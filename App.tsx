@@ -5,6 +5,7 @@ import { INITIAL_EFFECTS } from './constants';
 import { AuthProvider } from './context/AuthContext';
 import LandingPage from './components/LandingPage';
 import EditorView from './components/EditorView';
+import LegalConsentModal from './components/LegalConsentModal';
 
 const App: React.FC = () => {
   const [view, setView] = useState<AppView>(AppView.LANDING);
@@ -17,7 +18,11 @@ const App: React.FC = () => {
     currentEffectIndex: 0
   });
 
-  const handleFileUpload = (file: File) => {
+  const [legalModalOpen, setLegalModalOpen] = useState(false);
+  const [forceLegal, setForceLegal] = useState(false);
+  const [postConsentCallback, setPostConsentCallback] = useState<(() => void) | null>(null);
+
+  const processFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
@@ -35,6 +40,38 @@ const App: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
+  const handleFileUpload = (file: File) => {
+    // Legacy fallback: if file comes through but consent missing (should be caught by click handler now)
+    const hasConsent = localStorage.getItem('glitch_consent_v1');
+    if (!hasConsent) {
+      setPostConsentCallback(() => () => processFile(file));
+      setForceLegal(true);
+      setLegalModalOpen(true);
+      return;
+    }
+    processFile(file);
+  };
+
+  const handleLegalConfirm = () => {
+    localStorage.setItem('glitch_consent_v1', 'true');
+    setLegalModalOpen(false);
+    setForceLegal(false);
+
+    if (postConsentCallback) {
+      postConsentCallback();
+      setPostConsentCallback(null);
+    }
+  };
+
+  const handleOpenLegal = (force: boolean | unknown = false, callback?: () => void) => {
+    const isForced = force === true;
+    setForceLegal(isForced);
+    if (callback) {
+      setPostConsentCallback(() => callback);
+    }
+    setLegalModalOpen(true);
+  };
+
   const updateState = (newState: Partial<GlitchState>) => {
     setState(prev => ({ ...prev, ...newState }));
   };
@@ -47,13 +84,14 @@ const App: React.FC = () => {
   const renderView = () => {
     switch (view) {
       case AppView.LANDING:
-        return <LandingPage onFileUpload={handleFileUpload} onNavigate={navigateTo} />;
+        return <LandingPage onFileUpload={handleFileUpload} onNavigate={navigateTo} onOpenLegal={handleOpenLegal} />;
       case AppView.EDITOR:
         return (
           <EditorView
             state={state}
             onUpdateState={updateState}
             onNavigate={navigateTo}
+            onOpenLegal={handleOpenLegal}
           />
         );
       case AppView.GALLERY:
@@ -66,13 +104,19 @@ const App: React.FC = () => {
           </div>
         );
       default:
-        return <LandingPage onFileUpload={handleFileUpload} onNavigate={navigateTo} />;
+        return <LandingPage onFileUpload={handleFileUpload} onNavigate={navigateTo} onOpenLegal={handleOpenLegal} />;
     }
   };
 
   return (
     <AuthProvider>
       {renderView()}
+      <LegalConsentModal
+        isOpen={legalModalOpen}
+        onClose={() => setLegalModalOpen(false)}
+        onConfirm={handleLegalConfirm}
+        isForced={forceLegal}
+      />
     </AuthProvider>
   );
 };

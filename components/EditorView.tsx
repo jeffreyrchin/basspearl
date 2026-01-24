@@ -14,9 +14,10 @@ interface EditorViewProps {
   state: GlitchState;
   onUpdateState: (newState: Partial<GlitchState>) => void;
   onNavigate: (view: AppView) => void;
+  onOpenLegal: (force: boolean) => void;
 }
 
-const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigate }) => {
+const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigate, onOpenLegal }) => {
   const { user } = useAuth();
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -459,7 +460,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
           <ExportCreditsDisplay variant="inline" />
         </div>
         <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest text-white/70 uppercase">
-          <a href="#" className="hover:text-white transition-colors">Privacy & Terms</a>
+          <button onClick={() => onOpenLegal(false)} className="hover:text-white transition-colors uppercase">Privacy & Terms</button>
         </div>
       </footer>
 

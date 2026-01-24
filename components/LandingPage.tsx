@@ -10,14 +10,28 @@ import { useUploadQuota } from '../hooks/useUploadQuota';
 interface LandingPageProps {
   onFileUpload: (file: File) => void;
   onNavigate: (view: AppView) => void;
+  onOpenLegal: (force: boolean, callback?: () => void) => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onOpenLegal }) => {
   const { user } = useAuth();
   const { canUpload, incrementUploads } = useUploadQuota();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleUploadClick = () => {
+    const hasConsent = localStorage.getItem('glitch_consent_v1');
+    if (hasConsent) {
+      fileInputRef.current?.click();
+    } else {
+      onOpenLegal(true, () => {
+        fileInputRef.current?.click();
+      });
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -71,8 +85,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate }) =
             <span className="text-primary active-glow italic">in seconds</span>
           </h2>
 
-          <label className="w-full aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] glass-panel rounded-2xl md:rounded-3xl upload-zone-glow flex flex-col items-center justify-center border-dashed border-2 border-primary/30 hover:border-primary/60 transition-all group cursor-pointer overflow-hidden">
-            <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+          <div
+            onClick={handleUploadClick}
+            className="w-full aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] glass-panel rounded-2xl md:rounded-3xl upload-zone-glow flex flex-col items-center justify-center border-dashed border-2 border-primary/30 hover:border-primary/60 transition-all group cursor-pointer overflow-hidden"
+          >
+            <input
+              type="file"
+              className="hidden"
+              accept="image/*"
+              onChange={handleFileChange}
+              ref={fileInputRef}
+            />
             <div className="size-16 md:size-20 rounded-xl md:rounded-2xl bg-primary/10 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
               <span className="material-symbols-outlined text-primary text-[32px] md:text-[48px]">upload_file</span>
             </div>
@@ -81,7 +104,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate }) =
             <div className="bg-accent-blue hover:bg-white text-black px-6 md:px-10 py-2.5 md:py-3 rounded-full text-[10px] md:text-xs font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(0,242,255,0.4)] transition-all">
               Upload Image
             </div>
-          </label>
+          </div>
 
           <div className="w-full flex items-center justify-center mt-12 md:mt-24 mb-6 md:mb-8">
             <div className="flex items-center gap-3">
@@ -118,7 +141,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate }) =
           </div>
         </div>
         <div className="flex items-center gap-6 text-[10px] md:text-[11px] font-bold tracking-widest text-white/70 uppercase">
-          <a href="#" className="hover:text-white transition-colors">Privacy & Terms</a>
+          <button onClick={() => onOpenLegal(false)} className="hover:text-white transition-colors uppercase">Privacy & Terms</button>
         </div>
       </footer>
 
