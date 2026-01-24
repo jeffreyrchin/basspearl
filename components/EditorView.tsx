@@ -43,7 +43,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     if (!state.originalImage) return;
     setIsProcessing(true);
     try {
-      const processed = await glitchEngine.processImage(state.originalImage, state.effects);
+      const processed = await glitchEngine.processImage(state.originalImage, state.effects, !user);
 
       // History Logic
       const newHistory = state.history.slice(0, state.historyIndex + 1);
@@ -114,7 +114,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       applyGlitches();
     }, 300);
     return () => clearTimeout(timer);
-  }, [state.effects]);
+  }, [state.effects, user]);
 
 
 
@@ -312,11 +312,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
             <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay bg-gradient-to-t from-primary/20 to-transparent"></div>
 
-            <div className="absolute bottom-4 left-4 flex gap-4 text-[10px] text-white/40 font-mono">
-              <span>ACTIVE: {state.effects.filter(e => e.active).length}</span>
-              <span className="hidden sm:inline">ENGINE: GLITCH_V4</span>
-              {isPreviewing && <span className="text-primary font-bold">PREVIEWING ORIGINAL</span>}
-            </div>
+
 
             {isProcessing && !isPreviewing && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
@@ -324,6 +320,20 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
                   <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                   <span className="text-[10px] font-mono text-primary animate-pulse uppercase tracking-[0.2em]">Processing...</span>
                 </div>
+              </div>
+            )}
+          </div>
+
+          <div className="w-full max-w-5xl mt-4 flex flex-col gap-2 items-start text-[10px] text-white/40 font-mono">
+            <div className="flex gap-4">
+              <span>ACTIVE: {state.effects.filter(e => e.active).length}</span>
+              <span className="hidden sm:inline">ENGINE: GLITCH_V4</span>
+              {isPreviewing && <span className="text-primary font-bold">PREVIEWING ORIGINAL</span>}
+            </div>
+            {!user && (
+              <div className="flex items-center gap-2 text-white/60 bg-white/5 border border-white/10 px-3 py-2 rounded-lg">
+                <span className="material-symbols-outlined text-[14px] text-primary">info</span>
+                <span>Watermark active on previews & downloads. <button onClick={() => openAuthModal('login')} className="text-primary font-bold hover:underline cursor-pointer">Sign in</button> to remove.</span>
               </div>
             )}
           </div>

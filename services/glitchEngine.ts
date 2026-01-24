@@ -12,7 +12,7 @@ export class GlitchEngine {
     this.ctx = context;
   }
 
-  public async processImage(imageSrc: string, effects: EffectConfig[]): Promise<string> {
+  public async processImage(imageSrc: string, effects: EffectConfig[], shouldWatermark: boolean = false): Promise<string> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -26,11 +26,44 @@ export class GlitchEngine {
           this.applyEffect(effect);
         });
 
+        if (shouldWatermark) {
+          this.applyWatermark();
+        }
+
         resolve(this.canvas.toDataURL('image/png'));
       };
       img.onerror = reject;
       img.src = imageSrc;
     });
+  }
+
+  private applyWatermark() {
+    const width = this.canvas.width;
+    const height = this.canvas.height;
+
+    // Scale font size based on image width, but keep it within reasonable bounds
+    const fontSize = Math.max(20, Math.floor(width * 0.04));
+
+    this.ctx.save();
+    // Use Genos font to match the header, fallback to sans-serif
+    this.ctx.font = `bold ${fontSize}px "Genos", sans-serif`;
+    this.ctx.textAlign = 'right';
+    this.ctx.textBaseline = 'bottom';
+
+    // Add some padding from the edge
+    const padding = Math.floor(fontSize * 0.5);
+
+    // High contrast stroke (outline)
+    this.ctx.lineWidth = Math.max(2, fontSize * 0.08);
+    this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+    this.ctx.lineJoin = 'round';
+    this.ctx.strokeText('GlitchBrain', width - padding, height - padding);
+
+    // Bright fill
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    this.ctx.fillText('GlitchBrain', width - padding, height - padding);
+
+    this.ctx.restore();
   }
 
   private applyEffect(effect: EffectConfig) {
@@ -102,16 +135,16 @@ export class GlitchEngine {
     const segment = [];
     for (let y = startY; y < endY; y++) {
       const i = (y * width + x) * 4;
-      segment.push([pixels[i], pixels[i+1], pixels[i+2], pixels[i+3]]);
+      segment.push([pixels[i], pixels[i + 1], pixels[i + 2], pixels[i + 3]]);
     }
     segment.sort((a, b) => (a[0] + a[1] + a[2]) - (b[0] + b[1] + b[2]));
     for (let y = startY; y < endY; y++) {
       const i = (y * width + x) * 4;
       const [r, g, b, a] = segment[y - startY];
       pixels[i] = r;
-      pixels[i+1] = g;
-      pixels[i+2] = b;
-      pixels[i+3] = a;
+      pixels[i + 1] = g;
+      pixels[i + 2] = b;
+      pixels[i + 3] = a;
     }
   }
 
@@ -119,7 +152,7 @@ export class GlitchEngine {
     const pixels = imageData.data;
     const shift = Math.floor(intensity * 0.5);
     const temp = new Uint8ClampedArray(pixels);
-    
+
     for (let i = 0; i < pixels.length; i += 4) {
       const shiftedIndex = i + shift * 4;
       if (shiftedIndex < pixels.length) {
@@ -137,8 +170,8 @@ export class GlitchEngine {
     const factor = Math.max(1, Math.floor(intensity / 10));
     for (let i = 0; i < pixels.length; i += 4) {
       pixels[i] = Math.floor(pixels[i] / factor) * factor;
-      pixels[i+1] = Math.floor(pixels[i+1] / factor) * factor;
-      pixels[i+2] = Math.floor(pixels[i+2] / factor) * factor;
+      pixels[i + 1] = Math.floor(pixels[i + 1] / factor) * factor;
+      pixels[i + 2] = Math.floor(pixels[i + 2] / factor) * factor;
     }
   }
 
@@ -151,8 +184,8 @@ export class GlitchEngine {
         for (let x = 0; x < width; x++) {
           const i = (y * width + x) * 4;
           pixels[i] *= (1 - opacity);
-          pixels[i+1] *= (1 - opacity);
-          pixels[i+2] *= (1 - opacity);
+          pixels[i + 1] *= (1 - opacity);
+          pixels[i + 2] *= (1 - opacity);
         }
       }
     }
@@ -164,8 +197,8 @@ export class GlitchEngine {
     const brightness = (intensity / 10);
     for (let i = 0; i < pixels.length; i += 4) {
       for (let c = 0; c < 3; c++) {
-        let val = (pixels[i+c] - 128) * contrast + 128 + brightness;
-        pixels[i+c] = Math.min(255, Math.max(0, val));
+        let val = (pixels[i + c] - 128) * contrast + 128 + brightness;
+        pixels[i + c] = Math.min(255, Math.max(0, val));
       }
     }
   }
@@ -186,9 +219,9 @@ export class GlitchEngine {
           const targetIdx = (y * width + x) * 4;
           const sourceIdx = (y * width + sourceX) * 4;
           pixels[targetIdx] = temp[sourceIdx];
-          pixels[targetIdx+1] = temp[sourceIdx+1];
-          pixels[targetIdx+2] = temp[sourceIdx+2];
-          pixels[targetIdx+3] = temp[sourceIdx+3];
+          pixels[targetIdx + 1] = temp[sourceIdx + 1];
+          pixels[targetIdx + 2] = temp[sourceIdx + 2];
+          pixels[targetIdx + 3] = temp[sourceIdx + 3];
         }
       }
     }
@@ -212,8 +245,8 @@ export class GlitchEngine {
           const i = (y * width + x) * 4;
           const si = (y * width + Math.floor(Math.max(0, Math.min(width - 1, x + shiftX)))) * 4;
           pixels[i] = pixels[si];
-          pixels[i+1] = pixels[si+1];
-          pixels[i+2] = pixels[si+2];
+          pixels[i + 1] = pixels[si + 1];
+          pixels[i + 2] = pixels[si + 2];
         }
       }
     }
@@ -224,7 +257,7 @@ export class GlitchEngine {
     const width = imageData.width;
     const height = imageData.height;
     const bleedAmount = Math.floor(intensity / 5);
-    
+
     for (let y = 0; y < height; y++) {
       for (let x = width - 1; x > bleedAmount; x--) {
         const i = (y * width + x) * 4;
@@ -240,20 +273,20 @@ export class GlitchEngine {
     const width = imageData.width;
     const height = imageData.height;
     const blockSize = Math.max(1, Math.floor(intensity / 10));
-    
+
     for (let y = 0; y < height; y += blockSize) {
       for (let x = 0; x < width; x += blockSize) {
         const i = (y * width + x) * 4;
         const r = pixels[i];
-        const g = pixels[i+1];
-        const b = pixels[i+2];
-        
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+
         for (let dy = 0; dy < blockSize && y + dy < height; dy++) {
           for (let dx = 0; dx < blockSize && x + dx < width; dx++) {
             const targetI = ((y + dy) * width + (x + dx)) * 4;
             pixels[targetI] = r;
-            pixels[targetI+1] = g;
-            pixels[targetI+2] = b;
+            pixels[targetI + 1] = g;
+            pixels[targetI + 2] = b;
           }
         }
       }
@@ -269,9 +302,9 @@ export class GlitchEngine {
         if (chaos < 0.3) {
           pixels[i] = 255 - pixels[i]; // Invert
         } else if (chaos < 0.6) {
-          pixels[i+1] = pixels[i+2]; // Swizzling
+          pixels[i + 1] = pixels[i + 2]; // Swizzling
         } else {
-          pixels[i+2] = 255; // Blue spike
+          pixels[i + 2] = 255; // Blue spike
         }
       }
     }
