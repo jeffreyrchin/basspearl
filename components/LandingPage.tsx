@@ -35,6 +35,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+
+      // 50MB Limit Check
+      const MAX_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+      if (file.size > MAX_SIZE) {
+        alert("File too large. Please upload an image under 50MB.");
+        e.target.value = ''; // Reset input
+        return;
+      }
+
       if (!canUpload) {
         setShowLimitModal(true);
         // Reset file input so user can try again after login
@@ -42,7 +52,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
         return;
       }
       incrementUploads();
-      onFileUpload(e.target.files[0]);
+      onFileUpload(file);
     }
   };
 
