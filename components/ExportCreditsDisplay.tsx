@@ -69,7 +69,7 @@ const ExportCreditsDisplay: React.FC<ExportCreditsDisplayProps> = ({
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2"
-                        strokeDasharray={`${percentage * 0.4} 50`}
+                        strokeDasharray={`${percentage * 0.5} 50`}
                         className={isEmpty ? 'text-red-400' : isLow ? 'text-yellow-400' : 'text-primary'}
                     />
                 </svg>
