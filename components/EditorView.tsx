@@ -345,7 +345,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
           <div className="w-full max-w-5xl mt-4 flex flex-col gap-2 items-start text-[10px] text-white/40 font-mono">
             <div className="flex gap-4">
               <span>ACTIVE: {state.effects.filter(e => e.active).length}</span>
-              <span className="hidden sm:inline">ENGINE: GLITCH_V4</span>
+              <span className="hidden sm:inline">ENGINE: GLITCH</span>
               {isPreviewing && <span className="text-primary font-bold">PREVIEWING ORIGINAL</span>}
             </div>
             {!user && (
