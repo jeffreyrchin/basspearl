@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import AuthModal from './AuthModal';
 import ExportCreditsDisplay from './ExportCreditsDisplay';
 import UserMenu from './UserMenu';
+import ShareModal from './ShareModal';
 
 interface EditorViewProps {
   state: GlitchState;
@@ -22,6 +23,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const [activeTab, setActiveTab] = useState<'layers' | 'presets'>('layers');
   const [searchTerm, setSearchTerm] = useState('');
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [showMobileEffects, setShowMobileEffects] = useState(false);
 
@@ -59,13 +61,9 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     }
   };
 
-  const handleExport = () => {
+  const handleShare = () => {
     if (!state.processedImage) return;
-
-    const link = document.createElement('a');
-    link.href = state.processedImage;
-    link.download = `glitchbrain-${Date.now()}.png`;
-    link.click();
+    setShareModalOpen(true);
   };
 
   const handleUndo = () => {
@@ -257,11 +255,11 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
         </div>
         <div className="flex items-center gap-2 md:gap-4">
           <button
-            onClick={handleExport}
+            onClick={handleShare}
             className="bg-primary hover:bg-primary/80 text-white px-3 md:px-5 py-1.5 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest cyber-glow transition-all flex items-center gap-2"
           >
-            <span className="material-symbols-outlined text-[16px]">download</span>
-            <span className="hidden sm:inline">Export</span>
+            <span className="material-symbols-outlined text-[16px]">ios_share</span>
+            <span className="hidden sm:inline">Share</span>
           </button>
           <UserMenu
             onLoginClick={() => openAuthModal('login')}
@@ -466,6 +464,11 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         initialMode={authMode}
+      />
+      <ShareModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        imageUrl={state.processedImage}
       />
     </div>
   );
