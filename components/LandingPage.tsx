@@ -47,11 +47,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate }) =
             </div>
             <h1 className="text-2xl font-bold tracking-tighter uppercase">Glitch<span className="text-primary">Brain</span></h1>
           </div>
-          <nav className="hidden md:flex gap-10 text-[11px] font-bold uppercase tracking-[0.2em] text-white/50">
-            <button className="hover:text-primary transition-colors" onClick={() => onNavigate(AppView.GALLERY)}>Gallery</button>
-            <button className="hover:text-primary transition-colors">About</button>
-            <button className="hover:text-primary transition-colors">Docs</button>
-          </nav>
         </div>
         <div className="flex items-center gap-6">
           {!user && (
@@ -88,39 +83,27 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate }) =
             </div>
           </label>
 
-          <div className="w-full flex items-center justify-between mt-24 mb-8">
+          <div className="w-full flex items-center justify-center mt-24 mb-8">
             <div className="flex items-center gap-3">
               <span className="h-px w-8 bg-primary"></span>
-              <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">Featured Community Glitches</h4>
-            </div>
-            <div className="flex gap-2">
-              <button className="size-8 rounded border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">
-                <span className="material-symbols-outlined text-sm">chevron_left</span>
-              </button>
-              <button className="size-8 rounded border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">
-                <span className="material-symbols-outlined text-sm">chevron_right</span>
-              </button>
+              <h4 className="text-[13px] font-bold uppercase tracking-[0.2em] text-white/70">Distortion Protocols</h4>
+              <span className="h-px w-8 bg-primary"></span>
             </div>
           </div>
 
-          <div className="w-full flex gap-6 overflow-x-auto custom-scrollbar pb-6">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="flex-none w-[320px] group cursor-pointer">
-                <div className="relative aspect-video rounded-xl overflow-hidden mb-3 border border-white/10">
-                  <img src={`https://picsum.photos/seed/glitch${i}/400/225`} className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                    <div className="text-center">
-                      <div className="text-[9px] font-bold uppercase tracking-widest mb-1 text-primary">View</div>
-                      <div className="size-10 rounded border border-primary/20 bg-primary/20 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-primary">visibility</span>
-                      </div>
-                    </div>
-                  </div>
+          <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-6 pb-6">
+            {[
+              { title: 'Pixel Sorting', desc: 'Vertical scan data displacement', icon: 'sort' },
+              { title: 'RGB Shifting', desc: 'Chromatic aberration artifacts', icon: 'layers' },
+              { title: 'Data Moshing', desc: 'Delta compression distortion', icon: 'grid_4x4' },
+              { title: 'CRT Simulation', desc: 'Synthetic cathode ray rendering', icon: 'reorder' }
+            ].map(feature => (
+              <div key={feature.title} className="glass-panel p-6 rounded-2xl border border-white/5 hover:border-primary/20 transition-all group text-left">
+                <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <span className="material-symbols-outlined text-primary text-[24px]">{feature.icon}</span>
                 </div>
-                <div className="flex justify-between items-center px-1">
-                  <span className="text-[10px] font-bold text-white/60 uppercase">NEO_TOKYO_0{i}.JPG</span>
-                  <span className="text-[9px] font-mono text-white/30 uppercase">@CYBER_ARTIST</span>
-                </div>
+                <h5 className="text-[14px] font-bold uppercase tracking-wider mb-1 text-white">{feature.title}</h5>
+                <p className="text-[12px] text-white/60 font-medium uppercase tracking-wide">{feature.desc}</p>
               </div>
             ))}
           </div>
@@ -128,17 +111,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate }) =
       </main>
 
       <footer className="h-8 bg-[#050510] border-t border-white/5 px-6 flex items-center justify-between z-50">
-        <div className="flex items-center gap-6 text-[9px] font-bold tracking-widest text-white/30 uppercase">
+        <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest text-white/80 uppercase">
           <div className="flex items-center gap-1.5">
             <span className="size-1.5 rounded-full bg-primary/50 shadow-sm shadow-primary/50"></span>
             System: Online
           </div>
-          <span>v4.2.0-Glitch Engine</span>
-          <span className="text-primary/50">Global Artists: 12,482</span>
         </div>
-        <div className="flex items-center gap-6 text-[9px] font-mono text-white/20">
-          <span>LAT: 35.6895° N, LONG: 139.6917° E</span>
-          <span>SECURED CONNECTION [AES-256]</span>
+        <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest text-white/70 uppercase">
+          <a href="#" className="hover:text-white transition-colors">Privacy & Terms</a>
         </div>
       </footer>
 

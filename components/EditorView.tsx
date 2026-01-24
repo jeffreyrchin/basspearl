@@ -451,16 +451,15 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
       {/* Footer Status Bar */}
       <footer className="h-6 bg-[#050510] border-t border-white/5 px-4 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-4 text-[9px] font-bold tracking-widest text-white/30 uppercase">
+        <div className="flex items-center gap-4 text-[11px] font-bold tracking-widest text-white/80 uppercase">
           <div className="flex items-center gap-1.5">
             <span className={`size-1.5 rounded-full ${isProcessing ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'} shadow-sm shadow-green-500/50`}></span>
             {isProcessing ? 'Processing' : 'Ready'}
           </div>
-          <span className="hidden md:inline">Render Engine: v4.2.0</span>
           <ExportCreditsDisplay variant="inline" />
         </div>
-        <div className="hidden md:flex items-center gap-6 text-[9px] font-mono text-white/30">
-          <span>FPS: 60.0</span>
+        <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest text-white/70 uppercase">
+          <a href="#" className="hover:text-white transition-colors">Privacy & Terms</a>
         </div>
       </footer>
 
