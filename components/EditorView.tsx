@@ -267,7 +267,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
             Effects
           </button>
         </div>
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-3 md:gap-4">
           <button
             onClick={handleShare}
             className="bg-primary hover:bg-primary/80 text-white px-3 md:px-5 py-1.5 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest cyber-glow transition-all flex items-center gap-2"
