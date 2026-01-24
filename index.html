@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" class="dark h-full">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glitchbrain | Glitch Art Generator</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Genos:ital,wght@0,100..900;1,100..900&family=Jockey+One&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d7ff2",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0a0a1a",
+                        "accent-blue": "#00f2ff",
+                    },
+                    fontFamily: {
+                        // "display": ["Space Grotesk", "sans-serif"],
+                        "display": ["Genos", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(16, 25, 34, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .cyber-glow {
+            box-shadow: 0 0 15px rgba(13, 127, 242, 0.3);
+        }
+
+        .active-glow {
+            text-shadow: 0 0 8px rgba(13, 127, 242, 0.8);
+        }
+
+        .grid-bg {
+            background-image: radial-gradient(circle, #223649 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #0d7ff2;
+            border-radius: 10px;
+        }
+
+        @keyframes scanline {
+            0% {
+                top: -10%;
+            }
+
+            100% {
+                top: 110%;
+            }
+        }
+
+        .scanline-anim {
+            animation: scanline 4s linear infinite;
+        }
+
+        .glitch-text-shadow {
+            text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
+        }
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3"
+  }
+}
+</script>
+    <link rel="stylesheet" href="/index.css">
+</head>
+
+<body class="bg-background-dark font-display text-white selection:bg-primary/30 min-h-full">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>

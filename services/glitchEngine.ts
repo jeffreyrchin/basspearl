@@ -1,0 +1,281 @@
+
+import { EffectConfig, GlitchEffectType } from '../types';
+
+export class GlitchEngine {
+  private canvas: HTMLCanvasElement;
+  private ctx: CanvasRenderingContext2D;
+
+  constructor() {
+    this.canvas = document.createElement('canvas');
+    const context = this.canvas.getContext('2d', { willReadFrequently: true });
+    if (!context) throw new Error('Could not create canvas context');
+    this.ctx = context;
+  }
+
+  public async processImage(imageSrc: string, effects: EffectConfig[]): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        this.canvas.width = img.width;
+        this.canvas.height = img.height;
+        this.ctx.drawImage(img, 0, 0);
+
+        // Apply active effects sequentially
+        effects.filter(e => e.active).forEach(effect => {
+          this.applyEffect(effect);
+        });
+
+        resolve(this.canvas.toDataURL('image/png'));
+      };
+      img.onerror = reject;
+      img.src = imageSrc;
+    });
+  }
+
+  private applyEffect(effect: EffectConfig) {
+    const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+    const pixels = imageData.data;
+    const { intensity, threshold } = effect;
+
+    switch (effect.type) {
+      case 'PIXEL_SORT':
+        this.pixelSort(imageData, intensity, threshold);
+        break;
+      case 'CHANNEL_SHIFT':
+        this.channelShift(imageData, intensity);
+        break;
+      case 'BIT_CRUSH':
+        this.bitCrush(imageData, intensity);
+        break;
+      case 'SCAN_LINES':
+        this.scanLines(imageData, intensity);
+        break;
+      case 'DEEP_FRY':
+        this.deepFry(imageData, intensity);
+        break;
+      case 'WAVE_DISTORTION':
+        this.waveDistortion(imageData, intensity);
+        break;
+      case 'DATA_CORRUPTION':
+        this.dataCorruption(imageData, intensity);
+        break;
+      case 'COLOR_BLEED':
+        this.colorBleed(imageData, intensity);
+        break;
+      case 'COMPRESSION_HELL':
+        this.compressionHell(imageData, intensity);
+        break;
+      case 'RANDOM_CHAOS':
+        this.randomChaos(imageData, intensity);
+        break;
+      default:
+        break;
+    }
+
+    this.ctx.putImageData(imageData, 0, 0);
+  }
+
+  private pixelSort(imageData: ImageData, intensity: number, threshold: number) {
+    const pixels = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+    const t = threshold * 2.55;
+
+    for (let x = 0; x < width; x++) {
+      let sortStart = -1;
+      for (let y = 0; y < height; y++) {
+        const i = (y * width + x) * 4;
+        const brightness = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+
+        if (brightness > t) {
+          if (sortStart === -1) sortStart = y;
+        } else if (sortStart !== -1) {
+          this.sortColumnSegment(pixels, width, x, sortStart, y);
+          sortStart = -1;
+        }
+      }
+    }
+  }
+
+  private sortColumnSegment(pixels: Uint8ClampedArray, width: number, x: number, startY: number, endY: number) {
+    const segment = [];
+    for (let y = startY; y < endY; y++) {
+      const i = (y * width + x) * 4;
+      segment.push([pixels[i], pixels[i+1], pixels[i+2], pixels[i+3]]);
+    }
+    segment.sort((a, b) => (a[0] + a[1] + a[2]) - (b[0] + b[1] + b[2]));
+    for (let y = startY; y < endY; y++) {
+      const i = (y * width + x) * 4;
+      const [r, g, b, a] = segment[y - startY];
+      pixels[i] = r;
+      pixels[i+1] = g;
+      pixels[i+2] = b;
+      pixels[i+3] = a;
+    }
+  }
+
+  private channelShift(imageData: ImageData, intensity: number) {
+    const pixels = imageData.data;
+    const shift = Math.floor(intensity * 0.5);
+    const temp = new Uint8ClampedArray(pixels);
+    
+    for (let i = 0; i < pixels.length; i += 4) {
+      const shiftedIndex = i + shift * 4;
+      if (shiftedIndex < pixels.length) {
+        pixels[i] = temp[shiftedIndex];
+      }
+      const shiftedIndexBlue = i - shift * 4;
+      if (shiftedIndexBlue >= 0) {
+        pixels[i + 2] = temp[shiftedIndexBlue];
+      }
+    }
+  }
+
+  private bitCrush(imageData: ImageData, intensity: number) {
+    const pixels = imageData.data;
+    const factor = Math.max(1, Math.floor(intensity / 10));
+    for (let i = 0; i < pixels.length; i += 4) {
+      pixels[i] = Math.floor(pixels[i] / factor) * factor;
+      pixels[i+1] = Math.floor(pixels[i+1] / factor) * factor;
+      pixels[i+2] = Math.floor(pixels[i+2] / factor) * factor;
+    }
+  }
+
+  private scanLines(imageData: ImageData, intensity: number) {
+    const pixels = imageData.data;
+    const width = imageData.width;
+    const opacity = intensity / 200;
+    for (let y = 0; y < imageData.height; y++) {
+      if (y % 3 === 0) {
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          pixels[i] *= (1 - opacity);
+          pixels[i+1] *= (1 - opacity);
+          pixels[i+2] *= (1 - opacity);
+        }
+      }
+    }
+  }
+
+  private deepFry(imageData: ImageData, intensity: number) {
+    const pixels = imageData.data;
+    const contrast = 1 + (intensity / 50);
+    const brightness = (intensity / 10);
+    for (let i = 0; i < pixels.length; i += 4) {
+      for (let c = 0; c < 3; c++) {
+        let val = (pixels[i+c] - 128) * contrast + 128 + brightness;
+        pixels[i+c] = Math.min(255, Math.max(0, val));
+      }
+    }
+  }
+
+  private waveDistortion(imageData: ImageData, intensity: number) {
+    const pixels = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+    const temp = new Uint8ClampedArray(pixels);
+    const freq = Math.max(1, intensity / 5);
+    const amp = intensity / 2;
+
+    for (let y = 0; y < height; y++) {
+      const xOffset = Math.sin(y / freq) * amp;
+      for (let x = 0; x < width; x++) {
+        const sourceX = Math.floor(x + xOffset);
+        if (sourceX >= 0 && sourceX < width) {
+          const targetIdx = (y * width + x) * 4;
+          const sourceIdx = (y * width + sourceX) * 4;
+          pixels[targetIdx] = temp[sourceIdx];
+          pixels[targetIdx+1] = temp[sourceIdx+1];
+          pixels[targetIdx+2] = temp[sourceIdx+2];
+          pixels[targetIdx+3] = temp[sourceIdx+3];
+        }
+      }
+    }
+  }
+
+  private dataCorruption(imageData: ImageData, intensity: number) {
+    const pixels = imageData.data;
+    const numBlocks = Math.floor(intensity / 2);
+    const width = imageData.width;
+    const height = imageData.height;
+
+    for (let b = 0; b < numBlocks; b++) {
+      const bx = Math.random() * width;
+      const by = Math.random() * height;
+      const bw = Math.random() * (width / 4);
+      const bh = Math.random() * 20;
+      const shiftX = (Math.random() - 0.5) * intensity;
+
+      for (let y = Math.floor(by); y < Math.min(height, by + bh); y++) {
+        for (let x = Math.floor(bx); x < Math.min(width, bx + bw); x++) {
+          const i = (y * width + x) * 4;
+          const si = (y * width + Math.floor(Math.max(0, Math.min(width - 1, x + shiftX)))) * 4;
+          pixels[i] = pixels[si];
+          pixels[i+1] = pixels[si+1];
+          pixels[i+2] = pixels[si+2];
+        }
+      }
+    }
+  }
+
+  private colorBleed(imageData: ImageData, intensity: number) {
+    const pixels = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+    const bleedAmount = Math.floor(intensity / 5);
+    
+    for (let y = 0; y < height; y++) {
+      for (let x = width - 1; x > bleedAmount; x--) {
+        const i = (y * width + x) * 4;
+        const sourceI = (y * width + (x - bleedAmount)) * 4;
+        // Bleed red channel
+        pixels[i] = (pixels[i] + pixels[sourceI]) / 2;
+      }
+    }
+  }
+
+  private compressionHell(imageData: ImageData, intensity: number) {
+    const pixels = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+    const blockSize = Math.max(1, Math.floor(intensity / 10));
+    
+    for (let y = 0; y < height; y += blockSize) {
+      for (let x = 0; x < width; x += blockSize) {
+        const i = (y * width + x) * 4;
+        const r = pixels[i];
+        const g = pixels[i+1];
+        const b = pixels[i+2];
+        
+        for (let dy = 0; dy < blockSize && y + dy < height; dy++) {
+          for (let dx = 0; dx < blockSize && x + dx < width; dx++) {
+            const targetI = ((y + dy) * width + (x + dx)) * 4;
+            pixels[targetI] = r;
+            pixels[targetI+1] = g;
+            pixels[targetI+2] = b;
+          }
+        }
+      }
+    }
+  }
+
+  private randomChaos(imageData: ImageData, intensity: number) {
+    const pixels = imageData.data;
+    const threshold = 1 - (intensity / 100);
+    for (let i = 0; i < pixels.length; i += 4) {
+      if (Math.random() > threshold) {
+        const chaos = Math.random();
+        if (chaos < 0.3) {
+          pixels[i] = 255 - pixels[i]; // Invert
+        } else if (chaos < 0.6) {
+          pixels[i+1] = pixels[i+2]; // Swizzling
+        } else {
+          pixels[i+2] = 255; // Blue spike
+        }
+      }
+    }
+  }
+}
+
+export const glitchEngine = new GlitchEngine();
