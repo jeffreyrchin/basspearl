@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useExportCredits } from '../hooks/useExportCredits';
 import AuthModal from './AuthModal';
 import ExportCreditsDisplay from './ExportCreditsDisplay';
+import UserMenu from './UserMenu';
 
 interface EditorViewProps {
   state: GlitchState;
@@ -22,6 +23,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const [activeTab, setActiveTab] = useState<'layers' | 'presets'>('layers');
   const [searchTerm, setSearchTerm] = useState('');
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [showExportLimitModal, setShowExportLimitModal] = useState(false);
   const [showMobileEffects, setShowMobileEffects] = useState(false);
 
@@ -102,6 +104,11 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     }
   };
 
+  const openAuthModal = (mode: 'login' | 'signup') => {
+    setAuthMode(mode);
+    setAuthModalOpen(true);
+  };
+
   const handleApplyPreset = (presetName: string) => {
     const newEffects = PRESETS[presetName];
     if (newEffects) {
@@ -121,9 +128,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     return () => clearTimeout(timer);
   }, [state.effects]);
 
-  const initials = user?.displayName
-    ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-    : user?.email?.slice(0, 2).toUpperCase() || 'U';
+
 
   const renderEffectsList = () => (
     <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
@@ -273,26 +278,10 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
               </span>
             )}
           </button>
-          {user ? (
-            user.photoURL ? (
-              <img
-                src={user.photoURL}
-                alt={user.displayName || 'User'}
-                className="size-8 md:size-9 rounded-full border-2 border-primary/40 object-cover"
-              />
-            ) : (
-              <div className="size-8 md:size-9 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-xs font-bold text-white border-2 border-primary/40">
-                {initials}
-              </div>
-            )
-          ) : (
-            <button
-              onClick={() => setAuthModalOpen(true)}
-              className="size-8 md:size-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
-            >
-              <span className="material-symbols-outlined text-[20px] text-white/60">person</span>
-            </button>
-          )}
+          <UserMenu
+            onLoginClick={() => openAuthModal('login')}
+            onSignupClick={() => openAuthModal('signup')}
+          />
         </div>
       </header>
 
@@ -492,7 +481,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
-        initialMode="signup"
+        initialMode={authMode}
       />
 
       {/* Export Limit Modal */}

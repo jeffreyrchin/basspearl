@@ -73,7 +73,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onLoginClick, onSignupClick }) => {
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 glass-panel rounded-xl overflow-hidden border border-white/10 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+                <div className="absolute right-0 top-full mt-2 w-64 bg-black/90 backdrop-blur-xl rounded-xl overflow-hidden border border-white/10 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 z-50">
                     {/* User Info */}
                     <div className="p-4 border-b border-white/5">
                         <div className="flex items-center gap-3">
