@@ -6,16 +6,16 @@ export enum AppView {
   PROCESSING = 'PROCESSING'
 }
 
-export type GlitchEffectType = 
-  | 'PIXEL_SORT' 
-  | 'CHANNEL_SHIFT' 
-  | 'DATA_CORRUPTION' 
-  | 'DEEP_FRY' 
-  | 'SCAN_LINES' 
-  | 'BIT_CRUSH' 
-  | 'WAVE_DISTORTION' 
-  | 'COLOR_BLEED' 
-  | 'COMPRESSION_HELL' 
+export type GlitchEffectType =
+  | 'PIXEL_SORT'
+  | 'CHANNEL_SHIFT'
+  | 'DATA_CORRUPTION'
+  | 'DEEP_FRY'
+  | 'SCAN_LINES'
+  | 'BIT_CRUSH'
+  | 'WAVE_DISTORTION'
+  | 'COLOR_BLEED'
+  | 'COMPRESSION_HELL'
   | 'RANDOM_CHAOS';
 
 export interface EffectConfig {
@@ -25,10 +25,16 @@ export interface EffectConfig {
   active: boolean;
 }
 
+export interface GlitchInfo {
+  image: string;
+  effects: EffectConfig[];
+}
+
 export interface GlitchState {
   originalImage: string | null;
   processedImage: string | null;
-  history: string[];
+  history: GlitchInfo[];
+  historyIndex: number;
   effects: EffectConfig[];
   currentEffectIndex: number;
 }

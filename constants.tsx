@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { GlitchEffectType } from './types';
+import { GlitchEffectType, EffectConfig } from './types';
 
 export const INITIAL_EFFECTS = [
   { type: 'PIXEL_SORT' as GlitchEffectType, intensity: 72, threshold: 40, active: true },
@@ -26,4 +26,32 @@ export const EFFECT_METADATA: Record<GlitchEffectType, { label: string; subLabel
   COLOR_BLEED: { label: 'Color Bleed', subLabel: 'HORIZONTAL SMEAR', icon: 'palette' },
   COMPRESSION_HELL: { label: 'Compression Hell', subLabel: 'JPEG ARTIFACTS', icon: 'compress' },
   RANDOM_CHAOS: { label: 'Random Chaos', subLabel: 'SYSTEM COLLAPSE', icon: 'bolt' },
+};
+
+export const PRESETS: Record<string, EffectConfig[]> = {
+  'RESET': INITIAL_EFFECTS.map(e => ({ ...e, active: false })),
+  'CYBERPUNK': INITIAL_EFFECTS.map(e => {
+    if (e.type === 'PIXEL_SORT') return { ...e, active: true, intensity: 80, threshold: 25 };
+    if (e.type === 'CHANNEL_SHIFT') return { ...e, active: true, intensity: 60 };
+    if (e.type === 'SCAN_LINES') return { ...e, active: true, intensity: 30 };
+    return { ...e, active: false };
+  }),
+  'VAPORWAVE': INITIAL_EFFECTS.map(e => {
+    if (e.type === 'SCAN_LINES') return { ...e, active: true, intensity: 60 };
+    if (e.type === 'WAVE_DISTORTION') return { ...e, active: true, intensity: 40 };
+    if (e.type === 'CHANNEL_SHIFT') return { ...e, active: true, intensity: 40 };
+    return { ...e, active: false };
+  }),
+  'DEEP_FRIED': INITIAL_EFFECTS.map(e => {
+    if (e.type === 'DEEP_FRY') return { ...e, active: true, intensity: 70 };
+    if (e.type === 'DATA_CORRUPTION') return { ...e, active: true, intensity: 40 };
+    if (e.type === 'COMPRESSION_HELL') return { ...e, active: true, intensity: 80 };
+    return { ...e, active: false };
+  }),
+  'GLITCH_ART': INITIAL_EFFECTS.map(e => {
+    if (e.type === 'PIXEL_SORT') return { ...e, active: true, intensity: 40, threshold: 60 };
+    if (e.type === 'DATA_CORRUPTION') return { ...e, active: true, intensity: 30 };
+    if (e.type === 'BIT_CRUSH') return { ...e, active: true, intensity: 50 };
+    return { ...e, active: false };
+  })
 };

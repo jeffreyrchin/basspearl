@@ -1,6 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { AppView } from '../types';
+import UserMenu from './UserMenu';
+import AuthModal from './AuthModal';
+import ExportCreditsDisplay from './ExportCreditsDisplay';
+import { useAuth } from '../context/AuthContext';
 
 interface LandingPageProps {
   onFileUpload: (file: File) => void;
@@ -8,10 +12,19 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate }) => {
+  const { user } = useAuth();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       onFileUpload(e.target.files[0]);
     }
+  };
+
+  const openAuthModal = (mode: 'login' | 'signup') => {
+    setAuthMode(mode);
+    setAuthModalOpen(true);
   };
 
   return (
@@ -31,10 +44,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate }) =
           </nav>
         </div>
         <div className="flex items-center gap-6">
-          <button className="text-sm font-bold uppercase tracking-widest text-white/70 hover:text-white transition-colors">Login</button>
-          <button className="bg-primary hover:bg-primary/80 text-white px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest cyber-glow transition-all">
-            Sign Up
-          </button>
+          {!user && (
+            <ExportCreditsDisplay
+              variant="badge"
+              onLoginClick={() => openAuthModal('login')}
+            />
+          )}
+          <UserMenu
+            onLoginClick={() => openAuthModal('login')}
+            onSignupClick={() => openAuthModal('signup')}
+          />
         </div>
       </header>
 
@@ -112,6 +131,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate }) =
           <span>SECURED CONNECTION [AES-256]</span>
         </div>
       </footer>
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode={authMode}
+      />
     </div>
   );
 };
