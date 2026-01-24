@@ -46,14 +46,28 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       const processed = await glitchEngine.processImage(state.originalImage, state.effects, !user);
 
       // History Logic
-      const newHistory = state.history.slice(0, state.historyIndex + 1);
-      newHistory.push({ image: processed, effects: state.effects });
+      const currentHistoryItem = state.history[state.historyIndex];
+      const effectsChanged = !currentHistoryItem || JSON.stringify(currentHistoryItem.effects) !== JSON.stringify(state.effects);
 
-      onUpdateState({
-        processedImage: processed,
-        history: newHistory,
-        historyIndex: newHistory.length - 1
-      });
+      if (effectsChanged) {
+        const newHistory = state.history.slice(0, state.historyIndex + 1);
+        newHistory.push({ image: processed, effects: state.effects });
+
+        onUpdateState({
+          processedImage: processed,
+          history: newHistory,
+          historyIndex: newHistory.length - 1
+        });
+      } else {
+        // Effects haven't changed (e.g., initial load or auth change), just update the image
+        const newHistory = [...state.history];
+        newHistory[state.historyIndex] = { ...newHistory[state.historyIndex], image: processed };
+
+        onUpdateState({
+          processedImage: processed,
+          history: newHistory
+        });
+      }
     } catch (err) {
       console.error(err);
     } finally {
