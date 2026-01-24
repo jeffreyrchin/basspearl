@@ -103,7 +103,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onLoginClick, onSignupClick }) => {
                     <div className="p-4 border-b border-white/5">
                         <div className="flex items-center gap-2 text-primary">
                             <span className="material-symbols-outlined text-[18px]">all_inclusive</span>
-                            <span className="text-xs font-bold uppercase tracking-widest">Unlimited Exports</span>
+                            <span className="text-xs font-bold uppercase tracking-widest">Unlimited Uploads</span>
                         </div>
                     </div>
 

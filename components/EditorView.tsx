@@ -4,7 +4,7 @@ import { GlitchState, EffectConfig, AppView } from '../types';
 import { EFFECT_METADATA, PRESETS } from '../constants';
 import { glitchEngine } from '../services/glitchEngine';
 import { useAuth } from '../context/AuthContext';
-import { useExportCredits } from '../hooks/useExportCredits';
+
 import AuthModal from './AuthModal';
 import ExportCreditsDisplay from './ExportCreditsDisplay';
 import UserMenu from './UserMenu';
@@ -17,14 +17,12 @@ interface EditorViewProps {
 
 const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigate }) => {
   const { user } = useAuth();
-  const { canExport, useExport, exportsRemaining, hasUnlimited } = useExportCredits();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<'layers' | 'presets'>('layers');
   const [searchTerm, setSearchTerm] = useState('');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [showExportLimitModal, setShowExportLimitModal] = useState(false);
   const [showMobileEffects, setShowMobileEffects] = useState(false);
 
   // New State for Preview
@@ -64,18 +62,10 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const handleExport = () => {
     if (!state.processedImage) return;
 
-    if (!canExport) {
-      setShowExportLimitModal(true);
-      return;
-    }
-
-    const success = useExport();
-    if (success) {
-      const link = document.createElement('a');
-      link.href = state.processedImage;
-      link.download = `glitchbrain-${Date.now()}.png`;
-      link.click();
-    }
+    const link = document.createElement('a');
+    link.href = state.processedImage;
+    link.download = `glitchbrain-${Date.now()}.png`;
+    link.click();
   };
 
   const handleUndo = () => {
@@ -272,11 +262,6 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
           >
             <span className="material-symbols-outlined text-[16px]">download</span>
             <span className="hidden sm:inline">Export</span>
-            {!hasUnlimited && (
-              <span className="bg-white/20 px-1.5 py-0.5 rounded text-[9px]">
-                {exportsRemaining}
-              </span>
-            )}
           </button>
           <UserMenu
             onLoginClick={() => openAuthModal('login')}
@@ -477,48 +462,11 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
         </div>
       </footer>
 
-      {/* Auth Modal */}
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         initialMode={authMode}
       />
-
-      {/* Export Limit Modal */}
-      {showExportLimitModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-md"
-            onClick={() => setShowExportLimitModal(false)}
-          />
-          <div className="relative w-full max-w-sm glass-panel rounded-2xl border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-300 p-8 text-center">
-            <div className="size-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <span className="material-symbols-outlined text-primary text-[32px]">download_done</span>
-            </div>
-            <h3 className="text-xl font-bold uppercase tracking-tight mb-2">Export Limit Reached</h3>
-            <p className="text-white/40 text-sm mb-6">
-              You've used all 5 free exports. Sign in for unlimited downloads!
-            </p>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => {
-                  setShowExportLimitModal(false);
-                  setAuthModalOpen(true);
-                }}
-                className="w-full py-3 rounded-xl bg-primary hover:bg-primary/80 text-white font-bold text-sm uppercase tracking-widest cyber-glow transition-all"
-              >
-                Sign In for Unlimited
-              </button>
-              <button
-                onClick={() => setShowExportLimitModal(false)}
-                className="w-full py-3 rounded-xl border border-white/10 hover:bg-white/5 text-white/60 font-bold text-sm uppercase tracking-widest transition-all"
-              >
-                Maybe Later
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

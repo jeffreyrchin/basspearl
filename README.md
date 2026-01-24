@@ -7,7 +7,7 @@ Transform images into stunning glitch art in seconds with real-time effects and 
 - 🎨 **10 Glitch Effects**: Pixel Sort, RGB Shift, Data Mosh, Deep Fry, and more
 - ⚡ **Real-time Preview**: See effects instantly as you adjust parameters
 - 🔐 **Firebase Auth**: Google + Email sign-in
-- 💾 **Export Credits**: 5 free exports for anonymous users, unlimited for signed-in users
+- 💾 **Upload Credits**: 5 free uploads for anonymous users, unlimited for signed-in users
 - 🎯 **Production-Ready UI**: Polished, responsive design
 
 ## Quick Start
@@ -54,8 +54,8 @@ npm run preview
 2. **Apply Effects**: Toggle effects on/off, adjust intensity and threshold
 3. **Export**: Download your glitched masterpiece
 
-**Anonymous users**: Get 5 free exports per session  
-**Signed-in users**: Unlimited exports!
+**Anonymous users**: Get 5 free uploads per day  
+**Signed-in users**: Unlimited uploads!
 
 ## Tech Stack
 

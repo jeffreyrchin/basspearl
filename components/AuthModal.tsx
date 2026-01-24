@@ -119,8 +119,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                     </h2>
                     <p className="text-white/40 text-center text-sm mb-8">
                         {mode === 'login'
-                            ? 'Sign in for unlimited exports'
-                            : 'Create an account for unlimited exports'}
+                            ? 'Sign in for unlimited uploads'
+                            : 'Create an account for unlimited uploads'}
                     </p>
 
                     {/* Google Button */}

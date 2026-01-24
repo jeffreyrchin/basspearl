@@ -5,6 +5,7 @@ import UserMenu from './UserMenu';
 import AuthModal from './AuthModal';
 import ExportCreditsDisplay from './ExportCreditsDisplay';
 import { useAuth } from '../context/AuthContext';
+import { useUploadQuota } from '../hooks/useUploadQuota';
 
 interface LandingPageProps {
   onFileUpload: (file: File) => void;
@@ -13,11 +14,20 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate }) => {
   const { user } = useAuth();
+  const { canUpload, incrementUploads } = useUploadQuota();
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
+      if (!canUpload) {
+        setShowLimitModal(true);
+        // Reset file input so user can try again after login
+        e.target.value = '';
+        return;
+      }
+      incrementUploads();
       onFileUpload(e.target.files[0]);
     }
   };
@@ -137,6 +147,42 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate }) =
         onClose={() => setAuthModalOpen(false)}
         initialMode={authMode}
       />
+
+      {/* Upload Limit Modal */}
+      {showLimitModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            onClick={() => setShowLimitModal(false)}
+          />
+          <div className="relative w-full max-w-sm glass-panel rounded-2xl border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-300 p-8 text-center">
+            <div className="size-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-primary text-[32px]">cloud_off</span>
+            </div>
+            <h3 className="text-xl font-bold uppercase tracking-tight mb-2">Daily Upload Limit Reached</h3>
+            <p className="text-white/40 text-sm mb-6">
+              You've reached your daily limit of 5 uploads. Sign in for unlimited glitching!
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  setShowLimitModal(false);
+                  openAuthModal('signup');
+                }}
+                className="w-full py-3 rounded-xl bg-primary hover:bg-primary/80 text-white font-bold text-sm uppercase tracking-widest cyber-glow transition-all"
+              >
+                Sign In for Unlimited
+              </button>
+              <button
+                onClick={() => setShowLimitModal(false)}
+                className="w-full py-3 rounded-xl border border-white/10 hover:bg-white/5 text-white/60 font-bold text-sm uppercase tracking-widest transition-all"
+              >
+                Maybe Tomorrow
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
