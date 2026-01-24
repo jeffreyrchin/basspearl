@@ -287,27 +287,30 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
         {/* Canvas Area */}
         <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden relative">
           {/* Floating Canvas Controls */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 glass-panel p-2 rounded-xl z-30">
+          {/* Floating Canvas Controls */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 glass-panel p-1.5 rounded-xl z-30">
             <button
               onClick={handleUndo}
               disabled={state.historyIndex <= 0}
-              className={`p-2 transition-colors ${state.historyIndex <= 0 ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:text-white'}`}
+              className={`size-8 flex items-center justify-center rounded-lg transition-colors ${state.historyIndex <= 0 ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+              title="Undo"
             >
-              <span className="material-symbols-outlined text-[20px]">undo</span>
+              <span className="material-symbols-outlined text-[20px] leading-none">undo</span>
             </button>
             <button
               onClick={handleRedo}
               disabled={state.historyIndex >= state.history.length - 1}
-              className={`p-2 transition-colors ${state.historyIndex >= state.history.length - 1 ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:text-white'}`}
+              className={`size-8 flex items-center justify-center rounded-lg transition-colors ${state.historyIndex >= state.history.length - 1 ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+              title="Redo"
             >
-              <span className="material-symbols-outlined text-[20px]">redo</span>
+              <span className="material-symbols-outlined text-[20px] leading-none">redo</span>
             </button>
             <div className="w-px h-4 bg-white/10 mx-1"></div>
             <button
               onMouseDown={() => setIsPreviewing(true)}
               onMouseUp={() => setIsPreviewing(false)}
               onMouseLeave={() => setIsPreviewing(false)}
-              className={`flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase tracking-[0.15em] cyber-glow transition-all ${isPreviewing ? 'bg-white text-black' : 'bg-primary text-white'}`}
+              className={`flex items-center gap-2 px-3 md:px-4 h-8 rounded-lg text-white text-[10px] font-bold uppercase tracking-[0.15em] cyber-glow transition-all ${isPreviewing ? 'bg-white text-black' : 'bg-primary text-white'}`}
             >
               <span className="material-symbols-outlined text-[16px]">compare</span>
               <span className="hidden sm:inline">{isPreviewing ? 'Original' : 'Preview'}</span>
@@ -388,30 +391,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
           {activeTab === 'layers' ? renderEffectsList() : renderPresetsList()}
 
-          {/* Bottom Actions */}
-          <div className="p-4 border-t border-white/5 flex items-center justify-between shrink-0">
-            <div className="flex gap-2">
-              <button
-                onClick={handleUndo}
-                disabled={state.historyIndex <= 0}
-                className={`p-2 rounded-lg bg-white/5 transition-colors ${state.historyIndex <= 0 ? 'text-white/20 cursor-not-allowed' : 'text-white hover:text-primary'}`}
-              >
-                <span className="material-symbols-outlined text-[20px]">undo</span>
-              </button>
-              <button
-                onClick={handleRedo}
-                disabled={state.historyIndex >= state.history.length - 1}
-                className={`p-2 rounded-lg bg-white/5 transition-colors ${state.historyIndex >= state.history.length - 1 ? 'text-white/20 cursor-not-allowed' : 'text-white hover:text-primary'}`}
-              >
-                <span className="material-symbols-outlined text-[20px]">redo</span>
-              </button>
-            </div>
 
-            <a href="#" className="flex items-center gap-2 text-[10px] font-bold text-white/40 hover:text-white uppercase tracking-widest transition-colors">
-              Help
-              <span className="material-symbols-outlined text-[16px]">help</span>
-            </a>
-          </div>
         </aside>
 
         {/* Mobile Effects Panel */}
