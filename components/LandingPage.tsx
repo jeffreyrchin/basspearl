@@ -56,9 +56,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
       <header className="flex items-center justify-between px-4 md:px-8 py-4 md:py-6 z-50 border-b border-white/5 bg-background-dark/60 backdrop-blur-xl sticky top-0">
         <div className="flex items-center gap-4 md:gap-10">
           <div className="flex items-center gap-2 cursor-pointer group">
-            <div className="size-8 text-primary active-glow group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined text-[32px]">vibration</span>
-            </div>
+
             <h1 className="text-2xl font-bold tracking-tighter uppercase">Glitch<span className="text-primary">Brain</span></h1>
           </div>
         </div>

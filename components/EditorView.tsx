@@ -239,9 +239,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       <header className="flex items-center justify-between px-4 md:px-6 py-4 z-50 border-b border-white/5 bg-background-dark/80 backdrop-blur-md shrink-0">
         <div className="flex items-center gap-4 md:gap-6">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate(AppView.LANDING)}>
-            <div className="size-7 md:size-8 text-primary active-glow">
-              <span className="material-symbols-outlined text-[28px] md:text-[32px]">vibration</span>
-            </div>
+
             <h2 className="text-lg md:text-xl font-bold tracking-tighter uppercase">Glitch<span className="text-primary">Brain</span></h2>
           </div>
           <div className="h-4 w-px bg-white/10 hidden md:block"></div>
