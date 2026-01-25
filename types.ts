@@ -27,7 +27,6 @@ export interface EffectConfig {
 }
 
 export interface GlitchInfo {
-  image: string;
   effects: EffectConfig[];
 }
 

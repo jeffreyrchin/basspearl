@@ -38,6 +38,11 @@ export class GlitchEngine {
         let width = img.width;
         let height = img.height;
 
+        // Determine resolution scale relative to a 800px standard for effect visual consistency
+        // A scale of 1.0 means the image is ~800px. A scale of 4.0 means it's 3200px.
+        // We use this scale to multiply pixel-based offsets in effects.
+        const resolutionScale = Math.max(1, Math.min(width, height) / 800);
+
         if (maxSize && (width > maxSize || height > maxSize)) {
           const ratio = Math.min(maxSize / width, maxSize / height);
           width = Math.floor(width * ratio);
@@ -50,7 +55,7 @@ export class GlitchEngine {
 
         // Apply active effects sequentially
         effects.filter(e => e.active).forEach(effect => {
-          this.applyEffect(effect);
+          this.applyEffect(effect, resolutionScale);
         });
 
         if (shouldWatermark) {
@@ -108,9 +113,8 @@ export class GlitchEngine {
 
   private currentRng: () => number = Math.random;
 
-  private applyEffect(effect: EffectConfig) {
+  private applyEffect(effect: EffectConfig, scale: number) {
     const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-    const pixels = imageData.data;
     const { intensity, threshold, seed } = effect;
 
     // Initialize RNG
@@ -122,34 +126,34 @@ export class GlitchEngine {
 
     switch (effect.type) {
       case 'PIXEL_SORT':
-        this.pixelSort(imageData, intensity, threshold);
+        this.pixelSort(imageData, intensity, threshold, scale);
         break;
       case 'CHANNEL_SHIFT':
-        this.channelShift(imageData, intensity, threshold);
+        this.channelShift(imageData, intensity, threshold, scale);
         break;
       case 'BIT_CRUSH':
-        this.bitCrush(imageData, intensity, threshold);
+        this.bitCrush(imageData, intensity, threshold, scale);
         break;
       case 'SCAN_LINES':
-        this.scanLines(imageData, intensity, threshold);
+        this.scanLines(imageData, intensity, threshold, scale);
         break;
       case 'DEEP_FRY':
         this.deepFry(imageData, intensity, threshold);
         break;
       case 'WAVE_DISTORTION':
-        this.waveDistortion(imageData, intensity, threshold);
+        this.waveDistortion(imageData, intensity, threshold, scale);
         break;
       case 'DATA_CORRUPTION':
-        this.dataCorruption(imageData, intensity, threshold);
+        this.dataCorruption(imageData, intensity, threshold, scale);
         break;
       case 'COLOR_BLEED':
-        this.colorBleed(imageData, intensity, threshold);
+        this.colorBleed(imageData, intensity, threshold, scale);
         break;
       case 'COMPRESSION_HELL':
-        this.compressionHell(imageData, intensity, threshold);
+        this.compressionHell(imageData, intensity, threshold, scale);
         break;
       case 'RANDOM_CHAOS':
-        this.randomChaos(imageData, intensity, threshold);
+        this.randomChaos(imageData, intensity, threshold, scale);
         break;
       default:
         break;
@@ -172,7 +176,7 @@ export class GlitchEngine {
     return this.currentRng();
   }
 
-  private pixelSort(imageData: ImageData, intensity: number, threshold: number) {
+  private pixelSort(imageData: ImageData, intensity: number, threshold: number, scale: number) {
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
@@ -225,10 +229,8 @@ export class GlitchEngine {
     }
   }
 
-  private channelShift(imageData: ImageData, intensity: number, threshold: number) {
+  private channelShift(imageData: ImageData, intensity: number, threshold: number, scale: number) {
     const pixels = imageData.data;
-    const scale = Math.max(1, imageData.width / 800);
-
     // Intensity = Horizontal Shift, Threshold = Vertical Shift
     const shiftX = Math.floor(intensity * 1.5 * scale);
     const shiftY = Math.floor(threshold * 0.5 * scale);
@@ -260,12 +262,11 @@ export class GlitchEngine {
     }
   }
 
-  private bitCrush(imageData: ImageData, intensity: number, threshold: number) {
+  private bitCrush(imageData: ImageData, intensity: number, threshold: number, scale: number) {
     const pixels = imageData.data;
     // Intensity = Quantization (Color depth)
     const qFactor = Math.floor(Math.pow(intensity / 10, 2.2)) + 1;
     // Threshold = Resampling (Pixelation)
-    const scale = Math.max(1, imageData.width / 800);
     const rFactor = Math.max(1, Math.floor((threshold / 10) * scale));
 
     for (let y = 0; y < imageData.height; y += rFactor) {
@@ -294,11 +295,10 @@ export class GlitchEngine {
     }
   }
 
-  private scanLines(imageData: ImageData, intensity: number, threshold: number) {
+  private scanLines(imageData: ImageData, intensity: number, threshold: number, scale: number) {
     const pixels = imageData.data;
     const width = imageData.width;
     const opacity = intensity / 100;
-    const scale = Math.max(1, imageData.width / 800);
     // Threshold = Line Spacing (0-100 maps to 2-10 pixels)
     const spacing = Math.max(2, Math.floor(2 + (threshold / 10) * scale));
 
@@ -345,14 +345,13 @@ export class GlitchEngine {
     }
   }
 
-  private waveDistortion(imageData: ImageData, intensity: number, threshold: number) {
+  private waveDistortion(imageData: ImageData, intensity: number, threshold: number, scale: number) {
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
     if (intensity === 0) return;
 
     const temp = new Uint8ClampedArray(pixels);
-    const scale = Math.max(1, width / 800);
 
     // Intensity = Amplitude, Threshold = Frequency
     // Lower threshold = higher frequency (more waves)
@@ -378,11 +377,10 @@ export class GlitchEngine {
     }
   }
 
-  private dataCorruption(imageData: ImageData, intensity: number, threshold: number) {
+  private dataCorruption(imageData: ImageData, intensity: number, threshold: number, scale: number) {
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
-    const scale = Math.max(1, width / 800);
 
     // Intensity = Motion Vector Length (number of recursive shifts)
     const iterations = Math.floor(intensity / 10) + 1;
@@ -467,11 +465,10 @@ export class GlitchEngine {
     }
   }
 
-  private colorBleed(imageData: ImageData, intensity: number, threshold: number) {
+  private colorBleed(imageData: ImageData, intensity: number, threshold: number, scale: number) {
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
-    const scale = Math.max(1, width / 800);
 
     // Intensity = Bleed Amount
     const bleedAmount = Math.floor((intensity / 3) * scale);
@@ -500,11 +497,10 @@ export class GlitchEngine {
     }
   }
 
-  private compressionHell(imageData: ImageData, intensity: number, threshold: number) {
+  private compressionHell(imageData: ImageData, intensity: number, threshold: number, scale: number) {
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
-    const scale = Math.max(1, width / 800);
 
     // Intensity = Block size (8x8 is JPEG standard, we scale it)
     const blockSize = Math.max(2, Math.floor((4 + (intensity / 10)) * scale));
@@ -559,11 +555,10 @@ export class GlitchEngine {
     }
   }
 
-  private randomChaos(imageData: ImageData, intensity: number, threshold: number) {
+  private randomChaos(imageData: ImageData, intensity: number, threshold: number, scale: number) {
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
-    const scale = Math.max(1, width / 800);
 
     // Threshold = Jitter/BlockSize
     const blockSize = Math.max(1, Math.floor((threshold / 10) * scale));

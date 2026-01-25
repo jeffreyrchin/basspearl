@@ -85,25 +85,22 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
     try {
       // Direct render to canvas for preview - Zero GC Allocation
+      // Consistently render at full resolution to avoid jumps
       if (previewCanvasRef.current) {
         await glitchEngine.renderToCanvas(
           previewCanvasRef.current,
           state.originalImage,
           targetEffects,
-          !user,
-          800
+          !user
+          // No maxSize means full resolution!
         );
       }
-
-      // Do NOT update React state for preview. This saves memory.
-
     } catch (err) {
       console.error(err);
     } finally {
       isProcessingRef.current = false;
       setIsProcessing(false);
 
-      // If we have more pending work that came in while we were processing, do it now
       if (pendingStateRef.current) {
         requestAnimationFrame(processPending);
       }
@@ -116,39 +113,31 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     const targetEffects = overrideEffects || state.effects;
 
     if (commitToHistory) {
-      // Force immediate processing for history commits
-      // STILL use preview resolution (800) for the view/history to avoid jumps
+      // History is now lean (effects only), no need for a redundant render here
+      // because the previewCanvas is already rendering the latest effects at full-res.
       pendingStateRef.current = null;
-      setIsProcessing(true);
       try {
-        const processed = await glitchEngine.processImage(state.originalImage, targetEffects, !user, 800);
-
-        // History Logic
         const currentHistoryItem = state.history[state.historyIndex];
         const effectsChanged = !currentHistoryItem || JSON.stringify(currentHistoryItem.effects) !== JSON.stringify(targetEffects);
 
         if (effectsChanged) {
           const newHistory = state.history.slice(0, state.historyIndex + 1);
-          newHistory.push({ image: processed, effects: targetEffects });
+          newHistory.push({ effects: targetEffects });
 
-          // Limit history size to 20
-          if (newHistory.length > 20) {
+          if (newHistory.length > 30) {
             newHistory.shift();
           }
 
           onUpdateState({
-            processedImage: processed,
             history: newHistory,
             historyIndex: newHistory.length - 1,
             effects: targetEffects
           });
         } else {
-          onUpdateState({ processedImage: processed, effects: targetEffects });
+          onUpdateState({ effects: targetEffects });
         }
       } catch (err) {
         console.error(err);
-      } finally {
-        setIsProcessing(false);
       }
       return;
     }
@@ -161,27 +150,15 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   };
 
   const handleShare = () => {
-    if (!state.processedImage) return;
+    if (!previewCanvasRef.current) return;
+    const highResUrl = previewCanvasRef.current.toDataURL('image/png');
+    onUpdateState({ processedImage: highResUrl });
     setShareModalOpen(true);
   };
 
 
-  // Sync canvas with state when not processing (e.g. undo/redo/initial load)
-  useEffect(() => {
-    if (state.processedImage && previewCanvasRef.current) {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = previewCanvasRef.current;
-        if (canvas) {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0);
-        }
-      };
-      img.src = state.processedImage;
-    }
-  }, [state.processedImage]);
+  // No longer syncing from state.processedImage as it's too heavy for high-res. 
+  // Canvas is updated directly by glitchEngine.renderToCanvas.
 
   const handleUndo = () => {
     if (state.historyIndex > 0) {
@@ -189,11 +166,14 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       const prevIndex = state.historyIndex - 1;
       const prevItem = state.history[prevIndex];
       trackEvent('effect_applied', { effect_type: 'undo', index: prevIndex });
+
       onUpdateState({
         historyIndex: prevIndex,
-        effects: prevItem.effects,
-        processedImage: prevItem.image
+        effects: prevItem.effects
       });
+
+      // Immediate render for fast feedback
+      applyGlitches(false, prevItem.effects);
     }
   };
 
@@ -203,11 +183,14 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       const nextIndex = state.historyIndex + 1;
       const nextItem = state.history[nextIndex];
       trackEvent('effect_applied', { effect_type: 'redo', index: nextIndex });
+
       onUpdateState({
         historyIndex: nextIndex,
-        effects: nextItem.effects,
-        processedImage: nextItem.image
+        effects: nextItem.effects
       });
+
+      // Immediate render for fast feedback
+      applyGlitches(false, nextItem.effects);
     }
   };
 
@@ -395,13 +378,6 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
           </button>
         </div>
         <div className="flex items-center gap-3 md:gap-4">
-          <button
-            onClick={handleShare}
-            className="bg-primary hover:bg-primary/80 text-white px-3 md:px-5 py-1.5 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest cyber-glow transition-all flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined text-[16px]">ios_share</span>
-            <span className="hidden sm:inline">Share</span>
-          </button>
           <UserMenu
             onLoginClick={() => openAuthModal('login')}
             onSignupClick={() => openAuthModal('signup')}
@@ -441,6 +417,14 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
               >
                 <span className="material-symbols-outlined text-[16px]">compare</span>
                 <span className="hidden sm:inline">{isPreviewing ? 'Original' : 'Preview'}</span>
+              </button>
+              <div className="w-px h-4 bg-white/10 mx-1"></div>
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-2 px-3 md:px-4 h-8 rounded-lg bg-primary text-white text-[10px] font-bold uppercase tracking-[0.15em] cyber-glow transition-all hover:bg-primary/80"
+              >
+                <span className="material-symbols-outlined text-[16px]">download</span>
+                <span className="hidden sm:inline">Export</span>
               </button>
             </div>
           </div>
