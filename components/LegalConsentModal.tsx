@@ -25,7 +25,7 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
                 <div className="p-6 border-b border-white/10 shrink-0 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <span className="material-symbols-outlined text-primary text-[24px]">gavel</span>
-                        <h2 className="text-xl font-bold uppercase tracking-tight">Legal Terms</h2>
+                        <h2 className="text-xl font-bold uppercase tracking-wider">Privacy & Terms</h2>
                     </div>
                     {!isForced && (
                         <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
