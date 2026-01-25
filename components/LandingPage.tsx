@@ -20,39 +20,73 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
+  // New State for DND and Consent
+  const [isDragging, setIsDragging] = useState(false);
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(() => {
+    return !!localStorage.getItem('glitch_consent_v1');
+  });
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleUploadClick = () => {
-    const hasConsent = localStorage.getItem('glitch_consent_v1');
-    if (hasConsent) {
+    if (hasAcceptedTerms) {
       fileInputRef.current?.click();
-    } else {
-      onOpenLegal(true, () => {
-        fileInputRef.current?.click();
-      });
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (hasAcceptedTerms) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const processValidatedFile = (file: File) => {
+    // 50MB Limit Check
+    const MAX_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+    if (file.size > MAX_SIZE) {
+      alert("File too large. Please upload an image under 50MB.");
+      return;
+    }
+
+    if (!canUpload) {
+      setShowLimitModal(true);
+      return;
+    }
+    incrementUploads();
+    onFileUpload(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    if (!hasAcceptedTerms) return;
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      processValidatedFile(e.dataTransfer.files[0]);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
+      processValidatedFile(e.target.files[0]);
+      e.target.value = ''; // Reset input
+    }
+  };
 
-      // 50MB Limit Check
-      const MAX_SIZE = 50 * 1024 * 1024; // 50MB in bytes
-      if (file.size > MAX_SIZE) {
-        alert("File too large. Please upload an image under 50MB.");
-        e.target.value = ''; // Reset input
-        return;
-      }
-
-      if (!canUpload) {
-        setShowLimitModal(true);
-        // Reset file input so user can try again after login
-        e.target.value = '';
-        return;
-      }
-      incrementUploads();
-      onFileUpload(file);
+  const handleToggleTerms = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    setHasAcceptedTerms(checked);
+    if (checked) {
+      localStorage.setItem('glitch_consent_v1', 'true');
+    } else {
+      localStorage.removeItem('glitch_consent_v1');
     }
   };
 
@@ -95,7 +129,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
 
           <div
             onClick={handleUploadClick}
-            className="w-full aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] glass-panel rounded-2xl md:rounded-3xl upload-zone-glow flex flex-col items-center justify-center border-dashed border-2 border-primary/30 hover:border-primary/60 transition-all group cursor-pointer overflow-hidden"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`w-full min-h-[400px] md:min-h-[500px] glass-panel rounded-2xl md:rounded-3xl upload-zone-glow flex flex-col items-center justify-center border-dashed border-2 transition-all group overflow-hidden relative ${hasAcceptedTerms ? 'border-primary/30 hover:border-primary/60 cursor-pointer' : 'border-white/5 cursor-default opacity-80'} ${isDragging ? 'bg-primary/10 border-primary scale-[1.02]' : ''}`}
           >
             <input
               type="file"
@@ -104,13 +141,45 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
               onChange={handleFileChange}
               ref={fileInputRef}
             />
-            <div className="size-16 md:size-20 rounded-xl md:rounded-2xl bg-primary/10 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined text-primary text-[32px] md:text-[48px]">upload_file</span>
+
+            <div className={`flex flex-col items-center transition-all pb-20 ${isDragging ? 'scale-110' : ''}`}>
+              <div className={`size-16 md:size-20 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 transition-all ${hasAcceptedTerms ? 'bg-primary/10 text-primary group-hover:scale-110' : 'bg-white/5 text-white/20'}`}>
+                <span className="material-symbols-outlined text-[32px] md:text-[48px]">{isDragging ? 'download' : 'upload_file'}</span>
+              </div>
+              <h3 className={`text-base md:text-lg font-bold uppercase tracking-widest mb-2 px-4 ${hasAcceptedTerms ? 'text-white' : 'text-white/20'}`}>
+                Drop your media here
+              </h3>
+              <p className="text-white/40 text-[10px] md:text-sm font-medium mb-6 md:mb-8">PNG, JPG, TIFF (UP TO 50MB)</p>
+
+              {hasAcceptedTerms ? (
+                <div className="bg-accent-blue hover:bg-white text-black px-6 md:px-10 py-2.5 md:py-3 rounded-full text-[10px] md:text-xs font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(0,242,255,0.4)] transition-all">
+                  Upload Image
+                </div>
+              ) : (
+                <div className="text-[14px] md:text-[16px] font-bold text-primary uppercase tracking-widest bg-transparent px-4 py-2 animate-pulse drop-shadow-[0_0_8px_rgba(13,127,242,0.8)]">
+                  Accept Privacy & Terms to Upload
+                </div>
+              )}
             </div>
-            <h3 className="text-base md:text-lg font-bold uppercase tracking-widest mb-2 px-4">Drop your media here</h3>
-            <p className="text-white/40 text-[10px] md:text-sm font-medium mb-6 md:mb-8">PNG, JPG, TIFF (UP TO 50MB)</p>
-            <div className="bg-accent-blue hover:bg-white text-black px-6 md:px-10 py-2.5 md:py-3 rounded-full text-[10px] md:text-xs font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(0,242,255,0.4)] transition-all">
-              Upload Image
+
+            {/* Localized Legal Checkbox */}
+            <div
+              className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-black/40 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/5 hover:border-white/10 transition-colors group/check"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <input
+                type="checkbox"
+                id="terms-check"
+                checked={hasAcceptedTerms}
+                onChange={handleToggleTerms}
+                className="size-5 rounded border-white/20 bg-white/5 text-primary focus:ring-primary/50 transition-all cursor-pointer"
+              />
+              <label
+                htmlFor="terms-check"
+                className="text-[10px] font-bold uppercase tracking-widest cursor-pointer whitespace-nowrap"
+              >
+                I agree to the <button onClick={() => onOpenLegal(false)} className="text-primary uppercase hover:underline underline-offset-4">Privacy & Terms</button>
+              </label>
             </div>
           </div>
 
