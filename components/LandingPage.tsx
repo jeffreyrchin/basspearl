@@ -107,7 +107,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
             <h1 className="text-2xl font-bold tracking-normal uppercase">Glitch<span className="text-primary">Brain</span></h1>
           </div>
         </div>
-        <div className="flex items-center gap-3 md:gap-6">
+        <div className="flex items-center gap-2 md:gap-6">
           {!user && (
             <ExportCreditsDisplay
               variant="badge"
