@@ -12,7 +12,8 @@ export class GlitchEngine {
     this.ctx = context;
   }
 
-  private imageCache: Map<string, HTMLImageElement> = new Map();
+  private currentImageSrc: string | null = null;
+  private currentImage: HTMLImageElement | null = null;
 
   public async processImage(imageSrc: string, effects: EffectConfig[], shouldWatermark: boolean = false, maxSize?: number): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -42,15 +43,16 @@ export class GlitchEngine {
         resolve(this.canvas.toDataURL('image/png'));
       };
 
-      if (this.imageCache.has(imageSrc)) {
-        processCachedImage(this.imageCache.get(imageSrc)!);
+      if (this.currentImageSrc === imageSrc && this.currentImage) {
+        processCachedImage(this.currentImage);
         return;
       }
 
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
-        this.imageCache.set(imageSrc, img);
+        this.currentImageSrc = imageSrc;
+        this.currentImage = img;
         processCachedImage(img);
       };
       img.onerror = reject;

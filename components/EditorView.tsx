@@ -108,6 +108,11 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
           const newHistory = state.history.slice(0, state.historyIndex + 1);
           newHistory.push({ image: processed, effects: state.effects });
 
+          // Limit history size to 20
+          if (newHistory.length > 20) {
+            newHistory.shift();
+          }
+
           onUpdateState({
             processedImage: processed,
             history: newHistory,
