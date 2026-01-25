@@ -125,31 +125,31 @@ export class GlitchEngine {
         this.pixelSort(imageData, intensity, threshold);
         break;
       case 'CHANNEL_SHIFT':
-        this.channelShift(imageData, intensity);
+        this.channelShift(imageData, intensity, threshold);
         break;
       case 'BIT_CRUSH':
-        this.bitCrush(imageData, intensity);
+        this.bitCrush(imageData, intensity, threshold);
         break;
       case 'SCAN_LINES':
-        this.scanLines(imageData, intensity);
+        this.scanLines(imageData, intensity, threshold);
         break;
       case 'DEEP_FRY':
-        this.deepFry(imageData, intensity);
+        this.deepFry(imageData, intensity, threshold);
         break;
       case 'WAVE_DISTORTION':
-        this.waveDistortion(imageData, intensity);
+        this.waveDistortion(imageData, intensity, threshold);
         break;
       case 'DATA_CORRUPTION':
-        this.dataCorruption(imageData, intensity);
+        this.dataCorruption(imageData, intensity, threshold);
         break;
       case 'COLOR_BLEED':
-        this.colorBleed(imageData, intensity);
+        this.colorBleed(imageData, intensity, threshold);
         break;
       case 'COMPRESSION_HELL':
-        this.compressionHell(imageData, intensity);
+        this.compressionHell(imageData, intensity, threshold);
         break;
       case 'RANDOM_CHAOS':
-        this.randomChaos(imageData, intensity);
+        this.randomChaos(imageData, intensity, threshold);
         break;
       default:
         break;
@@ -173,14 +173,23 @@ export class GlitchEngine {
   }
 
   private pixelSort(imageData: ImageData, intensity: number, threshold: number) {
-    // ... existing pixelSort implementation (no random)
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
-    const t = threshold * 2.55;
+
+    // Invert threshold so 0 = no effect (high threshold), 100 = max effect (low threshold)
+    // Map 0-100 to 255-0 range roughly
+    const t = (100 - threshold) * 2.55;
+
+    // Use intensity to control how "long" the sort streaks can get or probability of sorting
+    // Higher intensity = more vertical streaks
+    const triggerProb = intensity / 100;
 
     for (let x = 0; x < width; x++) {
       let sortStart = -1;
+      // Randomly skip columns based on intensity to create "streaky" look
+      if (this.rand() > triggerProb) continue;
+
       for (let y = 0; y < height; y++) {
         const i = (y * width + x) * 4;
         const brightness = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
@@ -191,6 +200,10 @@ export class GlitchEngine {
           this.sortColumnSegment(pixels, width, x, sortStart, y);
           sortStart = -1;
         }
+      }
+      // Finish any pending sort at bottom
+      if (sortStart !== -1) {
+        this.sortColumnSegment(pixels, width, x, sortStart, height);
       }
     }
   }
@@ -212,87 +225,145 @@ export class GlitchEngine {
     }
   }
 
-  private channelShift(imageData: ImageData, intensity: number) {
+  private channelShift(imageData: ImageData, intensity: number, threshold: number) {
     const pixels = imageData.data;
-    // Scale shift based on width relative to preview size (800px)
     const scale = Math.max(1, imageData.width / 800);
-    const shift = Math.floor(intensity * 0.5 * scale);
+
+    // Intensity = Horizontal Shift, Threshold = Vertical Shift
+    const shiftX = Math.floor(intensity * 1.5 * scale);
+    const shiftY = Math.floor(threshold * 0.5 * scale);
+
+    if (intensity === 0 && threshold === 0) return;
+
     const temp = new Uint8ClampedArray(pixels);
-
-    for (let i = 0; i < pixels.length; i += 4) {
-      const shiftedIndex = i + shift * 4;
-      if (shiftedIndex < pixels.length) {
-        pixels[i] = temp[shiftedIndex];
-      }
-      const shiftedIndexBlue = i - shift * 4;
-      if (shiftedIndexBlue >= 0) {
-        pixels[i + 2] = temp[shiftedIndexBlue];
-      }
-    }
-  }
-
-  private bitCrush(imageData: ImageData, intensity: number) {
-    const pixels = imageData.data;
-    const factor = Math.max(1, Math.floor(intensity / 10));
-    for (let i = 0; i < pixels.length; i += 4) {
-      pixels[i] = Math.floor(pixels[i] / factor) * factor;
-      pixels[i + 1] = Math.floor(pixels[i + 1] / factor) * factor;
-      pixels[i + 2] = Math.floor(pixels[i + 2] / factor) * factor;
-    }
-  }
-
-  private scanLines(imageData: ImageData, intensity: number) {
-    const pixels = imageData.data;
     const width = imageData.width;
-    const opacity = intensity / 200;
-    // Scale line spacing? 
-    // Standard: 1 line every 3 pixels. 
-    // Scaled: 1 line every 3 * scale pixels? That would make lines thicker.
-    // For scanlines, standard behavior is usually per-pixel. 
-    // If we scale it, it might stop looking like scanlines and look like stripes.
-    // Let's keep per-pixel but maybe adjust intensity logic if needed. 
-    // Actually, on high-res, 1px scanlines are invisible. 
-    // Let's try scaling the spacing.
-    const scale = Math.max(1, Math.floor(imageData.width / 800));
-    const spacing = 3 * scale;
+    const height = imageData.height;
 
-    for (let y = 0; y < imageData.height; y++) {
-      if (Math.floor(y / scale) % 3 === 0) {
-        for (let x = 0; x < width; x++) {
-          const i = (y * width + x) * 4;
-          pixels[i] *= (1 - opacity);
-          pixels[i + 1] *= (1 - opacity);
-          pixels[i + 2] *= (1 - opacity);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const i = (y * width + x) * 4;
+
+        let sourceY = y - shiftY;
+        let sourceX = x - shiftX;
+        if (sourceY >= 0 && sourceX >= 0) {
+          const sourceI = (sourceY * width + sourceX) * 4;
+          pixels[i] = temp[sourceI];
+        }
+
+        sourceY = y + shiftY;
+        sourceX = x + shiftX;
+        if (sourceY < height && sourceX < width) {
+          const sourceI = (sourceY * width + sourceX) * 4;
+          pixels[i + 2] = temp[sourceI + 2];
         }
       }
     }
   }
 
-  private deepFry(imageData: ImageData, intensity: number) {
+  private bitCrush(imageData: ImageData, intensity: number, threshold: number) {
     const pixels = imageData.data;
-    const contrast = 1 + (intensity / 50);
-    const brightness = (intensity / 10);
-    for (let i = 0; i < pixels.length; i += 4) {
-      for (let c = 0; c < 3; c++) {
-        let val = (pixels[i + c] - 128) * contrast + 128 + brightness;
-        pixels[i + c] = Math.min(255, Math.max(0, val));
+    // Intensity = Quantization (Color depth)
+    const qFactor = Math.floor(Math.pow(intensity / 10, 2.2)) + 1;
+    // Threshold = Resampling (Pixelation)
+    const scale = Math.max(1, imageData.width / 800);
+    const rFactor = Math.max(1, Math.floor((threshold / 10) * scale));
+
+    for (let y = 0; y < imageData.height; y += rFactor) {
+      for (let x = 0; x < imageData.width; x += rFactor) {
+        const i = (y * imageData.width + x) * 4;
+
+        let r = pixels[i];
+        let g = pixels[i + 1];
+        let b = pixels[i + 2];
+
+        if (qFactor > 1) {
+          r = Math.floor(r / qFactor) * qFactor;
+          g = Math.floor(g / qFactor) * qFactor;
+          b = Math.floor(b / qFactor) * qFactor;
+        }
+
+        for (let dy = 0; dy < rFactor && y + dy < imageData.height; dy++) {
+          for (let dx = 0; dx < rFactor && x + dx < imageData.width; dx++) {
+            const targetI = ((y + dy) * imageData.width + (x + dx)) * 4;
+            pixels[targetI] = r;
+            pixels[targetI + 1] = g;
+            pixels[targetI + 2] = b;
+          }
+        }
       }
     }
   }
 
-  private waveDistortion(imageData: ImageData, intensity: number) {
+  private scanLines(imageData: ImageData, intensity: number, threshold: number) {
+    const pixels = imageData.data;
+    const width = imageData.width;
+    const opacity = intensity / 100;
+    const scale = Math.max(1, imageData.width / 800);
+    // Threshold = Line Spacing (0-100 maps to 2-10 pixels)
+    const spacing = Math.max(2, Math.floor(2 + (threshold / 10) * scale));
+
+    for (let y = 0; y < imageData.height; y++) {
+      if (Math.floor(y / scale) % spacing === 0) {
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          const rMult = 1 - opacity;
+          const gMult = 1 - (opacity * 0.8);
+          const bMult = 1 - (opacity * 0.9);
+          pixels[i] *= rMult;
+          pixels[i + 1] *= gMult;
+          pixels[i + 2] *= bMult;
+        }
+      }
+    }
+  }
+
+  private deepFry(imageData: ImageData, intensity: number, threshold: number) {
+    const pixels = imageData.data;
+    // Intensity = Heat (Contrast/Brightness)
+    const contrast = 1 + (Math.pow(intensity / 20, 2));
+    const brightness = (intensity * 1.5);
+    // Threshold = Posterize (Number of levels, 255 down to 2)
+    const levels = Math.max(2, 255 - Math.floor(threshold * 2.5));
+
+    for (let i = 0; i < pixels.length; i += 4) {
+      for (let c = 0; c < 3; c++) {
+        let val = pixels[i + c];
+        val = (val - 128) * contrast + 128 + brightness;
+
+        // Posterize
+        val = Math.floor(val / (256 / levels)) * (256 / levels);
+
+        pixels[i + c] = Math.min(255, Math.max(0, val));
+      }
+
+      if (intensity > 50) {
+        const max = Math.max(pixels[i], pixels[i + 1], pixels[i + 2]);
+        if (pixels[i] !== max) pixels[i] *= 0.8;
+        if (pixels[i + 1] !== max) pixels[i + 1] *= 0.8;
+        if (pixels[i + 2] !== max) pixels[i + 2] *= 0.8;
+      }
+    }
+  }
+
+  private waveDistortion(imageData: ImageData, intensity: number, threshold: number) {
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
-    const temp = new Uint8ClampedArray(pixels);
+    if (intensity === 0) return;
 
+    const temp = new Uint8ClampedArray(pixels);
     const scale = Math.max(1, width / 800);
-    const freq = Math.max(1, (intensity / 5) * scale); // Scale frequency? No, freq is wavelength divisor. 
-    // sin(y / freq). If y doubles, freq must double to keep same wave count.
-    const amp = (intensity / 2) * scale;
+
+    // Intensity = Amplitude, Threshold = Frequency
+    // Lower threshold = higher frequency (more waves)
+    const freq = Math.max(1, 100 * scale - (threshold * 0.9 * scale));
+    const amp = (intensity * 2) * scale;
+    const phase = this.rand() * Math.PI * 2;
 
     for (let y = 0; y < height; y++) {
-      const xOffset = Math.sin(y / freq) * amp;
+      let xOffset = Math.sin((y / freq) + phase) * amp;
+      xOffset += Math.cos((y / (freq * 0.5)) - phase) * (amp * 0.2);
+
       for (let x = 0; x < width; x++) {
         const sourceX = Math.floor(x + xOffset);
         if (sourceX >= 0 && sourceX < width) {
@@ -307,105 +378,208 @@ export class GlitchEngine {
     }
   }
 
-  private dataCorruption(imageData: ImageData, intensity: number) {
-    const pixels = imageData.data;
-    const numBlocks = Math.floor(intensity / 2);
-    const width = imageData.width;
-    const height = imageData.height;
-
-    const scale = Math.max(1, width / 800);
-
-    for (let b = 0; b < numBlocks; b++) {
-      const bx = this.rand() * width;
-      const by = this.rand() * height;
-      const bw = this.rand() * (width / 4); // Already relative to width
-      const bh = this.rand() * 20 * scale; // Scale height!
-      const shiftX = (this.rand() - 0.5) * intensity * scale; // Scale shift
-
-      for (let y = Math.floor(by); y < Math.min(height, by + bh); y++) {
-        for (let x = Math.floor(bx); x < Math.min(width, bx + bw); x++) {
-          const i = (y * width + x) * 4;
-          const si = (y * width + Math.floor(Math.max(0, Math.min(width - 1, x + shiftX)))) * 4;
-          pixels[i] = pixels[si];
-          pixels[i + 1] = pixels[si + 1];
-          pixels[i + 2] = pixels[si + 2];
-        }
-      }
-    }
-  }
-
-  private colorBleed(imageData: ImageData, intensity: number) {
+  private dataCorruption(imageData: ImageData, intensity: number, threshold: number) {
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
     const scale = Math.max(1, width / 800);
-    const bleedAmount = Math.floor((intensity / 5) * scale);
 
-    for (let y = 0; y < height; y++) {
-      for (let x = width - 1; x > bleedAmount; x--) {
-        const i = (y * width + x) * 4;
-        const sourceI = (y * width + (x - bleedAmount)) * 4;
-        // Bleed red channel
-        pixels[i] = (pixels[i] + pixels[sourceI]) / 2;
-      }
-    }
-  }
+    // Intensity = Motion Vector Length (number of recursive shifts)
+    const iterations = Math.floor(intensity / 10) + 1;
+    // Threshold = Block Density/Quantity
+    const blockDensity = threshold / 100;
 
-  private compressionHell(imageData: ImageData, intensity: number) {
-    const pixels = imageData.data;
-    const width = imageData.width;
-    const height = imageData.height;
-    const scale = Math.max(1, width / 800);
-    // Base block size on preview resolution (intensity / 10), then scale up
-    const baseBlockSize = Math.max(1, Math.floor(intensity / 10));
-    const blockSize = Math.floor(baseBlockSize * scale);
+    // Use macroblocks (16x16 standard for many codecs, scaled for res)
+    const blockSize = Math.floor(16 * scale);
 
-    for (let y = 0; y < height; y += blockSize) {
-      for (let x = 0; x < width; x += blockSize) {
-        const i = (y * width + x) * 4;
-        const r = pixels[i];
-        const g = pixels[i + 1];
-        const b = pixels[i + 2];
+    // Helper to get pixel from coordinates safely
+    const getPixel = (x: number, y: number) => {
+      const i = (y * width + x) * 4;
+      return [pixels[i], pixels[i + 1], pixels[i + 2]];
+    };
 
-        for (let dy = 0; dy < blockSize && y + dy < height; dy++) {
-          for (let dx = 0; dx < blockSize && x + dx < width; dx++) {
-            const targetI = ((y + dy) * width + (x + dx)) * 4;
-            pixels[targetI] = r;
-            pixels[targetI + 1] = g;
-            pixels[targetI + 2] = b;
+    // Helper to set pixel safely
+    const setPixel = (x: number, y: number, r: number, g: number, b: number) => {
+      if (x < 0 || x >= width || y < 0 || y >= height) return;
+      const i = (y * width + x) * 4;
+      pixels[i] = r;
+      pixels[i + 1] = g;
+      pixels[i + 2] = b;
+    };
+
+    // Partition image into blocks
+    for (let by = 0; by < height; by += blockSize) {
+      for (let bx = 0; bx < width; bx += blockSize) {
+
+        // Randomly choose if this block "moshes"
+        if (this.rand() < blockDensity) {
+
+          // Choose a motion vector for this block
+          const vx = Math.floor((this.rand() - 0.5) * 20 * scale);
+          const vy = Math.floor((this.rand() - 0.5) * 20 * scale);
+
+          if (vx === 0 && vy === 0) continue;
+
+          // Repeat the displacement (iterations) to create the "trail"
+          for (let iter = 0; iter < iterations; iter++) {
+
+            // To mosh, we take the CURRENT data in the block's path and "push" it
+            // This is most easily done by copying the block data and pasting it offset
+            // But we must do it for ALL pixels in the block
+
+            // Optimization: iterate range
+            const startY = Math.max(0, by);
+            const endY = Math.min(height, by + blockSize);
+            const startX = Math.max(0, bx);
+            const endX = Math.min(width, bx + blockSize);
+
+            // Sample the block
+            const blockData: number[][] = [];
+            for (let py = startY; py < endY; py++) {
+              for (let px = startX; px < endX; px++) {
+                const i = (py * width + px) * 4;
+                blockData.push([pixels[i], pixels[i + 1], pixels[i + 2]]);
+              }
+            }
+
+            // Paste the block offset
+            let idx = 0;
+            for (let py = startY; py < endY; py++) {
+              for (let px = startX; px < endX; px++) {
+                const tx = px + vx;
+                const ty = py + vy;
+
+                if (tx >= 0 && tx < width && ty >= 0 && ty < height) {
+                  const targetI = (ty * width + tx) * 4;
+                  const [r, g, b] = blockData[idx];
+
+                  // Overwrite with a slight blend for "persistence"
+                  pixels[targetI] = r;
+                  pixels[targetI + 1] = g;
+                  pixels[targetI + 2] = b;
+                }
+                idx++;
+              }
+            }
           }
         }
       }
     }
   }
 
-  private randomChaos(imageData: ImageData, intensity: number) {
+  private colorBleed(imageData: ImageData, intensity: number, threshold: number) {
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
     const scale = Math.max(1, width / 800);
-    const blockSize = Math.max(1, Math.floor(scale)); // Pixelated noise on high res
 
-    const threshold = 1 - (intensity / 100);
+    // Intensity = Bleed Amount
+    const bleedAmount = Math.floor((intensity / 3) * scale);
+    // Threshold = Ghosting (secondary shift)
+    const ghostShift = Math.floor((threshold / 5) * scale);
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width - bleedAmount; x++) {
+        const i = (y * width + x) * 4;
+        const sourceI = (y * width + (x + bleedAmount)) * 4;
+        pixels[i + 2] = (pixels[i + 2] + pixels[sourceI + 2]) / 2;
+      }
+      for (let x = width - 1; x > bleedAmount; x--) {
+        const i = (y * width + x) * 4;
+        const sourceI = (y * width + (x - bleedAmount)) * 4;
+        pixels[i] = (pixels[i] + pixels[sourceI]) / 2;
+      }
+
+      if (ghostShift > 0) {
+        for (let x = width - 1; x > ghostShift; x--) {
+          const i = (y * width + x) * 4;
+          const sourceI = (y * width + (x - ghostShift)) * 4;
+          pixels[i + 1] = (pixels[i + 1] + pixels[sourceI + 1]) / 1.5;
+        }
+      }
+    }
+  }
+
+  private compressionHell(imageData: ImageData, intensity: number, threshold: number) {
+    const pixels = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+    const scale = Math.max(1, width / 800);
+
+    // Intensity = Block size (8x8 is JPEG standard, we scale it)
+    const blockSize = Math.max(2, Math.floor((4 + (intensity / 10)) * scale));
+    // Threshold = Artifacting (Compression level)
+    const factor = (threshold / 10);
 
     for (let y = 0; y < height; y += blockSize) {
       for (let x = 0; x < width; x += blockSize) {
+        let rSum = 0, gSum = 0, bSum = 0;
+        let count = 0;
 
-        if (this.rand() > threshold) {
+        // Calculate average for the block
+        for (let dy = 0; dy < blockSize && y + dy < height; dy++) {
+          for (let dx = 0; dx < blockSize && x + dx < width; dx++) {
+            const i = ((y + dy) * width + (x + dx)) * 4;
+            rSum += pixels[i];
+            gSum += pixels[i + 1];
+            bSum += pixels[i + 2];
+            count++;
+          }
+        }
+
+        const rAvg = rSum / count;
+        const gAvg = gSum / count;
+        const bAvg = bSum / count;
+
+        // Apply average with JPEG-like "ringing" noise based on threshold
+        for (let dy = 0; dy < blockSize && y + dy < height; dy++) {
+          for (let dx = 0; dx < blockSize && x + dx < width; dx++) {
+            const i = ((y + dy) * width + (x + dx)) * 4;
+
+            // Quantization effect
+            const q = 1 + factor * 2;
+            let nr = Math.floor(rAvg / q) * q;
+            let ng = Math.floor(gAvg / q) * q;
+            let nb = Math.floor(bAvg / q) * q;
+
+            // Add pseudo-DCT ringing noise
+            if (factor > 2) {
+              const ring = Math.sin((dx + dy) * (1 / scale)) * (factor * 2);
+              nr += ring;
+              ng += ring;
+              nb += ring;
+            }
+
+            pixels[i] = Math.min(255, Math.max(0, nr));
+            pixels[i + 1] = Math.min(255, Math.max(0, ng));
+            pixels[i + 2] = Math.min(255, Math.max(0, nb));
+          }
+        }
+      }
+    }
+  }
+
+  private randomChaos(imageData: ImageData, intensity: number, threshold: number) {
+    const pixels = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+    const scale = Math.max(1, width / 800);
+
+    // Threshold = Jitter/BlockSize
+    const blockSize = Math.max(1, Math.floor((threshold / 10) * scale));
+    // Intensity = Entropy (Probability)
+    const probThreshold = 1 - Math.pow(intensity / 100, 0.5) * 0.5;
+
+    for (let y = 0; y < height; y += blockSize) {
+      for (let x = 0; x < width; x += blockSize) {
+        if (this.rand() > probThreshold) {
           const chaos = this.rand();
-
-          // Apply chaos to the whole block
           for (let dy = 0; dy < blockSize && y + dy < height; dy++) {
             for (let dx = 0; dx < blockSize && x + dx < width; dx++) {
               const i = ((y + dy) * width + (x + dx)) * 4;
-
-              if (chaos < 0.3) {
-                pixels[i] = 255 - pixels[i]; // Invert
-              } else if (chaos < 0.6) {
-                pixels[i + 1] = pixels[i + 2]; // Swizzling
-              } else {
-                pixels[i + 2] = 255; // Blue spike
-              }
+              if (chaos < 0.3) { pixels[i] = 255 - pixels[i]; }
+              else if (chaos < 0.6) { pixels[i + 1] = pixels[i + 2]; }
+              else { pixels[i + 2] = 255; }
             }
           }
         }
