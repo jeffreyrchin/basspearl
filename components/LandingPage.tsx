@@ -125,7 +125,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
         <div className="relative z-10 w-full max-w-4xl text-center flex flex-col items-center">
           <h2 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tighter uppercase mb-8 md:mb-12 max-w-3xl leading-none">
-            Make Glitch Art
+            Create Glitch Art
             <br />
             <span className="text-primary active-glow italic">in seconds</span>
           </h2>

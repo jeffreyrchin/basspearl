@@ -274,7 +274,14 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
                 </div>
               </div>
               <button
-                onClick={(e) => { e.stopPropagation(); handleEffectChange(idx, { active: !effect.active }); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const newEffects = [...state.effects];
+                  newEffects[idx] = { ...newEffects[idx], active: !effect.active };
+                  onUpdateState({ effects: newEffects });
+                  trackEvent('effect_applied', { effect_type: newEffects[idx].type, action: newEffects[idx].active ? 'on' : 'off' });
+                  applyGlitches(true, newEffects);
+                }}
                 className="material-symbols-outlined text-[16px]" style={{ color: effect.active ? '#0d7ff2' : 'rgba(255,255,255,0.2)' }}
               >
                 {effect.active ? 'check_circle' : 'circle'}
