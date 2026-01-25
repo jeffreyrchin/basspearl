@@ -146,6 +146,11 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
                                 <ul className="list-disc pl-5 mt-2 space-y-1 text-white/60">
                                     <li><strong>Google Firebase:</strong> Used for authentication. <a href="https://firebase.google.com/terms" className="text-primary hover:underline">Firebase Terms</a>.</li>
                                     <li><strong>Google Analytics (GA4):</strong> Used for usage telemetry and performance monitoring. <a href="https://policies.google.com/privacy" className="text-primary hover:underline">Google Privacy Policy</a>.</li>
+                                    <li><strong>Cloudflare: </strong>Used for content delivery and DDoS protection. Cloudflare may collect certain information such as
+                                        IP addresses, system configuration information, and other
+                                        information about traffic to and from our website. <a href="https://www.cloudflare.com/privacy/" className="text-primary hover:underline">Cloudflare Privacy Policy</a>.</li>
+                                    <li><strong>GitHub: </strong>Used for source code hosting and version control. <a href="https://docs.github.com/en/site-policy/github-terms/github-terms-of-service" className="text-primary hover:underline">GitHub Terms of Service</a>.</li>
+                                    <li><strong>Google Fonts: </strong>Used for loading custom fonts. <a href="https://developers.google.com/fonts/faq/privacy" className="text-primary hover:underline">Google Fonts Privacy Policy</a>.</li>
                                 </ul>
                             </div>
 
