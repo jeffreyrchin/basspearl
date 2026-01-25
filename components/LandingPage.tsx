@@ -135,7 +135,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`w-full min-h-[400px] md:min-h-[500px] glass-panel rounded-2xl md:rounded-3xl upload-zone-glow flex flex-col items-center justify-center border-dashed border-2 transition-all group overflow-hidden relative ${hasAcceptedTerms ? 'border-primary/30 hover:border-primary/60 cursor-pointer' : 'border-white/5 cursor-default opacity-80'} ${isDragging ? 'bg-primary/10 border-primary scale-[1.02]' : ''}`}
+            className={`w-full min-h-[400px] md:min-h-[500px] glass-panel rounded-2xl md:rounded-3xl upload-zone-glow flex flex-col items-center justify-center border-dashed border-2 transition-all group overflow-hidden relative border-primary/30 ${hasAcceptedTerms ? 'hover:border-primary/60 cursor-pointer' : 'cursor-default'} ${isDragging ? 'bg-primary/10 border-primary scale-[1.02]' : ''}`}
           >
             <input
               type="file"
