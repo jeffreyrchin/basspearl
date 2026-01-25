@@ -31,8 +31,10 @@ export interface GlitchInfo {
 }
 
 export interface GlitchState {
-  originalImage: string | null;
+  originalImage: string | null;  // Full Resolution Master
+  previewImage: string | null;   // 1280px Proxy for Editor
   processedImage: string | null;
+  processedImagePreview?: string | null;  // 640px preview for display
   history: GlitchInfo[];
   historyIndex: number;
   effects: EffectConfig[];

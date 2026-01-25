@@ -6,10 +6,14 @@ interface ShareModalProps {
     isOpen: boolean;
     onClose: () => void;
     imageUrl: string | null;
+    previewUrl?: string | null;
 }
 
-const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, imageUrl }) => {
+const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, imageUrl, previewUrl }) => {
     const [copyStatus, setCopyStatus] = useState<'idle' | 'copying' | 'copied' | 'error'>('idle');
+
+    // Use previewUrl for display if available, otherwise fallback to full res
+    const displayUrl = previewUrl || imageUrl;
 
     if (!isOpen || !imageUrl) return null;
 
@@ -87,7 +91,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, imageUrl }) =>
 
                 {/* Preview */}
                 <div className="aspect-video w-full bg-black/50 rounded-xl mb-6 overflow-hidden border border-white/5 relative group">
-                    <img src={imageUrl} alt="Glitch Preview" className="w-full h-full object-contain" />
+                    <img src={displayUrl || imageUrl} alt="Glitch Preview" className="w-full h-full object-contain" />
 
                 </div>
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GlitchState, EffectConfig, AppView } from '../types';
 import { EFFECT_METADATA, PRESETS } from '../constants';
-import { glitchEngine } from '../services/glitchEngine';
 import { useAuth } from '../context/AuthContext';
 
 import AuthModal from './AuthModal';
@@ -27,75 +26,142 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [showMobileEffects, setShowMobileEffects] = useState(false);
-  // Removed highRes export state for simplicity
 
-  // New State for Preview
-  const [isPreviewing, setIsPreviewing] = useState(false);
-
-  // History Navigation Ref
-  const isNavigatingHistory = useRef(false);
+  // Worker Reference
+  const workerRef = useRef<Worker | null>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  const handleEffectChange = async (index: number, updates: Partial<EffectConfig>) => {
+  // Initialize Worker
+  useEffect(() => {
+    try {
+      const worker = new Worker(new URL('../services/glitchWorker.ts', import.meta.url), { type: 'module' });
+      workerRef.current = worker;
+
+      worker.onmessage = (e) => {
+        const { success, imageBitmap, error } = e.data;
+        if (success && imageBitmap && previewCanvasRef.current) {
+          const canvas = previewCanvasRef.current;
+          if (canvas.width !== imageBitmap.width || canvas.height !== imageBitmap.height) {
+            canvas.width = imageBitmap.width;
+            canvas.height = imageBitmap.height;
+          }
+
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(imageBitmap, 0, 0);
+
+            // Clear any existing timeout
+            if (renderingTimeoutRef.current) clearTimeout(renderingTimeoutRef.current);
+
+            isProcessingRef.current = false;
+
+            // If no more work, schedule turning off the indicator
+            // If work arrives during this 200ms, processPending will cancel this timeout
+            if (!pendingStateRef.current) {
+              renderingTimeoutRef.current = setTimeout(() => {
+                setIsProcessing(false);
+              }, 200);
+            }
+          }
+
+          processPending(); // Loop
+        } else if (error) {
+          console.error('Worker Error:', error);
+          if (renderingTimeoutRef.current) clearTimeout(renderingTimeoutRef.current);
+          renderingTimeoutRef.current = setTimeout(() => {
+            setIsProcessing(false);
+          }, 200);
+          isProcessingRef.current = false;
+        }
+      };
+
+      return () => {
+        worker.terminate();
+      };
+    } catch (err) {
+      console.error("Failed to initialize worker", err);
+    }
+  }, []);
+
+  // Throttle refs
+  const lastProcessTimeRef = useRef(0);
+  const throttleFrameRef = useRef<number | null>(null);
+
+  // Hysteresis ref for rendering indicator to prevent flicker
+  const renderingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleEffectChange = async (index: number, updates: Partial<EffectConfig>, shouldThrottle: boolean = true) => {
     const newEffects = [...state.effects];
-
-    // Every effect MUST have a seed for determinism
     const seed = newEffects[index].seed ?? Math.floor(Math.random() * 1000000);
-
     newEffects[index] = { ...newEffects[index], ...updates, seed };
 
-    // Track effect usage
     if (updates.active !== undefined) {
       trackEvent('effect_applied', { effect_type: newEffects[index].type, action: updates.active ? 'on' : 'off' });
-    } else if (updates.intensity !== undefined) {
-      // Small debounce logic or just track significant changes? 
-      // For now, simple track on mouseUp/touchEnd in the UI component is better.
     }
 
-    // Determine if we should force a history commit (e.g. on toggle)
-    const isToggle = updates.active !== undefined;
-    if (isToggle) {
-      applyGlitches(true, newEffects);
-    } else {
-      onUpdateState({ effects: newEffects });
+    onUpdateState({ effects: newEffects });
+
+    if (throttleFrameRef.current !== null) {
+      cancelAnimationFrame(throttleFrameRef.current);
     }
+
+    throttleFrameRef.current = requestAnimationFrame(() => {
+      const now = performance.now();
+      const timeSinceLastProcess = now - lastProcessTimeRef.current;
+
+      if (timeSinceLastProcess >= 32) {
+        lastProcessTimeRef.current = now;
+        applyGlitches(false, newEffects);
+      } else {
+        throttleFrameRef.current = requestAnimationFrame(() => {
+          applyGlitches(false, newEffects);
+        });
+      }
+    });
   };
 
-  // Refs for processing loop
+  // Processing Loop Logic
   const isProcessingRef = useRef(false);
   const pendingStateRef = useRef<{ effects: EffectConfig[] } | null>(null);
 
   const processPending = async () => {
-    if (isProcessingRef.current || !pendingStateRef.current || !state.originalImage) return;
+    if (isProcessingRef.current || !pendingStateRef.current || !state.originalImage || !workerRef.current) return;
 
-    // Lock
+    // Clear any pending cooldown timeout - we are working again!
+    if (renderingTimeoutRef.current) {
+      clearTimeout(renderingTimeoutRef.current);
+      renderingTimeoutRef.current = null;
+    }
+
     isProcessingRef.current = true;
     setIsProcessing(true);
 
     const targetEffects = pendingStateRef.current.effects;
-    pendingStateRef.current = null; // Clear pending
+    pendingStateRef.current = null;
 
     try {
-      // Direct render to canvas for preview - Zero GC Allocation
-      // Consistently render at full resolution to avoid jumps
-      if (previewCanvasRef.current) {
-        await glitchEngine.renderToCanvas(
-          previewCanvasRef.current,
-          state.originalImage,
-          targetEffects,
-          !user
-          // No maxSize means full resolution!
-        );
-      }
+      const img = new Image();
+      img.src = state.originalImage;
+      await img.decode();
+      const bitmap = await createImageBitmap(img);
+
+      workerRef.current.postMessage({
+        id: Date.now().toString(),
+        type: 'PROCESS',
+        imageBitmap: bitmap,
+        effects: targetEffects,
+        shouldWatermark: !user
+      }, [bitmap]);
+
     } catch (err) {
       console.error(err);
-    } finally {
       isProcessingRef.current = false;
-      setIsProcessing(false);
 
-      if (pendingStateRef.current) {
-        requestAnimationFrame(processPending);
-      }
+      // Error case - also use hysteresis
+      if (renderingTimeoutRef.current) clearTimeout(renderingTimeoutRef.current);
+      renderingTimeoutRef.current = setTimeout(() => {
+        setIsProcessing(false);
+      }, 200);
     }
   };
 
@@ -105,85 +171,63 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     const targetEffects = overrideEffects || state.effects;
 
     if (commitToHistory) {
-      // History is now lean (effects only), no need for a redundant render here
-      // because the previewCanvas is already rendering the latest effects at full-res.
-      pendingStateRef.current = null;
-      try {
-        const currentHistoryItem = state.history[state.historyIndex];
-        const effectsChanged = !currentHistoryItem || JSON.stringify(currentHistoryItem.effects) !== JSON.stringify(targetEffects);
+      const currentHistoryItem = state.history[state.historyIndex];
+      const effectsChanged = !currentHistoryItem || JSON.stringify(currentHistoryItem.effects) !== JSON.stringify(targetEffects);
 
-        if (effectsChanged) {
-          const newHistory = state.history.slice(0, state.historyIndex + 1);
-          newHistory.push({ effects: targetEffects });
+      if (effectsChanged) {
+        const newHistory = state.history.slice(0, state.historyIndex + 1);
+        newHistory.push({ effects: targetEffects });
+        if (newHistory.length > 30) newHistory.shift();
 
-          if (newHistory.length > 30) {
-            newHistory.shift();
-          }
-
-          onUpdateState({
-            history: newHistory,
-            historyIndex: newHistory.length - 1,
-            effects: targetEffects
-          });
-        } else {
-          onUpdateState({ effects: targetEffects });
-        }
-      } catch (err) {
-        console.error(err);
+        onUpdateState({
+          history: newHistory,
+          historyIndex: newHistory.length - 1,
+          effects: targetEffects
+        });
+      } else {
+        onUpdateState({ effects: targetEffects });
       }
-      return;
     }
 
-    // View Only Update - Queue it
     pendingStateRef.current = { effects: targetEffects };
     if (!isProcessingRef.current) {
-      requestAnimationFrame(processPending);
+      processPending();
     }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (!previewCanvasRef.current) return;
-    const highResUrl = previewCanvasRef.current.toDataURL('image/png');
-    onUpdateState({ processedImage: highResUrl });
+
+    // WYSIWYG: The canvas IS the full resolution result
+    const canvasUrl = previewCanvasRef.current.toDataURL('image/png');
+
+    onUpdateState({
+      processedImage: canvasUrl,
+      processedImagePreview: canvasUrl
+    });
     setShareModalOpen(true);
   };
 
-
-  // No longer syncing from state.processedImage as it's too heavy for high-res. 
-  // Canvas is updated directly by glitchEngine.renderToCanvas.
-
   const handleUndo = () => {
     if (state.historyIndex > 0) {
-      isNavigatingHistory.current = true;
       const prevIndex = state.historyIndex - 1;
       const prevItem = state.history[prevIndex];
-      trackEvent('effect_applied', { effect_type: 'undo', index: prevIndex });
-
-      onUpdateState({
-        historyIndex: prevIndex,
-        effects: prevItem.effects
-      });
-
-      // Immediate render for fast feedback
+      onUpdateState({ historyIndex: prevIndex, effects: prevItem.effects });
       applyGlitches(false, prevItem.effects);
     }
   };
 
   const handleRedo = () => {
     if (state.historyIndex < state.history.length - 1) {
-      isNavigatingHistory.current = true;
       const nextIndex = state.historyIndex + 1;
       const nextItem = state.history[nextIndex];
-      trackEvent('effect_applied', { effect_type: 'redo', index: nextIndex });
-
-      onUpdateState({
-        historyIndex: nextIndex,
-        effects: nextItem.effects
-      });
-
-      // Immediate render for fast feedback
+      onUpdateState({ historyIndex: nextIndex, effects: nextItem.effects });
       applyGlitches(false, nextItem.effects);
     }
+  };
+
+  const handleHistoryCommit = () => {
+    applyGlitches(true);
   };
 
   const openAuthModal = (mode: 'login' | 'signup') => {
@@ -194,7 +238,6 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const handleApplyPreset = (presetName: string) => {
     const presetEffects = PRESETS[presetName];
     if (presetEffects) {
-      // Ensure ALL effects have seeds for determinism
       const seededEffects = presetEffects.map(e => ({
         ...e,
         seed: e.seed ?? Math.floor(Math.random() * 1000000)
@@ -203,106 +246,50 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       onUpdateState({ effects: seededEffects });
       trackEvent('effect_applied', { effect_type: 'preset', preset_name: presetName });
       applyGlitches(true, seededEffects);
-      setActiveTab('layers'); // Switch back to layers to see effects
+      setActiveTab('layers');
     }
   };
 
+  // Initial load
   useEffect(() => {
-    if (isNavigatingHistory.current) {
-      isNavigatingHistory.current = false;
-      return;
-    }
-    // Instant update without history commit
     applyGlitches(false);
-  }, [state.effects, user]);
-
-  const handleHistoryCommit = () => {
-    const currentEffect = state.effects[state.currentEffectIndex];
-    if (currentEffect) {
-      trackEvent('effect_applied', {
-        effect_type: currentEffect.type,
-        intensity: currentEffect.intensity,
-        threshold: currentEffect.threshold
-      });
-    }
-    applyGlitches(true);
-  };
-
-
+  }, [state.effects, user]); // Run when effects change or user status changes (watermark)
 
   const renderEffectsList = () => (
     <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
       {state.effects.map((effect, idx) => {
         const meta = EFFECT_METADATA[effect.type];
         const isActive = idx === state.currentEffectIndex;
-        const matchesSearch = meta.label.toLowerCase().includes(searchTerm.toLowerCase());
-
-        if (!matchesSearch && searchTerm !== '') return null;
+        if (!meta.label.toLowerCase().includes(searchTerm.toLowerCase()) && searchTerm !== '') return null;
 
         return (
-          <div
-            key={effect.type}
-            className={`p-3 rounded-xl transition-all ${isActive ? 'bg-primary/10 border border-primary/20' : 'hover:bg-white/5 border border-transparent hover:border-white/5'}`}
-          >
-            <div
-              onClick={() => onUpdateState({ currentEffectIndex: isActive ? -1 : idx })}
-              className="flex items-center justify-between mb-2 cursor-pointer"
-            >
+          <div key={effect.type} className={`p-3 rounded-xl transition-all ${isActive ? 'bg-primary/10 border border-primary/20' : 'hover:bg-white/5 border border-transparent hover:border-white/5'}`}>
+            <div onClick={() => onUpdateState({ currentEffectIndex: isActive ? -1 : idx })} className="flex items-center justify-between mb-2 cursor-pointer">
               <div className="flex items-center gap-3">
                 <div className={`size-8 rounded-lg flex items-center justify-center transition-colors ${isActive ? 'bg-primary text-white cyber-glow' : 'bg-white/5 text-white/60'}`}>
                   <span className="material-symbols-outlined text-[20px]">{meta.icon}</span>
                 </div>
                 <div>
                   <p className={`text-[11px] font-bold uppercase tracking-wider ${isActive ? 'text-primary active-glow' : 'text-white/80'}`}>{meta.label}</p>
-                  <p className="text-[9px] text-white/40 font-medium">{meta.subLabel}</p>
                 </div>
               </div>
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEffectChange(idx, { active: !effect.active });
-                }}
-                className="material-symbols-outlined text-[16px] transition-colors"
-                style={{ color: effect.active ? '#0d7ff2' : 'rgba(255,255,255,0.2)' }}
+                onClick={(e) => { e.stopPropagation(); handleEffectChange(idx, { active: !effect.active }); }}
+                className="material-symbols-outlined text-[16px]" style={{ color: effect.active ? '#0d7ff2' : 'rgba(255,255,255,0.2)' }}
               >
                 {effect.active ? 'check_circle' : 'circle'}
               </button>
             </div>
-
             {isActive && (
-              <div className="space-y-4 px-1 pb-2 mt-4 animate-in fade-in slide-in-from-top-1 duration-200">
+              <div className="space-y-4 px-1 pb-2 mt-4">
                 <div className="space-y-2">
-                  <div className="flex justify-between text-[10px] font-bold text-white/60">
-                    <span>{meta.intensityLabel?.toUpperCase() || 'INTENSITY'}</span>
-                    <span>{effect.intensity}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={effect.intensity}
-                    onChange={(e) => handleEffectChange(idx, { intensity: parseInt(e.target.value) })}
-                    onMouseUp={handleHistoryCommit}
-                    onTouchEnd={handleHistoryCommit}
-                    className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-primary"
-                  />
+                  <div className="flex justify-between text-[10px] font-bold text-white/60"><span>INTENSITY</span><span>{effect.intensity}%</span></div>
+                  <input type="range" min="0" max="100" value={effect.intensity} onChange={(e) => handleEffectChange(idx, { intensity: parseInt(e.target.value) }, true)} onMouseUp={handleHistoryCommit} onTouchEnd={handleHistoryCommit} className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-primary" />
                 </div>
                 {(meta.showThreshold ?? true) && (
                   <div className="space-y-2">
-                    <div className="flex justify-between text-[10px] font-bold text-white/60">
-                      <span>{meta.thresholdLabel?.toUpperCase() || 'THRESHOLD'}</span>
-                      <span>{effect.threshold}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={effect.threshold}
-                      onChange={(e) => handleEffectChange(idx, { threshold: parseInt(e.target.value) })}
-                      onMouseUp={handleHistoryCommit}
-                      onTouchEnd={handleHistoryCommit}
-                      className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-primary"
-                    />
+                    <div className="flex justify-between text-[10px] font-bold text-white/60"><span>THRESHOLD</span><span>{effect.threshold}%</span></div>
+                    <input type="range" min="0" max="100" value={effect.threshold} onChange={(e) => handleEffectChange(idx, { threshold: parseInt(e.target.value) }, true)} onMouseUp={handleHistoryCommit} onTouchEnd={handleHistoryCommit} className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-primary" />
                   </div>
                 )}
               </div>
@@ -316,25 +303,16 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const renderPresetsList = () => (
     <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
       {Object.entries(PRESETS).map(([name, config]) => (
-        <button
-          key={name}
-          onClick={() => handleApplyPreset(name)}
-          className="w-full p-4 rounded-xl border border-white/10 hover:border-primary/50 hover:bg-white/5 transition-all group text-left relative overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/0 to-primary/0 group-hover:from-primary/10 group-hover:to-transparent transition-all"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-bold uppercase tracking-widest text-white">{name.replace('_', ' ')}</span>
-              <span className="material-symbols-outlined text-[16px] text-primary opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-0 -translate-x-2">arrow_forward</span>
-            </div>
-            <div className="text-[10px] text-white/40">
-              {config.filter(e => e.active).length} Active Effects
-            </div>
-          </div>
+        <button key={name} onClick={() => handleApplyPreset(name)} className="w-full p-4 rounded-xl border border-white/10 hover:border-primary/50 hover:bg-white/5 transition-all text-left">
+          <span className="text-xs font-bold uppercase tracking-widest text-white">{name.replace('_', ' ')}</span>
         </button>
       ))}
     </div>
   );
+
+  // New State for Preview (Previewing Original vs Processed)
+  // We repurpose "Preview" button to show Original Image temporarily
+  const [isPreviewingOriginal, setIsPreviewingOriginal] = useState(false);
 
   return (
     <div className="fixed inset-0 flex h-screen w-full flex-col overflow-hidden bg-background-dark">
@@ -342,231 +320,119 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       <header className="flex items-center justify-between px-4 md:px-6 py-4 z-50 border-b border-white/5 bg-background-dark/80 backdrop-blur-md shrink-0">
         <div className="flex items-center gap-4 md:gap-6">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate(AppView.LANDING)}>
-
             <h2 className="text-lg md:text-xl font-bold tracking-tighter uppercase">Glitch<span className="text-primary">Brain</span></h2>
           </div>
           <div className="h-4 w-px bg-white/10 hidden md:block"></div>
           <nav className="hidden md:flex gap-6 text-sm font-medium tracking-wide text-white/50">
-            <button
-              className={`uppercase hover:text-primary transition-colors ${activeTab === 'layers' ? 'text-primary active-glow' : ''}`}
-              onClick={() => setActiveTab('layers')}
-            >
-              Layers
-            </button>
-            <button
-              className={`uppercase hover:text-primary transition-colors ${activeTab === 'presets' ? 'text-primary active-glow' : ''}`}
-              onClick={() => setActiveTab('presets')}
-            >
-              Presets
-            </button>
+            <button className={`uppercase hover:text-primary transition-colors ${activeTab === 'layers' ? 'text-primary active-glow' : ''}`} onClick={() => setActiveTab('layers')}>Layers</button>
+            <button className={`uppercase hover:text-primary transition-colors ${activeTab === 'presets' ? 'text-primary active-glow' : ''}`} onClick={() => setActiveTab('presets')}>Presets</button>
           </nav>
-          {/* Mobile Effects Toggle */}
-          <button
-            onClick={() => setShowMobileEffects(!showMobileEffects)}
-            className="lg:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest"
-          >
-            <span className="material-symbols-outlined text-[18px]">tune</span>
-            Effects
-          </button>
+          <button onClick={() => setShowMobileEffects(!showMobileEffects)} className="lg:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 uppercase text-xs font-bold">Effects</button>
         </div>
         <div className="flex items-center gap-3 md:gap-4">
-          <UserMenu
-            onLoginClick={() => openAuthModal('login')}
-            onSignupClick={() => openAuthModal('signup')}
-          />
+          <UserMenu onLoginClick={() => openAuthModal('login')} onSignupClick={() => openAuthModal('signup')} />
         </div>
       </header>
 
-      {/* Main Content - Flex Layout */}
+      {/* Main Content */}
       <main className="flex flex-1 relative bg-background-dark grid-bg overflow-hidden faed-in">
-        {/* Canvas Area */}
         <div className="flex-1 flex flex-col items-center justify-center p-0 overflow-hidden relative">
-          {/* Canvas Controls - Centered between header and image */}
           <div className="w-full shrink-0 h-12 md:h-14 flex items-center justify-center z-30">
             <div className="flex items-center gap-1.5 glass-panel p-1.5 rounded-xl shadow-lg border border-white/10 scale-90 md:scale-100">
-              <button
-                onClick={handleUndo}
-                disabled={state.historyIndex <= 0}
-                className={`size-8 flex items-center justify-center rounded-lg transition-colors ${state.historyIndex <= 0 ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
-                title="Undo"
-              >
-                <span className="material-symbols-outlined text-[20px] leading-none">undo</span>
-              </button>
-              <button
-                onClick={handleRedo}
-                disabled={state.historyIndex >= state.history.length - 1}
-                className={`size-8 flex items-center justify-center rounded-lg transition-colors ${state.historyIndex >= state.history.length - 1 ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
-                title="Redo"
-              >
-                <span className="material-symbols-outlined text-[20px] leading-none">redo</span>
-              </button>
+              <button onClick={handleUndo} disabled={state.historyIndex <= 0} className={`size-8 flex items-center justify-center rounded-lg ${state.historyIndex <= 0 ? 'text-white/20' : 'text-white/60 hover:text-white'}`}><span className="material-symbols-outlined text-[20px]">undo</span></button>
+              <button onClick={handleRedo} disabled={state.historyIndex >= state.history.length - 1} className={`size-8 flex items-center justify-center rounded-lg ${state.historyIndex >= state.history.length - 1 ? 'text-white/20' : 'text-white/60 hover:text-white'}`}><span className="material-symbols-outlined text-[20px]">redo</span></button>
               <div className="w-px h-4 bg-white/10 mx-1"></div>
               <button
-                onMouseDown={() => setIsPreviewing(true)}
-                onMouseUp={() => setIsPreviewing(false)}
-                onMouseLeave={() => setIsPreviewing(false)}
-                className={`flex items-center gap-2 px-3 md:px-4 h-8 rounded-lg text-white text-[10px] font-bold uppercase tracking-[0.15em] cyber-glow transition-all ${isPreviewing ? 'bg-white text-black' : 'bg-primary text-white'}`}
+                onMouseDown={() => setIsPreviewingOriginal(true)}
+                onMouseUp={() => setIsPreviewingOriginal(false)}
+                onMouseLeave={() => setIsPreviewingOriginal(false)}
+                className={`flex items-center gap-2 px-3 md:px-4 h-8 rounded-lg text-white text-[10px] font-bold uppercase tracking-[0.15em] cyber-glow transition-all ${isPreviewingOriginal ? 'bg-white text-black' : 'bg-primary text-white'}`}
               >
                 <span className="material-symbols-outlined text-[16px]">compare</span>
-                <span className="hidden sm:inline">{isPreviewing ? 'Original' : 'Preview'}</span>
+                <span className="hidden sm:inline">{isPreviewingOriginal ? 'Original' : 'Preview'}</span>
               </button>
               <div className="w-px h-4 bg-white/10 mx-1"></div>
-              <button
-                onClick={handleShare}
-                className="flex items-center gap-2 px-3 md:px-4 h-8 rounded-lg bg-primary text-white text-[10px] font-bold uppercase tracking-[0.15em] cyber-glow transition-all hover:bg-primary/80"
-              >
+              <button onClick={handleShare} className="flex items-center gap-2 px-3 md:px-4 h-8 rounded-lg bg-primary text-white text-[10px] font-bold uppercase tracking-[0.15em] cyber-glow hover:bg-primary/80">
                 <span className="material-symbols-outlined text-[16px]">download</span>
                 <span className="hidden sm:inline">Export</span>
               </button>
             </div>
           </div>
 
-          {/* Image Canvas Container */}
           <div className="relative w-full h-full flex-1 min-h-0 overflow-hidden group border-white/5 bg-black/5 flex items-center justify-center">
-            {/* Base Canvas */}
             <canvas
               ref={previewCanvasRef}
-              className={`max-w-full max-h-full object-contain transition-opacity duration-300 shadow-2xl rounded-lg ${isProcessing && !isPreviewing ? 'opacity-50' : 'opacity-100'} ${isPreviewing ? 'hidden' : ''}`}
+              className={`max-w-full max-h-full object-contain transition-all duration-150 shadow-2xl rounded-lg ${isProcessing && !isPreviewingOriginal ? 'opacity-90' : 'opacity-100'} ${isPreviewingOriginal ? 'hidden' : ''}`}
+              style={{ willChange: 'contents' }}
             />
 
-            {/* Original Image Overlay for "Compare" */}
-            {isPreviewing && state.originalImage && (
-              <img
-                src={state.originalImage}
-                className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
-                alt="Original"
-              />
+            {isPreviewingOriginal && state.originalImage && (
+              <img src={state.originalImage} className="max-w-full max-h-full object-contain shadow-2xl rounded-lg" alt="Original" />
             )}
 
             <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay bg-gradient-to-t from-primary/20 to-transparent"></div>
 
-
-
-            {isProcessing && !isPreviewing && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
-                <div className="flex flex-col items-center gap-2">
-                  <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-[10px] font-mono text-primary animate-pulse uppercase tracking-[0.2em]">Processing...</span>
-                </div>
+            {isProcessing && !isPreviewingOriginal && (
+              <div className="absolute top-4 right-4 flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+                <div className="size-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-[10px] font-mono text-primary animate-pulse uppercase tracking-widest">Rendering...</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Desktop Sidebar - Fixed Width, Scrollable */}
         <aside className="w-80 shrink-0 glass-panel flex flex-col border-l border-white/10 shadow-2xl h-full hidden lg:flex">
-          {/* Tab Header for Mobile/Search */}
           <div className="p-5 border-b border-white/5 shrink-0">
             <div className="flex gap-2 mb-4">
-              <button
-                onClick={() => setActiveTab('layers')}
-                className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors ${activeTab === 'layers' ? 'bg-primary text-white' : 'bg-white/5 text-white/40 hover:text-white'}`}
-              >
-                Layers
-              </button>
-              <button
-                onClick={() => setActiveTab('presets')}
-                className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors ${activeTab === 'presets' ? 'bg-primary text-white' : 'bg-white/5 text-white/40 hover:text-white'}`}
-              >
-                Presets
-              </button>
+              <button onClick={() => setActiveTab('layers')} className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors ${activeTab === 'layers' ? 'bg-primary text-white' : 'bg-white/5 text-white/40 hover:text-white'}`}>Layers</button>
+              <button onClick={() => setActiveTab('presets')} className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors ${activeTab === 'presets' ? 'bg-primary text-white' : 'bg-white/5 text-white/40 hover:text-white'}`}>Presets</button>
             </div>
-
             {activeTab === 'layers' && (
               <div className="relative flex items-center">
                 <span className="material-symbols-outlined absolute left-3 text-white/40 text-[20px]">search</span>
-                <input
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-white/5 border-none rounded-lg pl-10 pr-4 py-2 text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-primary transition-all uppercase placeholder:text-white/20"
-                  placeholder="SEARCH EFFECTS..."
-                  type="text"
-                />
+                <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white/5 border-none rounded-lg pl-10 pr-4 py-2 text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-primary uppercase placeholder:text-white/20" placeholder="SEARCH EFFECTS..." type="text" />
               </div>
             )}
           </div>
-
           {activeTab === 'layers' ? renderEffectsList() : renderPresetsList()}
-
           {!user && (
             <div className="p-3 mt-auto border-t border-white/5 bg-primary/5">
               <div className="flex items-start gap-2 text-white/60 text-[10px] leading-tight font-medium">
                 <span className="material-symbols-outlined text-[14px] text-primary shrink-0">info</span>
-                <p>
-                  Watermark active. <button onClick={() => openAuthModal('login')} className="text-primary font-bold hover:underline cursor-pointer">Sign in</button> to remove.
-                </p>
+                <p>Watermark active. <button onClick={() => openAuthModal('login')} className="text-primary font-bold hover:underline cursor-pointer">Sign in</button> to remove.</p>
               </div>
             </div>
           )}
         </aside>
 
-        {/* Mobile Effects Panel */}
         {showMobileEffects && (
           <div className="fixed inset-0 z-[100] lg:hidden">
-            <div
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
-              onClick={() => setShowMobileEffects(false)}
-            />
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setShowMobileEffects(false)} />
             <div className="absolute inset-x-0 bottom-0 glass-panel rounded-t-3xl border-t border-white/10 max-h-[80vh] flex flex-col animate-in slide-in-from-bottom duration-300">
-              {/* Handle */}
-              <div className="flex justify-center p-2">
-                <div className="w-12 h-1 bg-white/20 rounded-full"></div>
-              </div>
-
-              {/* Header */}
+              <div className="flex justify-center p-2"><div className="w-12 h-1 bg-white/20 rounded-full"></div></div>
               <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
                 <div className="flex gap-4">
-                  <button
-                    onClick={() => setActiveTab('layers')}
-                    className={`text-xs font-bold uppercase tracking-widest transition-colors ${activeTab === 'layers' ? 'text-primary' : 'text-white/40'}`}
-                  >
-                    Layers
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('presets')}
-                    className={`text-xs font-bold uppercase tracking-widest transition-colors ${activeTab === 'presets' ? 'text-primary' : 'text-white/40'}`}
-                  >
-                    Presets
-                  </button>
+                  <button onClick={() => setActiveTab('layers')} className={`text-xs font-bold uppercase tracking-widest ${activeTab === 'layers' ? 'text-primary' : 'text-white/40'}`}>Layers</button>
+                  <button onClick={() => setActiveTab('presets')} className={`text-xs font-bold uppercase tracking-widest ${activeTab === 'presets' ? 'text-primary' : 'text-white/40'}`}>Presets</button>
                 </div>
-                <button onClick={() => setShowMobileEffects(false)} className="p-1">
-                  <span className="material-symbols-outlined text-white/60">close</span>
-                </button>
+                <button onClick={() => setShowMobileEffects(false)} className="p-1"><span className="material-symbols-outlined text-white/60">close</span></button>
               </div>
-
-              {activeTab === 'layers' && (
-                <div className="p-4 border-b border-white/5 shrink-0">
-                  <div className="relative flex items-center">
-                    <span className="material-symbols-outlined absolute left-3 text-white/40 text-[20px]">search</span>
-                    <input
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-white/5 border-none rounded-lg pl-10 pr-4 py-2 text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-primary transition-all uppercase placeholder:text-white/20"
-                      placeholder="SEARCH EFFECTS..."
-                      type="text"
-                    />
-                  </div>
-                </div>
-              )}
-
               {activeTab === 'layers' ? renderEffectsList() : renderPresetsList()}
             </div>
           </div>
         )}
       </main>
 
-      {/* Footer Status Bar */}
       <footer className="h-6 bg-[#050510] border-t border-white/5 px-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4 text-[11px] font-bold tracking-widest text-white/80 uppercase">
           <div className="flex items-center gap-1.5 mr-4">
             <span className={`size-1.5 rounded-full ${isProcessing ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'} shadow-sm shadow-green-500/50`}></span>
-            {isProcessing ? 'Processing' : 'Ready'}
+            {isProcessing ? 'Rendering' : 'Ready'}
           </div>
           <div className="h-3 w-px bg-white/10"></div>
           <div className="flex gap-4 text-[9px] text-white/40">
             <span>ACTIVE: {state.effects.filter(e => e.active).length}</span>
-            <span className="hidden sm:inline">ENGINE: GLITCH</span>
-            {isPreviewing && <span className="text-primary active-glow">PREVIEWING ORIGINAL</span>}
+            <span className="hidden sm:inline">ENGINE: WEB WORKER (FULL RES)</span>
           </div>
         </div>
         <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest text-white/70 uppercase">
@@ -575,16 +441,8 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
         </div>
       </footer>
 
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        initialMode={authMode}
-      />
-      <ShareModal
-        isOpen={shareModalOpen}
-        onClose={() => setShareModalOpen(false)}
-        imageUrl={state.processedImage}
-      />
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} initialMode={authMode} />
+      <ShareModal isOpen={shareModalOpen} onClose={() => setShareModalOpen(false)} imageUrl={state.processedImage} previewUrl={state.processedImagePreview} />
     </div>
   );
 };

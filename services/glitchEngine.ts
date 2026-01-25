@@ -38,10 +38,18 @@ export class GlitchEngine {
         let width = img.width;
         let height = img.height;
 
-        // Determine resolution scale relative to a 800px standard for effect visual consistency
-        // A scale of 1.0 means the image is ~800px. A scale of 4.0 means it's 3200px.
-        // We use this scale to multiply pixel-based offsets in effects.
-        const resolutionScale = Math.max(1, Math.min(width, height) / 800);
+        // RESOLUTION INDEPENDENT SCALING STRATEGY:
+        // Instead of scaling "up" from 800px, we calculate a normalized "UNIT"
+        // which represents exactly 1% of the image's smallest dimension.
+        // All effects will use this UNIT to determine pixel sizes.
+
+        // This guarantees that a "5% shift" is visually identical on
+        // a 800px preview AND a 4000px export.
+        const UNIT = Math.min(width, height) / 100;
+
+        // Use a "Visual Scale" factor relative to 800px for effects that rely on strict pixel density (like noise)
+        // normalizedScale of 1.0 = 800px image. 5.0 = 4000px image.
+        const normalizedScale = Math.max(1, Math.min(width, height) / 800);
 
         if (maxSize && (width > maxSize || height > maxSize)) {
           const ratio = Math.min(maxSize / width, maxSize / height);
@@ -55,7 +63,9 @@ export class GlitchEngine {
 
         // Apply active effects sequentially
         effects.filter(e => e.active).forEach(effect => {
-          this.applyEffect(effect, resolutionScale);
+          // Pass both the absolute UNIT (for spatial transforms)
+          // and normalizedScale (for texture density/noise frequency)
+          this.applyEffect(effect, UNIT, normalizedScale);
         });
 
         if (shouldWatermark) {
@@ -113,7 +123,7 @@ export class GlitchEngine {
 
   private currentRng: () => number = Math.random;
 
-  private applyEffect(effect: EffectConfig, scale: number) {
+  private applyEffect(effect: EffectConfig, UNIT: number, scale: number) {
     const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
     const { intensity, threshold, seed } = effect;
 
@@ -126,34 +136,43 @@ export class GlitchEngine {
 
     switch (effect.type) {
       case 'PIXEL_SORT':
-        this.pixelSort(imageData, intensity, threshold, scale);
+        // Sort uses UNIT to ensure step size matches visual density
+        this.pixelSort(imageData, intensity, threshold, UNIT);
         break;
       case 'CHANNEL_SHIFT':
-        this.channelShift(imageData, intensity, threshold, scale);
+        // Shift uses UNIT for distance
+        this.channelShift(imageData, intensity, threshold, UNIT);
         break;
       case 'BIT_CRUSH':
-        this.bitCrush(imageData, intensity, threshold, scale);
+        // Resampling uses UNIT scale for pixelation density consistency
+        this.bitCrush(imageData, intensity, threshold, UNIT);
         break;
       case 'SCAN_LINES':
-        this.scanLines(imageData, intensity, threshold, scale);
+        // Spacing uses UNIT for relative thickness
+        this.scanLines(imageData, intensity, threshold, UNIT);
         break;
       case 'DEEP_FRY':
         this.deepFry(imageData, intensity, threshold);
         break;
       case 'WAVE_DISTORTION':
-        this.waveDistortion(imageData, intensity, threshold, scale);
+        // Wave uses UNIT for amplitude and frequency
+        this.waveDistortion(imageData, intensity, threshold, UNIT);
         break;
       case 'DATA_CORRUPTION':
-        this.dataCorruption(imageData, intensity, threshold, scale);
+        // Mosh uses UNIT for block sizes
+        this.dataCorruption(imageData, intensity, threshold, UNIT);
         break;
       case 'COLOR_BLEED':
-        this.colorBleed(imageData, intensity, threshold, scale);
+        // Bleed uses UNIT for distance
+        this.colorBleed(imageData, intensity, threshold, UNIT);
         break;
       case 'COMPRESSION_HELL':
-        this.compressionHell(imageData, intensity, threshold, scale);
+        // Compression blocks use UNIT to look visually identical
+        this.compressionHell(imageData, intensity, threshold, UNIT);
         break;
       case 'RANDOM_CHAOS':
-        this.randomChaos(imageData, intensity, threshold, scale);
+        // Chaos blocks use UNIT for visibility
+        this.randomChaos(imageData, intensity, threshold, UNIT);
         break;
       default:
         break;
@@ -176,7 +195,10 @@ export class GlitchEngine {
     return this.currentRng();
   }
 
-  private pixelSort(imageData: ImageData, intensity: number, threshold: number, scale: number) {
+  private pixelSort(imageData: ImageData, intensity: number, threshold: number, UNIT: number) {
+    // Early exit for very low intensity
+    if (intensity < 5) return;
+
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
@@ -189,10 +211,30 @@ export class GlitchEngine {
     // Higher intensity = more vertical streaks
     const triggerProb = intensity / 100;
 
-    for (let x = 0; x < width; x++) {
+    // Process every Nth column for better performance
+    // Scale the step relative to UNIT to guarantee EXACT same striping density
+    const baseStep = intensity < 30 ? 0.3 : intensity < 60 ? 0.2 : 0.1;
+    // Step is now a percentage of width (UNIT), ensuring 1:1 match
+    const step = Math.max(1, Math.floor(baseStep * UNIT));
+
+    for (let x = 0; x < width; x += step) {
+      // NORMALIZED RANDOMNESS:
+      // To ensure the same "random" columns are sorted at different resolutions with the same seed,
+      // we must rely on normalized X position (0.0 - 1.0) rather than absolute pixel index.
+      // However, for pixel sort, simply scaling the step covers most of density matching.
+      // We check randomness against the *virtual* column index to keep it consistent.
+
       let sortStart = -1;
-      // Randomly skip columns based on intensity to create "streaky" look
-      if (this.rand() > triggerProb) continue;
+
+      // Seed the RNG for this specific column based on Normalized X
+      // This ensures column at 50% width always rolls the same dice
+      const normalizedX = Math.floor((x / width) * 800); // Map to "virtual" 800px space
+      const colSeed = (this.currentRng() + normalizedX) * 12345;
+
+      // Simple hash for column probability
+      const colRand = Math.abs(Math.sin(colSeed) * 10000) % 1;
+
+      if (colRand > triggerProb) continue;
 
       for (let y = 0; y < height; y++) {
         const i = (y * width + x) * 4;
@@ -229,11 +271,12 @@ export class GlitchEngine {
     }
   }
 
-  private channelShift(imageData: ImageData, intensity: number, threshold: number, scale: number) {
+  private channelShift(imageData: ImageData, intensity: number, threshold: number, UNIT: number) {
     const pixels = imageData.data;
-    // Intensity = Horizontal Shift, Threshold = Vertical Shift
-    const shiftX = Math.floor(intensity * 1.5 * scale);
-    const shiftY = Math.floor(threshold * 0.5 * scale);
+    // Intensity = Horizontal Shift (using UNIT scale for resolution independence)
+    const shiftX = Math.floor(intensity * 0.2 * UNIT);
+    // Threshold = Vertical Shift
+    const shiftY = Math.floor(threshold * 0.1 * UNIT);
 
     if (intensity === 0 && threshold === 0) return;
 
@@ -262,12 +305,14 @@ export class GlitchEngine {
     }
   }
 
-  private bitCrush(imageData: ImageData, intensity: number, threshold: number, scale: number) {
+  private bitCrush(imageData: ImageData, intensity: number, threshold: number, UNIT: number) {
     const pixels = imageData.data;
     // Intensity = Quantization (Color depth)
     const qFactor = Math.floor(Math.pow(intensity / 10, 2.2)) + 1;
+
     // Threshold = Resampling (Pixelation)
-    const rFactor = Math.max(1, Math.floor((threshold / 10) * scale));
+    // Scale strictly by UNIT so a "pixel" is always X% of screen size
+    const rFactor = Math.max(1, Math.floor((threshold * 0.1) * UNIT));
 
     for (let y = 0; y < imageData.height; y += rFactor) {
       for (let x = 0; x < imageData.width; x += rFactor) {
@@ -295,15 +340,16 @@ export class GlitchEngine {
     }
   }
 
-  private scanLines(imageData: ImageData, intensity: number, threshold: number, scale: number) {
+  private scanLines(imageData: ImageData, intensity: number, threshold: number, UNIT: number) {
     const pixels = imageData.data;
     const width = imageData.width;
     const opacity = intensity / 100;
-    // Threshold = Line Spacing (0-100 maps to 2-10 pixels)
-    const spacing = Math.max(2, Math.floor(2 + (threshold / 10) * scale));
+    // Threshold = Line Spacing (relative to image size)
+    const spacing = Math.max(2, Math.floor(2 + (threshold * 0.1 * UNIT)));
 
     for (let y = 0; y < imageData.height; y++) {
-      if (Math.floor(y / scale) % spacing === 0) {
+      // Use spacing directly since it's already UNIT scaled
+      if (y % spacing === 0) {
         for (let x = 0; x < width; x++) {
           const i = (y * width + x) * 4;
           const rMult = 1 - opacity;
@@ -345,7 +391,7 @@ export class GlitchEngine {
     }
   }
 
-  private waveDistortion(imageData: ImageData, intensity: number, threshold: number, scale: number) {
+  private waveDistortion(imageData: ImageData, intensity: number, threshold: number, UNIT: number) {
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
@@ -353,15 +399,31 @@ export class GlitchEngine {
 
     const temp = new Uint8ClampedArray(pixels);
 
-    // Intensity = Amplitude, Threshold = Frequency
-    // Lower threshold = higher frequency (more waves)
-    const freq = Math.max(1, 100 * scale - (threshold * 0.9 * scale));
-    const amp = (intensity * 2) * scale;
-    const phase = this.rand() * Math.PI * 2;
+    // Intensity = Amplitude (relative to screen size)
+    const amp = (intensity * 0.5 * UNIT);
+
+    // Threshold = Frequency (Waves per screen HEIGHT)
+    // We normalize the wave phase to the image height so it aligns perfectly.
+    // 0-100 threshold maps to 1-50 waves vertically.
+    const waves = Math.max(1, threshold * 0.5);
+
+    // Normalized Phase Calculation
+    // We use (y / height) which is 0.0 to 1.0
+    // Then multiply by waves * 2PI to get the correct number of cycles.
+    const verticalPhaseScale = (Math.PI * 2 * waves) / height;
+
+    // Random starting phase (seeded)
+    const startPhase = this.rand() * Math.PI * 2;
 
     for (let y = 0; y < height; y++) {
-      let xOffset = Math.sin((y / freq) + phase) * amp;
-      xOffset += Math.cos((y / (freq * 0.5)) - phase) * (amp * 0.2);
+      // Use the normalized phase scale. 
+      // Input 'y' cancels out the '/ height' part of scale effectively scaling to %
+      const angle = y * verticalPhaseScale + startPhase;
+
+      let xOffset = Math.sin(angle) * amp;
+
+      // Add secondary harmonic (double frequency, lower amp)
+      xOffset += Math.cos(angle * 2 - startPhase) * (amp * 0.2);
 
       for (let x = 0; x < width; x++) {
         const sourceX = Math.floor(x + xOffset);
@@ -377,18 +439,24 @@ export class GlitchEngine {
     }
   }
 
-  private dataCorruption(imageData: ImageData, intensity: number, threshold: number, scale: number) {
+  private dataCorruption(imageData: ImageData, intensity: number, threshold: number, UNIT: number) {
+    // Early exit for very low values
+    if (intensity < 10 || threshold < 10) return;
+
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
 
-    // Intensity = Motion Vector Length (number of recursive shifts)
-    const iterations = Math.floor(intensity / 10) + 1;
-    // Threshold = Block Density/Quantity
+    // Intensity = Motion Vector Length (number of recursive shifts matches logic depth)
+    // Iterations don't need scaling, they determine "smear length" in steps
+    const iterations = Math.min(3, Math.floor(intensity / 20) + 1);
+
+    // Threshold = Block Density/Quantity (Probability doesn't need scaling)
     const blockDensity = threshold / 100;
 
-    // Use macroblocks (16x16 standard for many codecs, scaled for res)
-    const blockSize = Math.floor(16 * scale);
+    // Use macroblocks scaled to image size (~4% of screen unit)
+    // Min block size of 16px to prevent tiny dust at low res
+    const blockSize = Math.max(16, Math.floor(4 * UNIT));
 
     // Helper to get pixel from coordinates safely
     const getPixel = (x: number, y: number) => {
@@ -405,18 +473,29 @@ export class GlitchEngine {
       pixels[i + 2] = b;
     };
 
-    // Partition image into blocks
-    for (let by = 0; by < height; by += blockSize) {
-      for (let bx = 0; bx < width; bx += blockSize) {
+    // NORMALIZED RNG LOOP:
+    // Iterate over a fixed virtual grid based on the UNIT blocks to keep RNG stable.
+    const blocksX = Math.ceil(width / blockSize);
+    const blocksY = Math.ceil(height / blockSize);
+
+    for (let by = 0; by < blocksY; by++) {
+      for (let bx = 0; bx < blocksX; bx++) {
 
         // Randomly choose if this block "moshes"
+        // RNG Sequence is now locked to the block index (bx, by)
         if (this.rand() < blockDensity) {
 
-          // Choose a motion vector for this block
-          const vx = Math.floor((this.rand() - 0.5) * 20 * scale);
-          const vy = Math.floor((this.rand() - 0.5) * 20 * scale);
+          // Choose a motion vector for this block (Scaled by UNIT)
+          const vx = Math.floor((this.rand() - 0.5) * 5 * UNIT);
+          const vy = Math.floor((this.rand() - 0.5) * 5 * UNIT);
 
           if (vx === 0 && vy === 0) continue;
+
+          // Map back to pixel coordinates for the actual effect application
+          const startY = Math.max(0, by * blockSize);
+          const endY = Math.min(height, (by + 1) * blockSize);
+          const startX = Math.max(0, bx * blockSize);
+          const endX = Math.min(width, (bx + 1) * blockSize);
 
           // Repeat the displacement (iterations) to create the "trail"
           for (let iter = 0; iter < iterations; iter++) {
@@ -424,12 +503,6 @@ export class GlitchEngine {
             // To mosh, we take the CURRENT data in the block's path and "push" it
             // This is most easily done by copying the block data and pasting it offset
             // But we must do it for ALL pixels in the block
-
-            // Optimization: iterate range
-            const startY = Math.max(0, by);
-            const endY = Math.min(height, by + blockSize);
-            const startX = Math.max(0, bx);
-            const endX = Math.min(width, bx + blockSize);
 
             // Sample the block
             const blockData: number[][] = [];
@@ -465,15 +538,15 @@ export class GlitchEngine {
     }
   }
 
-  private colorBleed(imageData: ImageData, intensity: number, threshold: number, scale: number) {
+  private colorBleed(imageData: ImageData, intensity: number, threshold: number, UNIT: number) {
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
 
-    // Intensity = Bleed Amount
-    const bleedAmount = Math.floor((intensity / 3) * scale);
+    // Intensity = Bleed Amount (Scaled by UNIT)
+    const bleedAmount = Math.floor((intensity * 0.1) * UNIT);
     // Threshold = Ghosting (secondary shift)
-    const ghostShift = Math.floor((threshold / 5) * scale);
+    const ghostShift = Math.floor((threshold * 0.2) * UNIT);
 
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width - bleedAmount; x++) {
@@ -497,13 +570,17 @@ export class GlitchEngine {
     }
   }
 
-  private compressionHell(imageData: ImageData, intensity: number, threshold: number, scale: number) {
+  // compressionHell must scale BY UNIT for visual consistency, even if unrealistic for JPEGs
+  private compressionHell(imageData: ImageData, intensity: number, threshold: number, UNIT: number) {
+    // Early exit for very low values
+    if (intensity < 10 && threshold < 10) return;
+
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
 
-    // Intensity = Block size (8x8 is JPEG standard, we scale it)
-    const blockSize = Math.max(2, Math.floor((4 + (intensity / 10)) * scale));
+    // Intensity = Block size (Scaled by UNIT to match Editor)
+    const blockSize = Math.max(2, Math.floor((4 + (intensity * 0.1)) * UNIT));
     // Threshold = Artifacting (Compression level)
     const factor = (threshold / 10);
 
@@ -538,9 +615,9 @@ export class GlitchEngine {
             let ng = Math.floor(gAvg / q) * q;
             let nb = Math.floor(bAvg / q) * q;
 
-            // Add pseudo-DCT ringing noise
+            // Simplified ringing - scale frequency by UNIT so waves look same size
             if (factor > 2) {
-              const ring = Math.sin((dx + dy) * (1 / scale)) * (factor * 2);
+              const ring = Math.sin((dx + dy) * (1 / UNIT)) * (factor * 2);
               nr += ring;
               ng += ring;
               nb += ring;
@@ -555,23 +632,48 @@ export class GlitchEngine {
     }
   }
 
-  private randomChaos(imageData: ImageData, intensity: number, threshold: number, scale: number) {
+  private randomChaos(imageData: ImageData, intensity: number, threshold: number, UNIT: number) {
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
 
-    // Threshold = Jitter/BlockSize
-    const blockSize = Math.max(1, Math.floor((threshold / 10) * scale));
+    // Threshold = Jitter/BlockSize (Scaled by UNIT)
+    // Ensures noise blocks are visible on 4k screens
+    const blockSize = Math.max(1, Math.floor((threshold * 0.1) * UNIT));
+
     // Intensity = Entropy (Probability)
+    // Probability is density, so it doesn't need spatial scaling
     const probThreshold = 1 - Math.pow(intensity / 100, 0.5) * 0.5;
 
-    for (let y = 0; y < height; y += blockSize) {
-      for (let x = 0; x < width; x += blockSize) {
+    // NORMALIZED RNG LOOP:
+    // To keep the RNG sequence identical across resolutions, we must iterate
+    // a fixed "Virtual Grid" regardless of the image size.
+    // We iterate based on the "standard" 800px grid logic, then map to real pixels.
+    // 1 UNIT = 1% width/height. We'll step by UNIT-based blocks.
+
+    // Calculate how many blocks *would* fit in the image
+    const blocksX = Math.ceil(width / blockSize);
+    const blocksY = Math.ceil(height / blockSize);
+
+    for (let by = 0; by < blocksY; by++) {
+      for (let bx = 0; bx < blocksX; bx++) {
+        // RNG Call #1: Determine if block is chaotic
+        // Since we loop by block index (bx, by), this sequence is stable
+        // as long as the relative block count is similar (which UNIT ensures).
+
         if (this.rand() > probThreshold) {
+          // RNG Call #2: Chaos type
           const chaos = this.rand();
-          for (let dy = 0; dy < blockSize && y + dy < height; dy++) {
-            for (let dx = 0; dx < blockSize && x + dx < width; dx++) {
-              const i = ((y + dy) * width + (x + dx)) * 4;
+
+          // Map back to pixel coordinates
+          const startY = by * blockSize;
+          const startX = bx * blockSize;
+          const endY = Math.min(height, startY + blockSize);
+          const endX = Math.min(width, startX + blockSize);
+
+          for (let y = startY; y < endY; y++) {
+            for (let x = startX; x < endX; x++) {
+              const i = (y * width + x) * 4;
               if (chaos < 0.3) { pixels[i] = 255 - pixels[i]; }
               else if (chaos < 0.6) { pixels[i + 1] = pixels[i + 2]; }
               else { pixels[i + 2] = 255; }

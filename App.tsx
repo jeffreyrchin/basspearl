@@ -11,6 +11,7 @@ const App: React.FC = () => {
   const [view, setView] = useState<AppView>(AppView.LANDING);
   const [state, setState] = useState<GlitchState>({
     originalImage: null,
+    previewImage: null,
     processedImage: null,
     history: [],
     historyIndex: -1,
@@ -26,11 +27,22 @@ const App: React.FC = () => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
-      const initialHistoryItem = { image: result, effects: INITIAL_EFFECTS };
+
+      // WEB WORKER STRATEGY (THE TRUTH):
+      // We load the FULL resolution image and store it.
+      // No resizing. No proxies.
+      // The EditorView will handle async processing via Web Worker.
+
+      const initialHistoryItem = {
+        effects: INITIAL_EFFECTS
+      };
+
       setState(prev => ({
         ...prev,
-        originalImage: result,
-        processedImage: result,
+        originalImage: result,      // Source of Truth (Full Res)
+        previewImage: null,         // Deprecated - we use source
+        processedImage: result,     // Start with original
+        processedImagePreview: null,// Deprecated
         history: [initialHistoryItem],
         historyIndex: 0,
         effects: INITIAL_EFFECTS
