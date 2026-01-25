@@ -6,6 +6,7 @@ import AuthModal from './AuthModal';
 import ExportCreditsDisplay from './ExportCreditsDisplay';
 import { useAuth } from '../context/AuthContext';
 import { useUploadQuota } from '../hooks/useUploadQuota';
+import { trackEvent } from '../services/analytics';
 
 interface LandingPageProps {
   onFileUpload: (file: File) => void;
@@ -59,6 +60,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
       return;
     }
     incrementUploads();
+    trackEvent('image_upload', { file_size: file.size, file_type: file.type });
     onFileUpload(file);
   };
 
@@ -85,6 +87,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
     setHasAcceptedTerms(checked);
     if (checked) {
       localStorage.setItem('glitch_consent_v1', 'true');
+      trackEvent('terms_accepted');
     } else {
       localStorage.removeItem('glitch_consent_v1');
     }

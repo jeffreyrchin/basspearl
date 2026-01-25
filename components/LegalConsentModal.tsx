@@ -38,7 +38,7 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
                 <div className="flex-1 overflow-y-auto p-6 space-y-8 text-white/80 text-sm leading-relaxed custom-scrollbar">
                     <section>
                         <h1 className="text-2xl font-bold text-white mb-2">Privacy Policy</h1>
-                        <p className="text-white/60 mb-6 text-xs">Last Updated: January 24, 2026</p>
+                        <p className="text-white/60 mb-6 text-xs">Last Updated: January 25, 2026</p>
 
                         <div className="space-y-6">
                             <div>
@@ -55,6 +55,7 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
                                     <li><strong>Technical Data:</strong> Includes internet protocol (IP) address, your login data, browser type and version, time zone setting and location, browser plug-in types and versions, operating system and platform, and other technology on the devices you use to access this website.</li>
                                     <li><strong>Usage Data:</strong> Includes information about how you use our website, products and services.</li>
                                     <li><strong>Image Data:</strong> Images you upload are processed locally in your browser. We do not permanently store your original images on our servers unless explicitly saved by you to a cloud gallery feature (if available).</li>
+                                    <li><strong>Analytics Data:</strong> We collect anonymized usage data such as which effects you use, your interaction with presets, and successful image exports. This data is used solely to improve the user experience and feature set of GlitchBrain.</li>
                                 </ul>
                             </div>
 
@@ -102,7 +103,7 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
                                 <ul className="list-disc pl-5 mt-2 space-y-1 text-white/60">
                                     <li><strong>Account Data:</strong> Retained for the duration of your account's existence. Upon deletion, data is removed from active databases immediately and from backups within 30 days.</li>
                                     <li><strong>Image Data:</strong> Not retained on our servers. Browser-local data is cleared when you close the session.</li>
-                                    <li><strong>Usage/Analytics Data:</strong> Retained for a period of 24 months for trend analysis.</li>
+                                    <li><strong>Usage/Analytics Data:</strong> Retained for a period of 24 months for trend analysis. This data is anonymized and does not include your uploaded images.</li>
                                 </ul>
                             </div>
 
@@ -144,12 +145,13 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
                                 <p>We use the following third-party services to operate our website. By using our service, you agree to their respective terms.</p>
                                 <ul className="list-disc pl-5 mt-2 space-y-1 text-white/60">
                                     <li><strong>Google Firebase:</strong> Used for authentication. <a href="https://firebase.google.com/terms" className="text-primary hover:underline">Firebase Terms</a>.</li>
+                                    <li><strong>Google Analytics (GA4):</strong> Used for usage telemetry and performance monitoring. <a href="https://policies.google.com/privacy" className="text-primary hover:underline">Google Privacy Policy</a>.</li>
                                 </ul>
                             </div>
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">15. Cookies and Tracking</h3>
-                                <p>We use local storage and necessary cookies to maintain your session and preferences. Service providers like Firebase may use cookies for authentication purposes.</p>
+                                <p>We use local storage and necessary cookies to maintain your session and preferences. We also use analytics cookies (e.g., Google Analytics) to collect information about how you use our site. You can manage your cookie preferences through your browser settings.</p>
                             </div>
 
                             <div>
@@ -173,7 +175,7 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
 
                     <section>
                         <h1 className="text-2xl font-bold text-white mb-2">Terms of Service</h1>
-                        <p className="text-white/60 mb-6 text-xs">Last Updated: January 24, 2026</p>
+                        <p className="text-white/60 mb-6 text-xs">Last Updated: January 25, 2026</p>
 
                         <div className="space-y-6">
                             <div>

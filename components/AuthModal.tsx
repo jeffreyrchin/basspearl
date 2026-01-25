@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { trackEvent } from '../services/analytics';
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -21,6 +22,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
         if (isOpen) {
             setMode(initialMode);
             setError(null);
+            trackEvent('auth_view', { mode: initialMode });
         }
     }, [isOpen, initialMode]);
 
@@ -31,6 +33,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
         setError(null);
         try {
             await signInWithGoogle();
+            trackEvent('auth_success', { method: 'google', mode });
             onClose();
         } catch (err: any) {
             setError(getErrorMessage(err.code));
@@ -50,6 +53,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
             } else {
                 await signUpWithEmail(email, password, displayName);
             }
+            trackEvent('auth_success', { method: 'email', mode });
             onClose();
         } catch (err: any) {
             setError(getErrorMessage(err.code));

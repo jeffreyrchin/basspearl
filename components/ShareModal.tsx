@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { trackEvent } from '../services/analytics';
 
 interface ShareModalProps {
     isOpen: boolean;
@@ -16,6 +17,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, imageUrl }) =>
         const link = document.createElement('a');
         link.href = imageUrl;
         link.download = `glitchbrain-${Date.now()}.png`;
+        trackEvent('glitch_export', { method: 'download' });
         link.click();
     };
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { GlitchState, EffectConfig, AppView } from '../types';
 import { EFFECT_METADATA, PRESETS } from '../constants';
@@ -9,6 +8,7 @@ import AuthModal from './AuthModal';
 import ExportCreditsDisplay from './ExportCreditsDisplay';
 import UserMenu from './UserMenu';
 import ShareModal from './ShareModal';
+import { trackEvent } from '../services/analytics';
 
 interface EditorViewProps {
   state: GlitchState;
@@ -51,6 +51,14 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     // but ensure one exists.
 
     newEffects[index] = { ...newEffects[index], seed, ...updates };
+
+    // Track effect usage
+    if (updates.active !== undefined) {
+      trackEvent('effect_applied', { effect_type: newEffects[index].type, action: updates.active ? 'on' : 'off' });
+    } else if (updates.intensity !== undefined) {
+      // Small debounce logic or just track significant changes? 
+      // For now, simple track on mouseUp/touchEnd in the UI component is better.
+    }
 
     // Determine if we should force a history commit (e.g. on toggle)
     const isToggle = updates.active !== undefined;
@@ -180,6 +188,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       isNavigatingHistory.current = true;
       const prevIndex = state.historyIndex - 1;
       const prevItem = state.history[prevIndex];
+      trackEvent('effect_applied', { effect_type: 'undo', index: prevIndex });
       onUpdateState({
         historyIndex: prevIndex,
         effects: prevItem.effects,
@@ -193,6 +202,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       isNavigatingHistory.current = true;
       const nextIndex = state.historyIndex + 1;
       const nextItem = state.history[nextIndex];
+      trackEvent('effect_applied', { effect_type: 'redo', index: nextIndex });
       onUpdateState({
         historyIndex: nextIndex,
         effects: nextItem.effects,
@@ -216,6 +226,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       }));
 
       onUpdateState({ effects: seededEffects });
+      trackEvent('effect_applied', { effect_type: 'preset', preset_name: presetName });
       applyGlitches(true, seededEffects);
       setActiveTab('layers'); // Switch back to layers to see effects
     }
@@ -231,6 +242,14 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   }, [state.effects, user]);
 
   const handleHistoryCommit = () => {
+    const currentEffect = state.effects[state.currentEffectIndex];
+    if (currentEffect) {
+      trackEvent('effect_applied', {
+        effect_type: currentEffect.type,
+        intensity: currentEffect.intensity,
+        threshold: currentEffect.threshold
+      });
+    }
     applyGlitches(true);
   };
 
