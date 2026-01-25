@@ -33,7 +33,7 @@ const ExportCreditsDisplay: React.FC<ExportCreditsDisplayProps> = ({
             <div className={`flex items-center gap-1.5 ${isEmpty ? 'text-red-400' : isLow ? 'text-yellow-400' : 'text-white/50'}`}>
                 <span className="material-symbols-outlined text-[14px]">upload_file</span>
                 <span className="text-[9px] font-bold uppercase tracking-widest">
-                    {uploadsRemaining} / {maxFreeUploads} Uploads
+                    {uploadsRemaining} / {maxFreeUploads} <span className="hidden sm:inline">Uploads</span>
                 </span>
             </div>
         );

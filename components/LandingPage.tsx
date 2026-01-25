@@ -217,10 +217,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
         <div className="flex items-center gap-6 text-[10px] md:text-[11px] font-bold tracking-widest text-white/80 uppercase">
           <div className="flex items-center gap-1.5">
             <span className="size-1.5 rounded-full bg-primary/50 shadow-sm shadow-primary/50"></span>
-            System: Online
+            <span className="hidden sm:inline">System: Online</span>
           </div>
         </div>
-        <div className="flex items-center gap-6 text-[10px] md:text-[11px] font-bold tracking-widest text-white/70 uppercase">
+        <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest text-white/70 uppercase">
           <button onClick={() => onOpenLegal(false)} className="hover:text-white transition-colors uppercase">Privacy & Terms</button>
         </div>
       </footer>

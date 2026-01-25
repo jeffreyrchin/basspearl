@@ -369,7 +369,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const [isPreviewingOriginal, setIsPreviewingOriginal] = useState(false);
 
   return (
-    <div className="fixed inset-0 flex h-screen w-full flex-col overflow-hidden bg-background-dark">
+    <div className="fixed inset-0 flex h-[100dvh] w-full flex-col overflow-hidden bg-background-dark text-white">
       {/* Header */}
       <header className="flex items-center justify-between px-4 md:px-6 py-4 z-50 border-b border-white/5 bg-background-dark/80 backdrop-blur-md shrink-0">
         <div className="flex items-center gap-4 md:gap-6">
@@ -389,7 +389,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       </header>
 
       {/* Main Content */}
-      <main className="flex flex-1 relative bg-background-dark grid-bg overflow-hidden faed-in">
+      <main className="flex flex-1 relative bg-background-dark grid-bg overflow-hidden fade-in">
         <div className="flex-1 flex flex-col items-center justify-center p-0 overflow-hidden relative">
           <div className="w-full shrink-0 h-12 md:h-14 flex items-center justify-center z-30">
             <div className="flex items-center gap-1.5 glass-panel p-1.5 rounded-xl shadow-lg border border-white/10 scale-90 md:scale-100">
@@ -479,19 +479,19 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
       <footer className="h-6 bg-[#050510] border-t border-white/5 px-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4 text-[11px] font-bold tracking-widest text-white/80 uppercase">
-          <div className="flex items-center gap-1.5 mr-4">
+          <div className="flex items-center gap-1.5 mr-2 sm:mr-4">
             <span className={`size-1.5 rounded-full ${isProcessing ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'} shadow-sm shadow-green-500/50`}></span>
-            {isProcessing ? 'Rendering' : 'Ready'}
+            <span className="hidden sm:inline">{isProcessing ? 'Rendering' : 'Ready'}</span>
           </div>
           <div className="h-3 w-px bg-white/10"></div>
-          <div className="flex gap-4 text-[9px] text-white/40">
-            <span>ACTIVE: {state.effects.filter(e => e.active).length}</span>
+          <div className="flex gap-2 sm:gap-4 text-[9px] text-white/70">
+            <span>EFFECTS: {state.effects.filter(e => e.active).length}</span>
             <span className="hidden sm:inline">ENGINE: WEB WORKER (FULL RES)</span>
           </div>
         </div>
         <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest text-white/70 uppercase">
           <ExportCreditsDisplay variant="inline" />
-          <button onClick={() => onOpenLegal(false)} className="hover:text-white transition-colors uppercase">Privacy & Terms</button>
+          <button onClick={() => onOpenLegal(false)} className="hover:text-white transition-colors uppercase"><span className="hidden sm:inline">Privacy & </span>Terms</button>
         </div>
       </footer>
 
