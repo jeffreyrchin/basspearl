@@ -3,16 +3,16 @@ import React from 'react';
 import { GlitchEffectType, EffectConfig } from './types';
 
 export const INITIAL_EFFECTS = [
-  { type: 'PIXEL_SORT' as GlitchEffectType, intensity: 72, threshold: 40, active: true },
-  { type: 'CHANNEL_SHIFT' as GlitchEffectType, intensity: 30, threshold: 50, active: false },
-  { type: 'DATA_CORRUPTION' as GlitchEffectType, intensity: 20, threshold: 80, active: false },
-  { type: 'DEEP_FRY' as GlitchEffectType, intensity: 50, threshold: 50, active: false },
-  { type: 'SCAN_LINES' as GlitchEffectType, intensity: 40, threshold: 50, active: false },
-  { type: 'BIT_CRUSH' as GlitchEffectType, intensity: 25, threshold: 50, active: false },
-  { type: 'WAVE_DISTORTION' as GlitchEffectType, intensity: 15, threshold: 50, active: false },
-  { type: 'COLOR_BLEED' as GlitchEffectType, intensity: 35, threshold: 50, active: false },
-  { type: 'COMPRESSION_HELL' as GlitchEffectType, intensity: 60, threshold: 50, active: false },
-  { type: 'RANDOM_CHAOS' as GlitchEffectType, intensity: 10, threshold: 50, active: false },
+  { type: 'PIXEL_SORT' as GlitchEffectType, intensity: 72, threshold: 40, active: true, seed: 123456 },
+  { type: 'CHANNEL_SHIFT' as GlitchEffectType, intensity: 30, threshold: 50, active: false, seed: 234567 },
+  { type: 'DATA_CORRUPTION' as GlitchEffectType, intensity: 20, threshold: 80, active: false, seed: 345678 },
+  { type: 'DEEP_FRY' as GlitchEffectType, intensity: 50, threshold: 50, active: false, seed: 456789 },
+  { type: 'SCAN_LINES' as GlitchEffectType, intensity: 40, threshold: 50, active: false, seed: 567890 },
+  { type: 'BIT_CRUSH' as GlitchEffectType, intensity: 25, threshold: 50, active: false, seed: 678901 },
+  { type: 'WAVE_DISTORTION' as GlitchEffectType, intensity: 15, threshold: 50, active: false, seed: 789012 },
+  { type: 'COLOR_BLEED' as GlitchEffectType, intensity: 35, threshold: 50, active: false, seed: 890123 },
+  { type: 'COMPRESSION_HELL' as GlitchEffectType, intensity: 60, threshold: 50, active: false, seed: 901234 },
+  { type: 'RANDOM_CHAOS' as GlitchEffectType, intensity: 10, threshold: 50, active: false, seed: 111222 },
 ];
 
 export const EFFECT_METADATA: Record<GlitchEffectType, {

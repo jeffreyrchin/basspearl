@@ -39,18 +39,10 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const handleEffectChange = async (index: number, updates: Partial<EffectConfig>) => {
     const newEffects = [...state.effects];
 
-    // If activating or updating, ensure we have a seed
-    let seed = newEffects[index].seed;
-    if (seed === undefined) {
-      seed = Math.floor(Math.random() * 1000000);
-    }
+    // Every effect MUST have a seed for determinism
+    const seed = newEffects[index].seed ?? Math.floor(Math.random() * 1000000);
 
-    // If specifically toggling active on, maybe regenerate seed? 
-    // Or just keep the one we have? 
-    // Let's keep existing seed if present to avoid surprise changes, 
-    // but ensure one exists.
-
-    newEffects[index] = { ...newEffects[index], seed, ...updates };
+    newEffects[index] = { ...newEffects[index], ...updates, seed };
 
     // Track effect usage
     if (updates.active !== undefined) {
@@ -202,10 +194,10 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const handleApplyPreset = (presetName: string) => {
     const presetEffects = PRESETS[presetName];
     if (presetEffects) {
-      // Ensure active effects have seeds
+      // Ensure ALL effects have seeds for determinism
       const seededEffects = presetEffects.map(e => ({
         ...e,
-        seed: e.active ? (e.seed ?? Math.floor(Math.random() * 1000000)) : e.seed
+        seed: e.seed ?? Math.floor(Math.random() * 1000000)
       }));
 
       onUpdateState({ effects: seededEffects });
