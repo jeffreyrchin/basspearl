@@ -27,6 +27,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [showMobileEffects, setShowMobileEffects] = useState(false);
+  // Removed highRes export state for simplicity
 
   // New State for Preview
   const [isPreviewing, setIsPreviewing] = useState(false);
@@ -36,43 +37,97 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
   const handleEffectChange = async (index: number, updates: Partial<EffectConfig>) => {
     const newEffects = [...state.effects];
-    newEffects[index] = { ...newEffects[index], ...updates };
+
+    // If activating or updating, ensure we have a seed
+    let seed = newEffects[index].seed;
+    if (seed === undefined) {
+      seed = Math.floor(Math.random() * 1000000);
+    }
+
+    // If specifically toggling active on, maybe regenerate seed? 
+    // Or just keep the one we have? 
+    // Let's keep existing seed if present to avoid surprise changes, 
+    // but ensure one exists.
+
+    newEffects[index] = { ...newEffects[index], seed, ...updates };
     onUpdateState({ effects: newEffects });
   };
 
-  const applyGlitches = async () => {
-    if (!state.originalImage) return;
+  // Refs for processing loop
+  const isProcessingRef = useRef(false);
+  const pendingStateRef = useRef<{ effects: EffectConfig[] } | null>(null);
+
+  const processPending = async () => {
+    if (isProcessingRef.current || !pendingStateRef.current || !state.originalImage) return;
+
+    // Lock
+    isProcessingRef.current = true;
     setIsProcessing(true);
+
+    const targetEffects = pendingStateRef.current.effects;
+    pendingStateRef.current = null; // Clear pending
+
     try {
-      const processed = await glitchEngine.processImage(state.originalImage, state.effects, !user);
+      // Use a smaller size for previewing during drag for performance
+      const processed = await glitchEngine.processImage(state.originalImage, targetEffects, !user, 800);
 
-      // History Logic
-      const currentHistoryItem = state.history[state.historyIndex];
-      const effectsChanged = !currentHistoryItem || JSON.stringify(currentHistoryItem.effects) !== JSON.stringify(state.effects);
+      // Update View
+      onUpdateState({
+        processedImage: processed
+      });
 
-      if (effectsChanged) {
-        const newHistory = state.history.slice(0, state.historyIndex + 1);
-        newHistory.push({ image: processed, effects: state.effects });
-
-        onUpdateState({
-          processedImage: processed,
-          history: newHistory,
-          historyIndex: newHistory.length - 1
-        });
-      } else {
-        // Effects haven't changed (e.g., initial load or auth change), just update the image
-        const newHistory = [...state.history];
-        newHistory[state.historyIndex] = { ...newHistory[state.historyIndex], image: processed };
-
-        onUpdateState({
-          processedImage: processed,
-          history: newHistory
-        });
-      }
     } catch (err) {
       console.error(err);
     } finally {
+      isProcessingRef.current = false;
       setIsProcessing(false);
+
+      // If we have more pending work that came in while we were processing, do it now
+      if (pendingStateRef.current) {
+        requestAnimationFrame(processPending);
+      }
+    }
+  };
+
+  const applyGlitches = async (commitToHistory: boolean = false) => {
+    if (!state.originalImage) return;
+
+    if (commitToHistory) {
+      // Force immediate processing for history commits
+      // STILL use preview resolution (800) for the view/history to avoid jumps
+      pendingStateRef.current = null;
+      setIsProcessing(true);
+      try {
+        const processed = await glitchEngine.processImage(state.originalImage, state.effects, !user, 800);
+
+        // History Logic
+        const currentHistoryItem = state.history[state.historyIndex];
+        const effectsChanged = !currentHistoryItem || JSON.stringify(currentHistoryItem.effects) !== JSON.stringify(state.effects);
+
+        if (effectsChanged) {
+          const newHistory = state.history.slice(0, state.historyIndex + 1);
+          newHistory.push({ image: processed, effects: state.effects });
+
+          onUpdateState({
+            processedImage: processed,
+            history: newHistory,
+            historyIndex: newHistory.length - 1
+          });
+        } else {
+          onUpdateState({ processedImage: processed });
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsProcessing(false);
+      }
+      return;
+    }
+
+    // View Only Update - Queue it
+    pendingStateRef.current = { effects: state.effects };
+    if (!isProcessingRef.current) {
+      requestAnimationFrame(processPending);
     }
   };
 
@@ -113,9 +168,15 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   };
 
   const handleApplyPreset = (presetName: string) => {
-    const newEffects = PRESETS[presetName];
-    if (newEffects) {
-      onUpdateState({ effects: newEffects });
+    const presetEffects = PRESETS[presetName];
+    if (presetEffects) {
+      // Ensure active effects have seeds
+      const seededEffects = presetEffects.map(e => ({
+        ...e,
+        seed: e.active ? (e.seed ?? Math.floor(Math.random() * 1000000)) : e.seed
+      }));
+
+      onUpdateState({ effects: seededEffects });
       setActiveTab('layers'); // Switch back to layers to see effects
     }
   };
@@ -125,11 +186,13 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       isNavigatingHistory.current = false;
       return;
     }
-    const timer = setTimeout(() => {
-      applyGlitches();
-    }, 300);
-    return () => clearTimeout(timer);
+    // Instant update without history commit
+    applyGlitches(false);
   }, [state.effects, user]);
+
+  const handleHistoryCommit = () => {
+    applyGlitches(true);
+  };
 
 
 
@@ -185,6 +248,8 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
                     max="100"
                     value={effect.intensity}
                     onChange={(e) => handleEffectChange(idx, { intensity: parseInt(e.target.value) })}
+                    onMouseUp={handleHistoryCommit}
+                    onTouchEnd={handleHistoryCommit}
                     className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-primary"
                   />
                 </div>
@@ -199,6 +264,8 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
                     max="100"
                     value={effect.threshold}
                     onChange={(e) => handleEffectChange(idx, { threshold: parseInt(e.target.value) })}
+                    onMouseUp={handleHistoryCommit}
+                    onTouchEnd={handleHistoryCommit}
                     className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-primary"
                   />
                 </div>

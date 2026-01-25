@@ -23,6 +23,7 @@ export interface EffectConfig {
   intensity: number; // 0 to 100
   threshold: number; // 0 to 100
   active: boolean;
+  seed?: number;
 }
 
 export interface GlitchInfo {

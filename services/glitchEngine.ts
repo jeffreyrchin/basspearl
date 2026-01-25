@@ -12,14 +12,23 @@ export class GlitchEngine {
     this.ctx = context;
   }
 
-  public async processImage(imageSrc: string, effects: EffectConfig[], shouldWatermark: boolean = false): Promise<string> {
+  private imageCache: Map<string, HTMLImageElement> = new Map();
+
+  public async processImage(imageSrc: string, effects: EffectConfig[], shouldWatermark: boolean = false, maxSize?: number): Promise<string> {
     return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        this.canvas.width = img.width;
-        this.canvas.height = img.height;
-        this.ctx.drawImage(img, 0, 0);
+      const processCachedImage = (img: HTMLImageElement) => {
+        let width = img.width;
+        let height = img.height;
+
+        if (maxSize && (width > maxSize || height > maxSize)) {
+          const ratio = Math.min(maxSize / width, maxSize / height);
+          width = Math.floor(width * ratio);
+          height = Math.floor(height * ratio);
+        }
+
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.ctx.drawImage(img, 0, 0, width, height);
 
         // Apply active effects sequentially
         effects.filter(e => e.active).forEach(effect => {
@@ -31,6 +40,18 @@ export class GlitchEngine {
         }
 
         resolve(this.canvas.toDataURL('image/png'));
+      };
+
+      if (this.imageCache.has(imageSrc)) {
+        processCachedImage(this.imageCache.get(imageSrc)!);
+        return;
+      }
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        this.imageCache.set(imageSrc, img);
+        processCachedImage(img);
       };
       img.onerror = reject;
       img.src = imageSrc;
@@ -66,10 +87,19 @@ export class GlitchEngine {
     this.ctx.restore();
   }
 
+  private currentRng: () => number = Math.random;
+
   private applyEffect(effect: EffectConfig) {
     const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
     const pixels = imageData.data;
-    const { intensity, threshold } = effect;
+    const { intensity, threshold, seed } = effect;
+
+    // Initialize RNG
+    if (seed !== undefined) {
+      this.currentRng = this.createSeededRng(seed);
+    } else {
+      this.currentRng = Math.random;
+    }
 
     switch (effect.type) {
       case 'PIXEL_SORT':
@@ -109,7 +139,22 @@ export class GlitchEngine {
     this.ctx.putImageData(imageData, 0, 0);
   }
 
+  // Simple Mulberry32 seeded RNG
+  private createSeededRng(seed: number) {
+    return function () {
+      var t = seed += 0x6D2B79F5;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+  }
+
+  private rand(): number {
+    return this.currentRng();
+  }
+
   private pixelSort(imageData: ImageData, intensity: number, threshold: number) {
+    // ... existing pixelSort implementation (no random)
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
@@ -150,7 +195,9 @@ export class GlitchEngine {
 
   private channelShift(imageData: ImageData, intensity: number) {
     const pixels = imageData.data;
-    const shift = Math.floor(intensity * 0.5);
+    // Scale shift based on width relative to preview size (800px)
+    const scale = Math.max(1, imageData.width / 800);
+    const shift = Math.floor(intensity * 0.5 * scale);
     const temp = new Uint8ClampedArray(pixels);
 
     for (let i = 0; i < pixels.length; i += 4) {
@@ -179,8 +226,19 @@ export class GlitchEngine {
     const pixels = imageData.data;
     const width = imageData.width;
     const opacity = intensity / 200;
+    // Scale line spacing? 
+    // Standard: 1 line every 3 pixels. 
+    // Scaled: 1 line every 3 * scale pixels? That would make lines thicker.
+    // For scanlines, standard behavior is usually per-pixel. 
+    // If we scale it, it might stop looking like scanlines and look like stripes.
+    // Let's keep per-pixel but maybe adjust intensity logic if needed. 
+    // Actually, on high-res, 1px scanlines are invisible. 
+    // Let's try scaling the spacing.
+    const scale = Math.max(1, Math.floor(imageData.width / 800));
+    const spacing = 3 * scale;
+
     for (let y = 0; y < imageData.height; y++) {
-      if (y % 3 === 0) {
+      if (Math.floor(y / scale) % 3 === 0) {
         for (let x = 0; x < width; x++) {
           const i = (y * width + x) * 4;
           pixels[i] *= (1 - opacity);
@@ -208,8 +266,11 @@ export class GlitchEngine {
     const width = imageData.width;
     const height = imageData.height;
     const temp = new Uint8ClampedArray(pixels);
-    const freq = Math.max(1, intensity / 5);
-    const amp = intensity / 2;
+
+    const scale = Math.max(1, width / 800);
+    const freq = Math.max(1, (intensity / 5) * scale); // Scale frequency? No, freq is wavelength divisor. 
+    // sin(y / freq). If y doubles, freq must double to keep same wave count.
+    const amp = (intensity / 2) * scale;
 
     for (let y = 0; y < height; y++) {
       const xOffset = Math.sin(y / freq) * amp;
@@ -233,12 +294,14 @@ export class GlitchEngine {
     const width = imageData.width;
     const height = imageData.height;
 
+    const scale = Math.max(1, width / 800);
+
     for (let b = 0; b < numBlocks; b++) {
-      const bx = Math.random() * width;
-      const by = Math.random() * height;
-      const bw = Math.random() * (width / 4);
-      const bh = Math.random() * 20;
-      const shiftX = (Math.random() - 0.5) * intensity;
+      const bx = this.rand() * width;
+      const by = this.rand() * height;
+      const bw = this.rand() * (width / 4); // Already relative to width
+      const bh = this.rand() * 20 * scale; // Scale height!
+      const shiftX = (this.rand() - 0.5) * intensity * scale; // Scale shift
 
       for (let y = Math.floor(by); y < Math.min(height, by + bh); y++) {
         for (let x = Math.floor(bx); x < Math.min(width, bx + bw); x++) {
@@ -256,7 +319,8 @@ export class GlitchEngine {
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
-    const bleedAmount = Math.floor(intensity / 5);
+    const scale = Math.max(1, width / 800);
+    const bleedAmount = Math.floor((intensity / 5) * scale);
 
     for (let y = 0; y < height; y++) {
       for (let x = width - 1; x > bleedAmount; x--) {
@@ -272,7 +336,10 @@ export class GlitchEngine {
     const pixels = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
-    const blockSize = Math.max(1, Math.floor(intensity / 10));
+    const scale = Math.max(1, width / 800);
+    // Base block size on preview resolution (intensity / 10), then scale up
+    const baseBlockSize = Math.max(1, Math.floor(intensity / 10));
+    const blockSize = Math.floor(baseBlockSize * scale);
 
     for (let y = 0; y < height; y += blockSize) {
       for (let x = 0; x < width; x += blockSize) {
@@ -295,16 +362,33 @@ export class GlitchEngine {
 
   private randomChaos(imageData: ImageData, intensity: number) {
     const pixels = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+    const scale = Math.max(1, width / 800);
+    const blockSize = Math.max(1, Math.floor(scale)); // Pixelated noise on high res
+
     const threshold = 1 - (intensity / 100);
-    for (let i = 0; i < pixels.length; i += 4) {
-      if (Math.random() > threshold) {
-        const chaos = Math.random();
-        if (chaos < 0.3) {
-          pixels[i] = 255 - pixels[i]; // Invert
-        } else if (chaos < 0.6) {
-          pixels[i + 1] = pixels[i + 2]; // Swizzling
-        } else {
-          pixels[i + 2] = 255; // Blue spike
+
+    for (let y = 0; y < height; y += blockSize) {
+      for (let x = 0; x < width; x += blockSize) {
+
+        if (this.rand() > threshold) {
+          const chaos = this.rand();
+
+          // Apply chaos to the whole block
+          for (let dy = 0; dy < blockSize && y + dy < height; dy++) {
+            for (let dx = 0; dx < blockSize && x + dx < width; dx++) {
+              const i = ((y + dy) * width + (x + dx)) * 4;
+
+              if (chaos < 0.3) {
+                pixels[i] = 255 - pixels[i]; // Invert
+              } else if (chaos < 0.6) {
+                pixels[i + 1] = pixels[i + 2]; // Swizzling
+              } else {
+                pixels[i + 2] = 255; // Blue spike
+              }
+            }
+          }
         }
       }
     }
