@@ -16,6 +16,23 @@ export class GlitchEngine {
   private currentImage: HTMLImageElement | null = null;
 
   public async processImage(imageSrc: string, effects: EffectConfig[], shouldWatermark: boolean = false, maxSize?: number): Promise<string> {
+    await this.processInternal(imageSrc, effects, shouldWatermark, maxSize);
+    return this.canvas.toDataURL('image/png');
+  }
+
+  public async renderToCanvas(targetCanvas: HTMLCanvasElement, imageSrc: string, effects: EffectConfig[], shouldWatermark: boolean = false, maxSize?: number): Promise<void> {
+    await this.processInternal(imageSrc, effects, shouldWatermark, maxSize);
+
+    // Copy internal canvas to target canvas
+    targetCanvas.width = this.canvas.width;
+    targetCanvas.height = this.canvas.height;
+    const ctx = targetCanvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(this.canvas, 0, 0);
+    }
+  }
+
+  private async processInternal(imageSrc: string, effects: EffectConfig[], shouldWatermark: boolean = false, maxSize?: number): Promise<void> {
     return new Promise((resolve, reject) => {
       const processCachedImage = (img: HTMLImageElement) => {
         let width = img.width;
@@ -40,7 +57,7 @@ export class GlitchEngine {
           this.applyWatermark();
         }
 
-        resolve(this.canvas.toDataURL('image/png'));
+        resolve();
       };
 
       if (this.currentImageSrc === imageSrc && this.currentImage) {

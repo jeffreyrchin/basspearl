@@ -34,6 +34,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
   // History Navigation Ref
   const isNavigatingHistory = useRef(false);
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleEffectChange = async (index: number, updates: Partial<EffectConfig>) => {
     const newEffects = [...state.effects];
@@ -68,13 +69,18 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     pendingStateRef.current = null; // Clear pending
 
     try {
-      // Use a smaller size for previewing during drag for performance
-      const processed = await glitchEngine.processImage(state.originalImage, targetEffects, !user, 800);
+      // Direct render to canvas for preview - Zero GC Allocation
+      if (previewCanvasRef.current) {
+        await glitchEngine.renderToCanvas(
+          previewCanvasRef.current,
+          state.originalImage,
+          targetEffects,
+          !user,
+          800
+        );
+      }
 
-      // Update View
-      onUpdateState({
-        processedImage: processed
-      });
+      // Do NOT update React state for preview. This saves memory.
 
     } catch (err) {
       console.error(err);
@@ -140,6 +146,24 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     if (!state.processedImage) return;
     setShareModalOpen(true);
   };
+
+
+  // Sync canvas with state when not processing (e.g. undo/redo/initial load)
+  useEffect(() => {
+    if (state.processedImage && previewCanvasRef.current) {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = previewCanvasRef.current;
+        if (canvas) {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0);
+        }
+      };
+      img.src = state.processedImage;
+    }
+  }, [state.processedImage]);
 
   const handleUndo = () => {
     if (state.historyIndex > 0) {
@@ -389,12 +413,20 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
           </div>
 
           {/* Image Canvas Container */}
-          <div className="relative w-full max-w-5xl aspect-video rounded-lg shadow-2xl overflow-hidden group border border-white/5 bg-black/20">
-            {(state.processedImage || state.originalImage) && (
+          <div className="relative w-full max-w-5xl aspect-video rounded-lg shadow-2xl overflow-hidden group border border-white/5 bg-black/20 flex items-center justify-center">
+
+            {/* Base Canvas */}
+            <canvas
+              ref={previewCanvasRef}
+              className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${isProcessing && !isPreviewing ? 'opacity-50' : 'opacity-100'}`}
+            />
+
+            {/* Original Image Overlay for "Compare" */}
+            {isPreviewing && state.originalImage && (
               <img
-                src={isPreviewing && state.originalImage ? state.originalImage : state.processedImage || ''}
-                className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-300 ${isProcessing && !isPreviewing ? 'opacity-50' : 'opacity-100'}`}
-                alt="Canvas"
+                src={state.originalImage}
+                className={`absolute inset-0 w-full h-full object-contain bg-black`}
+                alt="Original"
               />
             )}
 
