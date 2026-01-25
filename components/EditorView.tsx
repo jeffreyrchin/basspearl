@@ -27,6 +27,22 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [showMobileEffects, setShowMobileEffects] = useState(false);
 
+  // Sync refs for the processing loop & stale closures
+  const stateRef = useRef(state);
+  const userRef = useRef(user);
+
+  useEffect(() => {
+    stateRef.current = state;
+    userRef.current = user;
+  }, [state, user]);
+
+  useEffect(() => {
+    // Force a re-process to update the main-thread watermark visibility
+    if (state.originalImage) {
+      applyGlitches(false);
+    }
+  }, [user]);
+
   // Worker Reference
   const workerRef = useRef<Worker | null>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -50,13 +66,40 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
           if (ctx) {
             ctx.drawImage(imageBitmap, 0, 0);
 
+            // Simple main-thread watermark using userRef to avoid stale closures
+            if (!userRef.current) {
+              const width = canvas.width;
+              const height = canvas.height;
+              const fontSize = Math.max(24, Math.floor(width * 0.04));
+
+              ctx.save();
+              ctx.font = `800 ${fontSize}px "Genos", sans-serif`;
+              ctx.textAlign = 'right';
+              ctx.textBaseline = 'bottom';
+              ctx.lineJoin = 'round';
+
+              const padding = Math.floor(fontSize * 0.5);
+              const brainWidth = ctx.measureText('BRAIN').width;
+              const xR = width - padding;
+              const y = height - padding;
+
+              ctx.lineWidth = fontSize * 0.15;
+              ctx.strokeStyle = '#000000';
+              ctx.strokeText('BRAIN', xR, y);
+              ctx.strokeText('GLITCH', xR - brainWidth, y);
+
+              ctx.fillStyle = '#0d7ff2';
+              ctx.fillText('BRAIN', xR, y);
+              ctx.fillStyle = '#ffffff';
+              ctx.fillText('GLITCH', xR - brainWidth, y);
+              ctx.restore();
+            }
+
             // Clear any existing timeout
             if (renderingTimeoutRef.current) clearTimeout(renderingTimeoutRef.current);
 
             isProcessingRef.current = false;
 
-            // If no more work, schedule turning off the indicator
-            // If work arrives during this 200ms, processPending will cancel this timeout
             if (!pendingStateRef.current) {
               renderingTimeoutRef.current = setTimeout(() => {
                 setIsProcessing(false);
@@ -64,7 +107,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
             }
           }
 
-          processPending(); // Loop
+          processPending();
         } else if (error) {
           console.error('Worker Error:', error);
           if (renderingTimeoutRef.current) clearTimeout(renderingTimeoutRef.current);
@@ -83,7 +126,12 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     }
   }, []);
 
-  // Throttle refs
+  // Initial render process
+  useEffect(() => {
+    if (state.originalImage) {
+      applyGlitches(true);
+    }
+  }, []);
   const lastProcessTimeRef = useRef(0);
   const throttleFrameRef = useRef<number | null>(null);
 
@@ -125,7 +173,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const pendingStateRef = useRef<{ effects: EffectConfig[] } | null>(null);
 
   const processPending = async () => {
-    if (isProcessingRef.current || !pendingStateRef.current || !state.originalImage || !workerRef.current) return;
+    if (isProcessingRef.current || !pendingStateRef.current || !stateRef.current.originalImage || !workerRef.current) return;
 
     // Clear any pending cooldown timeout - we are working again!
     if (renderingTimeoutRef.current) {
@@ -141,7 +189,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
     try {
       const img = new Image();
-      img.src = state.originalImage;
+      img.src = stateRef.current.originalImage;
       await img.decode();
       const bitmap = await createImageBitmap(img);
 
@@ -149,8 +197,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
         id: Date.now().toString(),
         type: 'PROCESS',
         imageBitmap: bitmap,
-        effects: targetEffects,
-        shouldWatermark: !user
+        effects: targetEffects
       }, [bitmap]);
 
     } catch (err) {
@@ -166,12 +213,12 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   };
 
   const applyGlitches = async (commitToHistory: boolean = false, overrideEffects?: EffectConfig[]) => {
-    if (!state.originalImage) return;
+    if (!stateRef.current.originalImage) return;
 
-    const targetEffects = overrideEffects || state.effects;
+    const targetEffects = overrideEffects || stateRef.current.effects;
 
     if (commitToHistory) {
-      const currentHistoryItem = state.history[state.historyIndex];
+      const currentHistoryItem = stateRef.current.history[stateRef.current.historyIndex];
       const effectsChanged = !currentHistoryItem || JSON.stringify(currentHistoryItem.effects) !== JSON.stringify(targetEffects);
 
       if (effectsChanged) {
@@ -327,7 +374,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       <header className="flex items-center justify-between px-4 md:px-6 py-4 z-50 border-b border-white/5 bg-background-dark/80 backdrop-blur-md shrink-0">
         <div className="flex items-center gap-4 md:gap-6">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate(AppView.LANDING)}>
-            <h2 className="text-lg md:text-xl font-bold tracking-tighter uppercase">Glitch<span className="text-primary">Brain</span></h2>
+            <h2 className="text-lg md:text-xl font-bold tracking-normal uppercase">Glitch<span className="text-primary">Brain</span></h2>
           </div>
           <div className="h-4 w-px bg-white/10 hidden md:block"></div>
           <nav className="hidden md:flex gap-6 text-sm font-medium tracking-wide text-white/50">

@@ -30,7 +30,6 @@ interface WorkerMessage {
     type: 'PROCESS';
     imageBitmap: ImageBitmap;
     effects: EffectConfig[];
-    shouldWatermark: boolean;
 }
 
 interface WorkerResponse {
@@ -53,7 +52,7 @@ class GlitchWorkerEngine {
         this.ctx = context;
     }
 
-    public async process(imageBitmap: ImageBitmap, effects: EffectConfig[], shouldWatermark: boolean): Promise<ImageBitmap> {
+    public async process(imageBitmap: ImageBitmap, effects: EffectConfig[]): Promise<ImageBitmap> {
         const width = imageBitmap.width;
         const height = imageBitmap.height;
 
@@ -75,34 +74,8 @@ class GlitchWorkerEngine {
             this.applyEffect(effect, UNIT, normalizedScale);
         });
 
-        if (shouldWatermark) {
-            this.applyWatermark();
-        }
-
         // Return result as ImageBitmap
         return this.canvas.transferToImageBitmap();
-    }
-
-    private applyWatermark() {
-        const width = this.canvas.width;
-        const height = this.canvas.height;
-        const fontSize = Math.max(20, Math.floor(width * 0.04));
-
-        this.ctx.save();
-        // Font loading in worker is tricky, use basic font
-        this.ctx.font = `bold ${fontSize}px sans-serif`;
-        this.ctx.textAlign = 'right';
-        this.ctx.textBaseline = 'bottom';
-        const padding = Math.floor(fontSize * 0.5);
-
-        this.ctx.lineWidth = Math.max(2, fontSize * 0.08);
-        this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-        this.ctx.lineJoin = 'round';
-        this.ctx.strokeText('GlitchBrain', width - padding, height - padding);
-
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        this.ctx.fillText('GlitchBrain', width - padding, height - padding);
-        this.ctx.restore();
     }
 
     // --- EFFECT LOGIC (Copied from GlitchEngine with strict typing) ---
@@ -679,7 +652,7 @@ const engine = new GlitchWorkerEngine();
 self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     if (e.data.type === 'PROCESS') {
         try {
-            const resultBitmap = await engine.process(e.data.imageBitmap, e.data.effects, e.data.shouldWatermark);
+            const resultBitmap = await engine.process(e.data.imageBitmap, e.data.effects);
             const response: WorkerResponse = {
                 id: e.data.id,
                 success: true,

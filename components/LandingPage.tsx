@@ -104,7 +104,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
         <div className="flex items-center gap-4 md:gap-10">
           <div className="flex items-center gap-2 cursor-pointer group">
 
-            <h1 className="text-2xl font-bold tracking-tighter uppercase">Glitch<span className="text-primary">Brain</span></h1>
+            <h1 className="text-2xl font-bold tracking-normal uppercase">Glitch<span className="text-primary">Brain</span></h1>
           </div>
         </div>
         <div className="flex items-center gap-3 md:gap-6">

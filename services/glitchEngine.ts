@@ -95,28 +95,35 @@ export class GlitchEngine {
   private applyWatermark() {
     const width = this.canvas.width;
     const height = this.canvas.height;
-
-    // Scale font size based on image width, but keep it within reasonable bounds
-    const fontSize = Math.max(20, Math.floor(width * 0.04));
+    const fontSize = Math.max(24, Math.floor(width * 0.04));
 
     this.ctx.save();
-    // Use Genos font to match the header, fallback to sans-serif
-    this.ctx.font = `bold ${fontSize}px "Genos", sans-serif`;
+    this.ctx.font = `800 ${fontSize}px "Genos", sans-serif`;
     this.ctx.textAlign = 'right';
     this.ctx.textBaseline = 'bottom';
-
-    // Add some padding from the edge
-    const padding = Math.floor(fontSize * 0.5);
-
-    // High contrast stroke (outline)
-    this.ctx.lineWidth = Math.max(2, fontSize * 0.08);
-    this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
     this.ctx.lineJoin = 'round';
-    this.ctx.strokeText('GlitchBrain', width - padding, height - padding);
 
-    // Bright fill
-    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    this.ctx.fillText('GlitchBrain', width - padding, height - padding);
+    const padding = Math.floor(fontSize * 0.5);
+    const glitchText = 'GLITCH';
+    const brainText = 'BRAIN';
+
+    const brainWidth = this.ctx.measureText(brainText).width;
+    const xBrain = width - padding;
+    const xGlitch = xBrain - brainWidth;
+    const y = height - padding;
+
+    // 1. Black Outline (Stroke)
+    this.ctx.lineWidth = fontSize * 0.15;
+    this.ctx.strokeStyle = '#000000';
+    this.ctx.strokeText(brainText, xBrain, y);
+    this.ctx.strokeText(glitchText, xGlitch, y);
+
+    // 2. Fills
+    this.ctx.fillStyle = '#0d7ff2';
+    this.ctx.fillText(brainText, xBrain, y);
+
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.fillText(glitchText, xGlitch, y);
 
     this.ctx.restore();
   }
