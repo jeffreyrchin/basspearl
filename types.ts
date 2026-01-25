@@ -16,7 +16,10 @@ export type GlitchEffectType =
   | 'WAVE_DISTORTION'
   | 'COLOR_BLEED'
   | 'COMPRESSION_HELL'
-  | 'RANDOM_CHAOS';
+  | 'RANDOM_CHAOS'
+  | 'ANALOG_NOISE'
+  | 'HUE_ROTATION'
+  | 'INVERT_GHOST';
 
 export interface EffectConfig {
   type: GlitchEffectType;

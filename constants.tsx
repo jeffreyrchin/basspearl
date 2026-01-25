@@ -13,6 +13,9 @@ export const INITIAL_EFFECTS = [
   { type: 'COLOR_BLEED' as GlitchEffectType, intensity: 35, threshold: 50, active: false, seed: 890123 },
   { type: 'COMPRESSION_HELL' as GlitchEffectType, intensity: 60, threshold: 50, active: false, seed: 901234 },
   { type: 'RANDOM_CHAOS' as GlitchEffectType, intensity: 10, threshold: 50, active: false, seed: 111222 },
+  { type: 'ANALOG_NOISE' as GlitchEffectType, intensity: 40, threshold: 50, active: false, seed: 222333 },
+  { type: 'HUE_ROTATION' as GlitchEffectType, intensity: 0, threshold: 0, active: false, seed: 333444 },
+  { type: 'INVERT_GHOST' as GlitchEffectType, intensity: 50, threshold: 50, active: false, seed: 444555 },
 ];
 
 export const EFFECT_METADATA: Record<GlitchEffectType, {
@@ -33,6 +36,9 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   COLOR_BLEED: { label: 'Color Bleed', subLabel: 'HORIZONTAL SMEAR', icon: 'palette', intensityLabel: 'Bleed', thresholdLabel: 'Ghosting', showThreshold: true },
   COMPRESSION_HELL: { label: 'Compression Hell', subLabel: 'JPEG ARTIFACTS', icon: 'compress', intensityLabel: 'Block Size', thresholdLabel: 'Artifacting', showThreshold: true },
   RANDOM_CHAOS: { label: 'Random Chaos', subLabel: 'SYSTEM COLLAPSE', icon: 'bolt', intensityLabel: 'Entropy', thresholdLabel: 'Jitter', showThreshold: true },
+  ANALOG_NOISE: { label: 'Analog Noise', subLabel: 'FILM GRAIN', icon: 'grain', intensityLabel: 'Gain', thresholdLabel: 'Greyscale', showThreshold: true },
+  HUE_ROTATION: { label: 'Acid Trip', subLabel: 'COLOR CYCLING', icon: 'change_circle', intensityLabel: 'Spectrum', thresholdLabel: 'Vibrance', showThreshold: true },
+  INVERT_GHOST: { label: 'Spectral', subLabel: 'NEGATIVE MIX', icon: 'invert_colors', intensityLabel: 'Inversion', thresholdLabel: '', showThreshold: false },
 };
 
 export const PRESETS: Record<string, EffectConfig[]> = {
@@ -51,16 +57,36 @@ export const PRESETS: Record<string, EffectConfig[]> = {
     return { ...e, active: false };
   }),
   'DEEP_FRIED': INITIAL_EFFECTS.map(e => {
-    if (e.type === 'DEEP_FRY') return { ...e, active: true, intensity: 80, threshold: 70 }; // High heat + heavy posterize
-    if (e.type === 'DATA_CORRUPTION') return { ...e, active: true, intensity: 30, threshold: 20 }; // Mosh streaks
-    if (e.type === 'COMPRESSION_HELL') return { ...e, active: true, intensity: 70, threshold: 80 }; // Heavy JPEG artifacts
+    if (e.type === 'DEEP_FRY') return { ...e, active: true, intensity: 60, threshold: 40 }; // Lower saturation/contrast
+    if (e.type === 'ANALOG_NOISE') return { ...e, active: true, intensity: 50, threshold: 0 }; // Moderate color noise
+    if (e.type === 'WAVE_DISTORTION') return { ...e, active: true, intensity: 20, threshold: 0 }; // Slight warp instead of blocks
     return { ...e, active: false };
   }),
-  'GLITCH_ART': INITIAL_EFFECTS.map(e => {
-    if (e.type === 'PIXEL_SORT') return { ...e, active: true, intensity: 50, threshold: 60 }; // Chaotic sorting
-    if (e.type === 'BIT_CRUSH') return { ...e, active: true, intensity: 60, threshold: 40 }; // Pixelated + quantized
-    if (e.type === 'RANDOM_CHAOS') return { ...e, active: true, intensity: 30, threshold: 50 }; // Entropy specks
-    if (e.type === 'DATA_CORRUPTION') return { ...e, active: true, intensity: 60, threshold: 40 }; // Heavy mosh
+  'SYSTEM_FAILURE': INITIAL_EFFECTS.map(e => {
+    if (e.type === 'DATA_CORRUPTION') return { ...e, active: true, intensity: 70, threshold: 30 }; // Broken blocks
+    if (e.type === 'PIXEL_SORT') return { ...e, active: true, intensity: 40, threshold: 70 }; // Glitchy streaks
+    if (e.type === 'RANDOM_CHAOS') return { ...e, active: true, intensity: 40, threshold: 60 }; // Noise
+    if (e.type === 'CHANNEL_SHIFT') return { ...e, active: true, intensity: 30, threshold: 30 }; // Misalignment
+    return { ...e, active: false };
+  }),
+  'VHS_RETRO': INITIAL_EFFECTS.map(e => {
+    if (e.type === 'SCAN_LINES') return { ...e, active: true, intensity: 40, threshold: 30 }; // Lines
+    if (e.type === 'ANALOG_NOISE') return { ...e, active: true, intensity: 30, threshold: 80 }; // Mono Static
+    if (e.type === 'WAVE_DISTORTION') return { ...e, active: true, intensity: 30, threshold: 5 }; // Tracking
+    if (e.type === 'CHANNEL_SHIFT') return { ...e, active: true, intensity: 40, threshold: 0 }; // Aberration
+    if (e.type === 'COLOR_BLEED') return { ...e, active: true, intensity: 50, threshold: 60 }; // Smear
+    return { ...e, active: false };
+  }),
+  'ACID_TRIP': INITIAL_EFFECTS.map(e => {
+    if (e.type === 'HUE_ROTATION') return { ...e, active: true, intensity: 50, threshold: 50 }; // Color Cycle
+    if (e.type === 'WAVE_DISTORTION') return { ...e, active: true, intensity: 70, threshold: 20 }; // Melting
+    if (e.type === 'COLOR_BLEED') return { ...e, active: true, intensity: 60, threshold: 40 }; // Trails
+    return { ...e, active: false };
+  }),
+  'GHOST_MACHINE': INITIAL_EFFECTS.map(e => {
+    if (e.type === 'INVERT_GHOST') return { ...e, active: true, intensity: 60, threshold: 50 }; // Negative
+    if (e.type === 'PIXEL_SORT') return { ...e, active: true, intensity: 40, threshold: 20 }; // Ethereal lines
+    if (e.type === 'COLOR_BLEED') return { ...e, active: true, intensity: 50, threshold: 80 }; // Glow
     return { ...e, active: false };
   })
 };

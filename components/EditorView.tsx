@@ -283,12 +283,12 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
             {isActive && (
               <div className="space-y-4 px-1 pb-2 mt-4">
                 <div className="space-y-2">
-                  <div className="flex justify-between text-[10px] font-bold text-white/60"><span>INTENSITY</span><span>{effect.intensity}%</span></div>
+                  <div className="flex justify-between text-[10px] font-bold text-white/60"><span>{meta.intensityLabel?.toUpperCase() || 'INTENSITY'}</span><span>{effect.intensity}%</span></div>
                   <input type="range" min="0" max="100" value={effect.intensity} onChange={(e) => handleEffectChange(idx, { intensity: parseInt(e.target.value) }, true)} onMouseUp={handleHistoryCommit} onTouchEnd={handleHistoryCommit} className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-primary" />
                 </div>
                 {(meta.showThreshold ?? true) && (
                   <div className="space-y-2">
-                    <div className="flex justify-between text-[10px] font-bold text-white/60"><span>THRESHOLD</span><span>{effect.threshold}%</span></div>
+                    <div className="flex justify-between text-[10px] font-bold text-white/60"><span>{meta.thresholdLabel?.toUpperCase() || 'THRESHOLD'}</span><span>{effect.threshold}%</span></div>
                     <input type="range" min="0" max="100" value={effect.threshold} onChange={(e) => handleEffectChange(idx, { threshold: parseInt(e.target.value) }, true)} onMouseUp={handleHistoryCommit} onTouchEnd={handleHistoryCommit} className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-primary" />
                   </div>
                 )}

@@ -12,7 +12,10 @@ type GlitchEffectType =
     | 'WAVE_DISTORTION'
     | 'COLOR_BLEED'
     | 'COMPRESSION_HELL'
-    | 'RANDOM_CHAOS';
+    | 'RANDOM_CHAOS'
+    | 'ANALOG_NOISE'
+    | 'HUE_ROTATION'
+    | 'INVERT_GHOST';
 
 interface EffectConfig {
     type: GlitchEffectType;
@@ -146,6 +149,15 @@ class GlitchWorkerEngine {
                 break;
             case 'RANDOM_CHAOS':
                 this.randomChaos(imageData, intensity, threshold, UNIT);
+                break;
+            case 'ANALOG_NOISE':
+                this.analogNoise(imageData, intensity, threshold, UNIT);
+                break;
+            case 'HUE_ROTATION':
+                this.hueRotation(imageData, intensity, threshold);
+                break;
+            case 'INVERT_GHOST':
+                this.invertGhost(imageData, intensity, threshold);
                 break;
         }
 
@@ -512,6 +524,152 @@ class GlitchWorkerEngine {
                     }
                 }
             }
+        }
+    }
+
+    private analogNoise(imageData: ImageData, intensity: number, threshold: number, UNIT: number) {
+        if (intensity === 0) return;
+        const pixels = imageData.data;
+        // Intensity = Amount of noise
+        // Threshold = Color Noise vs Mono Noise (High threshold = More Mono)
+        const amount = intensity / 100 * 255; // 0-255 range
+        const monoThreshold = threshold / 100;
+
+        for (let i = 0; i < pixels.length; i += 4) {
+            const isMono = this.rand() < monoThreshold;
+
+            if (isMono) {
+                const noise = (this.rand() - 0.5) * amount;
+                pixels[i] = Math.min(255, Math.max(0, pixels[i] + noise));
+                pixels[i + 1] = Math.min(255, Math.max(0, pixels[i + 1] + noise));
+                pixels[i + 2] = Math.min(255, Math.max(0, pixels[i + 2] + noise));
+            } else {
+                pixels[i] = Math.min(255, Math.max(0, pixels[i] + (this.rand() - 0.5) * amount));
+                pixels[i + 1] = Math.min(255, Math.max(0, pixels[i + 1] + (this.rand() - 0.5) * amount));
+                pixels[i + 2] = Math.min(255, Math.max(0, pixels[i + 2] + (this.rand() - 0.5) * amount));
+            }
+        }
+    }
+
+    private hueRotation(imageData: ImageData, intensity: number, threshold: number) {
+        if (intensity === 0) return;
+        const pixels = imageData.data;
+        // Intensity = Degrees (0-100 -> 0-360)
+        // Threshold = Saturation Boost (0-100 -> 1.0-3.0)
+
+        const degrees = (intensity / 100) * 360;
+        const satBoost = 1 + (threshold / 100) * 2;
+
+        // Pre-calculate sin/cos for rotation
+        const rad = degrees * (Math.PI / 180);
+        const cosA = Math.cos(rad);
+        const sinA = Math.sin(rad);
+
+        // Matrix weights for RGB -> YIQ -> Rotate -> RGB
+        // Using standard YIQ conversion approximation
+        // This is expensive per pixel, but it's the "Truth" worker.
+
+        for (let i = 0; i < pixels.length; i += 4) {
+            const r = pixels[i];
+            const g = pixels[i + 1];
+            const b = pixels[i + 2];
+
+            // Simple Hue Rotate approximation to avoid heavy matrix math if possible, 
+            // but for "Acid" accurate rotation is better.
+            // Let's use a simplified approach that works well enough.
+
+            // Convert to HSL/HSV? limit: performance.
+            // Let's use a matrix approximation.
+
+            // Standard Hue Rotate matrix
+            const mag = Math.sqrt(3);
+            const x = mag * sinA; // Optimization consts not ideal here, doing simple RGB rotation
+
+            // Actually, for "Acid Trip", we often want cycle shifting which is faster
+            // BUT user wants Premium, so let's do real Hue Shift.
+
+            // U, V, W method
+            // Normalize
+            // It's cheaper to just convert RGB to HSL, shift H, back to RGB
+
+            this.applyHueShiftPixel(pixels, i, degrees, satBoost);
+        }
+    }
+
+    private applyHueShiftPixel(pixels: Uint8ClampedArray, i: number, degree: number, satBoost: number) {
+        let r = pixels[i] / 255;
+        let g = pixels[i + 1] / 255;
+        let b = pixels[i + 2] / 255;
+
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        let h = 0, s = 0, l = (max + min) / 2;
+
+        if (max !== min) {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+
+        // Apply Shift
+        h = (h + (degree / 360)) % 1;
+        if (h < 0) h += 1;
+
+        // Apply Saturation Boost
+        s = Math.min(1, s * satBoost);
+
+        // Back to RGB
+        if (s === 0) {
+            r = g = b = l;
+        } else {
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            r = this.hue2rgb(p, q, h + 1 / 3);
+            g = this.hue2rgb(p, q, h);
+            b = this.hue2rgb(p, q, h - 1 / 3);
+        }
+
+        pixels[i] = r * 255;
+        pixels[i + 1] = g * 255;
+        pixels[i + 2] = b * 255;
+    }
+
+    private hue2rgb(p: number, q: number, t: number) {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1 / 6) return p + (q - p) * 6 * t;
+        if (t < 1 / 2) return q;
+        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+        return p;
+    }
+
+    private invertGhost(imageData: ImageData, intensity: number, threshold: number) {
+        if (intensity === 0) return;
+        const pixels = imageData.data;
+        // Intensity = Opacity of Inversion (0-100)
+        // Threshold = Not used much, maybe brightness bias? Let's use it as blend mode trigger
+
+        const opacity = intensity / 100;
+
+        for (let i = 0; i < pixels.length; i += 4) {
+            const r = pixels[i];
+            const g = pixels[i + 1];
+            const b = pixels[i + 2];
+
+            // Invert
+            const ir = 255 - r;
+            const ig = 255 - g;
+            const ib = 255 - b;
+
+            // Blend Difference/Exclusion style
+            pixels[i] = r * (1 - opacity) + ir * opacity;
+            pixels[i + 1] = g * (1 - opacity) + ig * opacity;
+            pixels[i + 2] = b * (1 - opacity) + ib * opacity;
         }
     }
 }
