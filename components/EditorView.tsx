@@ -412,52 +412,52 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       {/* Main Content - Flex Layout */}
       <main className="flex flex-1 relative bg-background-dark grid-bg overflow-hidden faed-in">
         {/* Canvas Area */}
-        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden relative">
-          {/* Floating Canvas Controls */}
-          {/* Floating Canvas Controls */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 glass-panel p-1.5 rounded-xl z-30">
-            <button
-              onClick={handleUndo}
-              disabled={state.historyIndex <= 0}
-              className={`size-8 flex items-center justify-center rounded-lg transition-colors ${state.historyIndex <= 0 ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
-              title="Undo"
-            >
-              <span className="material-symbols-outlined text-[20px] leading-none">undo</span>
-            </button>
-            <button
-              onClick={handleRedo}
-              disabled={state.historyIndex >= state.history.length - 1}
-              className={`size-8 flex items-center justify-center rounded-lg transition-colors ${state.historyIndex >= state.history.length - 1 ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
-              title="Redo"
-            >
-              <span className="material-symbols-outlined text-[20px] leading-none">redo</span>
-            </button>
-            <div className="w-px h-4 bg-white/10 mx-1"></div>
-            <button
-              onMouseDown={() => setIsPreviewing(true)}
-              onMouseUp={() => setIsPreviewing(false)}
-              onMouseLeave={() => setIsPreviewing(false)}
-              className={`flex items-center gap-2 px-3 md:px-4 h-8 rounded-lg text-white text-[10px] font-bold uppercase tracking-[0.15em] cyber-glow transition-all ${isPreviewing ? 'bg-white text-black' : 'bg-primary text-white'}`}
-            >
-              <span className="material-symbols-outlined text-[16px]">compare</span>
-              <span className="hidden sm:inline">{isPreviewing ? 'Original' : 'Preview'}</span>
-            </button>
+        <div className="flex-1 flex flex-col items-center justify-center p-0 overflow-hidden relative">
+          {/* Canvas Controls - Centered between header and image */}
+          <div className="w-full shrink-0 h-12 md:h-14 flex items-center justify-center z-30">
+            <div className="flex items-center gap-1.5 glass-panel p-1.5 rounded-xl shadow-lg border border-white/10 scale-90 md:scale-100">
+              <button
+                onClick={handleUndo}
+                disabled={state.historyIndex <= 0}
+                className={`size-8 flex items-center justify-center rounded-lg transition-colors ${state.historyIndex <= 0 ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+                title="Undo"
+              >
+                <span className="material-symbols-outlined text-[20px] leading-none">undo</span>
+              </button>
+              <button
+                onClick={handleRedo}
+                disabled={state.historyIndex >= state.history.length - 1}
+                className={`size-8 flex items-center justify-center rounded-lg transition-colors ${state.historyIndex >= state.history.length - 1 ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+                title="Redo"
+              >
+                <span className="material-symbols-outlined text-[20px] leading-none">redo</span>
+              </button>
+              <div className="w-px h-4 bg-white/10 mx-1"></div>
+              <button
+                onMouseDown={() => setIsPreviewing(true)}
+                onMouseUp={() => setIsPreviewing(false)}
+                onMouseLeave={() => setIsPreviewing(false)}
+                className={`flex items-center gap-2 px-3 md:px-4 h-8 rounded-lg text-white text-[10px] font-bold uppercase tracking-[0.15em] cyber-glow transition-all ${isPreviewing ? 'bg-white text-black' : 'bg-primary text-white'}`}
+              >
+                <span className="material-symbols-outlined text-[16px]">compare</span>
+                <span className="hidden sm:inline">{isPreviewing ? 'Original' : 'Preview'}</span>
+              </button>
+            </div>
           </div>
 
           {/* Image Canvas Container */}
-          <div className="relative w-full max-w-5xl aspect-video rounded-lg shadow-2xl overflow-hidden group border border-white/5 bg-black/20 flex items-center justify-center">
-
+          <div className="relative w-full h-full flex-1 min-h-0 overflow-hidden group border-white/5 bg-black/5 flex items-center justify-center">
             {/* Base Canvas */}
             <canvas
               ref={previewCanvasRef}
-              className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${isProcessing && !isPreviewing ? 'opacity-50' : 'opacity-100'}`}
+              className={`max-w-full max-h-full object-contain transition-opacity duration-300 shadow-2xl rounded-lg ${isProcessing && !isPreviewing ? 'opacity-50' : 'opacity-100'} ${isPreviewing ? 'hidden' : ''}`}
             />
 
             {/* Original Image Overlay for "Compare" */}
             {isPreviewing && state.originalImage && (
               <img
                 src={state.originalImage}
-                className={`absolute inset-0 w-full h-full object-contain bg-black`}
+                className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
                 alt="Original"
               />
             )}
@@ -472,20 +472,6 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
                   <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                   <span className="text-[10px] font-mono text-primary animate-pulse uppercase tracking-[0.2em]">Processing...</span>
                 </div>
-              </div>
-            )}
-          </div>
-
-          <div className="w-full max-w-5xl mt-4 flex flex-col gap-2 items-start text-[10px] text-white/40 font-mono">
-            <div className="flex gap-4">
-              <span>ACTIVE: {state.effects.filter(e => e.active).length}</span>
-              <span className="hidden sm:inline">ENGINE: GLITCH</span>
-              {isPreviewing && <span className="text-primary font-bold">PREVIEWING ORIGINAL</span>}
-            </div>
-            {!user && (
-              <div className="flex items-center gap-2 text-white/60 bg-white/5 border border-white/10 px-3 py-2 rounded-lg">
-                <span className="material-symbols-outlined text-[14px] text-primary">info</span>
-                <span>Watermark active on previews & downloads. <button onClick={() => openAuthModal('login')} className="text-primary font-bold hover:underline cursor-pointer">Sign in</button> to remove.</span>
               </div>
             )}
           </div>
@@ -526,7 +512,16 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
           {activeTab === 'layers' ? renderEffectsList() : renderPresetsList()}
 
-
+          {!user && (
+            <div className="p-3 mt-auto border-t border-white/5 bg-primary/5">
+              <div className="flex items-start gap-2 text-white/60 text-[10px] leading-tight font-medium">
+                <span className="material-symbols-outlined text-[14px] text-primary shrink-0">info</span>
+                <p>
+                  Watermark active. <button onClick={() => openAuthModal('login')} className="text-primary font-bold hover:underline cursor-pointer">Sign in</button> to remove.
+                </p>
+              </div>
+            </div>
+          )}
         </aside>
 
         {/* Mobile Effects Panel */}
@@ -587,13 +582,19 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       {/* Footer Status Bar */}
       <footer className="h-6 bg-[#050510] border-t border-white/5 px-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4 text-[11px] font-bold tracking-widest text-white/80 uppercase">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 mr-4">
             <span className={`size-1.5 rounded-full ${isProcessing ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'} shadow-sm shadow-green-500/50`}></span>
             {isProcessing ? 'Processing' : 'Ready'}
           </div>
-          <ExportCreditsDisplay variant="inline" />
+          <div className="h-3 w-px bg-white/10"></div>
+          <div className="flex gap-4 text-[9px] text-white/40">
+            <span>ACTIVE: {state.effects.filter(e => e.active).length}</span>
+            <span className="hidden sm:inline">ENGINE: GLITCH</span>
+            {isPreviewing && <span className="text-primary active-glow">PREVIEWING ORIGINAL</span>}
+          </div>
         </div>
         <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest text-white/70 uppercase">
+          <ExportCreditsDisplay variant="inline" />
           <button onClick={() => onOpenLegal(false)} className="hover:text-white transition-colors uppercase">Privacy & Terms</button>
         </div>
       </footer>
