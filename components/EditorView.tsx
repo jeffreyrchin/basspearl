@@ -51,7 +51,14 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     // but ensure one exists.
 
     newEffects[index] = { ...newEffects[index], seed, ...updates };
-    onUpdateState({ effects: newEffects });
+
+    // Determine if we should force a history commit (e.g. on toggle)
+    const isToggle = updates.active !== undefined;
+    if (isToggle) {
+      applyGlitches(true, newEffects);
+    } else {
+      onUpdateState({ effects: newEffects });
+    }
   };
 
   // Refs for processing loop
@@ -95,8 +102,10 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     }
   };
 
-  const applyGlitches = async (commitToHistory: boolean = false) => {
+  const applyGlitches = async (commitToHistory: boolean = false, overrideEffects?: EffectConfig[]) => {
     if (!state.originalImage) return;
+
+    const targetEffects = overrideEffects || state.effects;
 
     if (commitToHistory) {
       // Force immediate processing for history commits
@@ -104,15 +113,15 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       pendingStateRef.current = null;
       setIsProcessing(true);
       try {
-        const processed = await glitchEngine.processImage(state.originalImage, state.effects, !user, 800);
+        const processed = await glitchEngine.processImage(state.originalImage, targetEffects, !user, 800);
 
         // History Logic
         const currentHistoryItem = state.history[state.historyIndex];
-        const effectsChanged = !currentHistoryItem || JSON.stringify(currentHistoryItem.effects) !== JSON.stringify(state.effects);
+        const effectsChanged = !currentHistoryItem || JSON.stringify(currentHistoryItem.effects) !== JSON.stringify(targetEffects);
 
         if (effectsChanged) {
           const newHistory = state.history.slice(0, state.historyIndex + 1);
-          newHistory.push({ image: processed, effects: state.effects });
+          newHistory.push({ image: processed, effects: targetEffects });
 
           // Limit history size to 20
           if (newHistory.length > 20) {
@@ -122,10 +131,11 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
           onUpdateState({
             processedImage: processed,
             history: newHistory,
-            historyIndex: newHistory.length - 1
+            historyIndex: newHistory.length - 1,
+            effects: targetEffects
           });
         } else {
-          onUpdateState({ processedImage: processed });
+          onUpdateState({ processedImage: processed, effects: targetEffects });
         }
       } catch (err) {
         console.error(err);
@@ -136,7 +146,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     }
 
     // View Only Update - Queue it
-    pendingStateRef.current = { effects: state.effects };
+    pendingStateRef.current = { effects: targetEffects };
     if (!isProcessingRef.current) {
       requestAnimationFrame(processPending);
     }
@@ -206,6 +216,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       }));
 
       onUpdateState({ effects: seededEffects });
+      applyGlitches(true, seededEffects);
       setActiveTab('layers'); // Switch back to layers to see effects
     }
   };
