@@ -91,7 +91,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
       {/* Immersive Background */}
       <div className="absolute inset-0 z-0">
         <img
-          src="/landing-image.png"
+          src="/hero.jpg"
           alt="Glitch World"
           className="w-full h-full object-cover scale-105"
         />
