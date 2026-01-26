@@ -325,7 +325,7 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
                             <button
                                 onClick={onConfirm}
                                 disabled={!agreed}
-                                className={`px-8 py-2 rounded-lg font-bold text-xs uppercase tracking-widest transition-all ${agreed ? 'bg-primary hover:bg-primary/80 text-white cyber-glow' : 'bg-white/10 text-white/20 cursor-not-allowed'}`}
+                                className={`px-8 py-2 rounded-lg font-bold text-xs uppercase tracking-widest transition-all border ${agreed ? 'bg-black border-primary hover:bg-primary/30 text-white cyber-glow' : 'border-white/5 bg-white/10 text-white/20 cursor-not-allowed'}`}
                             >
                                 Agree & Continue
                             </button>

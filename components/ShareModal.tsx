@@ -107,7 +107,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, imageUrl, prev
                 <div className="grid grid-cols-2 gap-3 mb-2">
                     <button
                         onClick={handleDownload}
-                        className="col-span-2 py-3 rounded-xl bg-primary hover:bg-primary/80 text-white font-bold text-sm uppercase tracking-widest cyber-glow transition-all flex items-center justify-center gap-2"
+                        className="col-span-2 py-3 rounded-xl bg-black border border-primary hover:bg-primary/30 text-white font-bold text-sm uppercase tracking-widest cyber-glow transition-all flex items-center justify-center gap-2"
                     >
                         <span className="material-symbols-outlined">download</span>
                         Download

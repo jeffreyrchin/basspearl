@@ -38,7 +38,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onLoginClick, onSignupClick }) => {
                 </button>
                 <button
                     onClick={onSignupClick}
-                    className="hidden sm:block bg-primary hover:bg-primary/80 text-white px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest cyber-glow transition-all"
+                    className="hidden sm:block bg-black border border-primary hover:bg-primary/30 text-white px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all"
                 >
                     Sign Up
                 </button>

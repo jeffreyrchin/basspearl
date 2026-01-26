@@ -218,7 +218,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full py-3.5 rounded-xl bg-primary hover:bg-primary/80 text-white font-bold text-sm uppercase tracking-widest cyber-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full py-3.5 rounded-xl bg-black border border-primary hover:bg-primary/30 text-white font-bold text-sm uppercase tracking-widest cyber-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {isLoading ? (
                                 <>

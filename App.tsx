@@ -22,16 +22,14 @@ const App: React.FC = () => {
   const [legalModalOpen, setLegalModalOpen] = useState(false);
   const [forceLegal, setForceLegal] = useState(false);
   const [postConsentCallback, setPostConsentCallback] = useState<(() => void) | null>(null);
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(() => {
+    return !!localStorage.getItem('glitch_consent_v1');
+  });
 
   const processFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
-
-      // WEB WORKER STRATEGY (THE TRUTH):
-      // We load the FULL resolution image and store it.
-      // No resizing. No proxies.
-      // The EditorView will handle async processing via Web Worker.
 
       const initialHistoryItem = {
         effects: INITIAL_EFFECTS
@@ -39,10 +37,10 @@ const App: React.FC = () => {
 
       setState(prev => ({
         ...prev,
-        originalImage: result,      // Source of Truth (Full Res)
-        previewImage: null,         // Deprecated - we use source
-        processedImage: result,     // Start with original
-        processedImagePreview: null,// Deprecated
+        originalImage: result,
+        previewImage: null,
+        processedImage: result,
+        processedImagePreview: null,
         history: [initialHistoryItem],
         historyIndex: 0,
         effects: INITIAL_EFFECTS
@@ -53,9 +51,7 @@ const App: React.FC = () => {
   };
 
   const handleFileUpload = (file: File) => {
-    // Legacy fallback: if file comes through but consent missing (should be caught by click handler now)
-    const hasConsent = localStorage.getItem('glitch_consent_v1');
-    if (!hasConsent) {
+    if (!hasAcceptedTerms) {
       setPostConsentCallback(() => () => processFile(file));
       setForceLegal(true);
       setLegalModalOpen(true);
@@ -66,6 +62,7 @@ const App: React.FC = () => {
 
   const handleLegalConfirm = () => {
     localStorage.setItem('glitch_consent_v1', 'true');
+    setHasAcceptedTerms(true);
     setLegalModalOpen(false);
     setForceLegal(false);
 
@@ -96,7 +93,14 @@ const App: React.FC = () => {
   const renderView = () => {
     switch (view) {
       case AppView.LANDING:
-        return <LandingPage onFileUpload={handleFileUpload} onNavigate={navigateTo} onOpenLegal={handleOpenLegal} />;
+        return (
+          <LandingPage
+            onFileUpload={handleFileUpload}
+            onNavigate={navigateTo}
+            onOpenLegal={handleOpenLegal}
+            hasAcceptedTerms={hasAcceptedTerms}
+          />
+        );
       case AppView.EDITOR:
         return (
           <EditorView
@@ -107,7 +111,6 @@ const App: React.FC = () => {
           />
         );
       case AppView.GALLERY:
-        // Simplified Gallery - for demo, we go back to Landing or just show a back button
         return (
           <div className="h-screen bg-background-dark flex items-center justify-center flex-col gap-4">
             <h1 className="text-4xl font-bold uppercase tracking-widest text-primary active-glow">Gallery Mode</h1>
@@ -116,7 +119,14 @@ const App: React.FC = () => {
           </div>
         );
       default:
-        return <LandingPage onFileUpload={handleFileUpload} onNavigate={navigateTo} onOpenLegal={handleOpenLegal} />;
+        return (
+          <LandingPage
+            onFileUpload={handleFileUpload}
+            onNavigate={navigateTo}
+            onOpenLegal={handleOpenLegal}
+            hasAcceptedTerms={hasAcceptedTerms}
+          />
+        );
     }
   };
 

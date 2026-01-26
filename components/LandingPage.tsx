@@ -12,20 +12,18 @@ interface LandingPageProps {
   onFileUpload: (file: File) => void;
   onNavigate: (view: AppView) => void;
   onOpenLegal: (force: boolean, callback?: () => void) => void;
+  hasAcceptedTerms: boolean;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onOpenLegal }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onOpenLegal, hasAcceptedTerms }) => {
   const { user } = useAuth();
   const { canUpload, incrementUploads } = useUploadQuota();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
-  // New State for DND and Consent
+  // New State for DND
   const [isDragging, setIsDragging] = useState(false);
-  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(() => {
-    return !!localStorage.getItem('glitch_consent_v1');
-  });
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -82,28 +80,123 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
     }
   };
 
-  const handleToggleTerms = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked;
-    setHasAcceptedTerms(checked);
-    if (checked) {
-      localStorage.setItem('glitch_consent_v1', 'true');
-      trackEvent('terms_accepted');
-    } else {
-      localStorage.removeItem('glitch_consent_v1');
-    }
-  };
-
   const openAuthModal = (mode: 'login' | 'signup') => {
     setAuthMode(mode);
     setAuthModalOpen(true);
   };
 
+  // Stage 1: Hero View
+  const renderHeroView = () => (
+    <main className="flex-1 relative flex flex-col items-center justify-center text-center px-4 overflow-hidden">
+      {/* Immersive Background */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src="/landing-image.png"
+          alt="Glitch World"
+          className="w-full h-full object-cover scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background-dark/5 via-background-dark/10 to-background-dark"></div>
+      </div>
+
+      <div className="relative z-10 max-w-4xl animate-in fade-in slide-in-from-bottom-8 duration-1000">
+        <h2 className="text-5xl sm:text-6xl active-glow md:text-8xl font-bold tracking-tighter uppercase mb-8 leading-[0.9] drop-shadow-2xl">
+          Apply stunning effects
+          <br />
+          to your images
+        </h2>
+        <p className="text-white/60 text-lg md:text-xl font-medium uppercase tracking-[0.3em] mb-12 max-w-2xl mx-auto active-glow">
+          Glitch Art Editor
+        </p>
+
+        <button
+          onClick={() => onOpenLegal(true)}
+          className="group relative px-8 py-3 bg-black border-primary border-2 text-white font-bold text-sm uppercase tracking-[0.3em] rounded-full overflow-hidden transition-all hover:scale-105 cyber-glow"
+        >
+          <span className="relative z-10">Start Editing</span>
+          <div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+        </button>
+      </div>
+    </main>
+  );
+
+  // Stage 2: Upload Hub
+  const renderUploadHub = () => (
+    <main className="flex-1 relative flex flex-col items-center justify-center p-4 md:p-8 grid-bg">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="relative z-10 w-full max-w-4xl text-center flex flex-col items-center">
+        <h2 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tighter uppercase mb-8 md:mb-12 max-w-3xl leading-none">
+          Create glitch art
+          <br />
+          <span className="text-primary active-glow italic">in seconds</span>
+        </h2>
+
+        <p className="text-white/40 text-sm md:text-base font-bold uppercase tracking-[0.2em] mb-8 animate-pulse">
+          Upload an image to begin
+        </p>
+
+        <div
+          onClick={handleUploadClick}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`w-full min-h-[400px] md:min-h-[500px] glass-panel rounded-2xl md:rounded-3xl upload-zone-glow flex flex-col items-center justify-center border-dashed border-2 transition-all group overflow-hidden relative border-primary/30 hover:border-primary/60 cursor-pointer ${isDragging ? 'bg-primary/10 border-primary scale-[1.02]' : ''}`}
+        >
+          <input
+            type="file"
+            className="hidden"
+            accept="image/*"
+            onChange={handleFileChange}
+            ref={fileInputRef}
+          />
+
+          <div className={`flex flex-col items-center transition-all pb-24 ${isDragging ? 'scale-110' : ''}`}>
+            <div className="size-16 md:size-20 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 transition-all bg-primary/10 text-primary group-hover:scale-110">
+              <span className="material-symbols-outlined text-[32px] md:text-[48px]">{isDragging ? 'download' : 'upload_file'}</span>
+            </div>
+            <h3 className="text-base md:text-lg font-bold uppercase tracking-widest mb-2 px-4 text-white">
+              Drop your media here
+            </h3>
+            <p className="text-white/40 text-[10px] md:text-sm font-medium mb-6 md:mb-8">PNG, JPG, TIFF (UP TO 50MB)</p>
+
+            <div className="bg-accent-blue hover:bg-white text-black px-6 md:px-10 py-2.5 md:py-3 rounded-full text-[10px] md:text-xs font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(0,242,255,0.4)] transition-all">
+              Upload Image
+            </div>
+          </div>
+        </div>
+
+        <div className="w-full flex items-center justify-center mt-12 md:mt-24 mb-6 md:mb-8">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-8 bg-primary"></span>
+            <h4 className="text-[13px] font-bold uppercase tracking-[0.2em] text-white/70">Distortion Protocols</h4>
+            <span className="h-px w-8 bg-primary"></span>
+          </div>
+        </div>
+
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 pb-6">
+          {[
+            { title: 'Pixel Sorting', desc: 'Vertical scan data displacement', icon: 'sort' },
+            { title: 'RGB Shifting', desc: 'Chromatic aberration artifacts', icon: 'layers' },
+            { title: 'Data Moshing', desc: 'Delta compression distortion', icon: 'grid_4x4' },
+            { title: 'CRT Simulation', desc: 'Synthetic cathode ray rendering', icon: 'reorder' }
+          ].map(feature => (
+            <div key={feature.title} className="glass-panel p-4 md:p-6 rounded-xl md:rounded-2xl border border-white/5 hover:border-primary/20 transition-all group text-left">
+              <div className="size-8 md:size-10 rounded-lg md:rounded-xl bg-primary/10 flex items-center justify-center mb-3 md:mb-4 group-hover:bg-primary/20 transition-colors">
+                <span className="material-symbols-outlined text-primary text-[20px] md:text-[24px]">{feature.icon}</span>
+              </div>
+              <h5 className="text-[12px] md:text-[14px] font-bold uppercase tracking-wider mb-1 text-white">{feature.title}</h5>
+              <p className="text-[10px] md:text-[12px] text-white/60 font-medium uppercase tracking-wide leading-relaxed">{feature.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+
   return (
     <div className="relative min-h-screen flex flex-col bg-background-dark font-display text-white overflow-x-hidden">
-      <header className="flex items-center justify-between px-4 md:px-8 py-4 md:py-6 z-50 border-b border-white/5 bg-background-dark/60 backdrop-blur-xl sticky top-0">
+      <header className="flex items-center justify-between px-4 md:px-8 py-4 z-50 border-b border-white/10 bg-background-dark/60 backdrop-blur-xl sticky top-0">
         <div className="flex items-center gap-4 md:gap-10">
           <div className="flex items-center gap-2 cursor-pointer group">
-
             <h1 className="text-2xl font-bold tracking-normal uppercase">Glitch<span className="text-primary">Brain</span></h1>
           </div>
         </div>
@@ -121,103 +214,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
         </div>
       </header>
 
-      <main className="flex-1 relative flex flex-col items-center justify-center p-4 md:p-8 grid-bg">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
-        <div className="relative z-10 w-full max-w-4xl text-center flex flex-col items-center">
-          <h2 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tighter uppercase mb-8 md:mb-12 max-w-3xl leading-none">
-            Create Glitch Art
-            <br />
-            <span className="text-primary active-glow italic">in seconds</span>
-          </h2>
+      {hasAcceptedTerms ? renderUploadHub() : renderHeroView()}
 
-          <div
-            onClick={handleUploadClick}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={`w-full min-h-[400px] md:min-h-[500px] glass-panel rounded-2xl md:rounded-3xl upload-zone-glow flex flex-col items-center justify-center border-dashed border-2 transition-all group overflow-hidden relative border-primary/30 ${hasAcceptedTerms ? 'hover:border-primary/60 cursor-pointer' : 'cursor-default'} ${isDragging ? 'bg-primary/10 border-primary scale-[1.02]' : ''}`}
-          >
-            <input
-              type="file"
-              className="hidden"
-              accept="image/*"
-              onChange={handleFileChange}
-              ref={fileInputRef}
-            />
-
-            <div className={`flex flex-col items-center transition-all pb-20 ${isDragging ? 'scale-110' : ''}`}>
-              <div className={`size-16 md:size-20 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 transition-all ${hasAcceptedTerms ? 'bg-primary/10 text-primary group-hover:scale-110' : 'bg-white/5 text-white/20'}`}>
-                <span className="material-symbols-outlined text-[32px] md:text-[48px]">{isDragging ? 'download' : 'upload_file'}</span>
-              </div>
-              <h3 className={`text-base md:text-lg font-bold uppercase tracking-widest mb-2 px-4 ${hasAcceptedTerms ? 'text-white' : 'text-white/20'}`}>
-                Drop your media here
-              </h3>
-              <p className="text-white/40 text-[10px] md:text-sm font-medium mb-6 md:mb-8">PNG, JPG, TIFF (UP TO 50MB)</p>
-
-              {hasAcceptedTerms ? (
-                <div className="bg-accent-blue hover:bg-white text-black px-6 md:px-10 py-2.5 md:py-3 rounded-full text-[10px] md:text-xs font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(0,242,255,0.4)] transition-all">
-                  Upload Image
-                </div>
-              ) : (
-                <div className="text-[14px] md:text-[16px] font-bold text-primary uppercase tracking-widest bg-transparent px-4 py-2 animate-pulse drop-shadow-[0_0_8px_rgba(13,127,242,0.8)]">
-                  Accept Privacy & Terms to Upload
-                </div>
-              )}
-            </div>
-
-            {/* Localized Legal Checkbox */}
-            <div
-              className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-black/40 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/5 hover:border-white/10 transition-colors group/check"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <input
-                type="checkbox"
-                id="terms-check"
-                checked={hasAcceptedTerms}
-                onChange={handleToggleTerms}
-                className="size-5 rounded border-white/20 bg-white/5 text-primary focus:ring-primary/50 transition-all cursor-pointer"
-              />
-              <label
-                htmlFor="terms-check"
-                className="text-[10px] font-bold uppercase tracking-widest cursor-pointer whitespace-nowrap"
-              >
-                I agree to the <button onClick={() => onOpenLegal(false)} className="text-primary uppercase hover:underline underline-offset-4">Privacy & Terms</button>
-              </label>
-            </div>
-          </div>
-
-          <div className="w-full flex items-center justify-center mt-12 md:mt-24 mb-6 md:mb-8">
-            <div className="flex items-center gap-3">
-              <span className="h-px w-8 bg-primary"></span>
-              <h4 className="text-[13px] font-bold uppercase tracking-[0.2em] text-white/70">Distortion Protocols</h4>
-              <span className="h-px w-8 bg-primary"></span>
-            </div>
-          </div>
-
-          <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 pb-6">
-            {[
-              { title: 'Pixel Sorting', desc: 'Vertical scan data displacement', icon: 'sort' },
-              { title: 'RGB Shifting', desc: 'Chromatic aberration artifacts', icon: 'layers' },
-              { title: 'Data Moshing', desc: 'Delta compression distortion', icon: 'grid_4x4' },
-              { title: 'CRT Simulation', desc: 'Synthetic cathode ray rendering', icon: 'reorder' }
-            ].map(feature => (
-              <div key={feature.title} className="glass-panel p-4 md:p-6 rounded-xl md:rounded-2xl border border-white/5 hover:border-primary/20 transition-all group text-left">
-                <div className="size-8 md:size-10 rounded-lg md:rounded-xl bg-primary/10 flex items-center justify-center mb-3 md:mb-4 group-hover:bg-primary/20 transition-colors">
-                  <span className="material-symbols-outlined text-primary text-[20px] md:text-[24px]">{feature.icon}</span>
-                </div>
-                <h5 className="text-[12px] md:text-[14px] font-bold uppercase tracking-wider mb-1 text-white">{feature.title}</h5>
-                <p className="text-[10px] md:text-[12px] text-white/60 font-medium uppercase tracking-wide leading-relaxed">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </main>
-
-      <footer className="py-4 md:h-8 bg-[#050510] border-t border-white/5 px-4 md:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 z-50">
-        <div className="flex items-center gap-6 text-[10px] md:text-[11px] font-bold tracking-widest text-white/80 uppercase">
+      <footer className="py-4 md:h-8 bg-[#050510] border-t border-white/5 px-4 md:px-6 flex flex-row items-center justify-between gap-4 z-50">
+        <div className="hidden sm:inline flex items-center gap-6 text-[10px] md:text-[11px] font-bold tracking-widest text-white/80 uppercase">
           <div className="flex items-center gap-1.5">
             <span className="size-1.5 rounded-full bg-primary/50 shadow-sm shadow-primary/50"></span>
-            <span className="hidden sm:inline">System: Online</span>
+            <span>System: Online</span>
           </div>
         </div>
         <span className="text-[11px] font-bold tracking-widest text-white/70 uppercase">© 2026 GlitchBrain</span>

@@ -400,13 +400,13 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
                 onMouseDown={() => setIsPreviewingOriginal(true)}
                 onMouseUp={() => setIsPreviewingOriginal(false)}
                 onMouseLeave={() => setIsPreviewingOriginal(false)}
-                className={`flex items-center gap-2 px-3 md:px-4 h-8 rounded-lg text-white text-[10px] font-bold uppercase tracking-[0.15em] cyber-glow transition-all ${isPreviewingOriginal ? 'bg-white text-black' : 'bg-primary text-white'}`}
+                className={`flex items-center gap-2 px-3 md:px-4 h-8 rounded-lg text-white text-[10px] font-bold uppercase tracking-[0.15em] cyber-glow transition-all border border-primary ${isPreviewingOriginal ? 'bg-white text-black border-white' : 'bg-black text-white'}`}
               >
                 <span className="material-symbols-outlined text-[16px]">compare</span>
                 <span className="hidden sm:inline">{isPreviewingOriginal ? 'Original' : 'Preview'}</span>
               </button>
               <div className="w-px h-4 bg-white/10 mx-1"></div>
-              <button onClick={handleShare} className="flex items-center gap-2 px-3 md:px-4 h-8 rounded-lg bg-primary text-white text-[10px] font-bold uppercase tracking-[0.15em] cyber-glow hover:bg-primary/80">
+              <button onClick={handleShare} className="flex items-center gap-2 px-3 md:px-4 h-8 rounded-lg bg-black text-white text-[10px] font-bold uppercase tracking-[0.15em] cyber-glow hover:bg-primary/30 border border-primary">
                 <span className="material-symbols-outlined text-[16px]">download</span>
                 <span className="hidden sm:inline">Export</span>
               </button>
@@ -438,8 +438,8 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
         <aside className="w-80 shrink-0 glass-panel flex flex-col border-l border-white/10 shadow-2xl h-full hidden lg:flex">
           <div className="p-5 border-b border-white/5 shrink-0">
             <div className="flex gap-2 mb-4">
-              <button onClick={() => setActiveTab('layers')} className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors ${activeTab === 'layers' ? 'bg-primary text-white' : 'bg-white/5 text-white/40 hover:text-white'}`}>Layers</button>
-              <button onClick={() => setActiveTab('presets')} className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors ${activeTab === 'presets' ? 'bg-primary text-white' : 'bg-white/5 text-white/40 hover:text-white'}`}>Presets</button>
+              <button onClick={() => setActiveTab('layers')} className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors border ${activeTab === 'layers' ? 'bg-primary/10 text-primary active-glow border-primary/30' : 'bg-white/5 text-white/40 hover:text-white border-white/5'}`}>Layers</button>
+              <button onClick={() => setActiveTab('presets')} className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors border ${activeTab === 'presets' ? 'bg-primary/10 text-primary active-glow border-primary/30' : 'bg-white/5 text-white/40 hover:text-white border-white/5'}`}>Presets</button>
             </div>
             {activeTab === 'layers' && (
               <div className="relative flex items-center">
@@ -451,7 +451,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
           {activeTab === 'layers' ? renderEffectsList() : renderPresetsList()}
           {!user && (
             <div className="p-3 mt-auto border-t border-white/5 bg-primary/5">
-              <div className="flex items-start gap-2 text-white/60 text-[10px] leading-tight font-medium">
+              <div className="flex items-start gap-2 text-white/60 text-[11px] leading-tight font-medium">
                 <span className="material-symbols-outlined text-[14px] text-primary shrink-0">info</span>
                 <p>Watermark active. <button onClick={() => openAuthModal('login')} className="text-primary font-bold hover:underline cursor-pointer">Sign in</button> to remove.</p>
               </div>
