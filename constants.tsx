@@ -28,7 +28,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
 }> = {
   PIXEL_SORT: { label: 'Pixel Sort', subLabel: 'VERTICAL SCAN', icon: 'sort', intensityLabel: 'Streak Length', thresholdLabel: 'Trigger Level', showThreshold: true },
   CHANNEL_SHIFT: { label: 'RGB Shift', subLabel: 'CHROMATIC ABERRATION', icon: 'layers', intensityLabel: 'Offset', thresholdLabel: 'Vertical Tear', showThreshold: true },
-  DATA_CORRUPTION: { label: 'Data Mosh', subLabel: 'DELTA COMPRESSION', icon: 'grid_4x4', intensityLabel: 'Mosh Length', thresholdLabel: 'Mosh Density', showThreshold: true },
+  DATA_CORRUPTION: { label: 'Datamosh', subLabel: 'DELTA COMPRESSION', icon: 'grid_4x4', intensityLabel: 'Mosh Length', thresholdLabel: 'Mosh Density', showThreshold: true },
   DEEP_FRY: { label: 'Deep Fry', subLabel: 'SATURATION HELL', icon: 'local_fire_department', intensityLabel: 'Heat', thresholdLabel: 'Posterize', showThreshold: true },
   SCAN_LINES: { label: 'Scan Lines', subLabel: 'CRT SIMULATION', icon: 'reorder', intensityLabel: 'Opacity', thresholdLabel: 'Line Spacing', showThreshold: true },
   BIT_CRUSH: { label: 'Bit Crush', subLabel: '8-BIT DECIMATION', icon: 'developer_board', intensityLabel: 'Quantize', thresholdLabel: 'Resample', showThreshold: true },

@@ -7,6 +7,7 @@ import AuthModal from './AuthModal';
 import ExportCreditsDisplay from './ExportCreditsDisplay';
 import UserMenu from './UserMenu';
 import ShareModal from './ShareModal';
+import InfoModal from './InfoModal';
 import { trackEvent } from '../services/analytics';
 
 interface EditorViewProps {
@@ -29,6 +30,8 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [infoModalOpen, setInfoModalOpen] = useState(false);
+  const [infoModalType, setInfoModalType] = useState<'help' | 'about'>('help');
 
   const isDraggingRef = useRef(false);
   const isDraggingFromHandleRef = useRef(false);
@@ -496,6 +499,22 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
           <button onClick={() => setShowMobileEffects(!showMobileEffects)} className="lg:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 uppercase text-xs font-bold">Effects</button>
         </div>
         <div className="flex items-center gap-2 md:gap-4">
+          <button
+            onClick={() => { setInfoModalType('help'); setInfoModalOpen(true); }}
+            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-colors"
+            title="Help & Documentation"
+          >
+            <span className="material-symbols-outlined text-[18px]">help</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Help</span>
+          </button>
+          <button
+            onClick={() => { setInfoModalType('about'); setInfoModalOpen(true); }}
+            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-colors"
+            title="About GlitchBrain"
+          >
+            <span className="material-symbols-outlined text-[18px]">info</span>
+            <span className="text-xs font-bold uppercase tracking-wider">About</span>
+          </button>
           <UserMenu onLoginClick={() => openAuthModal('login')} onSignupClick={() => openAuthModal('signup')} />
         </div>
       </header>
@@ -603,6 +622,25 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
               }}
             >
               <div data-drag-handle="true" className="flex justify-center p-2"><div className="w-12 h-1 bg-white/20 rounded-full"></div></div>
+
+              {/* Quick Actions: Help & About */}
+              <div className="flex items-center gap-2 px-5 py-2.5 border-b border-white/5">
+                <button
+                  onClick={() => { setInfoModalType('help'); setInfoModalOpen(true); }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white/80 flex-1"
+                >
+                  <span className="material-symbols-outlined text-[18px]">help</span>
+                  <span className="text-xs font-bold uppercase tracking-wider">Help</span>
+                </button>
+                <button
+                  onClick={() => { setInfoModalType('about'); setInfoModalOpen(true); }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white/80 flex-1"
+                >
+                  <span className="material-symbols-outlined text-[18px]">info</span>
+                  <span className="text-xs font-bold uppercase tracking-wider">About</span>
+                </button>
+              </div>
+
               <div data-drag-handle="true" className="flex items-center justify-between px-5 py-3 border-b border-white/5">
                 <div className="flex gap-4">
                   <button onClick={() => setActiveTab('layers')} className={`text-xs font-bold uppercase tracking-widest ${activeTab === 'layers' ? 'text-primary' : 'text-white/40'}`}>Layers</button>
@@ -636,6 +674,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} initialMode={authMode} />
       <ShareModal isOpen={shareModalOpen} onClose={() => setShareModalOpen(false)} imageUrl={state.processedImage} previewUrl={state.processedImagePreview} />
+      <InfoModal isOpen={infoModalOpen} onClose={() => setInfoModalOpen(false)} type={infoModalType} />
     </div>
   );
 };

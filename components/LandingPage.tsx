@@ -1,9 +1,8 @@
 
 import React, { useState } from 'react';
 import { AppView } from '../types';
-import UserMenu from './UserMenu';
+import Navbar from './Navbar';
 import AuthModal from './AuthModal';
-import ExportCreditsDisplay from './ExportCreditsDisplay';
 import { useAuth } from '../context/AuthContext';
 import { useUploadQuota } from '../hooks/useUploadQuota';
 import { trackEvent } from '../services/analytics';
@@ -176,7 +175,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
           {[
             { title: 'Pixel Sorting', desc: 'Vertical scan data displacement', icon: 'sort' },
             { title: 'RGB Shifting', desc: 'Chromatic aberration artifacts', icon: 'layers' },
-            { title: 'Data Moshing', desc: 'Delta compression distortion', icon: 'grid_4x4' },
+            { title: 'Datamoshing', desc: 'Delta compression distortion', icon: 'grid_4x4' },
             { title: 'CRT Simulation', desc: 'Synthetic cathode ray rendering', icon: 'reorder' }
           ].map(feature => (
             <div key={feature.title} className="glass-panel p-4 md:p-6 rounded-xl md:rounded-2xl border border-white/5 hover:border-primary/20 transition-all group text-left">
@@ -194,25 +193,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
 
   return (
     <div className="relative min-h-screen flex flex-col bg-background-dark font-display text-white overflow-x-hidden">
-      <header className="flex items-center justify-between px-4 md:px-8 py-4 z-50 border-b border-white/10 bg-background-dark/60 backdrop-blur-xl sticky top-0">
-        <div className="flex items-center gap-4 md:gap-10">
-          <div className="flex items-center gap-2 cursor-pointer group">
-            <h1 className="text-2xl font-bold tracking-normal uppercase">Glitch<span className="text-primary">Brain</span><span className="lowercase">.io</span></h1>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 md:gap-6">
-          {!user && (
-            <ExportCreditsDisplay
-              variant="badge"
-              onLoginClick={() => openAuthModal('login')}
-            />
-          )}
-          <UserMenu
-            onLoginClick={() => openAuthModal('login')}
-            onSignupClick={() => openAuthModal('signup')}
-          />
-        </div>
-      </header>
+      <Navbar
+        onLoginClick={() => openAuthModal('login')}
+        onSignupClick={() => openAuthModal('signup')}
+      />
 
       {hasAcceptedTerms ? renderUploadHub() : renderHeroView()}
 
