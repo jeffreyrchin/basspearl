@@ -30,6 +30,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const [isDragging, setIsDragging] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
+  const isDraggingRef = useRef(false);
   const isDraggingFromHandleRef = useRef(false);
   const startYRef = useRef(0);
   const currentDragYRef = useRef(0);
@@ -320,22 +321,37 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     const panel = panelRef.current;
     if (!panel) return;
 
-    const handleTouchStart = (e: TouchEvent) => {
-      startYRef.current = e.touches[0].clientY;
+    const handlePointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement;
+
+      // Don't start drag if clicking interactive elements (buttons, inputs)
+      if (target.closest('button, a, input, select, textarea')) {
+        return;
+      }
+
+      startYRef.current = e.clientY;
+      isDraggingRef.current = true;
       setIsDragging(true);
 
-      const target = e.target as HTMLElement;
       isDraggingFromHandleRef.current = !!target.closest('[data-drag-handle="true"]');
+
+      // Capture pointer to ensure we get events even if cursor moves outside panel
+      try {
+        panel.setPointerCapture(e.pointerId);
+      } catch (err) {
+        // Ignore capture errors
+      }
     };
 
-    const handleTouchMove = (e: TouchEvent) => {
-      const currentY = e.touches[0].clientY;
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!isDraggingRef.current) return;
+
+      const currentY = e.clientY;
       const deltaY = currentY - startYRef.current;
       const scrollTop = scrollRef.current?.scrollTop || 0;
 
       // Engage if dragging from handle OR at top and swiping down
       if ((isDraggingFromHandleRef.current || scrollTop <= 0) && deltaY > 0) {
-        if (e.cancelable) e.preventDefault();
         setDragY(deltaY);
         currentDragYRef.current = deltaY;
       } else {
@@ -344,24 +360,52 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       }
     };
 
-    const handleTouchEnd = () => {
+    const handlePointerUp = (e: PointerEvent) => {
+      if (!isDraggingRef.current) return;
+
+      isDraggingRef.current = false;
       setIsDragging(false);
+      isDraggingFromHandleRef.current = false;
+
       if (currentDragYRef.current > 100) {
         handleCloseLocal();
       } else {
         setDragY(0);
       }
       currentDragYRef.current = 0;
+
+      try {
+        panel.releasePointerCapture(e.pointerId);
+      } catch (err) {
+        // Ignore capture release errors
+      }
     };
 
-    panel.addEventListener('touchstart', handleTouchStart);
+    // Selective touchmove prevention for mobile scroll interference
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDraggingRef.current) return;
+      const currentY = e.touches[0].clientY;
+      const deltaY = currentY - startYRef.current;
+      const scrollTop = scrollRef.current?.scrollTop || 0;
+
+      // If at top and pulling down, prevent native scroll to allow swipe-to-hide
+      if (scrollTop <= 0 && deltaY > 0 && e.cancelable) {
+        e.preventDefault();
+      }
+    };
+
+    panel.addEventListener('pointerdown', handlePointerDown);
+    panel.addEventListener('pointermove', handlePointerMove);
+    panel.addEventListener('pointerup', handlePointerUp);
+    panel.addEventListener('pointercancel', handlePointerUp);
     panel.addEventListener('touchmove', handleTouchMove, { passive: false });
-    panel.addEventListener('touchend', handleTouchEnd);
 
     return () => {
-      panel.removeEventListener('touchstart', handleTouchStart);
+      panel.removeEventListener('pointerdown', handlePointerDown);
+      panel.removeEventListener('pointermove', handlePointerMove);
+      panel.removeEventListener('pointerup', handlePointerUp);
+      panel.removeEventListener('pointercancel', handlePointerUp);
       panel.removeEventListener('touchmove', handleTouchMove);
-      panel.removeEventListener('touchend', handleTouchEnd);
     };
   }, [showMobileEffects]);
 
