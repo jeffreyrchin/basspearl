@@ -197,7 +197,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
       <header className="flex items-center justify-between px-4 md:px-8 py-4 z-50 border-b border-white/10 bg-background-dark/60 backdrop-blur-xl sticky top-0">
         <div className="flex items-center gap-4 md:gap-10">
           <div className="flex items-center gap-2 cursor-pointer group">
-            <h1 className="text-2xl font-bold tracking-normal uppercase">Glitch<span className="text-primary">Brain</span></h1>
+            <h1 className="text-2xl font-bold tracking-normal uppercase">Glitch<span className="text-primary">Brain</span><span className="lowercase">.io</span></h1>
           </div>
         </div>
         <div className="flex items-center gap-2 md:gap-6">
@@ -223,7 +223,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
             <span>System: Online</span>
           </div>
         </div>
-        <span className="text-[11px] font-bold tracking-widest text-white/70 uppercase">© 2026 GlitchBrain</span>
+        <span className="text-[11px] font-bold tracking-widest text-white/70 uppercase">© 2026 GlitchBrain<span className="lowercase">.io</span></span>
         <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest text-white/70 uppercase">
           <button onClick={() => onOpenLegal(false)} className="hover:text-white transition-colors uppercase">Privacy & Terms</button>
         </div>

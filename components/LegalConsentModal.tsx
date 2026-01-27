@@ -43,7 +43,7 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
                         <div className="space-y-6">
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">1. Introduction</h3>
-                                <p>Welcome to GlitchBrain. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you.</p>
+                                <p>Welcome to GlitchBrain.io. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you.</p>
                             </div>
 
                             <div>
@@ -55,7 +55,7 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
                                     <li><strong>Technical Data:</strong> Includes internet protocol (IP) address, your login data, browser type and version, time zone setting and location, browser plug-in types and versions, operating system and platform, and other technology on the devices you use to access this website.</li>
                                     <li><strong>Usage Data:</strong> Includes information about how you use our website, products and services.</li>
                                     <li><strong>Image Data:</strong> Images you upload are processed locally in your browser. We do not permanently store your original images on our servers unless explicitly saved by you to a cloud gallery feature (if available).</li>
-                                    <li><strong>Analytics Data:</strong> We collect anonymized usage data such as which effects you use, your interaction with presets, and successful image exports. This data is used solely to improve the user experience and feature set of GlitchBrain.</li>
+                                    <li><strong>Analytics Data:</strong> We collect anonymized usage data such as which effects you use, your interaction with presets, and successful image exports. This data is used solely to improve the user experience and feature set of GlitchBrain.io.</li>
                                 </ul>
                             </div>
 
@@ -185,12 +185,12 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
                         <div className="space-y-6">
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">1. Acceptance of Terms</h3>
-                                <p>By accessing or using the GlitchBrain website and services, you agree to be bound by these Terms. If you disagree with any part of the terms then you may not access the Service.</p>
+                                <p>By accessing or using the GlitchBrain.io website and services, you agree to be bound by these Terms. If you disagree with any part of the terms then you may not access the Service.</p>
                             </div>
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">2. Description of Service</h3>
-                                <p>GlitchBrain provides a web-based tool for applying visual effects ("glitch effects") to user-uploaded images. The image processing occurs client-side within your browser.</p>
+                                <p>GlitchBrain.io provides a web-based tool for applying visual effects ("glitch effects") to user-uploaded images. The image processing occurs client-side within your browser.</p>
                             </div>
 
                             <div>
@@ -200,7 +200,7 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">4. User Content and Conduct</h3>
-                                <p>You retain all rights to the images you upload. By uploading content, you grant GlitchBrain a temporary license to process and display that content solely for the purpose of generating the requested visual effects. You are responsible for all content you upload.</p>
+                                <p>You retain all rights to the images you upload. By uploading content, you grant GlitchBrain.io a temporary license to process and display that content solely for the purpose of generating the requested visual effects. You are responsible for all content you upload.</p>
                             </div>
 
                             <div>
@@ -210,7 +210,7 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">6. Intellectual Property Rights</h3>
-                                <p>The Service and its original content (excluding Content provided by users), features and functionality are and will remain the exclusive property of GlitchBrain and its licensors.</p>
+                                <p>The Service and its original content (excluding Content provided by users), features and functionality are and will remain the exclusive property of GlitchBrain.io and its licensors.</p>
                             </div>
 
                             <div>
@@ -220,7 +220,7 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">8. Third-Party Services</h3>
-                                <p>The Service may use third-party services (such as Firebase) that declare their own Terms of Service. By using the Service, you acknowledge and agree that GlitchBrain is not responsible for the availability of such external sites or resources.</p>
+                                <p>The Service may use third-party services (such as Firebase) that declare their own Terms of Service. By using the Service, you acknowledge and agree that GlitchBrain.io is not responsible for the availability of such external sites or resources.</p>
                             </div>
 
                             <div>
@@ -230,12 +230,12 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">10. Limitation of Liability</h3>
-                                <p>In no event shall GlitchBrain, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses. In no event shall GlitchBrain's total liability to you for all damages, losses, and causes of action exceed the amount you have paid GlitchBrain in the last six (6) months, or, if greater, one hundred dollars ($100).</p>
+                                <p>In no event shall GlitchBrain.io, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses. In no event shall GlitchBrain.io's total liability to you for all damages, losses, and causes of action exceed the amount you have paid GlitchBrain.io in the last six (6) months, or, if greater, one hundred dollars ($100).</p>
                             </div>
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">11. Indemnification</h3>
-                                <p>You agree to defend, indemnify and hold harmless GlitchBrain and its licensee and licensors, and their employees, contractors, agents, officers and directors, from and against any and all claims, damages, obligations, losses, liabilities, costs or debt, and expenses.</p>
+                                <p>You agree to defend, indemnify and hold harmless GlitchBrain.io and its licensee and licensors, and their employees, contractors, agents, officers and directors, from and against any and all claims, damages, obligations, losses, liabilities, costs or debt, and expenses.</p>
                             </div>
 
                             <div>
@@ -250,12 +250,12 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">14. Dispute Resolution</h3>
-                                <p>If you have any concern or dispute about the Service, you agree to first try to resolve the dispute informally by contacting GlitchBrain.</p>
+                                <p>If you have any concern or dispute about the Service, you agree to first try to resolve the dispute informally by contacting GlitchBrain.io.</p>
                             </div>
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">15. Arbitration Agreement</h3>
-                                <p>For any dispute you have with GlitchBrain, you agree to first simply contact us and attempt to resolve the dispute with us informally. If GlitchBrain has not been able to resolve the dispute with you informally, we each agree to resolve any claim, dispute, or controversy via binding arbitration.</p>
+                                <p>For any dispute you have with GlitchBrain.io, you agree to first simply contact us and attempt to resolve the dispute with us informally. If GlitchBrain.io has not been able to resolve the dispute with you informally, we each agree to resolve any claim, dispute, or controversy via binding arbitration.</p>
                                 <p className="mt-2 text-white/60 text-xs bg-white/5 p-3 rounded">
                                     <strong>Opt-Out:</strong> You may opt-out of this Agreement to arbitrate by sending a written notice to jeffreyrchin.20@gmail.com within 30 days of first accepting these Terms. Your notice must include your name and address, the email address used to set up your account (if you have one), and an unequivocal statement that you want to opt-out of this arbitration agreement.
                                 </p>

@@ -80,18 +80,22 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
               const padding = Math.floor(fontSize * 0.5);
               const brainWidth = ctx.measureText('BRAIN').width;
+              const ioWidth = ctx.measureText('.io').width;
               const xR = width - padding;
               const y = height - padding;
 
               ctx.lineWidth = fontSize * 0.15;
               ctx.strokeStyle = '#000000';
-              ctx.strokeText('BRAIN', xR, y);
-              ctx.strokeText('GLITCH', xR - brainWidth, y);
+              ctx.strokeText('.io', xR, y);
+              ctx.strokeText('BRAIN', xR - ioWidth, y);
+              ctx.strokeText('GLITCH', xR - ioWidth - brainWidth, y);
 
-              ctx.fillStyle = '#fb00ff';
-              ctx.fillText('BRAIN', xR, y);
               ctx.fillStyle = '#ffffff';
-              ctx.fillText('GLITCH', xR - brainWidth, y);
+              ctx.fillText('.io', xR, y);
+              ctx.fillStyle = '#fb00ff';
+              ctx.fillText('BRAIN', xR - ioWidth, y);
+              ctx.fillStyle = '#ffffff';
+              ctx.fillText('GLITCH', xR - ioWidth - brainWidth, y);
               ctx.restore();
             }
 
@@ -374,7 +378,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       <header className="flex items-center justify-between px-4 md:px-6 py-4 z-50 border-b border-white/5 bg-background-dark/80 backdrop-blur-md shrink-0">
         <div className="flex items-center gap-4 md:gap-6">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate(AppView.LANDING)}>
-            <h2 className="text-lg md:text-xl font-bold tracking-normal uppercase">Glitch<span className="text-primary">Brain</span></h2>
+            <h2 className="text-lg md:text-xl font-bold tracking-normal uppercase">Glitch<span className="text-primary">Brain</span><span className="lowercase">.io</span></h2>
           </div>
           <div className="h-4 w-px bg-white/10 hidden md:block"></div>
           <nav className="hidden md:flex gap-6 text-sm font-medium tracking-wide text-white/50">

@@ -106,24 +106,29 @@ export class GlitchEngine {
     const padding = Math.floor(fontSize * 0.5);
     const glitchText = 'GLITCH';
     const brainText = 'BRAIN';
+    const ioText = '.io';
 
+    const ioWidth = this.ctx.measureText(ioText).width;
     const brainWidth = this.ctx.measureText(brainText).width;
-    const xBrain = width - padding;
-    const xGlitch = xBrain - brainWidth;
+    const xR = width - padding;
     const y = height - padding;
 
     // 1. Black Outline (Stroke)
     this.ctx.lineWidth = fontSize * 0.15;
     this.ctx.strokeStyle = '#000000';
-    this.ctx.strokeText(brainText, xBrain, y);
-    this.ctx.strokeText(glitchText, xGlitch, y);
+    this.ctx.strokeText(ioText, xR, y);
+    this.ctx.strokeText(brainText, xR - ioWidth, y);
+    this.ctx.strokeText(glitchText, xR - ioWidth - brainWidth, y);
 
     // 2. Fills
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.fillText(ioText, xR, y);
+
     this.ctx.fillStyle = '#fb00ff';
-    this.ctx.fillText(brainText, xBrain, y);
+    this.ctx.fillText(brainText, xR - ioWidth, y);
 
     this.ctx.fillStyle = '#ffffff';
-    this.ctx.fillText(glitchText, xGlitch, y);
+    this.ctx.fillText(glitchText, xR - ioWidth - brainWidth, y);
 
     this.ctx.restore();
   }

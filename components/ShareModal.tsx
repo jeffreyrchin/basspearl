@@ -20,7 +20,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, imageUrl, prev
     const handleDownload = () => {
         const link = document.createElement('a');
         link.href = imageUrl;
-        link.download = `glitchbrain-${Date.now()}.png`;
+        link.download = `glitchbrain-io-${Date.now()}.png`;
         trackEvent('glitch_export', { method: 'download' });
         link.click();
     };
@@ -28,14 +28,14 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, imageUrl, prev
     const handleWebShare = async () => {
         try {
             const blob = await (await fetch(imageUrl)).blob();
-            const fileName = `glitchbrain-${Date.now()}.png`;
+            const fileName = `glitchbrain-io-${Date.now()}.png`;
             const file = new File([blob], fileName, { type: 'image/png' });
 
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
                     files: [file],
-                    title: '[GlitchBrain Art]',
-                    text: 'Check out my glitch art created with GlitchBrain!',
+                    title: '[GlitchBrain.io Art]',
+                    text: 'Check out my glitch art created with GlitchBrain.io!',
                 });
             } else {
                 alert('Web Share not supported on this device. Try downloading or copying instead.');
@@ -52,7 +52,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, imageUrl, prev
             await navigator.clipboard.write([
                 new ClipboardItem({
                     [blob.type]: blob,
-                    'text/plain': new Blob(['Made with GlitchBrain'], { type: 'text/plain' })
+                    'text/plain': new Blob(['Made with GlitchBrain.io'], { type: 'text/plain' })
                 })
             ]);
             setCopyStatus('copied');
