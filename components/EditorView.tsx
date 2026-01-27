@@ -88,7 +88,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
               ctx.strokeText('BRAIN', xR, y);
               ctx.strokeText('GLITCH', xR - brainWidth, y);
 
-              ctx.fillStyle = '#0d7ff2';
+              ctx.fillStyle = '#fb00ff';
               ctx.fillText('BRAIN', xR, y);
               ctx.fillStyle = '#ffffff';
               ctx.fillText('GLITCH', xR - brainWidth, y);

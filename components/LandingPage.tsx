@@ -158,7 +158,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
             </h3>
             <p className="text-white/40 text-[10px] md:text-sm font-medium mb-6 md:mb-8">PNG, JPG, TIFF (UP TO 50MB)</p>
 
-            <div className="bg-accent-blue hover:bg-white text-black px-6 md:px-10 py-2.5 md:py-3 rounded-full text-[10px] md:text-xs font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(0,242,255,0.4)] transition-all">
+            <div className="bg-accent-blue hover:bg-white text-black px-6 md:px-10 py-2.5 md:py-3 rounded-full text-[10px] md:text-xs font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(251,0,255,0.4)] transition-all">
               Upload Image
             </div>
           </div>

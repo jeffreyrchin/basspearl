@@ -119,7 +119,7 @@ export class GlitchEngine {
     this.ctx.strokeText(glitchText, xGlitch, y);
 
     // 2. Fills
-    this.ctx.fillStyle = '#0d7ff2';
+    this.ctx.fillStyle = '#fb00ff';
     this.ctx.fillText(brainText, xBrain, y);
 
     this.ctx.fillStyle = '#ffffff';
