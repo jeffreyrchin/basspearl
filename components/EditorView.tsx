@@ -26,6 +26,15 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [showMobileEffects, setShowMobileEffects] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+
+  const isDraggingFromHandleRef = useRef(false);
+  const startYRef = useRef(0);
+  const currentDragYRef = useRef(0);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Sync refs for the processing loop & stale closures
   const stateRef = useRef(state);
@@ -301,13 +310,68 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     }
   };
 
+  // Mobile Swipe-to-Hide Logic
+  const handleCloseLocal = () => {
+    setIsClosing(true);
+    setDragY(window.innerHeight);
+  };
+
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      startYRef.current = e.touches[0].clientY;
+      setIsDragging(true);
+
+      const target = e.target as HTMLElement;
+      isDraggingFromHandleRef.current = !!target.closest('[data-drag-handle="true"]');
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const currentY = e.touches[0].clientY;
+      const deltaY = currentY - startYRef.current;
+      const scrollTop = scrollRef.current?.scrollTop || 0;
+
+      // Engage if dragging from handle OR at top and swiping down
+      if ((isDraggingFromHandleRef.current || scrollTop <= 0) && deltaY > 0) {
+        if (e.cancelable) e.preventDefault();
+        setDragY(deltaY);
+        currentDragYRef.current = deltaY;
+      } else {
+        setDragY(0);
+        currentDragYRef.current = 0;
+      }
+    };
+
+    const handleTouchEnd = () => {
+      setIsDragging(false);
+      if (currentDragYRef.current > 100) {
+        handleCloseLocal();
+      } else {
+        setDragY(0);
+      }
+      currentDragYRef.current = 0;
+    };
+
+    panel.addEventListener('touchstart', handleTouchStart);
+    panel.addEventListener('touchmove', handleTouchMove, { passive: false });
+    panel.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      panel.removeEventListener('touchstart', handleTouchStart);
+      panel.removeEventListener('touchmove', handleTouchMove);
+      panel.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [showMobileEffects]);
+
   // Initial load
   useEffect(() => {
     applyGlitches(false);
   }, [state.effects, user]); // Run when effects change or user status changes (watermark)
 
   const renderEffectsList = () => (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
+    <div ref={scrollRef} className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2 overscroll-contain">
       {state.effects.map((effect, idx) => {
         const meta = EFFECT_METADATA[effect.type];
         const isActive = idx === state.currentEffectIndex;
@@ -359,7 +423,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   );
 
   const renderPresetsList = () => (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
+    <div ref={activeTab === 'presets' ? scrollRef : null} className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3 overscroll-contain">
       {Object.entries(PRESETS).map(([name, config]) => (
         <button key={name} onClick={() => handleApplyPreset(name)} className="w-full p-4 rounded-xl border border-white/10 hover:border-primary/50 hover:bg-white/5 transition-all text-left">
           <span className="text-xs font-bold uppercase tracking-widest text-white">{name.replace('_', ' ')}</span>
@@ -474,15 +538,33 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
         {showMobileEffects && (
           <div className="fixed inset-0 z-[100] lg:hidden">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setShowMobileEffects(false)} />
-            <div className="absolute inset-x-0 bottom-0 glass-panel rounded-t-3xl border-t border-white/10 max-h-[80vh] flex flex-col animate-in slide-in-from-bottom duration-300">
-              <div className="flex justify-center p-2"><div className="w-12 h-1 bg-white/20 rounded-full"></div></div>
-              <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
+            <div
+              className={`absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
+              onClick={handleCloseLocal}
+            />
+            <div
+              ref={panelRef}
+              onTransitionEnd={(e) => {
+                if (isClosing && e.propertyName === 'transform') {
+                  setShowMobileEffects(false);
+                  setIsClosing(false);
+                  setDragY(0);
+                }
+              }}
+              className="absolute inset-x-0 bottom-0 glass-panel rounded-t-3xl border-t border-white/10 max-h-[80vh] flex flex-col animate-in slide-in-from-bottom duration-300"
+              style={{
+                transform: isClosing ? `translateY(100%)` : (dragY > 0 ? `translateY(${dragY}px)` : 'none'),
+                transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                touchAction: 'none'
+              }}
+            >
+              <div data-drag-handle="true" className="flex justify-center p-2"><div className="w-12 h-1 bg-white/20 rounded-full"></div></div>
+              <div data-drag-handle="true" className="flex items-center justify-between px-5 py-3 border-b border-white/5">
                 <div className="flex gap-4">
                   <button onClick={() => setActiveTab('layers')} className={`text-xs font-bold uppercase tracking-widest ${activeTab === 'layers' ? 'text-primary' : 'text-white/40'}`}>Layers</button>
                   <button onClick={() => setActiveTab('presets')} className={`text-xs font-bold uppercase tracking-widest ${activeTab === 'presets' ? 'text-primary' : 'text-white/40'}`}>Presets</button>
                 </div>
-                <button onClick={() => setShowMobileEffects(false)} className="p-1"><span className="material-symbols-outlined text-white/60">close</span></button>
+                <button onClick={handleCloseLocal} className="p-1"><span className="material-symbols-outlined text-white/60">close</span></button>
               </div>
               {activeTab === 'layers' ? renderEffectsList() : renderPresetsList()}
             </div>
