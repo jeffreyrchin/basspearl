@@ -22,6 +22,48 @@ const GalleryPage: React.FC = () => {
         { id: 6, title: 'Rainbow Noise', artist: 'Anonymous', src: '/gallery/rainbow_noise.png', alt: 'Rainbow Noise' }
     ];
 
+    // Lightbox State
+    const [selectedArtwork, setSelectedArtwork] = useState<typeof placeholderArtworks[0] | null>(null);
+
+    // Close on escape key
+    React.useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setSelectedArtwork(null);
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    // Optimized Image Component with Skeleton Loading
+    const GalleryImage = ({ src, alt, priority }: { src: string, alt: string, priority?: boolean }) => {
+        const [isLoaded, setIsLoaded] = useState(false);
+
+        return (
+            <div className="relative group overflow-hidden w-full h-full bg-white/5">
+                {/* Skeleton / Placeholder */}
+                {!isLoaded && (
+                    <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-white/5 via-white/10 to-white/5" />
+                )}
+
+                {/* The Real Image */}
+                <img
+                    src={src}
+                    alt={alt}
+                    loading={priority ? "eager" : "lazy"}
+                    // @ts-ignore - fetchPriority is standard but missing in React types
+                    fetchPriority={priority ? "high" : "auto"}
+                    className={`w-full h-full object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'
+                        }`}
+                    onLoad={() => setIsLoaded(true)}
+                />
+
+                {/* Hover Effects (Only active after load) */}
+                <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 ${isLoaded ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'
+                    }`} />
+            </div>
+        );
+    };
+
     return (
         <AuthProvider>
             <div className="min-h-screen flex flex-col bg-background-dark text-white">
@@ -46,17 +88,21 @@ const GalleryPage: React.FC = () => {
 
                         {/* Gallery Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-20">
-                            {placeholderArtworks.map(artwork => (
+                            {placeholderArtworks.map((artwork, index) => (
                                 <div
                                     key={artwork.id}
-                                    className="group glass-panel rounded-2xl border border-white/10 overflow-hidden hover:border-primary/30 transition-all cursor-pointer"
+                                    className="group glass-panel rounded-2xl border border-white/10 overflow-hidden hover:border-primary/30 transition-all cursor-pointer hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1"
+                                    onClick={() => setSelectedArtwork(artwork)}
                                 >
                                     {/* Placeholder Image Area */}
                                     <div className="aspect-square bg-gradient-to-br from-primary/20 via-background-dark to-accent-blue/20 relative overflow-hidden">
                                         <div className="absolute inset-0 flex items-center justify-center">
-                                            <img src={artwork.src} alt={artwork.alt} className="w-full h-full object-cover" />
+                                            <GalleryImage
+                                                src={artwork.src}
+                                                alt={artwork.alt}
+                                                priority={index < 3} // Prioritize first 3 images
+                                            />
                                         </div>
-                                        <div className="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </div>
 
                                     {/* Artwork Info */}
@@ -165,6 +211,52 @@ const GalleryPage: React.FC = () => {
                     initialMode={authMode}
                 />
             </div>
+
+            {/* Lightbox Modal */}
+            {selectedArtwork && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    {/* Backdrop - Click anywhere to close */}
+                    <div
+                        className="absolute inset-0 bg-black/90 backdrop-blur-sm animate-in fade-in duration-300"
+                        onClick={() => setSelectedArtwork(null)}
+                    />
+
+                    {/* Content Stack - Floating, Transparent */}
+                    <div className="relative z-10 w-full max-w-5xl h-full max-h-[90vh] flex flex-col pointer-events-none">
+
+                        {/* 1. Header (Floating Close Button) */}
+                        <div className="flex justify-end pb-2 shrink-0 pointer-events-auto">
+                            <button
+                                onClick={() => setSelectedArtwork(null)}
+                                className="text-white/80 hover:text-white p-2 rounded-full bg-black/50 backdrop-blur-md transition-all hover:bg-black/70"
+                                title="Close"
+                            >
+                                <span className="material-symbols-outlined text-[24px]">close</span>
+                            </button>
+                        </div>
+
+                        {/* 2. Image (Floating) */}
+                        <div className="flex-1 min-h-0 flex items-center justify-center pointer-events-none">
+                            <img
+                                src={selectedArtwork.src}
+                                alt={selectedArtwork.alt}
+                                className="max-h-full max-w-full object-contain rounded-lg shadow-2xl border border-white/10 pointer-events-auto cursor-default"
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        </div>
+
+                        {/* 3. Footer (Floating Caption) */}
+                        <div className="mt-4 text-center shrink-0 pointer-events-auto">
+                            <h3 className="text-xl font-bold uppercase tracking-widest text-white mb-1 drop-shadow-lg">
+                                {selectedArtwork.title}
+                            </h3>
+                            <p className="text-sm text-white/60 uppercase tracking-wide drop-shadow-md">
+                                by {selectedArtwork.artist}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AuthProvider>
     );
 };
