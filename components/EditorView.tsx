@@ -415,6 +415,14 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   // Initial load
   useEffect(() => {
     applyGlitches(false);
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = ''; // Standard browser confirmation
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [state.effects, user]); // Run when effects change or user status changes (watermark)
 
   const renderEffectsList = () => (

@@ -107,6 +107,11 @@ const MainApp: React.FC = () => {
   };
 
   const navigateTo = (newView: AppView) => {
+    if (view === AppView.EDITOR && newView !== AppView.EDITOR) {
+      if (!window.confirm("Changes you made may not be saved. Are you sure you want to leave?")) {
+        return;
+      }
+    }
     setView(newView);
   };
 
