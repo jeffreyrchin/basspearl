@@ -452,7 +452,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
                   trackEvent('effect_applied', { effect_type: newEffects[idx].type, action: newEffects[idx].active ? 'on' : 'off' });
                   applyGlitches(true, newEffects);
                 }}
-                className="material-symbols-outlined text-[16px]" style={{ color: effect.active ? '#0d7ff2' : 'rgba(255,255,255,0.2)' }}
+                className="material-symbols-outlined text-[24px]" style={{ color: effect.active ? '#0d7ff2' : 'rgba(255,255,255,0.2)' }}
               >
                 {effect.active ? 'check_circle' : 'circle'}
               </button>
@@ -461,12 +461,12 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
               <div className="space-y-4 px-1 pb-2 mt-4">
                 <div className="space-y-2">
                   <div className="flex justify-between text-[10px] font-bold text-white/60"><span>{meta.intensityLabel?.toUpperCase() || 'INTENSITY'}</span><span>{effect.intensity}%</span></div>
-                  <input type="range" min="0" max="100" value={effect.intensity} onChange={(e) => handleEffectChange(idx, { intensity: parseInt(e.target.value) }, true)} onMouseUp={handleHistoryCommit} onTouchEnd={handleHistoryCommit} className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-primary" />
+                  <input type="range" min="0" max="100" value={effect.intensity} onChange={(e) => handleEffectChange(idx, { intensity: parseInt(e.target.value) }, true)} onMouseUp={handleHistoryCommit} onTouchEnd={handleHistoryCommit} className="w-full h-6 bg-transparent appearance-none cursor-pointer custom-slider" />
                 </div>
                 {(meta.showThreshold ?? true) && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-[10px] font-bold text-white/60"><span>{meta.thresholdLabel?.toUpperCase() || 'THRESHOLD'}</span><span>{effect.threshold}%</span></div>
-                    <input type="range" min="0" max="100" value={effect.threshold} onChange={(e) => handleEffectChange(idx, { threshold: parseInt(e.target.value) }, true)} onMouseUp={handleHistoryCommit} onTouchEnd={handleHistoryCommit} className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-primary" />
+                    <input type="range" min="0" max="100" value={effect.threshold} onChange={(e) => handleEffectChange(idx, { threshold: parseInt(e.target.value) }, true)} onMouseUp={handleHistoryCommit} onTouchEnd={handleHistoryCommit} className="w-full h-6 bg-transparent appearance-none cursor-pointer custom-slider" />
                   </div>
                 )}
               </div>
