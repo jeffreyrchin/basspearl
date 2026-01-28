@@ -328,7 +328,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       const target = e.target as HTMLElement;
 
       // Don't start drag if clicking interactive elements (buttons, inputs)
-      if (target.closest('button, a, input, select, textarea')) {
+      if (target.closest('button, a, input, select, textarea, [data-interactive="true"]')) {
         return;
       }
 
@@ -434,7 +434,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
         return (
           <div key={effect.type} className={`p-3 rounded-xl transition-all ${isActive ? 'bg-primary/10 border border-primary/20' : 'hover:bg-white/5 border border-transparent hover:border-white/5'}`}>
-            <div onClick={() => onUpdateState({ currentEffectIndex: isActive ? -1 : idx })} className="flex items-center justify-between mb-2 cursor-pointer">
+            <div data-interactive="true" onClick={() => onUpdateState({ currentEffectIndex: isActive ? -1 : idx })} className="flex items-center justify-between mb-2 cursor-pointer">
               <div className="flex items-center gap-3">
                 <div className={`size-8 rounded-lg flex items-center justify-center transition-colors ${isActive ? 'bg-primary text-white cyber-glow' : 'bg-white/5 text-white/60'}`}>
                   <span className="material-symbols-outlined text-[20px]">{meta.icon}</span>
