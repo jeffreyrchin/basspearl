@@ -68,10 +68,6 @@ export class GlitchEngine {
           this.applyEffect(effect, UNIT, normalizedScale);
         });
 
-        if (shouldWatermark) {
-          this.applyWatermark();
-        }
-
         resolve();
       };
 
@@ -92,46 +88,6 @@ export class GlitchEngine {
     });
   }
 
-  private applyWatermark() {
-    const width = this.canvas.width;
-    const height = this.canvas.height;
-    const fontSize = Math.max(24, Math.floor(width * 0.04));
-
-    this.ctx.save();
-    this.ctx.font = `800 ${fontSize}px "Genos", sans-serif`;
-    this.ctx.textAlign = 'right';
-    this.ctx.textBaseline = 'bottom';
-    this.ctx.lineJoin = 'round';
-
-    const padding = Math.floor(fontSize * 0.5);
-    const glitchText = 'GLITCH';
-    const brainText = 'BRAIN';
-    const ioText = '.io';
-
-    const ioWidth = this.ctx.measureText(ioText).width;
-    const brainWidth = this.ctx.measureText(brainText).width;
-    const xR = width - padding;
-    const y = height - padding;
-
-    // 1. Black Outline (Stroke)
-    this.ctx.lineWidth = fontSize * 0.15;
-    this.ctx.strokeStyle = '#000000';
-    this.ctx.strokeText(ioText, xR, y);
-    this.ctx.strokeText(brainText, xR - ioWidth, y);
-    this.ctx.strokeText(glitchText, xR - ioWidth - brainWidth, y);
-
-    // 2. Fills
-    this.ctx.fillStyle = '#ffffff';
-    this.ctx.fillText(ioText, xR, y);
-
-    this.ctx.fillStyle = '#fb00ff';
-    this.ctx.fillText(brainText, xR - ioWidth, y);
-
-    this.ctx.fillStyle = '#ffffff';
-    this.ctx.fillText(glitchText, xR - ioWidth - brainWidth, y);
-
-    this.ctx.restore();
-  }
 
   private currentRng: () => number = Math.random;
 

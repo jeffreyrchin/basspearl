@@ -33,6 +33,16 @@ export interface GlitchInfo {
   effects: EffectConfig[];
 }
 
+export interface CropState {
+  aspectRatio: number | null;
+  aspectLabel: string | null;
+  scale: number;
+  x: number;
+  y: number;
+  targetWidth?: number;
+  targetHeight?: number;
+}
+
 export interface GlitchState {
   originalImage: string | null;  // Full Resolution Master
   previewImage: string | null;   // 1280px Proxy for Editor
@@ -42,4 +52,5 @@ export interface GlitchState {
   historyIndex: number;
   effects: EffectConfig[];
   currentEffectIndex: number;
+  crop: CropState;
 }

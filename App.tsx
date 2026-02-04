@@ -37,7 +37,8 @@ const MainApp: React.FC = () => {
     history: [],
     historyIndex: -1,
     effects: INITIAL_EFFECTS,
-    currentEffectIndex: 0
+    currentEffectIndex: 0,
+    crop: { aspectRatio: null, aspectLabel: null, scale: 1.0, x: 0, y: 0 }
   });
 
   const [legalModalOpen, setLegalModalOpen] = useState(false);
@@ -64,7 +65,8 @@ const MainApp: React.FC = () => {
         processedImagePreview: null,
         history: [initialHistoryItem],
         historyIndex: 0,
-        effects: INITIAL_EFFECTS
+        effects: INITIAL_EFFECTS,
+        crop: { aspectRatio: null, aspectLabel: null, scale: 1.0, x: 0, y: 0 }
       }));
       setView(AppView.EDITOR);
     };

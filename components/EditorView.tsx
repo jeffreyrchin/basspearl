@@ -9,6 +9,7 @@ import UserMenu from './UserMenu';
 import ShareModal from './ShareModal';
 import InfoModal from './InfoModal';
 import { trackEvent } from '../services/analytics';
+import { drawWatermarkToCanvas, Watermark } from '../services/watermarkService';
 
 interface EditorViewProps {
   state: GlitchState;
@@ -32,6 +33,22 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const [isClosing, setIsClosing] = useState(false);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [infoModalType, setInfoModalType] = useState<'help' | 'about'>('help');
+  const [showCropMenu, setShowCropMenu] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
+  const [imageSize, setImageSize] = useState<{ width: number; height: number } | null>(null);
+
+  // Aspect ratio presets
+  const aspectRatios = [
+    { label: 'Original', ratio: null },
+    { label: 'Profile Picture', ratio: 1, targetWidth: 1080, targetHeight: 1080 },
+    { label: 'Instagram Portrait', ratio: 4 / 5, targetWidth: 1080, targetHeight: 1350 },
+    { label: 'Instagram Story', ratio: 9 / 16, targetWidth: 1080, targetHeight: 1920 },
+    { label: 'Landscape', ratio: 1.91, targetWidth: 1080, targetHeight: 566 },
+    { label: 'YouTube Thumbnail', ratio: 16 / 9, targetWidth: 1280, targetHeight: 720 }
+  ];
+
+  // Viewport tracking for robust crop sizing
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
 
   const isDraggingRef = useRef(false);
   const isDraggingFromHandleRef = useRef(false);
@@ -44,6 +61,13 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   const stateRef = useRef(state);
   const userRef = useRef(user);
 
+  // Crop viewport refs
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const cropWindowRef = useRef<HTMLDivElement>(null);
+  const panStartRef = useRef({ x: 0, y: 0 });
+  const currentTransformRef = useRef({ x: 0, y: 0, scale: 1.0 });
+  const animationFrameRef = useRef<number | null>(null);
+
   useEffect(() => {
     stateRef.current = state;
     userRef.current = user;
@@ -55,6 +79,25 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       applyGlitches(false);
     }
   }, [user]);
+
+  // Sync currentTransformRef with crop state
+  // Sync currentTransformRef with crop state
+  // We guard this to prevent "stuttering" where the slightly-stale React state
+  // overwrites the fresh imperative ref state during active gestures.
+  const isZoomingRef = useRef(false);
+  const zoomTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    // If we are actively interacting, DO NOT sync from state.
+    // The ref is the source of truth during interaction.
+    if (isPanning || isZoomingRef.current) return;
+
+    currentTransformRef.current = {
+      x: state.crop.x,
+      y: state.crop.y,
+      scale: state.crop.scale
+    };
+  }, [state.crop, isPanning]);
 
   // Worker Reference
   const workerRef = useRef<Worker | null>(null);
@@ -73,44 +116,13 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
           if (canvas.width !== imageBitmap.width || canvas.height !== imageBitmap.height) {
             canvas.width = imageBitmap.width;
             canvas.height = imageBitmap.height;
+            setImageSize({ width: imageBitmap.width, height: imageBitmap.height });
           }
 
           const ctx = canvas.getContext('2d');
           if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(imageBitmap, 0, 0);
-
-            // Simple main-thread watermark using userRef to avoid stale closures
-            if (!userRef.current) {
-              const width = canvas.width;
-              const height = canvas.height;
-              const fontSize = Math.max(24, Math.floor(width * 0.04));
-
-              ctx.save();
-              ctx.font = `800 ${fontSize}px "Genos", sans-serif`;
-              ctx.textAlign = 'right';
-              ctx.textBaseline = 'bottom';
-              ctx.lineJoin = 'round';
-
-              const padding = Math.floor(fontSize * 0.5);
-              const brainWidth = ctx.measureText('BRAIN').width;
-              const ioWidth = ctx.measureText('.io').width;
-              const xR = width - padding;
-              const y = height - padding;
-
-              ctx.lineWidth = fontSize * 0.15;
-              ctx.strokeStyle = '#000000';
-              ctx.strokeText('.io', xR, y);
-              ctx.strokeText('BRAIN', xR - ioWidth, y);
-              ctx.strokeText('GLITCH', xR - ioWidth - brainWidth, y);
-
-              ctx.fillStyle = '#ffffff';
-              ctx.fillText('.io', xR, y);
-              ctx.fillStyle = '#fb00ff';
-              ctx.fillText('BRAIN', xR - ioWidth, y);
-              ctx.fillStyle = '#ffffff';
-              ctx.fillText('GLITCH', xR - ioWidth - brainWidth, y);
-              ctx.restore();
-            }
 
             // Clear any existing timeout
             if (renderingTimeoutRef.current) clearTimeout(renderingTimeoutRef.current);
@@ -260,10 +272,66 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   };
 
   const handleShare = async () => {
-    if (!previewCanvasRef.current) return;
+    const sourceCanvas = previewCanvasRef.current;
+    if (!sourceCanvas) return;
 
-    // WYSIWYG: The canvas IS the full resolution result
-    const canvasUrl = previewCanvasRef.current.toDataURL('image/png');
+    let canvasUrl: string;
+
+    if (state.crop.aspectRatio === null) {
+      // No crop: export full canvas
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = sourceCanvas.width;
+      tempCanvas.height = sourceCanvas.height;
+      const ctx = tempCanvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(sourceCanvas, 0, 0);
+        if (!user) {
+          drawWatermarkToCanvas(ctx, tempCanvas.width, tempCanvas.height);
+        }
+        canvasUrl = tempCanvas.toDataURL('image/png');
+      } else {
+        canvasUrl = sourceCanvas.toDataURL('image/png');
+      }
+    } else {
+      // Stationary Crop Window Export Logic
+      const tempCanvas = document.createElement('canvas');
+
+      const cropWindow = cropWindowRef.current;
+      if (!cropWindow) return;
+      const cropRect = cropWindow.getBoundingClientRect();
+      const canvasRect = sourceCanvas.getBoundingClientRect();
+
+      const scaleX = sourceCanvas.width / canvasRect.width;
+      const scaleY = sourceCanvas.height / canvasRect.height;
+
+      const relativeX = cropRect.left - canvasRect.left;
+      const relativeY = cropRect.top - canvasRect.top;
+
+      const sourceX = relativeX * scaleX;
+      const sourceY = relativeY * scaleY;
+      const sourceW = cropRect.width * scaleX;
+      const sourceH = cropRect.height * scaleY;
+
+      // Use target dimensions if available, otherwise fallback to source crop dimensions
+      tempCanvas.width = state.crop.targetWidth || sourceW;
+      tempCanvas.height = state.crop.targetHeight || sourceH;
+
+      const ctx = tempCanvas.getContext('2d');
+      if (!ctx) return;
+
+      // Draw with scaling to the target dimensions (9-argument version of drawImage)
+      ctx.drawImage(
+        sourceCanvas,
+        sourceX, sourceY, sourceW, sourceH,
+        0, 0, tempCanvas.width, tempCanvas.height
+      );
+
+      if (!user) {
+        drawWatermarkToCanvas(ctx, tempCanvas.width, tempCanvas.height);
+      }
+
+      canvasUrl = tempCanvas.toDataURL('image/png');
+    }
 
     onUpdateState({
       processedImage: canvasUrl,
@@ -312,6 +380,108 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       applyGlitches(true, seededEffects);
       setActiveTab('layers');
     }
+  };
+
+  // Crop handlers
+  const handleAspectRatioChange = (ratio: number | null, label: string, targetWidth?: number, targetHeight?: number) => {
+    // 1. Calculate new containment scale so image fits in viewport
+    let newScale = 1.0;
+    if (ratio !== null && previewCanvasRef.current && viewportRef.current) {
+      const imgW = previewCanvasRef.current.width;
+      const imgH = previewCanvasRef.current.height;
+      const viewW = viewportRef.current.clientWidth;
+      const viewH = viewportRef.current.clientHeight;
+
+      // Target dimensions for the crop window (with 20px padding * 2 = 40px safety - REDUCED for larger view)
+      const safeW = viewW - 40;
+      const safeH = viewH - 40;
+
+      // Calculate crop window dimensions based on ratio
+      let cropW = safeW;
+      let cropH = safeW / ratio;
+
+      if (cropH > safeH) {
+        cropH = safeH;
+        cropW = safeH * ratio;
+      }
+
+      // "Cover" means the image fills the crop.
+      const scaleX = cropW / imgW;
+      const scaleY = cropH / imgH;
+      newScale = Math.max(scaleX, scaleY);
+    }
+
+    const newCrop = { aspectRatio: ratio, aspectLabel: label, scale: newScale, x: 0, y: 0, targetWidth, targetHeight };
+    currentTransformRef.current = { x: 0, y: 0, scale: newScale };
+    onUpdateState({ crop: newCrop });
+    setShowCropMenu(false);
+  };
+
+  const handleResetCrop = () => {
+    handleAspectRatioChange(
+      state.crop.aspectRatio,
+      state.crop.aspectLabel || '',
+      state.crop.targetWidth,
+      state.crop.targetHeight
+    );
+  };
+
+  const applyTransform = () => {
+    if (!previewCanvasRef.current || state.crop.aspectRatio === null) return;
+    const canvas = previewCanvasRef.current;
+
+    // Enforce bounds: Image must always cover the crop window
+    if (cropWindowRef.current) {
+      const cropW = cropWindowRef.current.clientWidth;
+      const cropH = cropWindowRef.current.clientHeight;
+      const imgW = canvas.width;
+      const imgH = canvas.height;
+      const { scale } = currentTransformRef.current;
+
+      const sw = imgW * scale;
+      const sh = imgH * scale;
+
+      const maxX = Math.max(0, (sw - cropW) / 2);
+      const maxY = Math.max(0, (sh - cropH) / 2);
+
+      currentTransformRef.current.x = Math.max(-maxX, Math.min(maxX, currentTransformRef.current.x));
+      currentTransformRef.current.y = Math.max(-maxY, Math.min(maxY, currentTransformRef.current.y));
+    }
+
+    const { x, y, scale } = currentTransformRef.current;
+    canvas.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+  };
+
+  const handleCropZoom = (delta: number, clientX?: number, clientY?: number) => {
+    if (!viewportRef.current || !previewCanvasRef.current) return;
+
+    // Mark as zooming so effects don't overwrite us
+    isZoomingRef.current = true;
+    if (zoomTimeoutRef.current) clearTimeout(zoomTimeoutRef.current);
+    zoomTimeoutRef.current = setTimeout(() => {
+      isZoomingRef.current = false;
+    }, 100);
+
+    let minScale = 0.1;
+    if (state.crop.aspectRatio !== null && cropWindowRef.current) {
+      const cropW = cropWindowRef.current.clientWidth;
+      const cropH = cropWindowRef.current.clientHeight;
+      const imgW = previewCanvasRef.current.width;
+      const imgH = previewCanvasRef.current.height;
+      minScale = Math.max(cropW / imgW, cropH / imgH);
+    }
+
+    const newScale = Math.max(minScale, Math.min(5.0, currentTransformRef.current.scale - delta * 0.001));
+
+    currentTransformRef.current.scale = newScale;
+
+    applyTransform();
+
+    // Debounce state update
+    if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+    animationFrameRef.current = requestAnimationFrame(() => {
+      onUpdateState({ crop: { ...state.crop, ...currentTransformRef.current } });
+    });
   };
 
   // Mobile Swipe-to-Hide Logic
@@ -411,6 +581,24 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       panel.removeEventListener('touchmove', handleTouchMove);
     };
   }, [showMobileEffects]);
+
+  // Track viewport size changes
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setViewportSize({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height
+        });
+      }
+    });
+
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, []);
 
   // Initial load
   useEffect(() => {
@@ -554,6 +742,39 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
                 <span className="hidden sm:inline">{isPreviewingOriginal ? 'Original' : 'Preview'}</span>
               </button>
               <div className="w-px h-4 bg-white/10 mx-1"></div>
+              {/* Aspect Ratio Button */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowCropMenu(!showCropMenu)}
+                  className="flex items-center gap-2 px-3 md:px-4 h-8 rounded-lg bg-black text-white text-[10px] font-bold uppercase tracking-[0.15em] hover:bg-white/10 border border-white/20"
+                >
+                  <span className="material-symbols-outlined text-[16px]">crop</span>
+                  <span className="hidden sm:inline">{state.crop.aspectLabel || 'Crop'}</span>
+                </button>
+                {showCropMenu && (
+                  <div className="absolute top-full mt-2 right-0 bg-black/95 backdrop-blur-md border border-white/20 rounded-lg shadow-xl z-50 min-w-[180px]">
+                    {aspectRatios.map((preset) => (
+                      <button
+                        key={preset.label}
+                        onClick={() => handleAspectRatioChange(preset.ratio, preset.label, preset.targetWidth, preset.targetHeight)}
+                        className="w-full px-4 py-2 text-left text-xs font-bold uppercase tracking-wider hover:bg-primary/20 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {state.crop.aspectRatio !== null && (
+                <button
+                  onClick={handleResetCrop}
+                  className="size-8 flex items-center justify-center rounded-lg text-white/60 hover:text-white"
+                  title="Reset Crop"
+                >
+                  <span className="material-symbols-outlined text-[20px]">restart_alt</span>
+                </button>
+              )}
+              <div className="w-px h-4 bg-white/10 mx-1"></div>
               <button onClick={handleShare} className="flex items-center gap-2 px-3 md:px-4 h-8 rounded-lg bg-black text-white text-[10px] font-bold uppercase tracking-[0.15em] cyber-glow hover:bg-primary/30 border border-primary">
                 <span className="material-symbols-outlined text-[16px]">download</span>
                 <span className="hidden sm:inline">Export</span>
@@ -561,16 +782,158 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
             </div>
           </div>
 
-          <div className="relative w-full h-full flex-1 min-h-0 overflow-hidden group border-white/5 bg-black/5 flex items-center justify-center">
-            <canvas
-              ref={previewCanvasRef}
-              className={`max-w-full max-h-full object-contain transition-all duration-150 shadow-2xl rounded-lg ${isProcessing && !isPreviewingOriginal ? 'opacity-90' : 'opacity-100'} ${isPreviewingOriginal ? 'hidden' : ''}`}
-              style={{ willChange: 'contents' }}
-            />
+          <div
+            ref={viewportRef}
+            className="relative w-full h-full flex-1 min-h-0 overflow-hidden group border-white/5 bg-black/5 flex items-center justify-center"
+            onWheel={(e) => {
+              if (state.crop.aspectRatio !== null) {
+                e.preventDefault();
+                handleCropZoom(e.deltaY, e.clientX, e.clientY);
+              }
+            }}
+            onPointerDown={(e) => {
+              if (state.crop.aspectRatio !== null && !isPanning) {
+                e.preventDefault();
+                setIsPanning(true);
+                panStartRef.current = {
+                  x: e.clientX - currentTransformRef.current.x,
+                  y: e.clientY - currentTransformRef.current.y
+                };
+              }
+            }}
+            onPointerMove={(e) => {
+              if (isPanning && state.crop.aspectRatio !== null) {
+                currentTransformRef.current.x = e.clientX - panStartRef.current.x;
+                currentTransformRef.current.y = e.clientY - panStartRef.current.y;
+                applyTransform();
+              }
+            }}
+            onPointerUp={() => {
+              if (isPanning) {
+                setIsPanning(false);
+                onUpdateState({ crop: { ...state.crop, ...currentTransformRef.current } });
+              }
+            }}
+            onPointerLeave={() => {
+              if (isPanning) {
+                setIsPanning(false);
+                onUpdateState({ crop: { ...state.crop, ...currentTransformRef.current } });
+              }
+            }}
+            style={{ cursor: state.crop.aspectRatio !== null ? (isPanning ? 'grabbing' : 'grab') : 'default' }}
+          >
+            {/* 1. Canvas Wrapper - Handles safe positioning for Original mode */}
+            <div
+              className="relative flex items-center justify-center transform-gpu"
+              style={{
+                ...(state.crop.aspectRatio === null
+                  ? {
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    aspectRatio: imageSize ? `${imageSize.width} / ${imageSize.height}` : 'auto',
+                    width: 'auto',
+                    height: 'auto'
+                  }
+                  : {
+                    width: 'fit-content',
+                    height: 'fit-content'
+                  })
+              }}
+            >
+              <canvas
+                ref={previewCanvasRef}
+                className={`shadow-2xl rounded-lg ${isProcessing && !isPreviewingOriginal ? 'opacity-90' : 'opacity-100'} ${isPreviewingOriginal ? 'hidden' : ''}`}
+                style={{
+                  willChange: 'transform',
+                  // CRITICAL: No transition-all here, ensures instant drag response
+                  transition: 'opacity 0.15s ease',
+                  maxWidth: state.crop.aspectRatio === null ? '100%' : 'none',
+                  maxHeight: state.crop.aspectRatio === null ? '100%' : 'none',
+                  objectFit: 'contain',
+                  transform: state.crop.aspectRatio !== null
+                    ? `translate(${state.crop.x}px, ${state.crop.y}px) scale(${state.crop.scale})`
+                    : 'none',
+                  transformOrigin: 'center center'
+                }}
+              />
 
-            {isPreviewingOriginal && state.originalImage && (
-              <img src={state.originalImage} className="max-w-full max-h-full object-contain shadow-2xl rounded-lg" alt="Original" />
+              {isPreviewingOriginal && state.originalImage && (
+                <img
+                  src={state.originalImage}
+                  className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
+                  alt="Original"
+                  style={{
+                    maxWidth: state.crop.aspectRatio === null ? '100%' : 'none',
+                    maxHeight: state.crop.aspectRatio === null ? '100%' : 'none',
+                    transform: state.crop.aspectRatio !== null
+                      ? `translate(${state.crop.x}px, ${state.crop.y}px) scale(${state.crop.scale})`
+                      : 'none',
+                    transformOrigin: 'center center'
+                  }}
+                />
+              )}
+
+              {/* No-crop Watermark - Now strictly over the image */}
+              {state.crop.aspectRatio === null && !user && !isPreviewingOriginal && state.originalImage && (
+                <div className="absolute bottom-[4%] right-[4%] w-[30%] aspect-[5.33/1] z-[60]">
+                  <Watermark className="w-full h-full" />
+                </div>
+              )}
+            </div>
+
+            {/* 2. Crop Overlay - The Fixed Window */}
+            {state.crop.aspectRatio !== null && !isPreviewingOriginal && (
+              <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center p-[20px]">
+                {/* This div creates the dimming via broad box-shadow and frame via border */}
+                <div
+                  ref={cropWindowRef}
+                  className="relative shadow-2xl border-2 border-white/50"
+                  style={{
+                    // Robust sizing: Check Viewport Ratio vs Crop Ratio
+                    // If Viewport is wider than crop (Landscape screen, Portrait crop) -> Height constrained -> height: 100%
+                    // If Crop is wider than Viewport (Portrait screen, Landscape crop) -> Width constrained -> width: 100%
+                    ...(state.crop.aspectRatio && viewportSize.width && viewportSize.height
+                      ? (state.crop.aspectRatio > (viewportSize.width / viewportSize.height)
+                        ? { width: '100%', height: 'auto' } // Crop is "wider" relative to view -> maximize width
+                        : { height: '100%', width: 'auto' } // Crop is "taller" relative to view -> maximize height
+                      )
+                      : { width: '100%', height: 'auto' } // Fallback
+                    ),
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    aspectRatio: `${state.crop.aspectRatio}`,
+                    boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.75)'
+                  }}
+                >
+                  {/* Visual Guides (Rule of Thirds) */}
+                  <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-20">
+                    <div className="border-r border-b border-white"></div>
+                    <div className="border-r border-b border-white"></div>
+                    <div className="border-b border-white"></div>
+                    <div className="border-r border-b border-white"></div>
+                    <div className="border-r border-b border-white"></div>
+                    <div className="border-b border-white"></div>
+                    <div className="border-r border-white"></div>
+                    <div className="border-r border-white"></div>
+                    <div></div>
+                  </div>
+
+                  {/* Profile Circle Guide */}
+                  {state.crop.aspectRatio === 1 && state.crop.aspectLabel === 'Profile Picture' && (
+                    <div className="absolute inset-0 m-auto border-2 border-dashed border-white/80 rounded-full w-[90%] h-[90%] opacity-80" />
+                  )}
+
+                  {/* Fixed Watermark Overlay */}
+                  {!user && (
+                    <div className="absolute bottom-[4%] right-[4%] w-[30%] aspect-[5.33/1] z-[60]">
+                      <Watermark className="w-full h-full" />
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
+
+
 
             <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay bg-gradient-to-t from-primary/20 to-transparent"></div>
 
