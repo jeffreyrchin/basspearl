@@ -38,7 +38,7 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
                 <div className="flex-1 overflow-y-auto p-6 space-y-8 text-white/80 text-sm leading-relaxed custom-scrollbar">
                     <section>
                         <h1 className="text-2xl font-bold text-white mb-2">Privacy Policy</h1>
-                        <p className="text-white/60 mb-6 text-xs">Last Updated: January 25, 2026</p>
+                        <p className="text-white/60 mb-6 text-xs">Last Updated: February 4, 2026</p>
 
                         <div className="space-y-6">
                             <div>
@@ -54,7 +54,7 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
                                     <li><strong>Contact Data:</strong> Includes email address for account management.</li>
                                     <li><strong>Technical Data:</strong> Includes internet protocol (IP) address, your login data, browser type and version, time zone setting and location, browser plug-in types and versions, operating system and platform, and other technology on the devices you use to access this website.</li>
                                     <li><strong>Usage Data:</strong> Includes information about how you use our website, products and services.</li>
-                                    <li><strong>Image Data:</strong> Images you upload are processed locally in your browser. We do not permanently store your original images on our servers unless explicitly saved by you to a cloud gallery feature (if available).</li>
+                                    <li><strong>Media Data (Images and Audio):</strong> Images and audio files you upload are processed locally in your browser. Audio files are analyzed to extract acoustic features and generate abstract art—no audio data leaves your device. We do not permanently store your original files on our servers unless explicitly saved by you to a cloud gallery feature (if available).</li>
                                     <li><strong>Analytics Data:</strong> We collect anonymized usage data such as which effects you use, your interaction with presets, and successful image exports. This data is used solely to improve the user experience and feature set of GlitchBrain.io.</li>
                                 </ul>
                             </div>
@@ -102,7 +102,7 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
                                 <p>We retain personal data only for as long as necessary to fulfill the purposes for which we collected it, including for the purposes of satisfying any legal, accounting, or reporting requirements. Specific retention periods include:</p>
                                 <ul className="list-disc pl-5 mt-2 space-y-1 text-white/60">
                                     <li><strong>Account Data:</strong> Retained for the duration of your account's existence. Upon deletion, data is removed from active databases immediately and from backups within 30 days.</li>
-                                    <li><strong>Image Data:</strong> Not retained on our servers. Browser-local data is cleared when you close the session.</li>
+                                    <li><strong>Media Data (Images and Audio):</strong> Not retained on our servers. Browser-local processing only—data is cleared when you close the session.</li>
                                     <li><strong>Usage/Analytics Data:</strong> Retained for a period of 24 months for trend analysis. This data is anonymized and does not include your uploaded images.</li>
                                 </ul>
                             </div>
@@ -180,7 +180,7 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
 
                     <section>
                         <h1 className="text-2xl font-bold text-white mb-2">Terms of Service</h1>
-                        <p className="text-white/60 mb-6 text-xs">Last Updated: January 25, 2026</p>
+                        <p className="text-white/60 mb-6 text-xs">Last Updated: February 4, 2026</p>
 
                         <div className="space-y-6">
                             <div>
@@ -190,7 +190,7 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">2. Description of Service</h3>
-                                <p>GlitchBrain.io provides a web-based tool for applying visual effects ("glitch effects") to user-uploaded images. The image processing occurs client-side within your browser.</p>
+                                <p>GlitchBrain.io provides a web-based tool for applying visual effects ("glitch effects") to user-uploaded images and generating abstract art from audio files. All image and audio processing occurs client-side within your browser—no files are uploaded to our servers.</p>
                             </div>
 
                             <div>
@@ -200,12 +200,12 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">4. User Content and Conduct</h3>
-                                <p>You retain all rights to the images you upload. By uploading content, you grant GlitchBrain.io a temporary license to process and display that content solely for the purpose of generating the requested visual effects. You are responsible for all content you upload.</p>
+                                <p>By uploading images or audio files, you represent and warrant that you own or have the necessary rights, licenses, consents, and permissions to use and authorize us to process such content. You retain whatever ownership rights you have in your uploaded content. By uploading content, you grant GlitchBrain.io a temporary, limited license to process that content solely for providing the requested visual effects or generative art. All processing happens locally in your browser. You are solely responsible for ensuring you have the right to upload and process any content you submit to the Service.</p>
                             </div>
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">5. Prohibited Content</h3>
-                                <p>You agree not to upload content that is illegal, defamatory, pornographic, harassing, hate speech, or infringing on intellectual property rights. We reserve the right to refuse service to anyone found violating these terms.</p>
+                                <p>You agree not to upload content that: (i) is illegal, defamatory, pornographic, harassing, or constitutes hate speech; (ii) infringes on any intellectual property rights, including copyrights, trademarks, or patents; or (iii) you do not have the right to use. Uploading copyrighted material without authorization from the rights holder is strictly prohibited. We reserve the right to refuse service to anyone found violating these terms.</p>
                             </div>
 
                             <div>

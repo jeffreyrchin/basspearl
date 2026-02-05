@@ -46,7 +46,7 @@ const MainApp: React.FC = () => {
   const [forceLegal, setForceLegal] = useState(false);
   const [postConsentCallback, setPostConsentCallback] = useState<(() => void) | null>(null);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(() => {
-    return !!localStorage.getItem('glitch_consent_v1');
+    return !!localStorage.getItem('glitch_consent_02042026');
   });
 
   const processFile = async (file: File) => {
@@ -131,7 +131,7 @@ const MainApp: React.FC = () => {
   };
 
   const handleLegalConfirm = () => {
-    localStorage.setItem('glitch_consent_v1', 'true');
+    localStorage.setItem('glitch_consent_02042026', 'true');
     setHasAcceptedTerms(true);
     setLegalModalOpen(false);
     setForceLegal(false);
