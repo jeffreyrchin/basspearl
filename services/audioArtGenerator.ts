@@ -6,6 +6,10 @@
  * Uses memory-efficient chunked processing to handle large files.
  */
 
+import { EffectConfig, GlitchEffectType } from '../types';
+import { INITIAL_EFFECTS } from '../constants';
+
+
 interface AudioFeatures {
   peakAmplitudes: number[];    // Peak amplitude per segment
   rmsEnergy: number[];         // RMS energy per segment
@@ -91,47 +95,51 @@ async function extractAudioFeatures(audioFile: File): Promise<AudioFeatures> {
  * Extract features from a single audio chunk
  */
 function extractChunkFeatures(chunk: Float32Array, sampleRate: number) {
-  // Peak amplitude
   let peakAmplitude = 0;
   let sumSquares = 0;
   let zeroCrossings = 0;
 
-  for (let i = 0; i < chunk.length; i++) {
-    const sample = chunk[i];
-    peakAmplitude = Math.max(peakAmplitude, Math.abs(sample));
-    sumSquares += sample * sample;
+  // Three-band filter state
+  let lpBass = 0;    // Low-pass for bass
+  let lpMid = 0;     // Low-pass for mid+treble (used to isolate mid)
+  let bassSumSq = 0;
+  let midSumSq = 0;
+  let trebleSumSq = 0;
 
-    // Zero crossing detection
-    if (i > 0 && chunk[i - 1] * sample < 0) {
-      zeroCrossings++;
-    }
+  const alphaBass = 0.15;  // Bass cutoff (~200Hz equivalent)
+  const alphaMid = 0.15;   // Mid cutoff (narrower band = more treble)
+
+  for (let i = 0; i < chunk.length; i++) {
+    const x = chunk[i];
+    peakAmplitude = Math.max(peakAmplitude, Math.abs(x));
+    sumSquares += x * x;
+
+    if (i > 0 && chunk[i - 1] * x < 0) zeroCrossings++;
+
+    // Three-band filter cascade (narrower mid band = more treble)
+    lpBass += alphaBass * (x - lpBass);           // Bass: low-pass at ~200Hz
+    const midPlusTreble = x - lpBass;              // Everything above bass
+    lpMid += alphaMid * (midPlusTreble - lpMid);  // Mid: captures middle frequencies
+    const treble = midPlusTreble - lpMid;         // Treble: residual high frequencies
+
+    bassSumSq += lpBass * lpBass;
+    midSumSq += lpMid * lpMid;
+    trebleSumSq += treble * treble;
   }
 
-  // RMS energy
   const rms = Math.sqrt(sumSquares / chunk.length);
+  const bassEnergy = Math.sqrt(bassSumSq / chunk.length);
+  const midEnergy = Math.sqrt(midSumSq / chunk.length);
+  const trebleEnergy = Math.sqrt(trebleSumSq / chunk.length);
 
-  // Zero crossing rate (normalized)
-  const zeroCrossingRate = zeroCrossings / chunk.length;
-
-  // Simple FFT approximation using frequency band energy
-  // For a more accurate approach, we'd use a proper FFT library
-  // Here we use a simplified approach: analyze sample variance in different frequency ranges
-
-  // Downsample for different frequency bands
-  const bassEnergy = calculateBandEnergy(chunk, 0, Math.floor(chunk.length / 8));
-  const midEnergy = calculateBandEnergy(chunk, Math.floor(chunk.length / 8), Math.floor(chunk.length / 2));
-  const trebleEnergy = calculateBandEnergy(chunk, Math.floor(chunk.length / 2), chunk.length);
-
-  // Spectral centroid approximation (where most energy is)
-  const totalEnergy = bassEnergy + midEnergy + trebleEnergy;
-  const spectralCentroid = totalEnergy > 0
-    ? (bassEnergy * 0.25 + midEnergy * 0.5 + trebleEnergy * 0.75) / totalEnergy
-    : 0.5;
+  // Spectral Centroid (Weighted "Brightness")
+  const total = bassEnergy + midEnergy + trebleEnergy + 0.001;
+  const spectralCentroid = (bassEnergy * 0.1 + midEnergy * 0.4 + trebleEnergy * 0.9) / total;
 
   return {
     peakAmplitude,
     rms,
-    zeroCrossingRate,
+    zeroCrossingRate: zeroCrossings / chunk.length,
     spectralCentroid,
     bassEnergy,
     midEnergy,
@@ -411,14 +419,17 @@ function addFilmGrain(ctx: CanvasRenderingContext2D, width: number, height: numb
 export async function generateAudioArt(
   audioFile: File,
   options: GenerativeArtOptions = {}
-): Promise<string> {
+): Promise<{ imageData: string, suggestedEffects: EffectConfig[] }> {
   // Extract audio features
   const features = await extractAudioFeatures(audioFile);
 
   // Generate particle field
-  const dataUrl = generateParticleField(features, options);
+  const imageData = generateParticleField(features, options);
 
-  return dataUrl;
+  // Calculate suggested effects based on audio characteristics
+  const suggestedEffects = getSuggestedEffects(features);
+
+  return { imageData, suggestedEffects };
 }
 
 /**
@@ -440,4 +451,112 @@ export async function getAudioMetadata(audioFile: File): Promise<{ duration: num
     await audioContext.close();
     throw new Error('Unable to decode audio file');
   }
+}
+
+/**
+ * Analyze audio features and suggest effects settings
+ * Maps audio characteristics to effect parameters
+ */
+interface NormalizedMetrics {
+  avgEnergy: number;
+  relBass: number;
+  relTreble: number;
+  zeroCrossing: number;
+  spectralAvg: number;
+}
+
+/**
+ * Extracts and normalizes audio features for gain-independent effect selection.
+ */
+function calculateNormalizedMetrics(f: AudioFeatures): NormalizedMetrics {
+  const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length;
+
+  const rawAvg = avg(f.rmsEnergy);
+  const peak = Math.max(...f.rmsEnergy, 0.01);
+
+  // Normalize energy relative to peak, with floor to handle very quiet tracks
+  // Lower floor (0.15) allows better distinction between quiet and loud tracks
+  const energy = rawAvg / Math.max(0.15, peak);
+
+  const [b, m, t] = [avg(f.bassEnergy), avg(f.midEnergy), avg(f.trebleEnergy)];
+  const total = b + m + t + 0.001;
+
+  return {
+    avgEnergy: energy,
+    relBass: b / total,
+    relTreble: t / total,
+    zeroCrossing: avg(f.zeroCrossingRates),
+    spectralAvg: avg(f.spectralCentroids)
+  };
+}
+
+/**
+ * Analyze audio features and suggest effects settings
+ */
+export function getSuggestedEffects(features: AudioFeatures): EffectConfig[] {
+  const metrics = calculateNormalizedMetrics(features);
+  const { avgEnergy, relBass, relTreble, zeroCrossing, spectralAvg } = metrics;
+
+  const audioHash = features.duration * 1000 + features.peakAmplitudes.reduce((a, b) => a + b, 0);
+  const random = seededRandom(Math.floor(audioHash));
+
+  // Selection state
+  const effects = INITIAL_EFFECTS.map(e => ({ ...e, active: false }));
+  const selectedTypes = new Set<GlitchEffectType>();
+
+  const pickFromPool = (pool: Array<{ type: GlitchEffectType; score: number; params: any }>, min: number, max: number, t = 0.3) => {
+    const candidates = pool.filter(p => p.score > t).sort(() => random() - 0.5);
+    const count = Math.min(candidates.length, Math.floor(random() * (max - min + 1)) + min);
+
+    candidates.slice(0, count).forEach(item => {
+      selectedTypes.add(item.type);
+      const idx = effects.findIndex(e => e.type === item.type);
+      if (idx !== -1) {
+        // Reduced variance: ±8 instead of ±40 to preserve audio-reactive behavior
+        const vary = (v: number) => Math.max(0, Math.min(100, Math.floor(v + (random() - 0.5) * 16)));
+        effects[idx] = { ...effects[idx], active: true, intensity: vary(item.params.intensity), threshold: vary(item.params.threshold) };
+      }
+    });
+  };
+
+  // Pools
+  const aggressivePool = [
+    { type: 'DATA_CORRUPTION' as const, score: avgEnergy, params: { intensity: 30 + avgEnergy * 60, threshold: 20 + avgEnergy * 60 } },
+    { type: 'DEEP_FRY' as const, score: avgEnergy, params: { intensity: 40 + avgEnergy * 60, threshold: 50 + avgEnergy * 50 } },
+    { type: 'BIT_CRUSH' as const, score: zeroCrossing * 2.5, params: { intensity: 20 + zeroCrossing * 100, threshold: 50 } },
+    { type: 'COMPRESSION_HELL' as const, score: avgEnergy, params: { intensity: avgEnergy * 20, threshold: avgEnergy * 100 } }
+  ];
+
+  const atmosphericPool = [
+    { type: 'WAVE_DISTORTION' as const, score: 1 - avgEnergy, params: { intensity: avgEnergy * 10, threshold: relTreble * 50 } },
+    { type: 'INVERT_GHOST' as const, score: 1 - avgEnergy, params: { intensity: 50 + (1 - relTreble) * 50, threshold: 0 } },
+    { type: 'ANALOG_NOISE' as const, score: relTreble * 2.5, params: { intensity: 10 + (1 - relTreble) * 80, threshold: 0 } }
+  ];
+
+  const tonalPool = [
+    { type: 'CHANNEL_SHIFT' as const, score: relBass * 2, params: { intensity: 30 + relBass * 70, threshold: 50 } },
+    { type: 'COLOR_BLEED' as const, score: relBass * 2, params: { intensity: 40 + relBass * 60, threshold: 0 } },
+    { type: 'HUE_ROTATION' as const, score: 0.5, params: { intensity: Math.floor(spectralAvg * 360), threshold: 50 + avgEnergy * 50 } },
+    { type: 'RANDOM_CHAOS' as const, score: relTreble * 2.5, params: { intensity: relTreble * 100, threshold: avgEnergy * 20 } },
+    { type: 'PIXEL_SORT' as const, score: relTreble * 2.5, params: { intensity: 30 + relTreble * 70, threshold: 50 } }
+  ];
+
+  // Logic: Higher threshold (0.55) due to adjusted normalization floor
+  if (avgEnergy > 0.55) pickFromPool(aggressivePool, 2, 3, 0.15);
+  else pickFromPool(atmosphericPool, 1, 3, 0.15);
+
+  const bassRatio = relBass / (relBass + relTreble + 0.001);
+  if (bassRatio > 0.6) pickFromPool(tonalPool.filter(p => p.type !== 'PIXEL_SORT'), 1, 3, 0.1);
+  else if (bassRatio < 0.4) pickFromPool(tonalPool.filter(p => ['PIXEL_SORT', 'HUE_ROTATION'].includes(p.type)), 1, 3, 0.1);
+  else pickFromPool(tonalPool, 1, 3, 0);
+
+  pickFromPool([{ type: 'SCAN_LINES', score: 0.3, params: { intensity: 20 + avgEnergy * 40, threshold: 50 } }], 1, 1, 0);
+
+  // Forced fallback
+  if (selectedTypes.size === 0) {
+    const hueIdx = effects.findIndex(e => e.type === 'HUE_ROTATION');
+    if (hueIdx !== -1) Object.assign(effects[hueIdx], { active: true, intensity: Math.floor(random() * 100), threshold: 50 });
+  }
+
+  return effects;
 }

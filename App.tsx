@@ -90,7 +90,7 @@ const MainApp: React.FC = () => {
         setView(AppView.PROCESSING); // Show loading state
 
         // Generate art from audio
-        const artDataUrl = await generateAudioArt(file, {
+        const { imageData, suggestedEffects } = await generateAudioArt(file, {
           width: 1280,
           height: 1280,
           colorScheme: 'cyberpunk'
@@ -101,13 +101,13 @@ const MainApp: React.FC = () => {
 
         setState(prev => ({
           ...prev,
-          originalImage: artDataUrl,
+          originalImage: imageData,
           previewImage: null,
-          processedImage: artDataUrl,
+          processedImage: imageData,
           processedImagePreview: null,
           history: [initialHistoryItem],
           historyIndex: 0,
-          effects: INITIAL_EFFECTS,
+          effects: suggestedEffects,
           crop: { aspectRatio: null, aspectLabel: null, scale: 1.0, x: 0, y: 0 },
           audioMetadata: metadata
         }));
