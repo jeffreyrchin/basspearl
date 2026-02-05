@@ -43,6 +43,11 @@ export interface CropState {
   targetHeight?: number;
 }
 
+export interface AudioMetadata {
+  duration: number;
+  format: string;
+}
+
 export interface GlitchState {
   originalImage: string | null;  // Full Resolution Master
   previewImage: string | null;   // 1280px Proxy for Editor
@@ -53,4 +58,5 @@ export interface GlitchState {
   effects: EffectConfig[];
   currentEffectIndex: number;
   crop: CropState;
+  audioMetadata?: AudioMetadata | null; // If source was audio file
 }

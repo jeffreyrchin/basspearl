@@ -4,6 +4,7 @@
 
 export type AnalyticsEvent =
     | 'image_upload'
+    | 'media_upload'
     | 'terms_accepted'
     | 'effect_applied'
     | 'glitch_export'

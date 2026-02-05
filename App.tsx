@@ -10,6 +10,7 @@ import GalleryPage from './components/GalleryPage';
 import AboutPage from './components/AboutPage';
 import HelpPage from './components/HelpPage';
 import LegalConsentModal from './components/LegalConsentModal';
+import { generateAudioArt, getAudioMetadata } from './services/audioArtGenerator';
 
 const App: React.FC = () => {
   return (
@@ -48,29 +49,75 @@ const MainApp: React.FC = () => {
     return !!localStorage.getItem('glitch_consent_v1');
   });
 
-  const processFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
+  const processFile = async (file: File) => {
+    // Detect file type
+    const isImage = file.type.startsWith('image/');
+    const isAudio = file.type.startsWith('audio/');
 
-      const initialHistoryItem = {
-        effects: INITIAL_EFFECTS
-      };
+    if (!isImage && !isAudio) {
+      alert('Please upload an image or audio file.');
+      return;
+    }
 
-      setState(prev => ({
-        ...prev,
-        originalImage: result,
-        previewImage: null,
-        processedImage: result,
-        processedImagePreview: null,
-        history: [initialHistoryItem],
-        historyIndex: 0,
-        effects: INITIAL_EFFECTS,
-        crop: { aspectRatio: null, aspectLabel: null, scale: 1.0, x: 0, y: 0 }
-      }));
-      setView(AppView.EDITOR);
+    const initialHistoryItem = {
+      effects: INITIAL_EFFECTS
     };
-    reader.readAsDataURL(file);
+
+    if (isImage) {
+      // Process image as before
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+
+        setState(prev => ({
+          ...prev,
+          originalImage: result,
+          previewImage: null,
+          processedImage: result,
+          processedImagePreview: null,
+          history: [initialHistoryItem],
+          historyIndex: 0,
+          effects: INITIAL_EFFECTS,
+          crop: { aspectRatio: null, aspectLabel: null, scale: 1.0, x: 0, y: 0 },
+          audioMetadata: null
+        }));
+        setView(AppView.EDITOR);
+      };
+      reader.readAsDataURL(file);
+    } else if (isAudio) {
+      // Process audio file
+      try {
+        setView(AppView.PROCESSING); // Show loading state
+
+        // Generate art from audio
+        const artDataUrl = await generateAudioArt(file, {
+          width: 1280,
+          height: 1280,
+          colorScheme: 'cyberpunk'
+        });
+
+        // Get audio metadata
+        const metadata = await getAudioMetadata(file);
+
+        setState(prev => ({
+          ...prev,
+          originalImage: artDataUrl,
+          previewImage: null,
+          processedImage: artDataUrl,
+          processedImagePreview: null,
+          history: [initialHistoryItem],
+          historyIndex: 0,
+          effects: INITIAL_EFFECTS,
+          crop: { aspectRatio: null, aspectLabel: null, scale: 1.0, x: 0, y: 0 },
+          audioMetadata: metadata
+        }));
+        setView(AppView.EDITOR);
+      } catch (error) {
+        console.error('Audio processing error:', error);
+        alert('Unable to process audio file. Please try a different file.');
+        setView(AppView.LANDING);
+      }
+    }
   };
 
   const handleFileUpload = (file: File) => {
@@ -126,6 +173,16 @@ const MainApp: React.FC = () => {
           onOpenLegal={handleOpenLegal}
           hasAcceptedTerms={hasAcceptedTerms}
         />
+      ) : view === AppView.PROCESSING ? (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-background-dark text-white">
+          <div className="text-center">
+            <div className="size-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6 animate-pulse">
+              <span className="material-symbols-outlined text-primary text-[48px]">graphic_eq</span>
+            </div>
+            <h2 className="text-2xl font-bold uppercase tracking-wider mb-3">Generating Art from Audio</h2>
+            <p className="text-white/60 text-sm uppercase tracking-widest">This may take a few seconds...</p>
+          </div>
+        </div>
       ) : (
         <EditorView
           state={state}

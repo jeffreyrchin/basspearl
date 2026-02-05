@@ -45,10 +45,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
   };
 
   const processValidatedFile = (file: File) => {
+    // Check file type
+    const isImage = file.type.startsWith('image/');
+    const isAudio = file.type.startsWith('audio/');
+
+    if (!isImage && !isAudio) {
+      alert("Please upload an image or audio file.");
+      return;
+    }
+
     // 50MB Limit Check
     const MAX_SIZE = 50 * 1024 * 1024; // 50MB in bytes
     if (file.size > MAX_SIZE) {
-      alert("File too large. Please upload an image under 50MB.");
+      alert("File too large. Please upload a file under 50MB.");
       return;
     }
 
@@ -57,7 +66,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
       return;
     }
     incrementUploads();
-    trackEvent('image_upload', { file_size: file.size, file_type: file.type });
+    trackEvent('media_upload', { file_size: file.size, file_type: file.type, media_type: file.type.split('/')[0] });
     onFileUpload(file);
   };
 
@@ -143,7 +152,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
           <input
             type="file"
             className="hidden"
-            accept="image/*"
+            accept="image/*,audio/*"
             onChange={handleFileChange}
             ref={fileInputRef}
           />
@@ -155,10 +164,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
             <h3 className="text-base md:text-lg font-bold uppercase tracking-widest mb-2 px-4 text-white">
               Drop your media here
             </h3>
-            <p className="text-white/40 text-[10px] md:text-sm font-medium mb-6 md:mb-8">PNG, JPG, TIFF (UP TO 50MB)</p>
+            <p className="text-white/40 text-[10px] md:text-sm font-medium mb-6 md:mb-8">IMAGES OR AUDIO (UP TO 50MB)</p>
 
             <div className="bg-accent-blue hover:bg-white text-black px-6 md:px-10 py-2.5 md:py-3 rounded-full text-[10px] md:text-xs font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(251,0,255,0.4)] transition-all">
-              Upload Image
+              Upload Media
             </div>
           </div>
         </div>
