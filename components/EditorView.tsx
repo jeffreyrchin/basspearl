@@ -382,6 +382,30 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     }
   };
 
+  const handleRandomize = () => {
+    // 1. Pick 3-5 random effects to activate
+    const numEffects = Math.floor(Math.random() * 3) + 3;
+    const shuffledEffects = [...state.effects].sort(() => 0.5 - Math.random());
+    const activeTypes = new Set(shuffledEffects.slice(0, numEffects).map(e => e.type));
+
+    const randomizedEffects = state.effects.map(effect => {
+      const isActive = activeTypes.has(effect.type);
+      return {
+        ...effect,
+        active: isActive,
+        intensity: Math.floor(Math.random() * 80) + 10, // 10-90%
+        threshold: Math.floor(Math.random() * 80) + 10,
+        seed: Math.floor(Math.random() * 1000000)
+      };
+    });
+
+    onUpdateState({ effects: randomizedEffects });
+    trackEvent('effect_applied', { effect_type: 'randomize', action: 'click' });
+    applyGlitches(true, randomizedEffects);
+  };
+
+  const [showMagicMenu, setShowMagicMenu] = useState(false);
+
   // Crop handlers
   const handleAspectRatioChange = (ratio: number | null, label: string, targetWidth?: number, targetHeight?: number) => {
     // 1. Calculate new containment scale so image fits in viewport
@@ -722,6 +746,46 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
             <div className="flex items-center gap-1.5 glass-panel p-1.5 rounded-xl shadow-lg border border-white/10 scale-90 md:scale-100">
               <button onClick={handleUndo} disabled={state.historyIndex <= 0} className={`size-8 flex items-center justify-center rounded-lg ${state.historyIndex <= 0 ? 'text-white/20' : 'text-white/60 hover:text-white'}`}><span className="material-symbols-outlined text-[20px]">undo</span></button>
               <button onClick={handleRedo} disabled={state.historyIndex >= state.history.length - 1} className={`size-8 flex items-center justify-center rounded-lg ${state.historyIndex >= state.history.length - 1 ? 'text-white/20' : 'text-white/60 hover:text-white'}`}><span className="material-symbols-outlined text-[20px]">redo</span></button>
+              <div className="w-px h-4 bg-white/10 mx-1"></div>
+
+              {/* Magic/Random Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowMagicMenu(!showMagicMenu)}
+                  className="flex items-center gap-2 px-3 md:px-4 h-8 rounded-lg bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 hover:border-primary active-glow transition-all"
+                  title="Instant Magic"
+                >
+                  <span className="material-symbols-outlined text-[18px]">auto_fix_high</span>
+                  <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-[0.15em]">Magic</span>
+                </button>
+
+                {showMagicMenu && (
+                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-black/95 backdrop-blur-md border border-white/20 rounded-lg shadow-xl z-50 min-w-[200px] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    <button onClick={() => { handleRandomize(); setShowMagicMenu(false); }} className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-white/10 border-b border-white/10 group">
+                      <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">casino</span>
+                      <div>
+                        <div className="text-xs font-bold uppercase tracking-wider text-white">Surprise Me</div>
+                        <div className="text-[10px] text-white/50">Randomize everything</div>
+                      </div>
+                    </button>
+                    <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white/40">Instant styles</div>
+                    {[
+                      { id: 'GLITCH_RAIN', label: 'Glitch Rain', icon: 'terminal' },
+                      { id: 'CYBERPUNK', label: 'Cyberpunk', icon: 'corporate_fare' },
+                      { id: 'VAPORWAVE', label: 'Vaporwave', icon: 'filter_drama' }
+                    ].map(preset => (
+                      <button
+                        key={preset.id}
+                        onClick={() => { handleApplyPreset(preset.id); setShowMagicMenu(false); }}
+                        className="w-full px-4 py-2 text-left flex items-center gap-3 hover:bg-white/10 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-white/60 text-[16px]">{preset.icon}</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-white/80">{preset.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="w-px h-4 bg-white/10 mx-1"></div>
               <button
                 onMouseDown={() => setIsPreviewingOriginal(true)}

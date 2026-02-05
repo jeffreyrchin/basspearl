@@ -43,6 +43,13 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
 
 export const PRESETS: Record<string, EffectConfig[]> = {
   'RESET': INITIAL_EFFECTS.map(e => ({ ...e, active: false })),
+  'GLITCH_RAIN': INITIAL_EFFECTS.map(e => {
+    if (e.type === 'PIXEL_SORT') return { ...e, active: true, intensity: 78, threshold: 86 }; // Vertical code rain
+    if (e.type === 'COLOR_BLEED') return { ...e, active: true, intensity: 10, threshold: 5 }; // Slight tint/shift
+    if (e.type === 'SCAN_LINES') return { ...e, active: true, intensity: 27, threshold: 0 }; // CRT feel
+    if (e.type === 'BIT_CRUSH') return { ...e, active: true, intensity: 0, threshold: 3 }; // Digital artifacts
+    return { ...e, active: false };
+  }),
   'CYBERPUNK': INITIAL_EFFECTS.map(e => {
     if (e.type === 'PIXEL_SORT') return { ...e, active: true, intensity: 80, threshold: 30 }; // Long streaks
     if (e.type === 'CHANNEL_SHIFT') return { ...e, active: true, intensity: 50, threshold: 20 }; // Aberration + slight tear

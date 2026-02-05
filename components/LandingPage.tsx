@@ -101,28 +101,79 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
         <img
           src="/hero.jpg"
           alt="Glitch World"
-          className="w-full h-full object-cover scale-105"
+          className="w-full h-full object-cover scale-105 opacity-60"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background-dark/5 via-background-dark/10 to-background-dark"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-background-dark/30 via-background-dark/60 to-background-dark"></div>
       </div>
 
-      <div className="relative z-10 max-w-4xl animate-in fade-in slide-in-from-bottom-8 duration-1000">
-        <h2 className="text-5xl sm:text-6xl active-glow md:text-8xl font-bold tracking-tighter uppercase mb-8 leading-[0.9] drop-shadow-2xl">
-          Apply stunning effects
+      <div className="relative z-10 max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-1000 flex flex-col items-center">
+        <h2 className="text-5xl sm:text-6xl md:text-8xl font-bold tracking-tighter uppercase mb-6 leading-[0.9] drop-shadow-2xl active-glow">
+          Generate art from
           <br />
-          to your images
+          <span className="text-primary">images & audio</span>
         </h2>
-        <p className="text-white/60 text-lg md:text-xl font-medium uppercase tracking-[0.3em] mb-12 max-w-2xl mx-auto active-glow">
-          Glitch Art Editor
+        <p className="text-white/80 text-lg md:text-xl font-medium uppercase tracking-[0.3em] mb-10 max-w-2xl mx-auto drop-shadow-lg">
+          Glitch Art & Audio Visualizer
         </p>
 
-        <button
-          onClick={() => onOpenLegal(true)}
-          className="group relative px-8 py-3 bg-black border-primary border-2 text-white font-bold text-sm uppercase tracking-[0.3em] rounded-full overflow-hidden transition-all hover:scale-105 cyber-glow"
-        >
-          <span className="relative z-10">Start Editing</span>
-          <div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-        </button>
+        <div className="flex flex-col items-center mb-16">
+          <button
+            onClick={() => onOpenLegal(true)}
+            className="group relative px-10 py-4 bg-black border-primary border-2 text-white font-bold text-base uppercase tracking-[0.3em] rounded-full overflow-hidden transition-all hover:scale-105 cyber-glow mb-4"
+          >
+            <span className="relative z-10">Start Creating</span>
+            <div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+          </button>
+
+          <div className="flex items-center gap-3 text-[10px] md:text-xs font-bold uppercase tracking-widest text-white/50">
+            <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px] text-primary">check_circle</span> No Signup Required</span>
+            <span className="w-1 h-1 rounded-full bg-white/20"></span>
+            <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px] text-primary">check_circle</span> 100% Free</span>
+            <span className="w-1 h-1 rounded-full bg-white/20"></span>
+            <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px] text-primary">check_circle</span> Secure</span>
+          </div>
+        </div>
+
+        {/* Inspiration Reel (Marquee) */}
+        <div className="w-full max-w-[100vw] overflow-hidden relative fade-mask-x">
+          {/* Styles injected locally for the marquee since we can't edit global css easily */}
+          <style>{`
+            @keyframes marquee {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+            .animate-marquee {
+              animation: marquee 40s linear infinite;
+            }
+            .fade-mask-x {
+              mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+              -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+            }
+           `}</style>
+
+          <div className="flex gap-4 animate-marquee w-max py-4 hover:[animation-play-state:paused]">
+            {/* Duplicated list for seamless loop */}
+            {[
+              { src: '/gallery/digital_chaos.png', label: 'Digital Chaos' },
+              { src: '/gallery/pixel_dreams.png', label: 'Pixel Dreams' },
+              { src: '/gallery/vector.png', label: 'Vector' },
+              { src: '/gallery/rainbow_noise.png', label: 'Rainbow Noise' },
+              { src: '/gallery/chromatic_shift.png', label: 'Chromatic Shift' },
+              { src: '/gallery/digital_chaos.png', label: 'Digital Chaos' },
+              { src: '/gallery/pixel_dreams.png', label: 'Pixel Dreams' },
+              { src: '/gallery/vector.png', label: 'Vector' },
+              { src: '/gallery/rainbow_noise.png', label: 'Rainbow Noise' },
+              { src: '/gallery/chromatic_shift.png', label: 'Chromatic Shift' },
+            ].map((item, i) => (
+              <div key={i} className="relative group w-[200px] md:w-[280px] aspect-square rounded-xl overflow-hidden border border-white/10 hover:border-primary/50 transition-all">
+                <img src={item.src} alt="Inspiration" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
+                  <span className="text-xs font-bold uppercase tracking-widest">{item.label}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </main>
   );
@@ -139,7 +190,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
         </h2>
 
         <p className="text-white/40 text-sm md:text-base font-bold uppercase tracking-[0.2em] mb-8 animate-pulse">
-          Upload an image to begin
+          Upload image or audio to begin
         </p>
 
         <div
