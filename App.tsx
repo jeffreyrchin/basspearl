@@ -121,11 +121,10 @@ const MainApp: React.FC = () => {
   };
 
   const handleFileUpload = (file: File) => {
+    // Implicit consent flow
     if (!hasAcceptedTerms) {
-      setPostConsentCallback(() => () => processFile(file));
-      setForceLegal(true);
-      setLegalModalOpen(true);
-      return;
+      localStorage.setItem('glitch_consent_02042026', 'true');
+      setHasAcceptedTerms(true);
     }
     processFile(file);
   };

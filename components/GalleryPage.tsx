@@ -155,12 +155,12 @@ const GalleryPage: React.FC = () => {
 
                             {/* Terms Card */}
                             <div className="bg-white/5 rounded-xl p-6 text-left border border-white/5 max-w-3xl mx-auto mt-8">
-                                <h3 className="text-sm font-bold uppercase tracking-wider text-white/90 mb-4 flex items-center gap-2 border-b border-white/5 pb-3">
+                                <h3 className="text-md font-bold uppercase tracking-wider text-white/90 mb-4 flex items-center gap-2 border-b border-white/5 pb-3">
                                     <span className="material-symbols-outlined text-primary text-sm">assignment</span>
                                     Submission Guidelines
                                 </h3>
 
-                                <ul className="grid gap-3 text-xs text-white/60 leading-relaxed sm:grid-cols-2">
+                                <ul className="grid gap-3 text-sm text-white/60 leading-relaxed sm:grid-cols-2">
                                     <li className="flex gap-2 items-start">
                                         <span className="text-primary mt-[3px] text-[10px]">●</span>
                                         <span>You created the artwork using GlitchBrain.io, or you own all necessary rights to any source material used.</span>
@@ -191,7 +191,7 @@ const GalleryPage: React.FC = () => {
                                     </li>
                                 </ul>
 
-                                <div className="mt-4 pt-4 border-t border-white/5 text-[10px] text-white/40 uppercase tracking-widest text-center">
+                                <div className="mt-4 pt-4 border-t border-white/5 text-[10px] text-white uppercase tracking-widest text-center">
                                     By tagging us, you agree to these guidelines.
                                 </div>
                             </div>

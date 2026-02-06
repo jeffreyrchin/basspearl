@@ -725,7 +725,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
             title="Help & Documentation"
           >
             <span className="material-symbols-outlined text-[18px]">help</span>
-            <span className="text-xs font-bold uppercase tracking-wider">Help</span>
+            <span className="hidden md:block text-xs font-bold uppercase tracking-wider">Help</span>
           </button>
           <button
             onClick={() => { setInfoModalType('about'); setInfoModalOpen(true); }}
