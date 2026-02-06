@@ -2,10 +2,18 @@ import React, { useState } from 'react';
 import { AuthProvider } from '../context/AuthContext';
 import Navbar from './Navbar';
 import AuthModal from './AuthModal';
+import LegalConsentModal from './LegalConsentModal';
+import { FEEDBACK_FORM_URL } from '../constants';
 
 const GalleryPage: React.FC = () => {
     const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [legalModalOpen, setLegalModalOpen] = useState(false);
     const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+
+
+    const handleOpenLegal = (force: boolean) => {
+        setLegalModalOpen(true);
+    };
 
     const openAuthModal = (mode: 'login' | 'signup') => {
         setAuthMode(mode);
@@ -199,16 +207,25 @@ const GalleryPage: React.FC = () => {
                     </div>
                 </main>
 
-                <footer className="py-4 md:h-8 bg-[#050510] border-t border-white/5 px-4 md:px-6 flex items-center justify-center">
-                    <span className="text-[11px] font-bold tracking-widest text-white/70 uppercase">
-                        © 2026 GlitchBrain<span className="lowercase">.io</span>
-                    </span>
+                <footer className="py-4 md:h-8 bg-[#050510] border-t border-white/5 px-4 md:px-6 flex flex-row items-center justify-between gap-4 z-50">
+                    <span className="text-[11px] font-bold tracking-widest text-white/70 uppercase">© 2026 GlitchBrain<span className="lowercase">.io</span></span>
+                    <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest text-white/70 uppercase">
+                        <a href={FEEDBACK_FORM_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors uppercase">Feedback</a>
+                        <button onClick={() => handleOpenLegal(false)} className="hover:text-white transition-colors uppercase">Privacy & Terms</button>
+                    </div>
                 </footer>
 
                 <AuthModal
                     isOpen={authModalOpen}
                     onClose={() => setAuthModalOpen(false)}
                     initialMode={authMode}
+                />
+
+                <LegalConsentModal
+                    isOpen={legalModalOpen}
+                    onClose={() => setLegalModalOpen(false)}
+                    onConfirm={() => setLegalModalOpen(false)}
+                    isForced={false}
                 />
             </div>
 

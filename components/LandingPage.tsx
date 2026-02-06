@@ -6,6 +6,7 @@ import AuthModal from './AuthModal';
 import { useAuth } from '../context/AuthContext';
 import { useUploadQuota } from '../hooks/useUploadQuota';
 import { trackEvent } from '../services/analytics';
+import { FEEDBACK_FORM_URL } from '../constants';
 
 interface LandingPageProps {
   onFileUpload: (file: File) => void;
@@ -353,6 +354,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
       <footer className="py-4 md:h-8 bg-[#050510] border-t border-white/5 px-4 md:px-6 flex flex-row items-center justify-between gap-4 z-50">
         <span className="text-[11px] font-bold tracking-widest text-white/70 uppercase">© 2026 GlitchBrain<span className="lowercase">.io</span></span>
         <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest text-white/70 uppercase">
+          <a href={FEEDBACK_FORM_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors uppercase">Feedback</a>
           <button onClick={() => onOpenLegal(false)} className="hover:text-white transition-colors uppercase">Privacy & Terms</button>
         </div>
       </footer>

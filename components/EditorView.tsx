@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GlitchState, EffectConfig, AppView } from '../types';
-import { EFFECT_METADATA, PRESETS } from '../constants';
+import { EFFECT_METADATA, PRESETS, FEEDBACK_FORM_URL } from '../constants';
 import { useAuth } from '../context/AuthContext';
 
 import AuthModal from './AuthModal';
@@ -1093,16 +1093,17 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
         <div className="flex items-center gap-4 text-[11px] font-bold tracking-widest text-white/80 uppercase">
           <div className="flex items-center gap-1.5 mr-2 sm:mr-4">
             <span className={`size-1.5 rounded-full ${isProcessing ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'} shadow-sm shadow-green-500/50`}></span>
-            <span className="hidden sm:inline">{isProcessing ? 'Rendering' : 'Ready'}</span>
+            <span className="hidden md:inline">{isProcessing ? 'Rendering' : 'Ready'}</span>
           </div>
           <div className="h-3 w-px bg-white/10"></div>
           <div className="flex gap-2 sm:gap-4 text-[9px] text-white/70">
             <span>EFFECTS: {state.effects.filter(e => e.active).length}</span>
-            <span className="hidden sm:inline">ENGINE: WEB WORKER (FULL RES)</span>
+            <span className="hidden md:inline">ENGINE: WEB WORKER (FULL RES)</span>
           </div>
         </div>
         <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest text-white/70 uppercase">
           <ExportCreditsDisplay variant="inline" />
+          <a href={FEEDBACK_FORM_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors uppercase">Feedback</a>
           <button onClick={() => onOpenLegal(false)} className="hover:text-white transition-colors uppercase"><span className="hidden sm:inline">Privacy & </span>Terms</button>
         </div>
       </footer>

@@ -97,3 +97,5 @@ export const PRESETS: Record<string, EffectConfig[]> = {
     return { ...e, active: false };
   })
 };
+
+export const FEEDBACK_FORM_URL = 'https://forms.gle/CBVXwJv9s3ZvXyWr8';
