@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AppView } from '../types';
 import Navbar from './Navbar';
 import AuthModal from './AuthModal';
@@ -24,7 +24,40 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
   // New State for DND
   const [isDragging, setIsDragging] = useState(false);
 
+  // Carousel state - key changes on resize to remount and restart animation smoothly
+  const [marqueeKey, setMarqueeKey] = useState(0);
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastWidthRef = useRef<number>(typeof window !== 'undefined' ? window.innerWidth : 0);
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Handle window resize to prevent carousel glitches (only on width changes)
+  useEffect(() => {
+    const handleResize = () => {
+      const currentWidth = window.innerWidth;
+
+      // Only restart carousel if width actually changed (not just height from mobile scroll)
+      if (currentWidth !== lastWidthRef.current) {
+        // Debounce resize events
+        if (resizeTimeoutRef.current) {
+          clearTimeout(resizeTimeoutRef.current);
+        }
+        resizeTimeoutRef.current = setTimeout(() => {
+          // Force remount of marquee by changing key
+          setMarqueeKey(prev => prev + 1);
+          lastWidthRef.current = currentWidth;
+        }, 150);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleUploadClick = () => {
     if (hasAcceptedTerms) {
@@ -139,11 +172,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
           {/* Styles injected locally for the marquee since we can't edit global css easily */}
           <style>{`
             @keyframes marquee {
-              0% { transform: translateX(0); }
-              100% { transform: translateX(-50%); }
+              0% { transform: translate3d(0, 0, 0); }
+              100% { transform: translate3d(-50%, 0, 0); }
             }
             .animate-marquee {
               animation: marquee 40s linear infinite;
+              animation-fill-mode: both;
+              will-change: transform;
+              backface-visibility: hidden;
+              -webkit-backface-visibility: hidden;
             }
             .fade-mask-x {
               mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
@@ -151,7 +188,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
             }
            `}</style>
 
-          <div className="flex gap-4 animate-marquee w-max py-4 hover:[animation-play-state:paused]">
+          <div key={marqueeKey} className="flex animate-marquee w-max py-4 transform-gpu">
             {/* Duplicated list for seamless loop */}
             {[
               { src: '/gallery/digital_chaos.png', label: 'Digital Chaos' },
@@ -165,9 +202,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
               { src: '/gallery/rainbow_noise.png', label: 'Rainbow Noise' },
               { src: '/gallery/chromatic_shift.png', label: 'Chromatic Shift' },
             ].map((item, i) => (
-              <div key={i} className="relative group w-[200px] md:w-[280px] aspect-square rounded-xl overflow-hidden border border-white/10 hover:border-primary/50 transition-all">
-                <img src={item.src} alt="Inspiration" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
+              <div key={i} className="relative w-[240px] aspect-square rounded-xl overflow-hidden border border-white/10 shrink-0 backface-hidden transform-gpu mr-4">
+                <img src={item.src} alt="Inspiration" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end justify-center pb-4">
                   <span className="text-xs font-bold uppercase tracking-widest">{item.label}</span>
                 </div>
               </div>
