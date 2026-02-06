@@ -361,6 +361,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         initialMode={authMode}
+        onOpenLegal={onOpenLegal}
       />
 
       {/* Upload Limit Modal */}

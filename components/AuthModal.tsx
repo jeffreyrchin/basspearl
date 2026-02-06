@@ -6,9 +6,10 @@ interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;
     initialMode?: 'login' | 'signup';
+    onOpenLegal?: (force: boolean, callback?: () => void) => void;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'login' }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'login', onOpenLegal }) => {
     const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
     const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
     const [email, setEmail] = useState('');
@@ -17,11 +18,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
             setMode(initialMode);
             setError(null);
+            setAgreedToTerms(false);
             trackEvent('auth_view', { mode: initialMode });
         }
     }, [isOpen, initialMode]);
@@ -44,6 +47,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
 
     const handleEmailSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (mode === 'signup' && !agreedToTerms) {
+            return;
+        }
+
         setIsLoading(true);
         setError(null);
 
@@ -86,6 +94,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
     const toggleMode = () => {
         setMode(mode === 'login' ? 'signup' : 'login');
         setError(null);
+        setAgreedToTerms(false);
     };
 
     return (
@@ -206,6 +215,27 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                             </div>
                         </div>
 
+                        {/* Consent Checkbox */}
+                        {mode === 'signup' && (
+                            <div className="flex items-start gap-3 mt-4">
+                                <div className="relative flex items-center justify-center size-5 shrink-0">
+                                    <input
+                                        type="checkbox"
+                                        id="terms-checkbox"
+                                        checked={agreedToTerms}
+                                        onChange={(e) => setAgreedToTerms(e.target.checked)}
+                                        className="peer size-5 appearance-none rounded-md border border-white/20 bg-white/5 checked:!bg-primary checked:!border-primary focus:outline-none focus:!border-primary focus:ring-0 accent-primary transition-all cursor-pointer"
+                                    />
+                                    <span className="absolute inset-0 flex items-center justify-center text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity">
+                                        <span className="material-symbols-outlined text-[16px] font-bold leading-none">check</span>
+                                    </span>
+                                </div>
+                                <label htmlFor="terms-checkbox" className="text-xs text-white/60 cursor-pointer select-none leading-relaxed pt-0.5">
+                                    I agree to the <span onClick={(e) => { e.preventDefault(); onOpenLegal?.(false); }} className="text-white hover:underline hover:text-primary transition-colors cursor-pointer">Terms of Service</span> and <span onClick={(e) => { e.preventDefault(); onOpenLegal?.(false); }} className="text-white hover:underline hover:text-primary transition-colors cursor-pointer">Privacy Policy</span>.
+                                </label>
+                            </div>
+                        )}
+
                         {/* Error Message */}
                         {error && (
                             <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
@@ -217,8 +247,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            disabled={isLoading}
-                            className="w-full py-3.5 rounded-xl bg-black border border-primary hover:bg-primary/30 text-white font-bold text-sm uppercase tracking-widest cyber-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            disabled={isLoading || (mode === 'signup' && !agreedToTerms)}
+                            className={`w-full py-3.5 rounded-xl bg-black border border-primary hover:bg-primary/30 text-white font-bold text-sm uppercase tracking-widest cyber-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${mode === 'signup' && !agreedToTerms ? 'opacity-50 grayscale' : ''}`}
                         >
                             {isLoading ? (
                                 <>
