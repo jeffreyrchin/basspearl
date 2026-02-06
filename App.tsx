@@ -38,7 +38,7 @@ const MainApp: React.FC = () => {
     history: [],
     historyIndex: -1,
     effects: INITIAL_EFFECTS,
-    currentEffectIndex: 0,
+    currentEffectIndex: -1,
     crop: { aspectRatio: null, aspectLabel: null, scale: 1.0, x: 0, y: 0 }
   });
 

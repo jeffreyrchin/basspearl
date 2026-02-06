@@ -664,9 +664,9 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
                   trackEvent('effect_applied', { effect_type: newEffects[idx].type, action: newEffects[idx].active ? 'on' : 'off' });
                   applyGlitches(true, newEffects);
                 }}
-                className="material-symbols-outlined text-[24px]" style={{ color: effect.active ? '#0d7ff2' : 'rgba(255,255,255,0.2)' }}
+                className={`material-symbols-outlined text-[24px] ${effect.active ? 'text-primary' : 'text-[rgb(255,255,255,0.2)]'}`}
               >
-                {effect.active ? 'check_circle' : 'circle'}
+                {'mode_off_on'}
               </button>
             </div>
             {isActive && (
@@ -712,8 +712,8 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
             <h2 className="text-lg md:text-xl font-bold tracking-normal uppercase">Glitch<span className="text-primary">Brain</span><span className="lowercase">.io</span></h2>
           </div>
           <div className="h-4 w-px bg-white/10 hidden md:block"></div>
-          <nav className="hidden md:flex gap-6 text-sm font-medium tracking-wide text-white/50">
-            <button className={`uppercase hover:text-primary transition-colors ${activeTab === 'layers' ? 'text-primary active-glow' : ''}`} onClick={() => setActiveTab('layers')}>Layers</button>
+          <nav className="hidden lg:flex gap-6 text-sm font-medium tracking-wide text-white/50">
+            <button className={`uppercase hover:text-primary transition-colors ${activeTab === 'layers' ? 'text-primary active-glow' : ''}`} onClick={() => setActiveTab('layers')}>Effects</button>
             <button className={`uppercase hover:text-primary transition-colors ${activeTab === 'presets' ? 'text-primary active-glow' : ''}`} onClick={() => setActiveTab('presets')}>Presets</button>
           </nav>
           <button onClick={() => setShowMobileEffects(!showMobileEffects)} className="lg:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 uppercase text-xs font-bold">Effects</button>
@@ -721,7 +721,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
         <div className="flex items-center gap-2 md:gap-4">
           <button
             onClick={() => { setInfoModalType('help'); setInfoModalOpen(true); }}
-            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-colors"
             title="Help & Documentation"
           >
             <span className="material-symbols-outlined text-[18px]">help</span>
@@ -1013,7 +1013,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
         <aside className="w-80 shrink-0 glass-panel flex flex-col border-l border-white/10 shadow-2xl h-full hidden lg:flex">
           <div className="p-5 border-b border-white/5 shrink-0">
             <div className="flex gap-2 mb-4">
-              <button onClick={() => setActiveTab('layers')} className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors border ${activeTab === 'layers' ? 'bg-primary/10 text-primary active-glow border-primary/30' : 'bg-white/5 text-white/40 hover:text-white border-white/5'}`}>Layers</button>
+              <button onClick={() => setActiveTab('layers')} className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors border ${activeTab === 'layers' ? 'bg-primary/10 text-primary active-glow border-primary/30' : 'bg-white/5 text-white/40 hover:text-white border-white/5'}`}>Effects</button>
               <button onClick={() => setActiveTab('presets')} className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors border ${activeTab === 'presets' ? 'bg-primary/10 text-primary active-glow border-primary/30' : 'bg-white/5 text-white/40 hover:text-white border-white/5'}`}>Presets</button>
             </div>
             {activeTab === 'layers' && (
@@ -1078,7 +1078,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
               <div data-drag-handle="true" className="flex items-center justify-between px-5 py-3 border-b border-white/5">
                 <div className="flex gap-4">
-                  <button onClick={() => setActiveTab('layers')} className={`text-xs font-bold uppercase tracking-widest ${activeTab === 'layers' ? 'text-primary' : 'text-white/40'}`}>Layers</button>
+                  <button onClick={() => setActiveTab('layers')} className={`text-xs font-bold uppercase tracking-widest ${activeTab === 'layers' ? 'text-primary' : 'text-white/40'}`}>Effects</button>
                   <button onClick={() => setActiveTab('presets')} className={`text-xs font-bold uppercase tracking-widest ${activeTab === 'presets' ? 'text-primary' : 'text-white/40'}`}>Presets</button>
                 </div>
                 <button onClick={handleCloseLocal} className="p-1"><span className="material-symbols-outlined text-white/60">close</span></button>

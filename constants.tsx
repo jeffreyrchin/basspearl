@@ -3,7 +3,7 @@ import React from 'react';
 import { GlitchEffectType, EffectConfig } from './types';
 
 export const INITIAL_EFFECTS = [
-  { type: 'PIXEL_SORT' as GlitchEffectType, intensity: 72, threshold: 40, active: true, seed: 123456 },
+  { type: 'PIXEL_SORT' as GlitchEffectType, intensity: 72, threshold: 85, active: true, seed: 123456 },
   { type: 'CHANNEL_SHIFT' as GlitchEffectType, intensity: 30, threshold: 50, active: false, seed: 234567 },
   { type: 'DATA_CORRUPTION' as GlitchEffectType, intensity: 20, threshold: 80, active: false, seed: 345678 },
   { type: 'DEEP_FRY' as GlitchEffectType, intensity: 50, threshold: 50, active: false, seed: 456789 },
@@ -11,11 +11,11 @@ export const INITIAL_EFFECTS = [
   { type: 'BIT_CRUSH' as GlitchEffectType, intensity: 25, threshold: 50, active: false, seed: 678901 },
   { type: 'WAVE_DISTORTION' as GlitchEffectType, intensity: 15, threshold: 50, active: false, seed: 789012 },
   { type: 'COLOR_BLEED' as GlitchEffectType, intensity: 35, threshold: 50, active: false, seed: 890123 },
-  { type: 'COMPRESSION_HELL' as GlitchEffectType, intensity: 60, threshold: 50, active: false, seed: 901234 },
-  { type: 'RANDOM_CHAOS' as GlitchEffectType, intensity: 10, threshold: 50, active: false, seed: 111222 },
+  { type: 'COMPRESSION_HELL' as GlitchEffectType, intensity: 16, threshold: 78, active: false, seed: 901234 },
+  { type: 'RANDOM_CHAOS' as GlitchEffectType, intensity: 16, threshold: 0, active: false, seed: 111222 },
   { type: 'ANALOG_NOISE' as GlitchEffectType, intensity: 40, threshold: 50, active: false, seed: 222333 },
-  { type: 'HUE_ROTATION' as GlitchEffectType, intensity: 0, threshold: 0, active: false, seed: 333444 },
-  { type: 'INVERT_GHOST' as GlitchEffectType, intensity: 50, threshold: 50, active: false, seed: 444555 },
+  { type: 'HUE_ROTATION' as GlitchEffectType, intensity: 20, threshold: 80, active: false, seed: 333444 },
+  { type: 'INVERT_GHOST' as GlitchEffectType, intensity: 80, threshold: 0, active: false, seed: 444555 },
 ];
 
 export const EFFECT_METADATA: Record<GlitchEffectType, {

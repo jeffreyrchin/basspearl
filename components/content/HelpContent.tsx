@@ -8,13 +8,13 @@ const HelpContent: React.FC = () => {
                 <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">Getting Started</h2>
                 <div className="space-y-3">
                     <p className="text-white/70 text-base leading-relaxed">
-                        <span className="font-bold text-white">1. Upload an Image:</span> Click the upload zone or drag and drop an image file (PNG, JPG, TIFF up to 50MB).
+                        <span className="font-bold text-white">1. Upload an Image:</span> Click the upload zone or drag and drop an image or audio file up to 50MB.
                     </p>
                     <p className="text-white/70 text-base leading-relaxed">
-                        <span className="font-bold text-white">2. Select Effects:</span> Browse the Layers panel to enable individual effects. Click any effect to expand its controls.
+                        <span className="font-bold text-white">2. Select Effects:</span> Browse the Effects panel and enable/disable individual effects by clicking on the individual power icons.
                     </p>
                     <p className="text-white/70 text-base leading-relaxed">
-                        <span className="font-bold text-white">3. Adjust Parameters:</span> Each effect has parameter sliders. Experiment to find your perfect glitch aesthetic.
+                        <span className="font-bold text-white">3. Adjust Parameters:</span> Clicking on an effect will open its parameter controls. Adjust the sliders to find your perfect glitch aesthetic.
                     </p>
                     <p className="text-white/70 text-base leading-relaxed">
                         <span className="font-bold text-white">4. Export:</span> Click the Export button to download your creation. Sign in to remove watermarks.
@@ -38,8 +38,8 @@ const HelpContent: React.FC = () => {
                         { name: 'Compression Hell', desc: 'Simulates aggressive JPEG compression with blocky artifacts and banding.' },
                         { name: 'Random Chaos', desc: 'Unpredictable visual noise and disruption for maximum entropy.' },
                         { name: 'Analog Noise', desc: 'Film grain and static noise overlays for a vintage analog feel.' },
-                        { name: 'Hue Rotation', desc: 'Rotates color hues across the spectrum for psychedelic color shifts.' },
-                        { name: 'Invert Ghost', desc: 'Creates ghosted inverted color trails and afterimages.' }
+                        { name: 'Acid Trip', desc: 'Rotates color hues across the spectrum for psychedelic color shifts.' },
+                        { name: 'Spectral', desc: 'Creates ghosted inverted color trails and afterimages.' }
                     ].map(effect => (
                         <div key={effect.name} className="glass-panel p-4 rounded-xl border border-white/10">
                             <h3 className="text-sm font-bold uppercase tracking-wider text-white mb-1.5">{effect.name}</h3>
@@ -66,12 +66,6 @@ const HelpContent: React.FC = () => {
                         </p>
                     </div>
                     <div className="glass-panel p-5 rounded-xl border border-white/10">
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-primary mb-2">Threshold Control</h3>
-                        <p className="text-white/60 text-sm leading-relaxed">
-                            The Threshold parameter determines which pixels are affected. Lower thresholds affect more of the image, higher thresholds target specific brightness ranges.
-                        </p>
-                    </div>
-                    <div className="glass-panel p-5 rounded-xl border border-white/10">
                         <h3 className="text-sm font-bold uppercase tracking-wider text-primary mb-2">Preview Original</h3>
                         <p className="text-white/60 text-sm leading-relaxed">
                             Hold down the Preview button to temporarily view your original image for comparison.
@@ -84,8 +78,8 @@ const HelpContent: React.FC = () => {
             <section className="space-y-4">
                 <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">Using Presets</h2>
                 <p className="text-white/70 text-base leading-relaxed">
-                    Presets are pre-configured effect combinations that instantly apply a specific aesthetic. Switch to the Presets tab in the effects panel
-                    to browse and apply them. Each preset can be further customized by adjusting individual effect parameters in the Layers tab.
+                    Presets are pre-configured effect combinations that instantly apply a specific aesthetic. Switch to the Presets tab
+                    to browse and apply various presets. Each preset can be further customized by adjusting individual effect parameters.
                 </p>
             </section>
 
@@ -101,7 +95,7 @@ const HelpContent: React.FC = () => {
                         <span className="font-bold text-primary">Logged-out users:</span> Exports include a GlitchBrain watermark. Sign in for unlimited watermark-free exports.
                     </p>
                     <p className="text-white/70 text-base leading-relaxed">
-                        <span className="font-bold text-primary">File size:</span> All exports are full resolution PNG files, which may be large. Consider re-compressing for web use if needed.
+                        <span className="font-bold text-primary">File size:</span> Original-size exports are full resolution PNG files, which may be large. Consider re-compressing for web use if needed.
                     </p>
                 </div>
             </section>
