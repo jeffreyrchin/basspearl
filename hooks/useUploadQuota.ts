@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 const COUNT_KEY = 'glitchbrain_daily_uploads_count';
 const DATE_KEY = 'glitchbrain_daily_uploads_date';
-const MAX_FREE_UPLOADS = 5;
+const MAX_FREE_UPLOADS = 20;
 
 export const useUploadQuota = () => {
     const { user } = useAuth();

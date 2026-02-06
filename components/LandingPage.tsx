@@ -377,7 +377,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
             </div>
             <h3 className="text-xl font-bold uppercase tracking-tight mb-2">Daily Upload Limit Reached</h3>
             <p className="text-white/40 text-sm mb-6">
-              You've reached your daily limit of 5 uploads. Sign in for unlimited glitching!
+              You've reached your daily limit of 20 uploads. Sign in for unlimited glitching!
             </p>
             <div className="flex flex-col gap-3">
               <button
