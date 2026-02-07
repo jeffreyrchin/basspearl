@@ -1140,7 +1140,12 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
         </div>
       </footer>
 
-      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} initialMode={authMode} />
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode={authMode}
+        onOpenLegal={onOpenLegal}
+      />
       <ShareModal isOpen={shareModalOpen} onClose={() => setShareModalOpen(false)} imageUrl={state.processedImage} previewUrl={state.processedImagePreview} />
       <InfoModal isOpen={infoModalOpen} onClose={() => setInfoModalOpen(false)} type={infoModalType} />
     </div>
