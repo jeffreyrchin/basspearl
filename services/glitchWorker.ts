@@ -1,12 +1,15 @@
 
 import { EffectConfig, GlitchEffectType } from '../types';
-import { GlitchAlgorithms, GlitchParams } from './glitchAlgorithms';
+import { TextureManager } from './TextureManager';
+import { ShaderManager, BASE_VERTEX_SHADER, PASS_THROUGH_FRAGMENT_SHADER } from './ShaderManager';
+import { EffectPipeline } from './EffectPipeline';
+import { SHADER_REGISTRY } from './glitchShaders';
 
 interface WorkerMessage {
     id: string;
-    type: 'PROCESS';
-    imageBitmap: ImageBitmap;
-    effects: EffectConfig[];
+    type: 'PROCESS' | 'SET_SOURCE';
+    imageBitmap?: ImageBitmap;
+    effects?: EffectConfig[];
 }
 
 interface WorkerResponse {
@@ -18,107 +21,165 @@ interface WorkerResponse {
 
 class GlitchWorkerEngine {
     private canvas: OffscreenCanvas;
-    private ctx: OffscreenCanvasRenderingContext2D;
+    private gl: WebGL2RenderingContext;
+    private textureManager: TextureManager;
+    private shaderManager: ShaderManager;
+    private pipeline: EffectPipeline;
+    private inputTexture: WebGLTexture | null = null;
+    private currentWidth: number = 0;
+    private currentHeight: number = 0;
+
+    private lastDatamoshState: { active: boolean, intensity: number } = { active: false, intensity: 0 };
 
     constructor() {
+        console.log('[GlitchWorker] Initializing v3.0 (Lean Texture Caching)');
         this.canvas = new OffscreenCanvas(100, 100);
-        const context = this.canvas.getContext('2d', { willReadFrequently: true });
-        if (!context) throw new Error('Could not create worker canvas context');
-        // @ts-ignore - OffscreenCanvasRenderingContext2D is compatible enough
-        this.ctx = context;
+        const gl = this.canvas.getContext('webgl2', {
+            preserveDrawingBuffer: true,
+            antialias: false
+        });
+        if (!gl) throw new Error('Could not create worker WebGL2 context');
+        this.gl = gl;
+
+        // WebGL context loss recovery
+        this.canvas.addEventListener('webglcontextlost', (event) => {
+            console.warn('[GlitchWorker] WebGL context lost - GPU memory exhausted');
+            event.preventDefault(); // Prevent default browser behavior
+        });
+
+        this.canvas.addEventListener('webglcontextrestored', () => {
+            console.log('[GlitchWorker] WebGL context restored - reinitializing');
+            this.textureManager = new TextureManager(this.gl);
+            this.shaderManager = new ShaderManager(this.gl);
+            this.initShaders();
+            this.pipeline = new EffectPipeline(this.gl, this.textureManager, this.shaderManager);
+            this.inputTexture = null; // Force reload on next PROCESS
+        });
+
+        this.textureManager = new TextureManager(gl);
+        this.shaderManager = new ShaderManager(gl);
+        this.initShaders();
+        this.pipeline = new EffectPipeline(gl, this.textureManager, this.shaderManager);
     }
 
-    public async process(imageBitmap: ImageBitmap, effects: EffectConfig[]): Promise<ImageBitmap> {
-        const width = imageBitmap.width;
-        const height = imageBitmap.height;
+    private initShaders() {
+        this.shaderManager.createProgram('pass-through', BASE_VERTEX_SHADER, PASS_THROUGH_FRAGMENT_SHADER);
 
+        // Use registry for automatic initialization
+        Object.entries(SHADER_REGISTRY).forEach(([name, shader]) => {
+            this.shaderManager.createProgram(name, BASE_VERTEX_SHADER, shader.fragmentSource);
+        });
+    }
+
+    public async setSource(imageBitmap: ImageBitmap) {
+        let { width, height } = imageBitmap;
+        let processedBitmap = imageBitmap;
+
+        // Hardware limit check only (Main thread handles device-specific 2048px/4096px limits)
+        const maxTextureSize = this.gl.getParameter(this.gl.MAX_TEXTURE_SIZE);
+
+        // Auto-downscale ONLY if image exceeds hardware capabilities
+        if (width > maxTextureSize || height > maxTextureSize) {
+            const scale = maxTextureSize / Math.max(width, height);
+            const newWidth = Math.floor(width * scale);
+            const newHeight = Math.floor(height * scale);
+            console.warn(`[GlitchWorker] Image exceeds hardware limit (${maxTextureSize}px). Downscaling to ${newWidth}×${newHeight}`);
+
+            // Actually create a downscaled ImageBitmap
+            processedBitmap = await createImageBitmap(imageBitmap, {
+                resizeWidth: newWidth,
+                resizeHeight: newHeight,
+                resizeQuality: 'high'
+            });
+
+            // CRITICAL: Close original bitmap to free GPU memory
+            imageBitmap.close();
+
+            width = newWidth;
+            height = newHeight;
+        }
+
+        this.currentWidth = width;
+        this.currentHeight = height;
+
+        // Resize and re-init buffers if needed
         if (this.canvas.width !== width || this.canvas.height !== height) {
             this.canvas.width = width;
             this.canvas.height = height;
+            this.gl.viewport(0, 0, width, height);
+            this.pipeline.resize(width, height);
+
+            if (this.inputTexture) this.textureManager.destroyTexture(this.inputTexture);
+            this.inputTexture = this.textureManager.createTexture(width, height, processedBitmap);
+            this.pipeline.setInputTexture(this.inputTexture!);
+            this.pipeline.initializeFeedback();
+        } else {
+            this.textureManager.updateTexture(this.inputTexture!, processedBitmap);
         }
 
-        this.ctx.drawImage(imageBitmap, 0, 0);
+        processedBitmap.close();
+        console.log(`[GlitchWorker] Source updated: ${width}x${height}`);
+    }
 
+    public async process(effects: EffectConfig[]): Promise<ImageBitmap> {
+        if (!this.inputTexture) throw new Error('No source image set in worker');
+
+        const datamoshEffect = effects.find(e => e.type === 'DATA_CORRUPTION' && e.active);
+        const datamoshIsActive = !!datamoshEffect && datamoshEffect.intensity > 0;
+
+        // Feedback Logic
+        const stateChanged = datamoshIsActive !== this.lastDatamoshState.active ||
+            (datamoshIsActive && this.lastDatamoshState.intensity === 0);
+
+        if (stateChanged) {
+            this.pipeline.initializeFeedback();
+        }
+
+        this.lastDatamoshState = {
+            active: datamoshIsActive,
+            intensity: datamoshEffect?.intensity || 0
+        };
+
+        const width = this.currentWidth;
+        const height = this.currentHeight;
         const UNIT = Math.min(width, height) / 100;
-        const normalizedScale = Math.max(1, Math.min(width, height) / 800);
+        this.pipeline.resetStack();
 
+        // Apply active effects sequentially
         effects.filter(e => e.active).forEach(effect => {
-            this.applyEffect(effect, UNIT, normalizedScale);
+            this.applyEffect(effect, UNIT, width, height);
         });
 
+        this.pipeline.renderToScreen();
         return this.canvas.transferToImageBitmap();
     }
 
-    private currentRng: () => number = Math.random;
-
-    private applyEffect(effect: EffectConfig, UNIT: number, scale: number) {
-        const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-        const { intensity, threshold, seed } = effect;
-
-        if (seed !== undefined) {
-            this.currentRng = this.createSeededRng(seed);
-        } else {
-            this.currentRng = Math.random;
+    private applyEffect(effect: EffectConfig, UNIT: number, width: number, height: number) {
+        const definition = SHADER_REGISTRY[effect.type];
+        if (!definition) {
+            console.warn(`Worker: Shader not found for ${effect.type}`);
+            return;
         }
 
-        const params: GlitchParams = {
-            intensity,
-            threshold,
-            UNIT,
-            random: () => this.currentRng()
+        const passes = definition.getPasses ? definition.getPasses(effect.intensity) : 1;
+        const seedOffset = Math.floor((effect.seed || 0) * 1000) % 5000;
+
+        const uniforms: Record<string, any> = {
+            u_intensity: effect.intensity,
+            u_threshold: effect.threshold,
+            u_unit: UNIT,
+            u_seed: effect.seed || Math.random(),
+            u_resolution: [width, height],
+            u_time: performance.now() * 0.001
         };
 
-        switch (effect.type) {
-            case 'PIXEL_SORT':
-                GlitchAlgorithms.PIXEL_SORT(imageData.data, imageData.width, imageData.height, params);
-                break;
-            case 'CHANNEL_SHIFT':
-                GlitchAlgorithms.CHANNEL_SHIFT(imageData.data, imageData.width, imageData.height, params);
-                break;
-            case 'BIT_CRUSH':
-                GlitchAlgorithms.BIT_CRUSH(imageData.data, imageData.width, imageData.height, params);
-                break;
-            case 'SCAN_LINES':
-                GlitchAlgorithms.SCAN_LINES(imageData.data, imageData.width, imageData.height, params);
-                break;
-            case 'DEEP_FRY':
-                GlitchAlgorithms.DEEP_FRY(imageData.data, imageData.width, imageData.height, params);
-                break;
-            case 'WAVE_DISTORTION':
-                GlitchAlgorithms.WAVE_DISTORTION(imageData.data, imageData.width, imageData.height, params);
-                break;
-            case 'DATA_CORRUPTION':
-                GlitchAlgorithms.DATA_CORRUPTION(imageData.data, imageData.width, imageData.height, params);
-                break;
-            case 'COLOR_BLEED':
-                GlitchAlgorithms.COLOR_BLEED(imageData.data, imageData.width, imageData.height, params);
-                break;
-            case 'COMPRESSION_HELL':
-                GlitchAlgorithms.COMPRESSION_HELL(imageData.data, imageData.width, imageData.height, params);
-                break;
-            case 'RANDOM_CHAOS':
-                GlitchAlgorithms.RANDOM_CHAOS(imageData.data, imageData.width, imageData.height, params);
-                break;
-            case 'ANALOG_NOISE':
-                GlitchAlgorithms.ANALOG_NOISE(imageData.data, imageData.width, imageData.height, params);
-                break;
-            case 'HUE_ROTATION':
-                GlitchAlgorithms.HUE_ROTATION(imageData.data, imageData.width, imageData.height, params);
-                break;
-            case 'INVERT_GHOST':
-                GlitchAlgorithms.INVERT_GHOST(imageData.data, imageData.width, imageData.height, params);
-                break;
-        }
+        for (let i = 0; i < passes; i++) {
+            uniforms.u_frame = i + seedOffset;
+            this.pipeline.applyEffect(effect.type, uniforms);
 
-        this.ctx.putImageData(imageData, 0, 0);
-    }
-
-    private createSeededRng(seed: number) {
-        return function () {
-            var t = seed += 0x6D2B79F5;
-            t = Math.imul(t ^ (t >>> 15), t | 1);
-            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+            if (definition.requiresFeedback) {
+                this.pipeline.saveFeedback();
+            }
         }
     }
 }
@@ -126,24 +187,20 @@ class GlitchWorkerEngine {
 const engine = new GlitchWorkerEngine();
 
 self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
-    if (e.data.type === 'PROCESS') {
-        try {
-            const resultBitmap = await engine.process(e.data.imageBitmap, e.data.effects);
-            const response: WorkerResponse = {
-                id: e.data.id,
-                success: true,
-                imageBitmap: resultBitmap
-            };
+    const { id, type, imageBitmap, effects } = e.data;
+
+    try {
+        if (type === 'SET_SOURCE' && imageBitmap) {
+            await engine.setSource(imageBitmap);
+            self.postMessage({ id, success: true });
+        } else if (type === 'PROCESS' && effects) {
+            const resultBitmap = await engine.process(effects);
+            const response: WorkerResponse = { id, success: true, imageBitmap: resultBitmap };
             // @ts-ignore
             self.postMessage(response, [resultBitmap]);
-        } catch (err) {
-            console.error('Worker Error:', err);
-            const response: WorkerResponse = {
-                id: e.data.id,
-                success: false,
-                error: String(err)
-            };
-            self.postMessage(response);
         }
+    } catch (err) {
+        console.error('Worker Error:', err);
+        self.postMessage({ id, success: false, error: String(err) });
     }
 };

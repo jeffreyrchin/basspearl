@@ -1,20 +1,45 @@
 
 import { EffectConfig, GlitchEffectType } from '../types';
-import { GlitchAlgorithms, GlitchParams } from './glitchAlgorithms';
+import { TextureManager } from './TextureManager';
+import { ShaderManager, BASE_VERTEX_SHADER, PASS_THROUGH_FRAGMENT_SHADER } from './ShaderManager';
+import { EffectPipeline } from './EffectPipeline';
+import { SHADER_REGISTRY } from './glitchShaders';
 
 export class GlitchEngine {
   private canvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
-
-  constructor() {
-    this.canvas = document.createElement('canvas');
-    const context = this.canvas.getContext('2d', { willReadFrequently: true });
-    if (!context) throw new Error('Could not create canvas context');
-    this.ctx = context;
-  }
+  private gl: WebGL2RenderingContext;
+  private textureManager: TextureManager;
+  private shaderManager: ShaderManager;
+  private pipeline: EffectPipeline;
 
   private currentImageSrc: string | null = null;
   private currentImage: HTMLImageElement | null = null;
+  private inputTexture: WebGLTexture | null = null;
+
+  constructor() {
+    this.canvas = document.createElement('canvas');
+    const gl = this.canvas.getContext('webgl2', {
+      preserveDrawingBuffer: true,
+      antialias: false
+    });
+    if (!gl) throw new Error('Could not create WebGL2 context');
+    this.gl = gl;
+
+    this.textureManager = new TextureManager(gl);
+    this.shaderManager = new ShaderManager(gl);
+    this.initShaders();
+    this.pipeline = new EffectPipeline(gl, this.textureManager, this.shaderManager);
+  }
+
+  private initShaders() {
+    // Initialize base pass-through shader
+    this.shaderManager.createProgram('pass-through', BASE_VERTEX_SHADER, PASS_THROUGH_FRAGMENT_SHADER);
+
+    // Automatically initialize all registered shaders
+    Object.entries(SHADER_REGISTRY).forEach(([name, shader]) => {
+      this.shaderManager.createProgram(name, BASE_VERTEX_SHADER, shader.fragmentSource);
+    });
+  }
 
   public async processImage(imageSrc: string, effects: EffectConfig[], shouldWatermark: boolean = false, maxSize?: number): Promise<string> {
     await this.processInternal(imageSrc, effects, shouldWatermark, maxSize);
@@ -39,24 +64,39 @@ export class GlitchEngine {
         let width = img.width;
         let height = img.height;
 
-        const UNIT = Math.min(width, height) / 100;
-        const normalizedScale = Math.max(1, Math.min(width, height) / 800);
-
         if (maxSize && (width > maxSize || height > maxSize)) {
           const ratio = Math.min(maxSize / width, maxSize / height);
           width = Math.floor(width * ratio);
           height = Math.floor(height * ratio);
         }
 
-        this.canvas.width = width;
-        this.canvas.height = height;
-        this.ctx.drawImage(img, 0, 0, width, height);
+        if (this.canvas.width !== width || this.canvas.height !== height) {
+          this.canvas.width = width;
+          this.canvas.height = height;
+          this.gl.viewport(0, 0, width, height);
+          this.pipeline.resize(width, height);
+
+          if (this.inputTexture) this.textureManager.destroyTexture(this.inputTexture);
+          this.inputTexture = this.textureManager.createTexture(width, height, img);
+          this.pipeline.setInputTexture(this.inputTexture!);
+          this.pipeline.initializeFeedback();
+        } else if (this.currentImageSrc !== imageSrc) {
+          this.textureManager.updateTexture(this.inputTexture!, img);
+          this.pipeline.setInputTexture(this.inputTexture!);
+          this.pipeline.initializeFeedback();
+        }
+
+        const UNIT = Math.min(width, height) / 100;
+
+        this.pipeline.setInputTexture(this.inputTexture!);
+        this.pipeline.resetStack();
 
         // Apply active effects sequentially
         effects.filter(e => e.active).forEach(effect => {
-          this.applyEffect(effect, UNIT, normalizedScale);
+          this.applyEffect(effect, UNIT, width, height);
         });
 
+        this.pipeline.renderToScreen();
         resolve();
       };
 
@@ -77,79 +117,33 @@ export class GlitchEngine {
     });
   }
 
-  private currentRng: () => number = Math.random;
-
-  private applyEffect(effect: EffectConfig, UNIT: number, scale: number) {
-    const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+  private applyEffect(effect: EffectConfig, UNIT: number, width: number, height: number) {
     const { intensity, threshold, seed } = effect;
-
-    // Initialize RNG
-    if (seed !== undefined) {
-      this.currentRng = this.createSeededRng(seed);
-    } else {
-      this.currentRng = Math.random;
-    }
-
-    const params: GlitchParams = {
-      intensity,
-      threshold,
-      UNIT,
-      random: () => this.currentRng()
+    const uniforms: Record<string, any> = {
+      u_intensity: intensity,
+      u_threshold: threshold,
+      u_unit: UNIT,
+      u_seed: seed || Math.random(),
+      u_resolution: [width, height],
+      u_time: performance.now() * 0.001
     };
 
-    switch (effect.type) {
-      case 'PIXEL_SORT':
-        GlitchAlgorithms.PIXEL_SORT(imageData.data, imageData.width, imageData.height, params);
-        break;
-      case 'CHANNEL_SHIFT':
-        GlitchAlgorithms.CHANNEL_SHIFT(imageData.data, imageData.width, imageData.height, params);
-        break;
-      case 'BIT_CRUSH':
-        GlitchAlgorithms.BIT_CRUSH(imageData.data, imageData.width, imageData.height, params);
-        break;
-      case 'SCAN_LINES':
-        GlitchAlgorithms.SCAN_LINES(imageData.data, imageData.width, imageData.height, params);
-        break;
-      case 'DEEP_FRY':
-        GlitchAlgorithms.DEEP_FRY(imageData.data, imageData.width, imageData.height, params);
-        break;
-      case 'WAVE_DISTORTION':
-        GlitchAlgorithms.WAVE_DISTORTION(imageData.data, imageData.width, imageData.height, params);
-        break;
-      case 'DATA_CORRUPTION':
-        GlitchAlgorithms.DATA_CORRUPTION(imageData.data, imageData.width, imageData.height, params);
-        break;
-      case 'COLOR_BLEED':
-        GlitchAlgorithms.COLOR_BLEED(imageData.data, imageData.width, imageData.height, params);
-        break;
-      case 'COMPRESSION_HELL':
-        GlitchAlgorithms.COMPRESSION_HELL(imageData.data, imageData.width, imageData.height, params);
-        break;
-      case 'RANDOM_CHAOS':
-        GlitchAlgorithms.RANDOM_CHAOS(imageData.data, imageData.width, imageData.height, params);
-        break;
-      case 'ANALOG_NOISE':
-        GlitchAlgorithms.ANALOG_NOISE(imageData.data, imageData.width, imageData.height, params);
-        break;
-      case 'HUE_ROTATION':
-        GlitchAlgorithms.HUE_ROTATION(imageData.data, imageData.width, imageData.height, params);
-        break;
-      case 'INVERT_GHOST':
-        GlitchAlgorithms.INVERT_GHOST(imageData.data, imageData.width, imageData.height, params);
-        break;
-      default:
-        break;
+    const definition = SHADER_REGISTRY[effect.type];
+    if (!definition) {
+      console.warn(`Shader not found for effect type: ${effect.type}`);
+      return;
     }
 
-    this.ctx.putImageData(imageData, 0, 0);
-  }
+    const passes = definition.getPasses ? definition.getPasses(intensity) : 1;
+    const seedOffset = Math.floor((seed || 0) * 1000) % 5000;
 
-  private createSeededRng(seed: number) {
-    return function () {
-      var t = seed += 0x6D2B79F5;
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    for (let i = 0; i < passes; i++) {
+      uniforms.u_frame = i + seedOffset;
+      this.pipeline.applyEffect(effect.type, uniforms);
+
+      if (definition.requiresFeedback) {
+        this.pipeline.saveFeedback();
+      }
     }
   }
 }

@@ -4,6 +4,7 @@ import { EFFECT_METADATA, PRESETS, FEEDBACK_FORM_URL } from '../constants';
 import { useAuth } from '../context/AuthContext';
 
 import AuthModal from './AuthModal';
+import { EffectSlider } from './EffectSlider';
 import ExportCreditsDisplay from './ExportCreditsDisplay';
 import UserMenu from './UserMenu';
 import ShareModal from './ShareModal';
@@ -81,7 +82,6 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   }, [user]);
 
   // Sync currentTransformRef with crop state
-  // Sync currentTransformRef with crop state
   // We guard this to prevent "stuttering" where the slightly-stale React state
   // overwrites the fresh imperative ref state during active gestures.
   const isZoomingRef = useRef(false);
@@ -149,6 +149,9 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
       return () => {
         worker.terminate();
+        if (sourceBitmapRef.current) {
+          sourceBitmapRef.current.close();
+        }
       };
     } catch (err) {
       console.error("Failed to initialize worker", err);
@@ -163,11 +166,20 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
   }, []);
   const lastProcessTimeRef = useRef(0);
   const throttleFrameRef = useRef<number | null>(null);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Mobile detection
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const THROTTLE_MS = isMobile ? 500 : 32; // Very aggressive throttling on mobile (2fps max)
+  const DEBOUNCE_MS = isMobile ? 500 : 150; // Strong debounce to prevent excessive updates
+
+  // Track active dragging to pause updates on mobile
+  // (Removed complex tracking refs as we now use simple debounce strategy)
 
   // Hysteresis ref for rendering indicator to prevent flicker
   const renderingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleEffectChange = async (index: number, updates: Partial<EffectConfig>, shouldThrottle: boolean = true) => {
+  const handleEffectChange = async (index: number, updates: Partial<EffectConfig>) => {
     const newEffects = [...state.effects];
     const seed = newEffects[index].seed ?? Math.floor(Math.random() * 1000000);
     newEffects[index] = { ...newEffects[index], ...updates, seed };
@@ -178,28 +190,44 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
     onUpdateState({ effects: newEffects });
 
+    // Clear existing timers
     if (throttleFrameRef.current !== null) {
       cancelAnimationFrame(throttleFrameRef.current);
     }
+    if (debounceTimeoutRef.current !== null) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
 
-    throttleFrameRef.current = requestAnimationFrame(() => {
-      const now = performance.now();
-      const timeSinceLastProcess = now - lastProcessTimeRef.current;
+    // On Mobile: SKIP throttled updates entirely to prevent crashes during rapid dragging.
+    // We rely SOLELY on the debounce timer below to update only when the user STOPS dragging.
+    if (!isMobile) {
+      // Throttled preview during dragging (Desktop only)
+      throttleFrameRef.current = requestAnimationFrame(() => {
+        const now = performance.now();
+        const timeSinceLastProcess = now - lastProcessTimeRef.current;
 
-      if (timeSinceLastProcess >= 32) {
-        lastProcessTimeRef.current = now;
-        applyGlitches(false, newEffects);
-      } else {
-        throttleFrameRef.current = requestAnimationFrame(() => {
+        if (timeSinceLastProcess >= THROTTLE_MS) {
+          lastProcessTimeRef.current = now;
           applyGlitches(false, newEffects);
-        });
-      }
-    });
+        } else {
+          throttleFrameRef.current = requestAnimationFrame(() => {
+            applyGlitches(false, newEffects);
+          });
+        }
+      });
+    }
+
+    // Debounced final update after user stops dragging (Mobile & Desktop)
+    debounceTimeoutRef.current = setTimeout(() => {
+      applyGlitches(false, newEffects);
+    }, DEBOUNCE_MS);
   };
 
   // Processing Loop Logic
   const isProcessingRef = useRef(false);
   const pendingStateRef = useRef<{ effects: EffectConfig[] } | null>(null);
+  const sourceBitmapRef = useRef<ImageBitmap | null>(null);
+  const currentSourceImageRef = useRef<string | null>(null);
 
   const processPending = async () => {
     if (isProcessingRef.current || !pendingStateRef.current || !stateRef.current.originalImage || !workerRef.current) return;
@@ -214,26 +242,52 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
     setIsProcessing(true);
 
     const targetEffects = pendingStateRef.current.effects;
-    pendingStateRef.current = null;
+    pendingStateRef.current = null; // Clear pending to accept only the latest request
 
     try {
-      const img = new Image();
-      img.src = stateRef.current.originalImage;
-      await img.decode();
-      const bitmap = await createImageBitmap(img);
+      // 1. Synchronize Source Image if changed
+      if (currentSourceImageRef.current !== stateRef.current.originalImage) {
+        console.log('[EditorView] Source image changed, updating worker...');
 
+        const img = new Image();
+        img.src = stateRef.current.originalImage;
+        await img.decode();
+
+        const maxDimension = isMobile ? 2048 : 4096;
+        if (sourceBitmapRef.current) sourceBitmapRef.current.close();
+
+        if (img.width > maxDimension || img.height > maxDimension) {
+          const scale = maxDimension / Math.max(img.width, img.height);
+          sourceBitmapRef.current = await createImageBitmap(img, {
+            resizeWidth: Math.floor(img.width * scale),
+            resizeHeight: Math.floor(img.height * scale),
+            resizeQuality: 'high'
+          });
+        } else {
+          sourceBitmapRef.current = await createImageBitmap(img);
+        }
+
+        // Send to worker ONCE
+        const transferBitmap = await createImageBitmap(sourceBitmapRef.current);
+        workerRef.current.postMessage({
+          id: 'set-source-' + Date.now(),
+          type: 'SET_SOURCE',
+          imageBitmap: transferBitmap
+        }, [transferBitmap]);
+
+        currentSourceImageRef.current = stateRef.current.originalImage;
+      }
+
+      // 2. Process Effects (Parameters Only)
       workerRef.current.postMessage({
         id: Date.now().toString(),
         type: 'PROCESS',
-        imageBitmap: bitmap,
         effects: targetEffects
-      }, [bitmap]);
+      });
 
     } catch (err) {
       console.error(err);
       isProcessingRef.current = false;
-
-      // Error case - also use hysteresis
       if (renderingTimeoutRef.current) clearTimeout(renderingTimeoutRef.current);
       renderingTimeoutRef.current = setTimeout(() => {
         setIsProcessing(false);
@@ -688,12 +742,20 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
               <div className="space-y-4 px-1 pb-2 mt-4">
                 <div className="space-y-2">
                   <div className="flex justify-between text-[10px] font-bold text-white/60"><span>{meta.intensityLabel?.toUpperCase() || 'INTENSITY'}</span><span>{effect.intensity}%</span></div>
-                  <input type="range" min="0" max="100" value={effect.intensity} onChange={(e) => handleEffectChange(idx, { intensity: parseInt(e.target.value) }, true)} onMouseUp={handleHistoryCommit} onTouchEnd={handleHistoryCommit} className="w-full h-6 bg-transparent appearance-none cursor-pointer custom-slider" />
+                  <EffectSlider
+                    value={effect.intensity}
+                    onChange={(val) => handleEffectChange(idx, { intensity: val })}
+                    onCommit={handleHistoryCommit}
+                  />
                 </div>
                 {(meta.showThreshold ?? true) && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-[10px] font-bold text-white/60"><span>{meta.thresholdLabel?.toUpperCase() || 'THRESHOLD'}</span><span>{effect.threshold}%</span></div>
-                    <input type="range" min="0" max="100" value={effect.threshold} onChange={(e) => handleEffectChange(idx, { threshold: parseInt(e.target.value) }, true)} onMouseUp={handleHistoryCommit} onTouchEnd={handleHistoryCommit} className="w-full h-6 bg-transparent appearance-none cursor-pointer custom-slider" />
+                    <EffectSlider
+                      value={effect.threshold}
+                      onChange={(val) => handleEffectChange(idx, { threshold: val })}
+                      onCommit={handleHistoryCommit}
+                    />
                   </div>
                 )}
               </div>
@@ -1028,11 +1090,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
                 </div>
               </div>
             )}
-
-
-
             <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay bg-gradient-to-t from-primary/20 to-transparent"></div>
-
             {isProcessing && !isPreviewingOriginal && (
               <div className="absolute top-4 right-4 flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
                 <div className="size-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
