@@ -652,6 +652,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
               tabIndex={0}
               onClick={() => onUpdateState({ currentEffectIndex: isActive ? -1 : idx })}
               onKeyDown={(e) => {
+                if (e.currentTarget !== e.target) return;
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
                   onUpdateState({ currentEffectIndex: isActive ? -1 : idx });
@@ -676,7 +677,9 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
                   trackEvent('effect_applied', { effect_type: newEffects[idx].type, action: newEffects[idx].active ? 'on' : 'off' });
                   applyGlitches(true, newEffects);
                 }}
-                className={`material-symbols-outlined text-[24px] ${effect.active ? 'text-primary' : 'text-[rgb(255,255,255,0.2)]'}`}
+                className={`material-symbols-outlined text-[24px] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md transition-colors ${effect.active ? 'text-primary' : 'text-white/20 hover:text-white/40'}`}
+                aria-label={`Toggle ${meta.label} ${effect.active ? 'off' : 'on'}`}
+                title={`Toggle ${meta.label}`}
               >
                 {'mode_off_on'}
               </button>
@@ -720,9 +723,14 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       {/* Header */}
       <header className="flex items-center justify-between px-4 md:px-6 py-4 z-50 border-b border-white/5 bg-background-dark/80 backdrop-blur-md shrink-0">
         <div className="flex items-center gap-4 md:gap-6">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate(AppView.LANDING)}>
+          <button
+            type="button"
+            className="flex items-center gap-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg"
+            onClick={() => onNavigate(AppView.LANDING)}
+            aria-label="Go to Landing Page"
+          >
             <h2 className="text-lg md:text-xl font-bold tracking-normal uppercase">Glitch<span className="text-primary">Brain</span><span className="lowercase">.io</span></h2>
-          </div>
+          </button>
           <div className="h-4 w-px bg-white/10 hidden md:block"></div>
           <nav className="hidden lg:flex gap-6 text-sm font-medium tracking-wide text-white/50">
             <button className={`uppercase hover:text-primary transition-colors ${activeTab === 'layers' ? 'text-primary active-glow' : ''}`} onClick={() => setActiveTab('layers')}>Effects</button>
