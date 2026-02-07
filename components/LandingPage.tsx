@@ -244,12 +244,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 max-w-4xl mx-auto">
           {/* Image Upload Card */}
-          <div
+          <button
+            type="button"
             onClick={() => handleUploadClick('image')}
             onDragOver={(e) => handleDragOver(e, 'image')}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, 'image')}
-            className={`group glass-panel p-1 border-white/10 hover:border-primary/50 transition-all duration-300 rounded-3xl cursor-pointer relative overflow-hidden ${activeDropZone === 'image' ? 'scale-105 border-primary ring-2 ring-primary/20 bg-primary/5' : 'hover:-translate-y-2'}`}
+            className={`w-full group glass-panel p-1 border-white/10 hover:border-primary/50 transition-all duration-300 rounded-3xl cursor-pointer relative overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${activeDropZone === 'image' ? 'scale-105 border-primary ring-2 ring-primary/20 bg-primary/5' : 'hover:-translate-y-2'}`}
           >
             <div className="bg-background-dark/50 backdrop-blur-xl rounded-[20px] p-8 md:p-12 h-full flex flex-col items-center text-center relative z-10">
               <div className={`size-20 rounded-2xl flex items-center justify-center mb-6 transition-transform ${activeDropZone === 'image' ? 'scale-110 bg-primary/20' : 'bg-gradient-to-br from-primary/20 to-transparent group-hover:scale-110'}`}>
@@ -264,15 +265,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
             </div>
             {/* Glow effect */}
             <div className={`absolute -inset-1 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 blur-xl transition-opacity ${activeDropZone === 'image' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}></div>
-          </div>
+          </button>
 
           {/* Audio Upload Card */}
-          <div
+          <button
+            type="button"
             onClick={() => handleUploadClick('audio')}
             onDragOver={(e) => handleDragOver(e, 'audio')}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, 'audio')}
-            className={`group glass-panel p-1 border-white/10 hover:border-accent-blue/50 transition-all duration-300 rounded-3xl cursor-pointer relative overflow-hidden ${activeDropZone === 'audio' ? 'scale-105 border-accent-blue ring-2 ring-accent-blue/20 bg-accent-blue/5' : 'hover:-translate-y-2'}`}
+            className={`w-full group glass-panel p-1 border-white/10 hover:border-accent-blue/50 transition-all duration-300 rounded-3xl cursor-pointer relative overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50 ${activeDropZone === 'audio' ? 'scale-105 border-accent-blue ring-2 ring-accent-blue/20 bg-accent-blue/5' : 'hover:-translate-y-2'}`}
           >
             <div className="bg-background-dark/50 backdrop-blur-xl rounded-[20px] p-8 md:p-12 h-full flex flex-col items-center text-center relative z-10">
               <div className={`size-20 rounded-2xl flex items-center justify-center mb-6 transition-transform ${activeDropZone === 'audio' ? 'scale-110 bg-accent-blue/20' : 'bg-gradient-to-br from-accent-blue/20 to-transparent group-hover:scale-110'}`}>
@@ -287,7 +289,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
             </div>
             {/* Glow effect */}
             <div className={`absolute -inset-1 bg-gradient-to-r from-accent-blue/0 via-accent-blue/10 to-accent-blue/0 blur-xl transition-opacity ${activeDropZone === 'audio' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}></div>
-          </div>
+          </button>
         </div>
 
         <div className="text-center mt-12">
@@ -329,7 +331,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
               <div className="size-24 rounded-full bg-background-dark border border-white/10 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover:border-primary/50 group-hover:shadow-[0_0_30px_rgba(251,0,255,0.2)] transition-all duration-300">
                 <span className="material-symbols-outlined text-4xl text-white group-hover:text-primary transition-colors">{item.icon}</span>
               </div>
-              <span className="text-primary font-bold text-sm tracking-widest mb-2 opacity-50">STEP {item.step}</span>
+              <span className="text-primary font-bold text-sm tracking-widest mb-2">STEP {item.step}</span>
               <h3 className="text-2xl font-bold uppercase tracking-wide mb-3">{item.title}</h3>
               <p className="text-white/60 text-sm leading-relaxed max-w-xs">{item.desc}</p>
             </div>
@@ -340,7 +342,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
   );
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-background-dark font-display text-white overflow-x-hidden">
+    <main className="relative min-h-screen flex flex-col bg-background-dark font-display text-white overflow-x-hidden">
       <Navbar
         onLoginClick={() => openAuthModal('login')}
         onSignupClick={() => openAuthModal('signup')}
@@ -401,7 +403,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 };
 

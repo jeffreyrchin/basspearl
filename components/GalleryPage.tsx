@@ -115,9 +115,9 @@ const GalleryPage: React.FC = () => {
 
                                     {/* Artwork Info */}
                                     <div className="p-4">
-                                        <h3 className="text-sm font-bold uppercase tracking-wider text-white mb-1">
+                                        <h2 className="text-sm font-bold uppercase tracking-wider text-white mb-1">
                                             {artwork.title}
-                                        </h3>
+                                        </h2>
                                         <p className="text-xs text-white/60 uppercase tracking-wide">
                                             by {artwork.artist}
                                         </p>
@@ -147,7 +147,7 @@ const GalleryPage: React.FC = () => {
                                     href="https://www.instagram.com/glitchbrain.io/"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-3 px-8 py-4 bg-primary hover:bg-primary/80 text-white font-bold text-sm uppercase tracking-widest rounded-xl cyber-glow transition-all hover:scale-105 min-w-[200px] justify-center"
+                                    className="flex items-center gap-3 px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/10 text-white font-bold text-sm uppercase tracking-widest rounded-xl transition-all hover:scale-105 min-w-[200px] justify-center"
                                 >
                                     Instagram
                                 </a>

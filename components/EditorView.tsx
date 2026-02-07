@@ -646,7 +646,19 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
         return (
           <div key={effect.type} className={`p-3 rounded-xl transition-all ${isActive ? 'bg-primary/10 border border-primary/20' : 'hover:bg-white/5 border border-transparent hover:border-white/5'}`}>
-            <div data-interactive="true" onClick={() => onUpdateState({ currentEffectIndex: isActive ? -1 : idx })} className="flex items-center justify-between mb-2 cursor-pointer">
+            <div
+              data-interactive="true"
+              role="button"
+              tabIndex={0}
+              onClick={() => onUpdateState({ currentEffectIndex: isActive ? -1 : idx })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onUpdateState({ currentEffectIndex: isActive ? -1 : idx });
+                }
+              }}
+              className="flex items-center justify-between mb-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg"
+            >
               <div className="flex items-center gap-3">
                 <div className={`size-8 rounded-lg flex items-center justify-center transition-colors ${isActive ? 'bg-primary text-white cyber-glow' : 'bg-white/5 text-white/60'}`}>
                   <span className="material-symbols-outlined text-[20px]">{meta.icon}</span>
@@ -1019,7 +1031,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
             {activeTab === 'layers' && (
               <div className="relative flex items-center">
                 <span className="material-symbols-outlined absolute left-3 text-white/40 text-[20px]">search</span>
-                <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white/5 border-none rounded-lg pl-10 pr-4 py-2 text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-primary uppercase placeholder:text-white/20" placeholder="SEARCH EFFECTS..." type="text" />
+                <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white/5 border-none rounded-lg pl-10 pr-4 py-2 text-[10px] font-bold tracking-widest focus:ring-1 focus-visible:ring-primary uppercase placeholder:text-white/20" placeholder="SEARCH EFFECTS..." type="text" />
               </div>
             )}
           </div>
