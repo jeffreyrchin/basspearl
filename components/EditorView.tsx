@@ -811,6 +811,17 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
                 onMouseDown={() => setIsPreviewingOriginal(true)}
                 onMouseUp={() => setIsPreviewingOriginal(false)}
                 onMouseLeave={() => setIsPreviewingOriginal(false)}
+                onKeyDown={(e) => {
+                  if (e.key === ' ' || e.key === 'Enter') {
+                    setIsPreviewingOriginal(true);
+                  }
+                }}
+                onKeyUp={(e) => {
+                  if (e.key === ' ' || e.key === 'Enter') {
+                    setIsPreviewingOriginal(false);
+                  }
+                }}
+                onBlur={() => setIsPreviewingOriginal(false)}
                 onTouchStart={(e) => {
                   e.preventDefault();
                   setIsPreviewingOriginal(true);
@@ -821,6 +832,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
                 }}
                 onContextMenu={(e) => e.preventDefault()}
                 className={`flex items-center gap-2 px-3 md:px-4 h-8 rounded-lg text-white text-[10px] font-bold uppercase tracking-[0.15em] cyber-glow transition-all border border-primary select-none ${isPreviewingOriginal ? 'bg-white text-black border-white' : 'bg-black text-white'}`}
+                aria-label="Hold to preview original image"
               >
                 <span className="material-symbols-outlined text-[16px]">compare</span>
                 <span className="hidden sm:inline">{isPreviewingOriginal ? 'Original' : 'Preview'}</span>

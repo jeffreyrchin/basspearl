@@ -29,6 +29,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
         }
     }, [isOpen, initialMode]);
 
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && isOpen) {
+                onClose();
+            }
+        };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     const handleGoogleSignIn = async () => {
@@ -224,14 +234,25 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                                         id="terms-checkbox"
                                         checked={agreedToTerms}
                                         onChange={(e) => setAgreedToTerms(e.target.checked)}
-                                        className="peer size-5 appearance-none rounded-md border border-white/20 bg-white/5 checked:!bg-primary checked:!border-primary focus:outline-none focus:!border-primary focus:ring-0 accent-primary transition-all cursor-pointer"
+                                        className="peer size-5 appearance-none rounded-md border border-white/20 bg-white/5 checked:!bg-primary checked:!border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 accent-primary transition-all cursor-pointer"
                                     />
                                     <span className="absolute inset-0 flex items-center justify-center text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity">
                                         <span className="material-symbols-outlined text-[16px] font-bold leading-none">check</span>
                                     </span>
                                 </div>
                                 <label htmlFor="terms-checkbox" className="text-xs text-white/60 cursor-pointer select-none leading-relaxed pt-0.5">
-                                    I agree to the <span onClick={(e) => { e.preventDefault(); onOpenLegal?.(false); }} className="text-white hover:underline hover:text-primary transition-colors cursor-pointer">Terms of Service</span> and <span onClick={(e) => { e.preventDefault(); onOpenLegal?.(false); }} className="text-white hover:underline hover:text-primary transition-colors cursor-pointer">Privacy Policy</span>.
+                                    I agree to the GlitchBrain.io<span
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={(e) => { e.preventDefault(); onOpenLegal?.(false); }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                onOpenLegal?.(false);
+                                            }
+                                        }}
+                                        className="text-white hover:underline hover:text-primary transition-colors cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 rounded px-0.5"
+                                    >Terms of Service and Privacy Policy</span>.
                                 </label>
                             </div>
                         )}

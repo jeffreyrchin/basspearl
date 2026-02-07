@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface LegalConsentModalProps {
     isOpen: boolean;
@@ -9,6 +9,16 @@ interface LegalConsentModalProps {
 
 const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, onConfirm, isForced }) => {
     const [agreed, setAgreed] = useState(false);
+
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && isOpen && !isForced) {
+                onClose();
+            }
+        };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [isOpen, onClose, isForced]);
 
     if (!isOpen) return null;
 
