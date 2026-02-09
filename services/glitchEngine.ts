@@ -96,7 +96,7 @@ export class GlitchEngine {
           this.applyEffect(effect, UNIT, width, height);
         });
 
-        this.pipeline.renderToScreen();
+        this.pipeline.renderToScreen(false);
         resolve();
       };
 
@@ -123,7 +123,7 @@ export class GlitchEngine {
       u_intensity: intensity,
       u_threshold: threshold,
       u_unit: UNIT,
-      u_seed: seed || Math.random(),
+      u_seed: (seed !== undefined && seed !== null) ? seed : Math.random(),
       u_resolution: [width, height],
       u_time: performance.now() * 0.001
     };

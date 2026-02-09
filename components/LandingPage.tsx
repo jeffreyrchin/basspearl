@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppView } from '../types';
 import Navbar from './Navbar';
 import AuthModal from './AuthModal';
@@ -16,6 +17,7 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onOpenLegal, hasAcceptedTerms }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { canUpload, incrementUploads } = useUploadQuota();
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -242,7 +244,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
           <p className="text-white/60 text-sm md:text-base font-medium uppercase tracking-widest">Select input method to begin glitching</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
           {/* Image Upload Card */}
           <button
             type="button"
@@ -252,14 +254,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
             onDrop={(e) => handleDrop(e, 'image')}
             className={`w-full group glass-panel p-1 border-white/10 hover:border-primary/50 transition-all duration-300 rounded-3xl cursor-pointer relative overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${activeDropZone === 'image' ? 'scale-105 border-primary ring-2 ring-primary/20 bg-primary/5' : 'hover:-translate-y-2'}`}
           >
-            <div className="bg-background-dark/50 backdrop-blur-xl rounded-[20px] p-8 md:p-12 h-full flex flex-col items-center text-center relative z-10">
-              <div className={`size-20 rounded-2xl flex items-center justify-center mb-6 transition-transform ${activeDropZone === 'image' ? 'scale-110 bg-primary/20' : 'bg-gradient-to-br from-primary/20 to-transparent group-hover:scale-110'}`}>
+            <div className="bg-background-dark/50 backdrop-blur-xl rounded-[20px] p-8 h-full flex flex-col items-center text-center relative z-10">
+              <div className={`size-16 rounded-2xl flex items-center justify-center mb-6 transition-transform ${activeDropZone === 'image' ? 'scale-110 bg-primary/20' : 'bg-gradient-to-br from-primary/20 to-transparent group-hover:scale-110'}`}>
                 <span className="material-symbols-outlined text-4xl text-primary">{activeDropZone === 'image' ? 'download' : 'image'}</span>
               </div>
-              <h3 className="text-2xl font-bold uppercase tracking-wide mb-2">Upload Image</h3>
-              <p className="text-white/50 text-sm mb-8 leading-relaxed">Glitch your photos with pixel sorting, datamoshing, and more.</p>
+              <h3 className="text-xl font-bold uppercase tracking-wide mb-2">Upload Image</h3>
+              <p className="text-white/50 text-xs mb-8 leading-relaxed">Glitch your photos with pixel sorting, datamoshing, and more.</p>
 
-              <div className={`mt-auto px-8 py-3 rounded-full border text-xs font-bold uppercase tracking-widest transition-all ${activeDropZone === 'image' ? 'bg-primary text-black border-primary' : 'bg-primary/10 border-primary/20 text-primary group-hover:bg-primary group-hover:text-black'}`}>
+              <div className={`mt-auto px-6 py-2.5 rounded-full border text-[10px] font-bold uppercase tracking-widest transition-all ${activeDropZone === 'image' ? 'bg-primary text-black border-primary' : 'bg-primary/10 border-primary/20 text-primary group-hover:bg-primary group-hover:text-black'}`}>
                 {activeDropZone === 'image' ? 'Drop Image Here' : 'Upload Photo'}
               </div>
             </div>
@@ -267,7 +269,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
             <div className={`absolute -inset-1 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 blur-xl transition-opacity ${activeDropZone === 'image' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}></div>
           </button>
 
-          {/* Audio Upload Card */}
+          {/* Audio Art Card */}
           <button
             type="button"
             onClick={() => handleUploadClick('audio')}
@@ -276,19 +278,40 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
             onDrop={(e) => handleDrop(e, 'audio')}
             className={`w-full group glass-panel p-1 border-white/10 hover:border-accent-blue/50 transition-all duration-300 rounded-3xl cursor-pointer relative overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50 ${activeDropZone === 'audio' ? 'scale-105 border-accent-blue ring-2 ring-accent-blue/20 bg-accent-blue/5' : 'hover:-translate-y-2'}`}
           >
-            <div className="bg-background-dark/50 backdrop-blur-xl rounded-[20px] p-8 md:p-12 h-full flex flex-col items-center text-center relative z-10">
-              <div className={`size-20 rounded-2xl flex items-center justify-center mb-6 transition-transform ${activeDropZone === 'audio' ? 'scale-110 bg-accent-blue/20' : 'bg-gradient-to-br from-accent-blue/20 to-transparent group-hover:scale-110'}`}>
+            <div className="bg-background-dark/50 backdrop-blur-xl rounded-[20px] p-8 h-full flex flex-col items-center text-center relative z-10">
+              <div className={`size-16 rounded-2xl flex items-center justify-center mb-6 transition-transform ${activeDropZone === 'audio' ? 'scale-110 bg-accent-blue/20' : 'bg-gradient-to-br from-accent-blue/20 to-transparent group-hover:scale-110'}`}>
                 <span className="material-symbols-outlined text-4xl text-accent-blue">{activeDropZone === 'audio' ? 'download' : 'graphic_eq'}</span>
               </div>
-              <h3 className="text-2xl font-bold uppercase tracking-wide mb-2">Generate From Audio</h3>
-              <p className="text-white/50 text-sm mb-8 leading-relaxed">Generate visuals based on audio characteristics.</p>
+              <h3 className="text-xl font-bold uppercase tracking-wide mb-2">Audio To Art</h3>
+              <p className="text-white/50 text-xs mb-8 leading-relaxed">Generate static visuals based on audio characteristics.</p>
 
-              <div className={`mt-auto px-8 py-3 rounded-full border text-xs font-bold uppercase tracking-widest transition-all ${activeDropZone === 'audio' ? 'bg-accent-blue text-black border-accent-blue' : 'bg-accent-blue/10 border-accent-blue/20 text-accent-blue group-hover:bg-accent-blue group-hover:text-black'}`}>
+              <div className={`mt-auto px-6 py-2.5 rounded-full border text-[10px] font-bold uppercase tracking-widest transition-all ${activeDropZone === 'audio' ? 'bg-accent-blue text-black border-accent-blue' : 'bg-accent-blue/10 border-accent-blue/20 text-accent-blue group-hover:bg-accent-blue group-hover:text-black'}`}>
                 {activeDropZone === 'audio' ? 'Drop Audio Here' : 'Upload Audio'}
               </div>
             </div>
             {/* Glow effect */}
             <div className={`absolute -inset-1 bg-gradient-to-r from-accent-blue/0 via-accent-blue/10 to-accent-blue/0 blur-xl transition-opacity ${activeDropZone === 'audio' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}></div>
+          </button>
+
+          {/* New Audio Reactive Animation Card */}
+          <button
+            type="button"
+            onClick={() => { }}
+            className={`w-full group glass-panel p-1 border-white/10 hover:border-primary/50 transition-all duration-300 rounded-3xl cursor-pointer relative overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 hover:-translate-y-2`}
+          >
+            <div className="bg-background-dark/50 backdrop-blur-xl rounded-[20px] p-8 h-full flex flex-col items-center text-center relative z-10">
+              <div className={`size-16 rounded-2xl flex items-center justify-center mb-6 transition-transform bg-gradient-to-br from-primary/20 to-transparent group-hover:scale-110`}>
+                <span className="material-symbols-outlined text-4xl text-primary animate-pulse">movie</span>
+              </div>
+              <h3 className="text-xl font-bold uppercase tracking-wide mb-2">Animate With Audio</h3>
+              <p className="text-white/50 text-xs mb-8 leading-relaxed">Create real-time animations that react to your music.</p>
+
+              <div className={`mt-auto px-6 py-2.5 rounded-full border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest transition-all bg-primary/10 group-hover:bg-primary group-hover:text-black`}>
+                Coming Soon
+              </div>
+            </div>
+            {/* Glow effect */}
+            <div className={`absolute -inset-1 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 blur-xl transition-opacity opacity-0 group-hover:opacity-100`}></div>
           </button>
         </div>
 

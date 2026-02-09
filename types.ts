@@ -3,7 +3,8 @@ export enum AppView {
   LANDING = 'LANDING',
   EDITOR = 'EDITOR',
   GALLERY = 'GALLERY',
-  PROCESSING = 'PROCESSING'
+  PROCESSING = 'PROCESSING',
+  AUDIO_REACTIVE = 'AUDIO_REACTIVE'
 }
 
 export type GlitchEffectType =
@@ -19,7 +20,9 @@ export type GlitchEffectType =
   | 'RANDOM_CHAOS'
   | 'ANALOG_NOISE'
   | 'HUE_ROTATION'
-  | 'INVERT_GHOST';
+  | 'INVERT_GHOST'
+  | 'ZOOM_PAN'
+  | 'SCREEN_SHAKE';
 
 export interface EffectConfig {
   type: GlitchEffectType;
@@ -27,6 +30,12 @@ export interface EffectConfig {
   threshold: number; // 0 to 100
   active: boolean;
   seed?: number;
+  // Reactive fields
+  reactiveIntensity?: boolean;
+  reactiveThreshold?: boolean;
+  maxIntensity?: number;
+  maxThreshold?: number;
+  frequencyBand?: 'BASS' | 'MID' | 'TREBLE' | 'ENERGY';
 }
 
 export interface GlitchInfo {

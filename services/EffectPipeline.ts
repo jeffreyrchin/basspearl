@@ -174,9 +174,9 @@ export class EffectPipeline {
         this.currentFBIndex = 0;
     }
 
-    public renderToScreen() {
+    public renderToScreen(flipY: boolean = true) {
         const currentResult = this.pingPongTextures[this.currentFBIndex];
-        this.draw('pass-through', null, [{ name: 'u_image', texture: currentResult }], {}, true);
+        this.draw('pass-through', null, [{ name: 'u_image', texture: currentResult }], {}, flipY);
     }
 
     public setInputTexture(texture: WebGLTexture) {

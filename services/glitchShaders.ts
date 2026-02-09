@@ -140,11 +140,11 @@ void main() {
         return;
     }
     
-    // Target: Max Amplitude 100px (10 units).
-    // int=100 -> 10 * u_unit.
-    // factor = 0.1.
+    // Target: Max Amplitude 300px (30 units).
+    // int=100 -> 30 * u_unit.
+    // factor = 0.3.
     
-    float ampPixels = u_intensity * 0.1 * u_unit;
+    float ampPixels = u_intensity * 0.3 * u_unit;
     // We only distort X, so use pixelSize.x
     float amp = ampPixels / u_resolution.x;
     
@@ -520,6 +520,60 @@ void main() {
 }
 `;
 
+export const ZOOM_PAN_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_intensity;
+uniform float u_threshold;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    float zoom = 1.0 + (u_intensity / 100.0) * 0.5;
+    vec2 center = vec2(0.5, 0.5);
+    
+    // Slight offset based on threshold (pan)
+    vec2 offset = vec2(u_threshold / 1000.0, sin(u_intensity * 0.1) * 0.01);
+    
+    vec2 coord = (v_texCoord - center - offset) / zoom + center + offset;
+    
+    if (coord.x >= 0.0 && coord.x <= 1.0 && coord.y >= 0.0 && coord.y <= 1.0) {
+        outColor = texture(u_image, coord);
+    } else {
+        outColor = vec4(0.0, 0.0, 0.0, 1.0);
+    }
+}
+`;
+
+export const SCREEN_SHAKE_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_intensity;
+uniform float u_threshold;
+uniform float u_seed;
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+float rand(vec2 co) {
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+void main() {
+    float amount = u_intensity / 100.0 * 0.05;
+    float jitterX = (rand(vec2(u_seed, 0.0)) - 0.5) * amount;
+    float jitterY = (rand(vec2(0.0, u_seed)) - 0.5) * amount;
+    
+    vec2 coord = v_texCoord + vec2(jitterX, jitterY);
+    
+    if (coord.x >= 0.0 && coord.x <= 1.0 && coord.y >= 0.0 && coord.y <= 1.0) {
+        outColor = texture(u_image, coord);
+    } else {
+        outColor = vec4(0.0, 0.0, 0.0, 1.0);
+    }
+}
+`;
+
 export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     CHANNEL_SHIFT: { name: 'CHANNEL_SHIFT', fragmentSource: CHANNEL_SHIFT_SHADER },
     BIT_CRUSH: { name: 'BIT_CRUSH', fragmentSource: BIT_CRUSH_SHADER },
@@ -534,4 +588,6 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     COLOR_BLEED: { name: 'COLOR_BLEED', fragmentSource: COLOR_BLEED_SHADER },
     COMPRESSION_HELL: { name: 'COMPRESSION_HELL', fragmentSource: COMPRESSION_HELL_SHADER },
     RANDOM_CHAOS: { name: 'RANDOM_CHAOS', fragmentSource: RANDOM_CHAOS_SHADER },
+    ZOOM_PAN: { name: 'ZOOM_PAN', fragmentSource: ZOOM_PAN_SHADER },
+    SCREEN_SHAKE: { name: 'SCREEN_SHAKE', fragmentSource: SCREEN_SHAKE_SHADER },
 };

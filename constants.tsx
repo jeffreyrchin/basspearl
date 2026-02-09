@@ -16,6 +16,8 @@ export const INITIAL_EFFECTS = [
   { type: 'ANALOG_NOISE' as GlitchEffectType, intensity: 40, threshold: 50, active: false, seed: 222333 },
   { type: 'HUE_ROTATION' as GlitchEffectType, intensity: 20, threshold: 80, active: false, seed: 333444 },
   { type: 'INVERT_GHOST' as GlitchEffectType, intensity: 80, threshold: 0, active: false, seed: 444555 },
+  { type: 'ZOOM_PAN' as GlitchEffectType, intensity: 0, threshold: 0, active: false, seed: 555666 },
+  { type: 'SCREEN_SHAKE' as GlitchEffectType, intensity: 0, threshold: 0, active: false, seed: 666777 },
 ];
 
 export const EFFECT_METADATA: Record<GlitchEffectType, {
@@ -39,6 +41,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   ANALOG_NOISE: { label: 'Analog Noise', subLabel: 'FILM GRAIN', icon: 'grain', intensityLabel: 'Gain', thresholdLabel: 'Greyscale', showThreshold: true },
   HUE_ROTATION: { label: 'Acid Trip', subLabel: 'COLOR CYCLING', icon: 'change_circle', intensityLabel: 'Spectrum', thresholdLabel: 'Vibrance', showThreshold: true },
   INVERT_GHOST: { label: 'Spectral', subLabel: 'NEGATIVE MIX', icon: 'invert_colors', intensityLabel: 'Inversion', thresholdLabel: '', showThreshold: false },
+  ZOOM_PAN: { label: 'Zoom Pulse', subLabel: 'RADIAL SCALE', icon: 'zoom_in', intensityLabel: 'Scale', thresholdLabel: 'Pan', showThreshold: true },
+  SCREEN_SHAKE: { label: 'Shake', subLabel: 'CAMERA JITTER', icon: 'vibration', intensityLabel: 'Intensity', thresholdLabel: 'Roughness', showThreshold: true },
 };
 
 export const PRESETS: Record<string, EffectConfig[]> = {
