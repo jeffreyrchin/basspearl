@@ -1,28 +1,22 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { AppView } from '../types';
 import Navbar from './Navbar';
-import AuthModal from './AuthModal';
 import { useAuth } from '../context/AuthContext';
-import { useUploadQuota } from '../hooks/useUploadQuota';
 import { trackEvent } from '../services/analytics';
-import { FEEDBACK_FORM_URL } from '../constants';
 
 interface LandingPageProps {
   onFileUpload: (file: File) => void;
   onNavigate: (view: AppView) => void;
-  onOpenLegal: (force: boolean, callback?: () => void) => void;
   hasAcceptedTerms: boolean;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onOpenLegal, hasAcceptedTerms }) => {
-  const navigate = useNavigate();
+import { useLegalStore } from '../store/useLegalStore';
+import { Footer } from './Footer';
+
+const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, hasAcceptedTerms }) => {
+  const { openLegal } = useLegalStore();
   const { user } = useAuth();
-  const { canUpload, incrementUploads } = useUploadQuota();
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [showLimitModal, setShowLimitModal] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
   // Refined Drag State
   const [activeDropZone, setActiveDropZone] = useState<'image' | 'audio' | null>(null);
@@ -108,11 +102,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
       return;
     }
 
-    if (!canUpload) {
-      setShowLimitModal(true);
-      return;
-    }
-    incrementUploads();
     trackEvent('media_upload', { file_size: file.size, file_type: file.type, media_type: file.type.split('/')[0] });
     onFileUpload(file);
   };
@@ -132,11 +121,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
       e.target.value = '';
     }
     expectedInputTypeRef.current = null;
-  };
-
-  const openAuthModal = (mode: 'login' | 'signup') => {
-    setAuthMode(mode);
-    setAuthModalOpen(true);
   };
 
   // Section 1: Hero
@@ -317,7 +301,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
 
         <div className="text-center mt-12">
           <p className="text-white text-[13px] uppercase tracking-widest">
-            By uploading, you agree to our <button onClick={(e) => { e.stopPropagation(); onOpenLegal(false); }} className="underline hover:text-white transition-colors">Privacy Policy</button> and <button onClick={(e) => { e.stopPropagation(); onOpenLegal(false); }} className="underline hover:text-white transition-colors">Terms of Service</button>.
+            By uploading, you agree to our <button onClick={(e) => { e.stopPropagation(); openLegal(false); }} className="underline hover:text-white transition-colors">Privacy Policy</button> and <button onClick={(e) => { e.stopPropagation(); openLegal(false); }} className="underline hover:text-white transition-colors">Terms of Service</button>.
           </p>
         </div>
 
@@ -366,66 +350,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, onO
 
   return (
     <main className="relative min-h-screen flex flex-col bg-background-dark font-display text-white overflow-x-hidden">
-      <Navbar
-        onLoginClick={() => openAuthModal('login')}
-        onSignupClick={() => openAuthModal('signup')}
-      />
+      <Navbar />
 
       {HeroSection()}
       {ExamplesSection()}
       {UploadSection()}
       {HowItWorksSection()}
 
-      <footer className="py-4 md:h-8 bg-[#050510] border-t border-white/5 px-4 md:px-6 flex flex-row items-center justify-between gap-4 z-50">
-        <span className="text-[11px] font-bold tracking-widest text-white/70 uppercase">© 2026 GlitchBrain<span className="lowercase">.io</span></span>
-        <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest text-white/70 uppercase">
-          <a href={FEEDBACK_FORM_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors uppercase">Feedback</a>
-          <button onClick={() => onOpenLegal(false)} className="hover:text-white transition-colors uppercase">Privacy & Terms</button>
-        </div>
-      </footer>
-
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        initialMode={authMode}
-        onOpenLegal={onOpenLegal}
-      />
-
-      {/* Upload Limit Modal */}
-      {showLimitModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-md"
-            onClick={() => setShowLimitModal(false)}
-          />
-          <div className="relative w-full max-w-sm glass-panel rounded-2xl border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-300 p-8 text-center">
-            <div className="size-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <span className="material-symbols-outlined text-primary text-[32px]">cloud_off</span>
-            </div>
-            <h3 className="text-xl font-bold uppercase tracking-tight mb-2">Daily Upload Limit Reached</h3>
-            <p className="text-white/40 text-sm mb-6">
-              You've reached your daily limit of 20 uploads. Sign in for unlimited glitching!
-            </p>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => {
-                  setShowLimitModal(false);
-                  openAuthModal('signup');
-                }}
-                className="w-full py-3 rounded-xl bg-primary hover:bg-primary/80 text-white font-bold text-sm uppercase tracking-widest cyber-glow transition-all"
-              >
-                Sign In for Unlimited
-              </button>
-              <button
-                onClick={() => setShowLimitModal(false)}
-                className="w-full py-3 rounded-xl border border-white/10 hover:bg-white/5 text-white/60 font-bold text-sm uppercase tracking-widest transition-all"
-              >
-                Maybe Tomorrow
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Footer />
     </main>
   );
 };

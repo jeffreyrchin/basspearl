@@ -13,34 +13,27 @@ import LegalConsentModal from './components/LegalConsentModal';
 import { generateAudioArt, getAudioMetadata } from './services/audioArtGenerator';
 import AudioReactiveView from './components/AudioReactiveView';
 
+import { useLegalStore } from './store/useLegalStore';
+import { useAuthStore } from './store/useAuthStore';
+import AuthModal from './components/AuthModal';
+
 const App: React.FC = () => {
-  const [legalModalOpen, setLegalModalOpen] = useState(false);
-  const [forceLegal, setForceLegal] = useState(false);
-  const [postConsentCallback, setPostConsentCallback] = useState<(() => void) | null>(null);
-  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(() => {
-    return !!localStorage.getItem('glitch_consent_02042026');
-  });
+  const {
+    isLegalOpen,
+    isForced,
+    hasAcceptedTerms,
+    setHasAcceptedTerms,
+    openLegal,
+    closeLegal,
+    confirmLegal
+  } = useLegalStore();
 
-  const handleLegalConfirm = () => {
-    localStorage.setItem('glitch_consent_02042026', 'true');
-    setHasAcceptedTerms(true);
-    setLegalModalOpen(false);
-    setForceLegal(false);
-
-    if (postConsentCallback) {
-      postConsentCallback();
-      setPostConsentCallback(null);
-    }
-  };
-
-  const handleOpenLegal = (force: boolean | unknown = false, callback?: () => void) => {
-    const isForced = force === true;
-    setForceLegal(isForced);
-    if (callback) {
-      setPostConsentCallback(() => callback);
-    }
-    setLegalModalOpen(true);
-  };
+  const {
+    isAuthOpen,
+    authMode,
+    openAuth,
+    closeAuth
+  } = useAuthStore();
 
   return (
     <AuthProvider>
@@ -50,13 +43,10 @@ const App: React.FC = () => {
           <MainApp
             hasAcceptedTerms={hasAcceptedTerms}
             setHasAcceptedTerms={setHasAcceptedTerms}
-            onOpenLegal={handleOpenLegal}
           />
         } />
         <Route path="/animate" element={
-          <AudioReactiveView
-            onOpenLegal={handleOpenLegal}
-          />
+          <AudioReactiveView />
         } />
 
         {/* Routed Pages */}
@@ -65,10 +55,15 @@ const App: React.FC = () => {
         <Route path="/help" element={<HelpPage />} />
       </Routes>
       <LegalConsentModal
-        isOpen={legalModalOpen}
-        onClose={() => setLegalModalOpen(false)}
-        onConfirm={handleLegalConfirm}
-        isForced={forceLegal}
+        isOpen={isLegalOpen}
+        onClose={closeLegal}
+        onConfirm={confirmLegal}
+        isForced={isForced}
+      />
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => closeAuth()}
+        initialMode={authMode}
       />
     </AuthProvider>
   );
@@ -77,9 +72,8 @@ const App: React.FC = () => {
 // Main SPA component for Landing/Editor flow
 const MainApp: React.FC<{
   hasAcceptedTerms: boolean,
-  setHasAcceptedTerms: React.Dispatch<React.SetStateAction<boolean>>,
-  onOpenLegal: (force: boolean | unknown, callback?: () => void) => void
-}> = ({ hasAcceptedTerms, setHasAcceptedTerms, onOpenLegal: handleOpenLegal }) => {
+  setHasAcceptedTerms: (accepted: boolean) => void
+}> = ({ hasAcceptedTerms, setHasAcceptedTerms }) => {
   const [view, setView] = useState<AppView>(AppView.LANDING);
   const [state, setState] = useState<GlitchState>({
     originalImage: null,
@@ -199,7 +193,6 @@ const MainApp: React.FC<{
         <LandingPage
           onFileUpload={handleFileUpload}
           onNavigate={navigateTo}
-          onOpenLegal={handleOpenLegal}
           hasAcceptedTerms={hasAcceptedTerms}
         />
       ) : view === AppView.PROCESSING ? (
@@ -217,7 +210,6 @@ const MainApp: React.FC<{
           state={state}
           onUpdateState={updateState}
           onNavigate={navigateTo}
-          onOpenLegal={handleOpenLegal}
         />
       )}
     </>

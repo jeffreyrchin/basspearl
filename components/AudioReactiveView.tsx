@@ -1,11 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { EffectConfig } from '../types';
 import { glitchEngine } from '../services/glitchEngine';
 import SidebarNavigation from './SidebarNavigation';
 import Navbar from './Navbar';
-import { FEEDBACK_FORM_URL } from '@/constants';
-import LegalConsentModal from './LegalConsentModal';
+import { Footer } from './Footer';
 
 interface AudioReactiveViewProps {
 }
@@ -29,8 +27,6 @@ const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = [
 ];
 
 const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
-    const navigate = useNavigate();
-    const [legalModalOpen, setLegalModalOpen] = useState(false);
     const [image, setImage] = useState<string | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [audioFile, setAudioFile] = useState<File | null>(null);
@@ -66,10 +62,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             if (audioContextRef.current) audioContextRef.current.close();
         };
     }, []);
-
-    const handleOpenLegal = (force: boolean) => {
-        setLegalModalOpen(true);
-    };
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -301,7 +293,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
     return (
         <div className="h-screen bg-[#050B14] text-white flex flex-col overflow-hidden font-display leading-relaxed">
-            <Navbar />
+            <Navbar editorView={true} />
 
             <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
                 {/* Main Content Area */}
@@ -370,21 +362,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     />
                 </aside>
             </div>
-
-            <footer className="p-1 bg-[#050510] border-t border-white/5 px-4 md:px-6 flex flex-row items-center justify-between gap-4 z-50">
-                <span className="text-[11px] font-bold tracking-widest text-white/70 uppercase">© 2026 GlitchBrain<span className="lowercase">.io</span></span>
-                <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest text-white/70 uppercase">
-                    <a href={FEEDBACK_FORM_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors uppercase">Feedback</a>
-                    <button onClick={() => handleOpenLegal(false)} className="hover:text-white transition-colors uppercase">Privacy & Terms</button>
-                </div>
-            </footer>
-
-            <LegalConsentModal
-                isOpen={legalModalOpen}
-                onClose={() => setLegalModalOpen(false)}
-                onConfirm={() => setLegalModalOpen(false)}
-                isForced={false}
-            />
+            <Footer />
         </div>
     );
 };

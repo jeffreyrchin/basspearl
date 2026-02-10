@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import UserMenu from './UserMenu';
-import ExportCreditsDisplay from './ExportCreditsDisplay';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface NavbarProps {
-    onLoginClick?: () => void;
-    onSignupClick?: () => void;
+    editorView?: boolean;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onSignupClick }) => {
+const Navbar: React.FC<NavbarProps> = ({ editorView }) => {
     const { user } = useAuth();
     const location = useLocation();
     const [menuOpen, setMenuOpen] = useState(false);
+    const { openAuth } = useAuthStore();
 
     // Prevent body scroll when menu is open
     useEffect(() => {
@@ -56,55 +56,48 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onSignupClick }) => {
                 {/* Left: Hamburger (mobile) + Logo + Nav Links (desktop) */}
                 <div className="flex items-center gap-4 md:gap-8">
                     {/* Hamburger Menu Icon (mobile only) */}
-                    <button
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        className="md:hidden size-10 flex items-center justify-center text-white/80 hover:text-white transition-colors"
-                        aria-label="Toggle menu"
-                    >
-                        <span className="material-symbols-outlined text-[28px]">
-                            {menuOpen ? 'close' : 'menu'}
-                        </span>
-                    </button>
+                    {!editorView && (
+                        <button
+                            onClick={() => setMenuOpen(!menuOpen)}
+                            className="md:hidden size-10 flex items-center justify-center text-white/80 hover:text-white transition-colors"
+                            aria-label="Toggle menu"
+                        >
+                            <span className="material-symbols-outlined text-[28px]">
+                                {menuOpen ? 'close' : 'menu'}
+                            </span>
+                        </button>
+                    )}
 
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2 group">
-                        <h1 className="text-xl md:text-2xl font-bold tracking-normal uppercase">
+                        <h1 className="text-xl font-bold tracking-normal uppercase">
                             Glitch<span className="text-primary">Brain</span>
                             <span className="lowercase">.io</span>
                         </h1>
                     </Link>
 
                     {/* Desktop Navigation Links */}
-                    <nav className="hidden md:flex items-center gap-6">
-                        {navLinks.map(link => (
-                            <Link
-                                key={link.to}
-                                to={link.to}
-                                className={`text-sm font-bold uppercase tracking-widest transition-colors ${isActive(link.to)
+                    {!editorView && (
+                        <nav className="hidden md:flex items-center gap-6">
+                            {navLinks.map(link => (
+                                <Link
+                                    key={link.to}
+                                    to={link.to}
+                                    className={`text-sm font-bold uppercase tracking-widest transition-colors ${isActive(link.to)
                                         ? 'text-primary active-glow'
                                         : 'text-white/60 hover:text-white'
-                                    }`}
-                            >
-                                {link.label}
-                            </Link>
-                        ))}
-                    </nav>
+                                        }`}
+                                >
+                                    {link.label}
+                                </Link>
+                            ))}
+                        </nav>
+                    )}
                 </div>
 
-                {/* Right: Credits Badge (desktop only, logged-out) + UserMenu */}
+                {/* Right: UserMenu */}
                 <div className="flex items-center gap-3 md:gap-6">
-                    {!user && (
-                        <div className="hidden lg:block">
-                            <ExportCreditsDisplay
-                                variant="badge"
-                                onLoginClick={onLoginClick}
-                            />
-                        </div>
-                    )}
-                    <UserMenu
-                        onLoginClick={onLoginClick}
-                        onSignupClick={onSignupClick}
-                    />
+                    <UserMenu />
                 </div>
             </header>
 
@@ -145,17 +138,13 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onSignupClick }) => {
                             ))}
                         </nav>
 
-                        {/* Credits & Auth (logged-out only) */}
+                        {/* Auth (logged-out only) */}
                         {!user && (
                             <div className="mt-auto p-6 border-t border-white/10 space-y-4">
-                                <ExportCreditsDisplay
-                                    variant="badge"
-                                    onLoginClick={onLoginClick}
-                                />
                                 <div className="flex flex-col gap-3">
                                     <button
                                         onClick={() => {
-                                            onLoginClick?.();
+                                            openAuth('login');
                                         }}
                                         className="w-full py-2.5 rounded-lg border border-primary text-primary font-bold text-sm uppercase tracking-widest hover:bg-primary/10 transition-all"
                                     >
@@ -163,7 +152,7 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onSignupClick }) => {
                                     </button>
                                     <button
                                         onClick={() => {
-                                            onSignupClick?.();
+                                            openAuth('signup');
                                         }}
                                         className="w-full py-2.5 rounded-lg bg-primary hover:bg-primary/80 text-white font-bold text-sm uppercase tracking-widest cyber-glow transition-all"
                                     >

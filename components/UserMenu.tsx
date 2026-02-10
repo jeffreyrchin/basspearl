@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface UserMenuProps {
-    onLoginClick: () => void;
-    onSignupClick: () => void;
 }
 
-const UserMenu: React.FC<UserMenuProps> = ({ onLoginClick, onSignupClick }) => {
+const UserMenu: React.FC<UserMenuProps> = () => {
     const { user, signOut, isLoading } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
+    const { openAuth } = useAuthStore();
     const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -31,13 +31,13 @@ const UserMenu: React.FC<UserMenuProps> = ({ onLoginClick, onSignupClick }) => {
         return (
             <div className="flex items-center gap-4">
                 <button
-                    onClick={onLoginClick}
+                    onClick={() => openAuth('login')}
                     className="text-sm font-bold uppercase tracking-widest text-white/70 hover:text-white transition-colors"
                 >
                     Login
                 </button>
                 <button
-                    onClick={onSignupClick}
+                    onClick={() => openAuth('signup')}
                     className="hidden sm:block bg-black border border-primary hover:bg-primary/30 text-white px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all"
                 >
                     Sign Up

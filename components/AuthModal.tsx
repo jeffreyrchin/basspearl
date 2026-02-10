@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { trackEvent } from '../services/analytics';
 
+import { useLegalStore } from '../store/useLegalStore';
+
 interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;
     initialMode?: 'login' | 'signup';
-    onOpenLegal?: (force: boolean, callback?: () => void) => void;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'login', onOpenLegal }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'login' }) => {
+    const { openLegal } = useLegalStore();
     const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
     const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
     const [email, setEmail] = useState('');
@@ -108,7 +110,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
     };
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/80 backdrop-blur-md"
@@ -244,11 +246,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                                     I agree to the GlitchBrain.io<span
                                         role="button"
                                         tabIndex={0}
-                                        onClick={(e) => { e.preventDefault(); onOpenLegal?.(false); }}
+                                        onClick={(e) => { e.preventDefault(); openLegal(false); }}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' || e.key === ' ') {
                                                 e.preventDefault();
-                                                onOpenLegal?.(false);
+                                                openLegal(false);
                                             }
                                         }}
                                         className="text-white hover:underline hover:text-primary transition-colors cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 rounded px-0.5"

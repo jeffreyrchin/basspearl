@@ -3,9 +3,7 @@ import { GlitchState, EffectConfig, AppView } from '../types';
 import { EFFECT_METADATA, PRESETS, FEEDBACK_FORM_URL } from '../constants';
 import { useAuth } from '../context/AuthContext';
 
-import AuthModal from './AuthModal';
 import { EffectSlider } from './EffectSlider';
-import ExportCreditsDisplay from './ExportCreditsDisplay';
 import UserMenu from './UserMenu';
 import ShareModal from './ShareModal';
 import InfoModal from './InfoModal';
@@ -16,18 +14,20 @@ interface EditorViewProps {
   state: GlitchState;
   onUpdateState: (newState: Partial<GlitchState>) => void;
   onNavigate: (view: AppView) => void;
-  onOpenLegal: (force: boolean) => void;
 }
 
-const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigate, onOpenLegal }) => {
+import { useLegalStore } from '../store/useLegalStore';
+import { useAuthStore } from '@/store/useAuthStore';
+
+const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigate }) => {
+  const { openLegal } = useLegalStore();
+  const { openAuth } = useAuthStore();
   const { user } = useAuth();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<'layers' | 'presets'>('layers');
   const [searchTerm, setSearchTerm] = useState('');
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [showMobileEffects, setShowMobileEffects] = useState(false);
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -414,11 +414,6 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
 
   const handleHistoryCommit = () => {
     applyGlitches(true);
-  };
-
-  const openAuthModal = (mode: 'login' | 'signup') => {
-    setAuthMode(mode);
-    setAuthModalOpen(true);
   };
 
   const handleApplyPreset = (presetName: string) => {
@@ -817,7 +812,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
             <span className="material-symbols-outlined text-[18px]">info</span>
             <span className="text-xs font-bold uppercase tracking-wider">About</span>
           </button>
-          <UserMenu onLoginClick={() => openAuthModal('login')} onSignupClick={() => openAuthModal('signup')} />
+          <UserMenu onLoginClick={() => openAuth('login')} onSignupClick={() => openAuth('signup')} />
         </div>
       </header>
 
@@ -1118,7 +1113,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
             <div className="p-3 mt-auto border-t border-white/5 bg-primary/5">
               <div className="flex items-start gap-2 text-white/60 text-[11px] leading-tight font-medium">
                 <span className="material-symbols-outlined text-[14px] text-primary shrink-0">info</span>
-                <p>Watermark active. <button onClick={() => openAuthModal('login')} className="text-primary font-bold hover:underline cursor-pointer">Sign in</button> to remove.</p>
+                <p>Watermark active. <button onClick={() => openAuth('login')} className="text-primary font-bold hover:underline cursor-pointer">Sign in</button> to remove.</p>
               </div>
             </div>
           )}
@@ -1192,18 +1187,11 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
           </div>
         </div>
         <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest text-white/70 uppercase">
-          <ExportCreditsDisplay variant="inline" />
           <a href={FEEDBACK_FORM_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors uppercase">Feedback</a>
-          <button onClick={() => onOpenLegal(false)} className="hover:text-white transition-colors uppercase"><span className="hidden sm:inline">Privacy & </span>Terms</button>
+          <button onClick={() => openLegal(false)} className="hover:text-white transition-colors uppercase"><span className="hidden sm:inline">Privacy & </span>Terms</button>
         </div>
       </footer>
 
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        initialMode={authMode}
-        onOpenLegal={onOpenLegal}
-      />
       <ShareModal isOpen={shareModalOpen} onClose={() => setShareModalOpen(false)} imageUrl={state.processedImage} previewUrl={state.processedImagePreview} />
       <InfoModal isOpen={infoModalOpen} onClose={() => setInfoModalOpen(false)} type={infoModalType} />
     </div>
