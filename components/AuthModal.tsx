@@ -1,19 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { trackEvent } from '../services/analytics';
-
 import { useLegalStore } from '../store/useLegalStore';
+import { useAuthStore } from '../store/useAuthStore';
 
-interface AuthModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    initialMode?: 'login' | 'signup';
-}
-
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'login' }) => {
+const AuthModal = () => {
     const { openLegal } = useLegalStore();
+    const { isAuthOpen, authMode, closeAuth, setAuthMode } = useAuthStore();
     const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
-    const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [displayName, setDisplayName] = useState('');
@@ -23,33 +17,32 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
     const [agreedToTerms, setAgreedToTerms] = useState(false);
 
     useEffect(() => {
-        if (isOpen) {
-            setMode(initialMode);
+        if (isAuthOpen) {
             setError(null);
             setAgreedToTerms(false);
-            trackEvent('auth_view', { mode: initialMode });
+            trackEvent('auth_view', { mode: authMode });
         }
-    }, [isOpen, initialMode]);
+    }, [isAuthOpen, authMode]);
 
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isOpen) {
-                onClose();
+            if (e.key === 'Escape' && isAuthOpen) {
+                closeAuth();
             }
         };
         window.addEventListener('keydown', handleEscape);
         return () => window.removeEventListener('keydown', handleEscape);
-    }, [isOpen, onClose]);
+    }, [isAuthOpen, closeAuth]);
 
-    if (!isOpen) return null;
+    if (!isAuthOpen) return null;
 
     const handleGoogleSignIn = async () => {
         setIsLoading(true);
         setError(null);
         try {
             await signInWithGoogle();
-            trackEvent('auth_success', { method: 'google', mode });
-            onClose();
+            trackEvent('auth_success', { method: 'google', mode: authMode });
+            closeAuth();
         } catch (err: any) {
             setError(getErrorMessage(err.code));
         } finally {
@@ -60,7 +53,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
     const handleEmailSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (mode === 'signup' && !agreedToTerms) {
+        if (authMode === 'signup' && !agreedToTerms) {
             return;
         }
 
@@ -68,13 +61,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
         setError(null);
 
         try {
-            if (mode === 'login') {
+            if (authMode === 'login') {
                 await signInWithEmail(email, password);
             } else {
                 await signUpWithEmail(email, password, displayName);
             }
-            trackEvent('auth_success', { method: 'email', mode });
-            onClose();
+            trackEvent('auth_success', { method: 'email', mode: authMode });
+            closeAuth();
         } catch (err: any) {
             setError(getErrorMessage(err.code));
         } finally {
@@ -104,7 +97,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
     };
 
     const toggleMode = () => {
-        setMode(mode === 'login' ? 'signup' : 'login');
+        setAuthMode(authMode === 'login' ? 'signup' : 'login');
         setError(null);
         setAgreedToTerms(false);
     };
@@ -114,7 +107,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/80 backdrop-blur-md"
-                onClick={onClose}
+                onClick={closeAuth}
             />
 
             {/* Modal */}
@@ -124,7 +117,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
 
                 {/* Close Button */}
                 <button
-                    onClick={onClose}
+                    onClick={closeAuth}
                     className="absolute top-4 right-4 size-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors z-10"
                 >
                     <span className="material-symbols-outlined text-white/60">close</span>
@@ -140,10 +133,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
 
                     {/* Title */}
                     <h2 className="text-3xl font-bold text-center tracking-tight uppercase mb-1">
-                        {mode === 'login' ? 'Welcome Back' : 'Join GlitchBrain'}
+                        {authMode === 'login' ? 'Welcome Back' : 'Join GlitchBrain'}
                     </h2>
                     <p className="text-white/40 text-center text-sm mb-8">
-                        {mode === 'login'
+                        {authMode === 'login'
                             ? 'Sign in for unlimited uploads'
                             : 'Create an account for unlimited uploads'}
                     </p>
@@ -172,7 +165,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
 
                     {/* Email Form */}
                     <form onSubmit={handleEmailSubmit} className="space-y-4">
-                        {mode === 'signup' && (
+                        {authMode === 'signup' && (
                             <div>
                                 <label className="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2">
                                     Display Name
@@ -228,7 +221,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                         </div>
 
                         {/* Consent Checkbox */}
-                        {mode === 'signup' && (
+                        {authMode === 'signup' && (
                             <div className="flex items-start gap-3 mt-4">
                                 <div className="relative flex items-center justify-center size-5 shrink-0">
                                     <input
@@ -246,11 +239,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                                     I agree to the GlitchBrain.io<span
                                         role="button"
                                         tabIndex={0}
-                                        onClick={(e) => { e.preventDefault(); openLegal(false); }}
+                                        onClick={(e) => { e.preventDefault(); openLegal(); }}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' || e.key === ' ') {
                                                 e.preventDefault();
-                                                openLegal(false);
+                                                openLegal();
                                             }
                                         }}
                                         className="text-white hover:underline hover:text-primary transition-colors cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 rounded px-0.5"
@@ -270,8 +263,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            disabled={isLoading || (mode === 'signup' && !agreedToTerms)}
-                            className={`w-full py-3.5 rounded-xl bg-black border border-primary hover:bg-primary/30 text-white font-bold text-sm uppercase tracking-widest cyber-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${mode === 'signup' && !agreedToTerms ? 'opacity-50 grayscale' : ''}`}
+                            disabled={isLoading || (authMode === 'signup' && !agreedToTerms)}
+                            className={`w-full py-3.5 rounded-xl bg-black border border-primary hover:bg-primary/30 text-white font-bold text-sm uppercase tracking-widest cyber-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${authMode === 'signup' && !agreedToTerms ? 'opacity-50 grayscale' : ''}`}
                         >
                             {isLoading ? (
                                 <>
@@ -279,19 +272,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                                     Processing...
                                 </>
                             ) : (
-                                mode === 'login' ? 'Sign In' : 'Create Account'
+                                authMode === 'login' ? 'Sign In' : 'Create Account'
                             )}
                         </button>
                     </form>
 
                     {/* Toggle Mode */}
                     <p className="text-center text-white/40 text-sm mt-6">
-                        {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}
+                        {authMode === 'login' ? "Don't have an account?" : 'Already have an account?'}
                         <button
                             onClick={toggleMode}
                             className="ml-2 text-primary hover:text-primary/80 font-bold uppercase tracking-wider transition-colors"
                         >
-                            {mode === 'login' ? 'Sign Up' : 'Sign In'}
+                            {authMode === 'login' ? 'Sign Up' : 'Sign In'}
                         </button>
                     </p>
                 </div>

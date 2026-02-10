@@ -1,20 +1,17 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { AppView } from '../types';
 import Navbar from './Navbar';
 import { useAuth } from '../context/AuthContext';
 import { trackEvent } from '../services/analytics';
 
 interface LandingPageProps {
   onFileUpload: (file: File) => void;
-  onNavigate: (view: AppView) => void;
-  hasAcceptedTerms: boolean;
 }
 
 import { useLegalStore } from '../store/useLegalStore';
 import { Footer } from './Footer';
 
-const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, hasAcceptedTerms }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload }) => {
   const { openLegal } = useLegalStore();
   const { user } = useAuth();
 
@@ -301,7 +298,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onFileUpload, onNavigate, has
 
         <div className="text-center mt-12">
           <p className="text-white text-[13px] uppercase tracking-widest">
-            By uploading, you agree to our <button onClick={(e) => { e.stopPropagation(); openLegal(false); }} className="underline hover:text-white transition-colors">Privacy Policy</button> and <button onClick={(e) => { e.stopPropagation(); openLegal(false); }} className="underline hover:text-white transition-colors">Terms of Service</button>.
+            By uploading, you agree to our <button onClick={(e) => { e.stopPropagation(); openLegal(); }} className="underline hover:text-white transition-colors">Privacy Policy</button> and <button onClick={(e) => { e.stopPropagation(); openLegal(); }} className="underline hover:text-white transition-colors">Terms of Service</button>.
           </p>
         </div>
 

@@ -1188,7 +1188,7 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
         </div>
         <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest text-white/70 uppercase">
           <a href={FEEDBACK_FORM_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors uppercase">Feedback</a>
-          <button onClick={() => openLegal(false)} className="hover:text-white transition-colors uppercase"><span className="hidden sm:inline">Privacy & </span>Terms</button>
+          <button onClick={() => openLegal()} className="hover:text-white transition-colors uppercase"><span className="hidden sm:inline">Privacy & </span>Terms</button>
         </div>
       </footer>
 

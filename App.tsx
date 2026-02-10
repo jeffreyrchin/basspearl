@@ -9,71 +9,33 @@ import EditorView from './components/EditorView';
 import GalleryPage from './components/GalleryPage';
 import AboutPage from './components/AboutPage';
 import HelpPage from './components/HelpPage';
-import LegalConsentModal from './components/LegalConsentModal';
 import { generateAudioArt, getAudioMetadata } from './services/audioArtGenerator';
 import AudioReactiveView from './components/AudioReactiveView';
-
-import { useLegalStore } from './store/useLegalStore';
-import { useAuthStore } from './store/useAuthStore';
 import AuthModal from './components/AuthModal';
+import LegalConsentModal from './components/LegalConsentModal';
 
-const App: React.FC = () => {
-  const {
-    isLegalOpen,
-    isForced,
-    hasAcceptedTerms,
-    setHasAcceptedTerms,
-    openLegal,
-    closeLegal,
-    confirmLegal
-  } = useLegalStore();
-
-  const {
-    isAuthOpen,
-    authMode,
-    openAuth,
-    closeAuth
-  } = useAuthStore();
-
+const App = () => {
   return (
     <AuthProvider>
       <Routes>
         {/* Main SPA Route - Landing and Editor */}
         <Route path="/" element={
-          <MainApp
-            hasAcceptedTerms={hasAcceptedTerms}
-            setHasAcceptedTerms={setHasAcceptedTerms}
-          />
+          <MainApp />
         } />
-        <Route path="/animate" element={
-          <AudioReactiveView />
-        } />
-
         {/* Routed Pages */}
+        <Route path="/animate" element={<AudioReactiveView />} />
         <Route path="/gallery" element={<GalleryPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/help" element={<HelpPage />} />
       </Routes>
-      <LegalConsentModal
-        isOpen={isLegalOpen}
-        onClose={closeLegal}
-        onConfirm={confirmLegal}
-        isForced={isForced}
-      />
-      <AuthModal
-        isOpen={isAuthOpen}
-        onClose={() => closeAuth()}
-        initialMode={authMode}
-      />
+      <LegalConsentModal />
+      <AuthModal />
     </AuthProvider>
   );
 };
 
 // Main SPA component for Landing/Editor flow
-const MainApp: React.FC<{
-  hasAcceptedTerms: boolean,
-  setHasAcceptedTerms: (accepted: boolean) => void
-}> = ({ hasAcceptedTerms, setHasAcceptedTerms }) => {
+const MainApp = () => {
   const [view, setView] = useState<AppView>(AppView.LANDING);
   const [state, setState] = useState<GlitchState>({
     originalImage: null,
@@ -158,11 +120,6 @@ const MainApp: React.FC<{
   };
 
   const handleFileUpload = (file: File) => {
-    // Implicit consent flow
-    if (!hasAcceptedTerms) {
-      localStorage.setItem('glitch_consent_02042026', 'true');
-      setHasAcceptedTerms(true);
-    }
     processFile(file);
   };
 
@@ -193,7 +150,6 @@ const MainApp: React.FC<{
         <LandingPage
           onFileUpload={handleFileUpload}
           onNavigate={navigateTo}
-          hasAcceptedTerms={hasAcceptedTerms}
         />
       ) : view === AppView.PROCESSING ? (
         <div className="min-h-screen flex flex-col items-center justify-center bg-background-dark text-white">

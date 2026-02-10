@@ -1,33 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { useLegalStore } from '../store/useLegalStore';
 
-interface LegalConsentModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onConfirm: () => void;
-    isForced: boolean;
-}
-
-const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, onConfirm, isForced }) => {
-    const [agreed, setAgreed] = useState(false);
+const LegalConsentModal = () => {
+    const { isLegalOpen, closeLegal } = useLegalStore();
 
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isOpen && !isForced) {
-                onClose();
+            if (e.key === 'Escape' && isLegalOpen) {
+                closeLegal();
             }
         };
         window.addEventListener('keydown', handleEscape);
         return () => window.removeEventListener('keydown', handleEscape);
-    }, [isOpen, onClose, isForced]);
+    }, [isLegalOpen, closeLegal]);
 
-    if (!isOpen) return null;
+    if (!isLegalOpen) return null;
 
     return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/80 backdrop-blur-md"
-                onClick={() => !isForced && onClose()}
+                onClick={() => closeLegal()}
             />
 
             <div className="relative w-full max-w-2xl glass-panel rounded-2xl border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-300 flex flex-col max-h-[80vh]">
@@ -37,11 +31,9 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
                         <span className="material-symbols-outlined text-primary text-[24px]">gavel</span>
                         <h2 className="text-xl font-bold uppercase tracking-wider">Privacy & Terms</h2>
                     </div>
-                    {!isForced && (
-                        <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
-                            <span className="material-symbols-outlined">close</span>
-                        </button>
-                    )}
+                    <button onClick={closeLegal} className="text-white/40 hover:text-white transition-colors">
+                        <span className="material-symbols-outlined">close</span>
+                    </button>
                 </div>
 
                 {/* Scrollable Content */}
@@ -301,45 +293,13 @@ const LegalConsentModal: React.FC<LegalConsentModalProps> = ({ isOpen, onClose, 
 
                 {/* Footer */}
                 <div className="p-6 border-t border-white/10 bg-white/5 shrink-0 flex flex-col gap-4">
-                    {isForced && (
-                        <label className="flex items-start gap-3 cursor-pointer group">
-                            <div className="relative flex items-center">
-                                <input
-                                    type="checkbox"
-                                    checked={agreed}
-                                    onChange={(e) => setAgreed(e.target.checked)}
-                                    className="peer sr-only "
-                                />
-                                <div className="size-5 border-2 border-white/20 rounded bg-black/40 peer-checked:bg-primary peer-checked:border-primary transition-all group-hover:border-white/40"></div>
-                                <span className="material-symbols-outlined absolute inset-0 text-white text-[16px] opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none flex items-center justify-center">check</span>
-                            </div>
-                            <span className="text-sm text-white/70 group-hover:text-white transition-colors select-none pt-0.5">
-                                I have read and agree to the <span className="text-primary">Terms of Service</span> and <span className="text-primary">Privacy Policy</span>.
-                            </span>
-                        </label>
-                    )}
-
                     <div className="flex justify-end gap-3">
-                        {/* If not forced (viewing from footer), just show close */}
-                        {!isForced && (
-                            <button
-                                onClick={onClose}
-                                className="px-6 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-white/60 font-bold text-xs uppercase tracking-widest transition-all"
-                            >
-                                Close
-                            </button>
-                        )}
-
-                        {/* If forced, show Agree button. If not forced, show it anyway? Usually just Close is enough for read-only, but consistent UX is nice. Only "Confirm" makes sense for the forced flow to unblock. */}
-                        {isForced && (
-                            <button
-                                onClick={onConfirm}
-                                disabled={!agreed}
-                                className={`px-8 py-2 rounded-lg font-bold text-xs uppercase tracking-widest transition-all border ${agreed ? 'bg-black border-primary hover:bg-primary/30 text-white cyber-glow' : 'border-white/5 bg-white/10 text-white/20 cursor-not-allowed'}`}
-                            >
-                                Agree & Continue
-                            </button>
-                        )}
+                        <button
+                            onClick={closeLegal}
+                            className="px-6 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-white/60 font-bold text-xs uppercase tracking-widest transition-all"
+                        >
+                            Close
+                        </button>
                     </div>
                 </div>
             </div>
