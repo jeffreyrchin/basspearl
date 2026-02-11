@@ -157,7 +157,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 key="rack-scroll"
                 className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-black/10"
             >
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                     {effects.map((effect, idx) => (
                         <div
                             key={effect.type}
@@ -172,9 +172,9 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                                 className="absolute inset-0 flex flex-col items-center justify-center z-0 w-full h-full"
                             >
                                 <div className={`mb-2 transition-all duration-500 ${effect.active ? 'text-primary' : 'text-white/60'}`}>
-                                    <span className="material-symbols-outlined text-xl">{EFFECT_METADATA[effect.type]?.icon || 'extension'}</span>
+                                    <span className="material-symbols-outlined text-2xl">{EFFECT_METADATA[effect.type]?.icon || 'extension'}</span>
                                 </div>
-                                <span className={`text-[10px] font-bold uppercase tracking-wider px-1 text-center leading-tight w-full ${effect.active ? 'text-white' : 'text-white/60'}`}>
+                                <span className={`text-[12px] font-bold uppercase tracking-wider px-1 text-center leading-tight w-full ${effect.active ? 'text-white' : 'text-white/60'}`}>
                                     {EFFECT_METADATA[effect.type]?.label}
                                 </span>
                             </button>
@@ -187,10 +187,10 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                                         i === idx ? { ...curr, active: !curr.active } : curr
                                     ));
                                 }}
-                                className={`absolute top-1 right-1 w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-300 z-10 border ${effect.active ? 'text-primary hover:bg-primary/10 hover:border-primary/40 border-transparent' : 'text-white hover:bg-white/10 hover:border-white/50 border-transparent'}`}
+                                className={`absolute top-2 right-2 w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 z-10 border ${effect.active ? 'text-primary hover:bg-primary/10 hover:border-primary/40 border-transparent' : 'text-white hover:bg-white/10 hover:border-white/50 border-transparent'}`}
                                 title={effect.active ? 'Deactivate' : 'Activate'}
                             >
-                                <span className="material-symbols-outlined text-base">power_settings_new</span>
+                                <span className="text-xl material-symbols-outlined">power_settings_new</span>
                             </button>
                         </div>
                     ))}

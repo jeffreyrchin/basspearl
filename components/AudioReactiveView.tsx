@@ -285,7 +285,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             <input id="image-file-input" type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                             <span className="material-symbols-outlined text-base">image</span>
                             <span className="text-[9px] font-bold uppercase tracking-widest truncate max-w-[120px]">
-                                {image ? (document.getElementById('image-file-input') as HTMLInputElement)?.files?.[0]?.name || 'Image' : 'Load Image'}
+                                {image ? (document.getElementById('image-file-input') as HTMLInputElement)?.files?.[0]?.name || 'Image' : 'Choose Image'}
                             </span>
                         </label>
 
@@ -294,7 +294,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             <input id="audio-file-input" type="file" accept="audio/*" onChange={handleAudioUpload} className="hidden" />
                             <span className="material-symbols-outlined text-base">graphic_eq</span>
                             <span className="text-[9px] font-bold uppercase tracking-widest truncate max-w-[120px]">
-                                {audioFile ? audioFile.name || 'Audio' : 'Load Audio'}
+                                {audioFile ? audioFile.name || 'Audio' : 'Choose Audio'}
                             </span>
                         </label>
                     </div>

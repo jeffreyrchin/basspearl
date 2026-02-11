@@ -41,11 +41,6 @@ export class GlitchEngine {
     });
   }
 
-  public async processImage(imageSrc: string, effects: EffectConfig[], shouldWatermark: boolean = false, maxSize?: number): Promise<string> {
-    await this.processInternal(imageSrc, effects, shouldWatermark, maxSize);
-    return this.canvas.toDataURL('image/png');
-  }
-
   public async renderToCanvas(targetCanvas: HTMLCanvasElement, imageSrc: string, effects: EffectConfig[], shouldWatermark: boolean = false, maxSize?: number): Promise<void> {
     await this.processInternal(imageSrc, effects, shouldWatermark, maxSize);
 
