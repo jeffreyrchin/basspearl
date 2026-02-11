@@ -66,97 +66,64 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                                 </div>
 
                                 <div className="space-y-4">
-                                    {/* Intensity Settings */}
-                                    <div className="space-y-6 bg-white/[0.03] p-5 rounded-2xl border border-white/5">
-                                        <div className="flex justify-between items-end">
-                                            <div className="space-y-2">
-                                                <label className="text-[9px] font-bold uppercase tracking-widest text-white/40">
-                                                    {effect.reactiveIntensity ? `Peak ${EFFECT_METADATA[effect.type]?.intensityLabel || 'Intensity'}` : (EFFECT_METADATA[effect.type]?.intensityLabel || 'Intensity')}
-                                                </label>
-                                                <div className="flex items-center gap-2 bg-black/40 p-1 rounded-xl border border-white/5 w-fit">
-                                                    <button
-                                                        onClick={() => {
-                                                            setEffects(prev => prev.map((e, idx) =>
-                                                                idx === selectedEffectIndex ? { ...e, reactiveIntensity: false } : e
-                                                            ));
-                                                        }}
-                                                        className={`px-3 py-2 rounded-lg text-[8px] font-bold uppercase tracking-widest transition-all ${!effect.reactiveIntensity ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white'}`}
-                                                    >
-                                                        Manual
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setEffects(prev => prev.map((e, idx) =>
-                                                                idx === selectedEffectIndex ? { ...e, reactiveIntensity: true } : e
-                                                            ));
-                                                        }}
-                                                        className={`px-3 py-2 rounded-lg text-[8px] font-bold uppercase tracking-widest transition-all ${effect.reactiveIntensity ? 'bg-primary/10 text-primary border border-primary/40 shadow-[inset_0_0_12px_rgba(59,130,246,0.1)]' : 'text-white/60 hover:text-white border border-transparent'}`}
-                                                    >
-                                                        Sync
-                                                    </button>
+                                    {EFFECT_METADATA[effect.type]?.paramNames?.map((paramName, paramIdx) => (
+                                        <div key={paramIdx} className="space-y-6 bg-white/[0.03] p-5 rounded-2xl border border-white/5">
+                                            <div className="flex justify-between items-end">
+                                                <div className="space-y-2">
+                                                    <label className="text-[9px] font-bold uppercase tracking-widest text-white/40">
+                                                        {effect.params[paramIdx].reactive ? `Peak ${paramName.name}` : paramName.name}
+                                                    </label>
+                                                    <div className="flex items-center gap-2 bg-black/40 p-1 rounded-xl border border-white/5 w-fit">
+                                                        <button
+                                                            onClick={() => {
+                                                                setEffects(prev => prev.map((e, idx) => {
+                                                                    if (idx === selectedEffectIndex) {
+                                                                        const newParams = [...e.params];
+                                                                        newParams[paramIdx] = { ...newParams[paramIdx], reactive: false };
+                                                                        return { ...e, params: newParams };
+                                                                    }
+                                                                    return e;
+                                                                }));
+                                                            }}
+                                                            className={`px-3 py-2 rounded-lg text-[8px] font-bold uppercase tracking-widest transition-all ${!effect.params[paramIdx].reactive ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white'}`}
+                                                        >
+                                                            Manual
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                setEffects(prev => prev.map((e, idx) => {
+                                                                    if (idx === selectedEffectIndex) {
+                                                                        const newParams = [...e.params];
+                                                                        newParams[paramIdx] = { ...newParams[paramIdx], reactive: true };
+                                                                        return { ...e, params: newParams };
+                                                                    }
+                                                                    return e;
+                                                                }));
+                                                            }}
+                                                            className={`px-3 py-2 rounded-lg text-[8px] font-bold uppercase tracking-widest transition-all ${effect.params[paramIdx].reactive ? 'bg-primary/10 text-primary border border-primary/40 shadow-[inset_0_0_12px_rgba(59,130,246,0.1)]' : 'text-white/60 hover:text-white border border-transparent'}`}
+                                                        >
+                                                            Sync
+                                                        </button>
+                                                    </div>
                                                 </div>
+                                                <span className="font-mono text-xs font-bold text-white px-2 py-1">{Math.round(effect.params[paramIdx].value)}%</span>
                                             </div>
-                                            <span className="font-mono text-xs font-bold text-white px-2 py-1">{Math.round(effect.reactiveIntensity ? (effect.maxIntensity ?? 100) : effect.intensity)}%</span>
+                                            <EffectSlider
+                                                value={effect.params[paramIdx].value}
+                                                onChange={(val) => {
+                                                    setEffects(prev => prev.map((e, idx) => {
+                                                        if (idx === selectedEffectIndex) {
+                                                            const newParams = [...e.params];
+                                                            newParams[paramIdx] = { ...newParams[paramIdx], value: val };
+                                                            return { ...e, params: newParams };
+                                                        }
+                                                        return e;
+                                                    }));
+                                                }}
+                                                onCommit={() => { }}
+                                            />
                                         </div>
-                                        <EffectSlider
-                                            value={effect.reactiveIntensity ? (effect.maxIntensity ?? 100) : effect.intensity}
-                                            onChange={(val) => {
-                                                setEffects(prev => prev.map((e, idx) => {
-                                                    if (idx === selectedEffectIndex) {
-                                                        return e.reactiveIntensity ? { ...e, maxIntensity: val } : { ...e, intensity: val };
-                                                    }
-                                                    return e;
-                                                }));
-                                            }}
-                                            onCommit={() => { }}
-                                        />
-                                    </div>
-
-                                    {/* Threshold Settings */}
-                                    <div className="space-y-6 bg-white/[0.03] p-5 rounded-2xl border border-white/5">
-                                        <div className="flex justify-between items-end">
-                                            <div className="space-y-2">
-                                                <label className="text-[9px] font-bold uppercase tracking-widest text-white/40">
-                                                    {effect.reactiveThreshold ? `Peak ${EFFECT_METADATA[effect.type]?.thresholdLabel || 'Threshold'}` : (EFFECT_METADATA[effect.type]?.thresholdLabel || 'Threshold')}
-                                                </label>
-                                                <div className="flex items-center gap-2 bg-black/40 p-1 rounded-xl border border-white/5 w-fit">
-                                                    <button
-                                                        onClick={() => {
-                                                            setEffects(prev => prev.map((e, idx) =>
-                                                                idx === selectedEffectIndex ? { ...e, reactiveThreshold: false } : e
-                                                            ));
-                                                        }}
-                                                        className={`px-3 py-2 rounded-lg text-[8px] font-bold uppercase tracking-widest transition-all ${!effect.reactiveThreshold ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white'}`}
-                                                    >
-                                                        Manual
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setEffects(prev => prev.map((e, idx) =>
-                                                                idx === selectedEffectIndex ? { ...e, reactiveThreshold: true } : e
-                                                            ));
-                                                        }}
-                                                        className={`px-3 py-2 rounded-lg text-[8px] font-bold uppercase tracking-widest transition-all ${effect.reactiveThreshold ? 'bg-primary/10 text-primary border border-primary/40 shadow-[inset_0_0_12px_rgba(59,130,246,0.1)]' : 'text-white/60 hover:text-white border border-transparent'}`}
-                                                    >
-                                                        Sync
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <span className="font-mono text-xs font-bold text-white px-2 py-1">{Math.round(effect.reactiveThreshold ? (effect.maxThreshold ?? 100) : effect.threshold)}%</span>
-                                        </div>
-                                        <EffectSlider
-                                            value={effect.reactiveThreshold ? (effect.maxThreshold ?? 100) : effect.threshold}
-                                            onChange={(val) => {
-                                                setEffects(prev => prev.map((e, idx) => {
-                                                    if (idx === selectedEffectIndex) {
-                                                        return e.reactiveThreshold ? { ...e, maxThreshold: val } : { ...e, threshold: val };
-                                                    }
-                                                    return e;
-                                                }));
-                                            }}
-                                            onCommit={() => { }}
-                                        />
-                                    </div>
+                                    ))}
 
                                     {/* Frequency Bands */}
                                     <div className="space-y-4 bg-white/[0.03] p-5 rounded-2xl border border-white/5">

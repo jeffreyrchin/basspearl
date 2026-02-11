@@ -514,7 +514,7 @@ export function getSuggestedEffects(features: AudioFeatures): EffectConfig[] {
       if (idx !== -1) {
         // Reduced variance: ±8 instead of ±40 to preserve audio-reactive behavior
         const vary = (v: number) => Math.max(0, Math.min(100, Math.floor(v + (random() - 0.5) * 16)));
-        effects[idx] = { ...effects[idx], active: true, intensity: vary(item.params.intensity), threshold: vary(item.params.threshold) };
+        effects[idx] = { ...effects[idx], active: true, params: item.params.map((p: any) => ({ ...p, value: vary(p.value) })) };
       }
     });
   };

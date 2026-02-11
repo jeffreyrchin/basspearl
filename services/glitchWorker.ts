@@ -1,5 +1,5 @@
 
-import { EffectConfig, GlitchEffectType } from '../types';
+import { EffectConfig } from '../types';
 import { TextureManager } from './TextureManager';
 import { ShaderManager, BASE_VERTEX_SHADER, PASS_THROUGH_FRAGMENT_SHADER } from './ShaderManager';
 import { EffectPipeline } from './EffectPipeline';
@@ -28,8 +28,6 @@ class GlitchWorkerEngine {
     private inputTexture: WebGLTexture | null = null;
     private currentWidth: number = 0;
     private currentHeight: number = 0;
-
-    private lastDatamoshState: { active: boolean, intensity: number } = { active: false, intensity: 0 };
 
     constructor() {
         console.log('[GlitchWorker] Initializing v3.0 (Lean Texture Caching)');
@@ -124,22 +122,6 @@ class GlitchWorkerEngine {
     public async process(effects: EffectConfig[]): Promise<ImageBitmap> {
         if (!this.inputTexture) throw new Error('No source image set in worker');
 
-        const datamoshEffect = effects.find(e => e.type === 'DATA_CORRUPTION' && e.active);
-        const datamoshIsActive = !!datamoshEffect && datamoshEffect.intensity > 0;
-
-        // Feedback Logic
-        const stateChanged = datamoshIsActive !== this.lastDatamoshState.active ||
-            (datamoshIsActive && this.lastDatamoshState.intensity === 0);
-
-        if (stateChanged) {
-            this.pipeline.initializeFeedback();
-        }
-
-        this.lastDatamoshState = {
-            active: datamoshIsActive,
-            intensity: datamoshEffect?.intensity || 0
-        };
-
         const width = this.currentWidth;
         const height = this.currentHeight;
         const UNIT = Math.min(width, height) / 100;
@@ -161,26 +143,18 @@ class GlitchWorkerEngine {
             return;
         }
 
-        const passes = definition.getPasses ? definition.getPasses(effect.intensity) : 1;
         const seedOffset = Math.floor((effect.seed || 0) * 1000) % 5000;
 
         const uniforms: Record<string, any> = {
-            u_intensity: effect.intensity,
-            u_threshold: effect.threshold,
+            u_params: effect.params.map(p => p.value),
             u_unit: UNIT,
             u_seed: effect.seed || Math.random(),
             u_resolution: [width, height],
             u_time: performance.now() * 0.001
         };
 
-        for (let i = 0; i < passes; i++) {
-            uniforms.u_frame = i + seedOffset;
-            this.pipeline.applyEffect(effect.type, uniforms);
-
-            if (definition.requiresFeedback) {
-                this.pipeline.saveFeedback();
-            }
-        }
+        uniforms.u_frame = seedOffset;
+        this.pipeline.applyEffect(effect.type, uniforms);
     }
 }
 

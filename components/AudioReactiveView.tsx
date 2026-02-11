@@ -4,27 +4,10 @@ import { glitchEngine } from '../services/glitchEngine';
 import SidebarNavigation from './SidebarNavigation';
 import Navbar from './Navbar';
 import { Footer } from './Footer';
+import { INITIAL_REACTIVE_EFFECTS } from '@/constants';
 
 interface AudioReactiveViewProps {
 }
-
-const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = [
-    { type: 'CHANNEL_SHIFT', intensity: 0, threshold: 0, active: true, seed: 1, reactiveIntensity: true, reactiveThreshold: false, maxIntensity: 50, maxThreshold: 20, frequencyBand: 'BASS' },
-    { type: 'WAVE_DISTORTION', intensity: 0, threshold: 0, active: false, seed: 1, reactiveIntensity: true, reactiveThreshold: false, maxIntensity: 30, maxThreshold: 10, frequencyBand: 'MID' },
-    { type: 'SCAN_LINES', intensity: 0, threshold: 0, active: false, seed: 1, reactiveIntensity: true, reactiveThreshold: false, maxIntensity: 40, maxThreshold: 20, frequencyBand: 'ENERGY' },
-    { type: 'PIXEL_SORT', intensity: 0, threshold: 0, active: false, seed: 1, reactiveIntensity: true, reactiveThreshold: true, maxIntensity: 80, maxThreshold: 90, frequencyBand: 'TREBLE' },
-    { type: 'BIT_CRUSH', intensity: 0, threshold: 0, active: false, seed: 1, reactiveIntensity: true, reactiveThreshold: false, maxIntensity: 20, maxThreshold: 10, frequencyBand: 'BASS' },
-    { type: 'ANALOG_NOISE', intensity: 0, threshold: 0, active: false, seed: 1, reactiveIntensity: true, reactiveThreshold: false, maxIntensity: 85, maxThreshold: 30, frequencyBand: 'ENERGY' },
-    { type: 'INVERT_GHOST', intensity: 0, threshold: 0, active: false, seed: 1, reactiveIntensity: true, reactiveThreshold: false, maxIntensity: 100, maxThreshold: 50, frequencyBand: 'BASS' },
-    { type: 'DATA_CORRUPTION', intensity: 0, threshold: 0, active: false, seed: 1, reactiveIntensity: true, reactiveThreshold: true, maxIntensity: 70, maxThreshold: 30, frequencyBand: 'MID' },
-    { type: 'COLOR_BLEED', intensity: 0, threshold: 0, active: false, seed: 1, reactiveIntensity: true, reactiveThreshold: false, maxIntensity: 60, maxThreshold: 40, frequencyBand: 'MID' },
-    { type: 'RANDOM_CHAOS', intensity: 0, threshold: 0, active: false, seed: 1, reactiveIntensity: true, reactiveThreshold: true, maxIntensity: 10, maxThreshold: 10, frequencyBand: 'ENERGY' },
-    { type: 'HUE_ROTATION', intensity: 0, threshold: 0, active: false, seed: 1, reactiveIntensity: true, reactiveThreshold: false, maxIntensity: 50, maxThreshold: 50, frequencyBand: 'TREBLE' },
-    { type: 'COMPRESSION_HELL', intensity: 0, threshold: 0, active: false, seed: 1, reactiveIntensity: true, reactiveThreshold: false, maxIntensity: 30, maxThreshold: 70, frequencyBand: 'MID' },
-    { type: 'DEEP_FRY', intensity: 0, threshold: 0, active: false, seed: 1, reactiveIntensity: true, reactiveThreshold: false, maxIntensity: 70, maxThreshold: 50, frequencyBand: 'ENERGY' },
-    { type: 'ZOOM_PAN', intensity: 0, threshold: 0, active: true, seed: 1, reactiveIntensity: true, reactiveThreshold: false, maxIntensity: 40, maxThreshold: 0, frequencyBand: 'ENERGY' },
-    { type: 'SCREEN_SHAKE', intensity: 0, threshold: 0, active: true, seed: 1, reactiveIntensity: true, reactiveThreshold: false, maxIntensity: 30, maxThreshold: 0, frequencyBand: 'BASS' },
-];
 
 const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const [image, setImage] = useState<string | null>(null);
@@ -249,19 +232,15 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 else if (effect.frequencyBand === 'MID') energyValue = pMid;
                 else if (effect.frequencyBand === 'TREBLE') energyValue = pTreble;
 
-                const reactiveIntensity = effect.reactiveIntensity
-                    ? energyValue * (effect.maxIntensity ?? 100)
-                    : effect.intensity ?? 0;
-
-                const reactiveThreshold = effect.reactiveThreshold
-                    ? energyValue * (effect.maxThreshold ?? 100)
-                    : effect.threshold ?? 0;
+                const reactiveParams = effect.params.map(param => ({
+                    ...param,
+                    value: param.reactive ? param.value * energyValue : param.value
+                }));
 
                 return {
                     ...effect,
-                    seed: (effect.seed ?? 0) + (requestRef.current ?? 0),
-                    intensity: Math.min(100, reactiveIntensity),
-                    threshold: Math.min(100, reactiveThreshold),
+                    params: reactiveParams,
+                    seed: (effect.seed ?? 0) + (requestRef.current ?? 0)
                 };
             });
 
@@ -274,6 +253,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             );
         } catch (err) {
             console.error("Animation loop error:", err);
+            console.error("Error stack:", err.stack);
         }
 
         if (isPlayingRef.current) {
@@ -301,7 +281,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     {/* Source Header: Quick-load controls centered above image */}
                     <div className="h-14 border-b border-white/5 bg-black/20 flex items-center justify-center px-6 gap-3 shrink-0">
                         {/* Image Source Action */}
-                        <label className={`h-9 px-4 rounded-xl border transition-all duration-300 flex items-center gap-3 cursor-pointer ${image ? 'border-[#00F0FF]/30 bg-[#00F0FF]/5 text-[#00F0FF]' : 'border-white/5 bg-white/[0.03] text-white/40 hover:border-white/20 hover:text-white/60'}`}>
+                        <label className={`h-9 px-4 rounded-xl border transition-all duration-300 flex items-center gap-3 cursor-pointer ${image ? 'border-[#00F0FF]/30 bg-[#00F0FF]/5 text-[#00F0FF]' : 'border-white/5 bg-white/[0.03] text-white hover:border-white/20'}`}>
                             <input id="image-file-input" type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                             <span className="material-symbols-outlined text-base">image</span>
                             <span className="text-[9px] font-bold uppercase tracking-widest truncate max-w-[120px]">
@@ -310,7 +290,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         </label>
 
                         {/* Audio Source Action */}
-                        <label className={`h-9 px-4 rounded-xl border transition-all duration-300 flex items-center gap-3 cursor-pointer ${audioFile ? 'border-[#3B82F6]/30 bg-[#3B82F6]/5 text-[#3B82F6]' : 'border-white/5 bg-white/[0.03] text-white/40 hover:border-white/20 hover:text-white/60'}`}>
+                        <label className={`h-9 px-4 rounded-xl border transition-all duration-300 flex items-center gap-3 cursor-pointer ${audioFile ? 'border-[#3B82F6]/30 bg-[#3B82F6]/5 text-[#3B82F6]' : 'border-white/5 bg-white/[0.03] text-white hover:border-white/20'}`}>
                             <input id="audio-file-input" type="file" accept="audio/*" onChange={handleAudioUpload} className="hidden" />
                             <span className="material-symbols-outlined text-base">graphic_eq</span>
                             <span className="text-[9px] font-bold uppercase tracking-widest truncate max-w-[120px]">
@@ -328,12 +308,12 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             />
                             {!image && (
                                 <div className="flex flex-col items-center gap-6 p-8 text-center max-w-md">
-                                    <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-white/10 border border-white/5">
+                                    <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-white/60 border border-white/20">
                                         <span className="material-symbols-outlined text-4xl">stream</span>
                                     </div>
                                     <div className="space-y-1">
-                                        <h3 className="text-lg font-bold tracking-tight text-white/40 uppercase tracking-[0.2em]">Upload Image and Audio</h3>
-                                        <p className="text-[9px] text-white/20 uppercase tracking-widest">Awaiting local assets for initialization</p>
+                                        <h3 className="text-lg font-bold tracking-tight text-white uppercase tracking-[0.2em]">Upload Image and Audio</h3>
+                                        <p className="text-[9px] text-white/60 uppercase tracking-widest">Awaiting local assets for initialization</p>
                                     </div>
                                 </div>
                             )}

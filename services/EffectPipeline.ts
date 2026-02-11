@@ -113,18 +113,33 @@ export class EffectPipeline {
 
         // Set custom uniforms
         Object.entries(uniforms).forEach(([name, value]) => {
-            const loc = this.shaderManager.getUniformLocation(program, name);
-            if (loc === null) return;
+            const loc =
+                name === 'u_params'
+                    ? this.shaderManager.getUniformLocation(program, `${name}[0]`)
+                    : this.shaderManager.getUniformLocation(program, name);
+
+            if (!loc) return;
 
             if (typeof value === 'number') {
                 gl.uniform1f(loc, value);
-            } else if (Array.isArray(value) || value instanceof Float32Array) {
-                // Ensure typed array for WebGL
-                const data = value instanceof Float32Array ? value : new Float32Array(value);
+                return;
+            }
 
-                if (data.length === 2) gl.uniform2fv(loc, data);
-                else if (data.length === 3) gl.uniform3fv(loc, data);
-                else if (data.length === 4) gl.uniform4fv(loc, data);
+            const data =
+                value instanceof Float32Array
+                    ? value
+                    : Array.isArray(value)
+                        ? new Float32Array(value)
+                        : null;
+
+            if (!data) return;
+
+            if (name === 'u_params') {
+                gl.uniform1fv(loc, data);
+            } else if (data.length === 2) {
+                gl.uniform2fv(loc, data);
+            } else {
+                gl.uniform1fv(loc, data);
             }
         });
 

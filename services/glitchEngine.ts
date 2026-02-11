@@ -1,5 +1,5 @@
 
-import { EffectConfig, GlitchEffectType } from '../types';
+import { EffectConfig } from '../types';
 import { TextureManager } from './TextureManager';
 import { ShaderManager, BASE_VERTEX_SHADER, PASS_THROUGH_FRAGMENT_SHADER } from './ShaderManager';
 import { EffectPipeline } from './EffectPipeline';
@@ -118,10 +118,9 @@ export class GlitchEngine {
   }
 
   private applyEffect(effect: EffectConfig, UNIT: number, width: number, height: number) {
-    const { intensity, threshold, seed } = effect;
+    const { params, seed } = effect;
     const uniforms: Record<string, any> = {
-      u_intensity: intensity,
-      u_threshold: threshold,
+      u_params: params.map(p => p.value),
       u_unit: UNIT,
       u_seed: (seed !== undefined && seed !== null) ? seed : Math.random(),
       u_resolution: [width, height],
@@ -134,17 +133,10 @@ export class GlitchEngine {
       return;
     }
 
-    const passes = definition.getPasses ? definition.getPasses(intensity) : 1;
     const seedOffset = Math.floor((seed || 0) * 1000) % 5000;
 
-    for (let i = 0; i < passes; i++) {
-      uniforms.u_frame = i + seedOffset;
-      this.pipeline.applyEffect(effect.type, uniforms);
-
-      if (definition.requiresFeedback) {
-        this.pipeline.saveFeedback();
-      }
-    }
+    uniforms.u_frame = seedOffset;
+    this.pipeline.applyEffect(effect.type, uniforms);
   }
 }
 

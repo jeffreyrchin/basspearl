@@ -2,15 +2,12 @@
 export interface ShaderDefinition {
     name: string;
     fragmentSource: string;
-    getPasses?: (intensity: number) => number;
-    requiresFeedback?: boolean;
 }
 
 export const CHANNEL_SHIFT_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_intensity;
-uniform float u_threshold;
+uniform float u_params[2]; // [shiftX, shiftY]
 uniform float u_unit;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
@@ -23,8 +20,8 @@ void main() {
     // int=100 -> 10 * u_unit.
     // factor = 0.1.
     
-    float shiftX = u_intensity * 0.1 * u_unit * pixelSize.x;
-    float shiftY = u_threshold * 0.1 * u_unit * pixelSize.y;
+    float shiftX = u_params[0] * 0.1 * u_unit * pixelSize.x;
+    float shiftY = u_params[1] * 0.1 * u_unit * pixelSize.y;
     
     vec4 color = texture(u_image, v_texCoord);
     float r = texture(u_image, v_texCoord - vec2(shiftX, shiftY)).r;
@@ -37,16 +34,15 @@ void main() {
 export const BIT_CRUSH_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_intensity;
-uniform float u_threshold;
+uniform float u_params[2]; // [quantize, resample]
 uniform float u_unit;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
 
 void main() {
-    float qFactor = floor(pow(u_intensity / 10.0, 2.2)) + 1.0;
-    float rFactor = max(1.0, floor((u_threshold * 0.1) * u_unit));
+    float qFactor = floor(pow(u_params[0] / 10.0, 2.2)) + 1.0;
+    float rFactor = max(1.0, floor((u_params[1] * 0.1) * u_unit));
     
     vec2 res = u_resolution;
     vec2 gridCoord = floor(v_texCoord * res / rFactor) * rFactor / res;
@@ -64,16 +60,15 @@ void main() {
 export const SCAN_LINES_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_intensity;
-uniform float u_threshold;
+uniform float u_params[2]; // [opacity, line spacing]
 uniform float u_unit;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
 
 void main() {
-    float opacity = u_intensity / 100.0;
-    float spacing = max(2.0, floor(2.0 + (u_threshold * 0.1 * u_unit)));
+    float opacity = u_params[0] / 100.0;
+    float spacing = max(2.0, floor(2.0 + (u_params[1] * 0.1 * u_unit)));
     
     vec4 color = texture(u_image, v_texCoord);
     
@@ -91,16 +86,15 @@ void main() {
 export const DEEP_FRY_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_intensity;
-uniform float u_threshold;
+uniform float u_params[2]; // [heat, posterize]
 in vec2 v_texCoord;
 out vec4 outColor;
 
 void main() {
-    float contrast = 1.0 + pow(u_intensity / 20.0, 2.0);
-    float brightness = (u_intensity * 1.5) / 255.0;
+    float contrast = 1.0 + pow(u_params[0] / 20.0, 2.0);
+    float brightness = (u_params[0] * 1.5) / 255.0;
     // Non-linear levels for better control (255 -> 2)
-    float levels = max(2.0, 256.0 / (1.0 + (u_threshold * 0.5)));
+    float levels = max(2.0, 256.0 / (1.0 + (u_params[1] * 0.5)));
     
     vec4 color = texture(u_image, v_texCoord);
     
@@ -108,7 +102,7 @@ void main() {
     val = (val - 0.5) * contrast + 0.5 + brightness;
     val = floor(val * levels) / levels;
     
-    if (u_intensity > 50.0) {
+    if (u_params[0] > 50.0) {
         float m = max(val.r, max(val.g, val.b));
         if (val.r < m) val.r *= 0.8;
         if (val.g < m) val.g *= 0.8;
@@ -122,8 +116,7 @@ void main() {
 export const WAVE_DISTORTION_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_intensity;
-uniform float u_threshold;
+uniform float u_params[2]; // [amplitude, frequency]
 uniform float u_unit;
 uniform float u_seed;
 uniform vec2 u_resolution;
@@ -135,7 +128,7 @@ float rand(vec2 co) {
 }
 
 void main() {
-    if (u_intensity == 0.0) {
+    if (u_params[0] == 0.0) {
         outColor = texture(u_image, v_texCoord);
         return;
     }
@@ -144,11 +137,11 @@ void main() {
     // int=100 -> 30 * u_unit.
     // factor = 0.3.
     
-    float ampPixels = u_intensity * 0.3 * u_unit;
+    float ampPixels = u_params[0] * 0.3 * u_unit;
     // We only distort X, so use pixelSize.x
     float amp = ampPixels / u_resolution.x;
     
-    float waves = max(1.0, u_threshold * 0.5);
+    float waves = max(1.0, u_params[1] * 0.5);
     float startPhase = rand(vec2(u_seed, u_seed)) * 3.14159 * 2.0;
     
     float angle = v_texCoord.y * 3.14159 * 2.0 * waves + startPhase;
@@ -167,8 +160,7 @@ void main() {
 export const HUE_ROTATION_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_intensity;
-uniform float u_threshold;
+uniform float u_params[2]; // [hue, saturation/vibrance]
 in vec2 v_texCoord;
 out vec4 outColor;
 
@@ -192,8 +184,8 @@ void main() {
     vec4 color = texture(u_image, v_texCoord);
     vec3 hsv = rgb2hsv(color.rgb);
     
-    hsv.x = fract(hsv.x + u_intensity / 100.0);
-    hsv.y = min(1.0, hsv.y * (1.0 + (u_threshold / 100.0) * 2.0));
+    hsv.x = fract(hsv.x + u_params[0] / 100.0);
+    hsv.y = min(1.0, hsv.y * (1.0 + (u_params[1] / 100.0) * 2.0));
     
     outColor = vec4(hsv2rgb(hsv), color.a);
 }
@@ -202,13 +194,13 @@ void main() {
 export const INVERT_GHOST_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_intensity;
+uniform float u_params[1]; // [inversion]
 in vec2 v_texCoord;
 out vec4 outColor;
 
 void main() {
     vec4 color = texture(u_image, v_texCoord);
-    float opacity = u_intensity / 100.0;
+    float opacity = u_params[0] / 100.0;
     vec3 inverted = 1.0 - color.rgb;
     outColor = vec4(mix(color.rgb, inverted, opacity), color.a);
 }
@@ -217,8 +209,7 @@ void main() {
 export const ANALOG_NOISE_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_intensity;
-uniform float u_threshold;
+uniform float u_params[2]; // [gain, grayscale]
 uniform float u_seed;
 uniform vec2 u_resolution; 
 in vec2 v_texCoord;
@@ -237,13 +228,13 @@ float hash(vec2 col, float seed) {
 void main() {
     vec4 color = texture(u_image, v_texCoord);
     
-    if (u_intensity <= 0.0) {
+    if (u_params[0] <= 0.0) {
         outColor = color;
         return;
     }
 
-    float amount = u_intensity / 100.0;
-    float monoThreshold = u_threshold / 100.0;
+    float amount = u_params[0] / 100.0;
+    float monoThreshold = u_params[1] / 100.0;
     vec2 pixelPos = floor(v_texCoord * u_resolution); // Floor ensures we snap to pixels
     
     // Random value for this pixel
@@ -272,8 +263,7 @@ void main() {
 export const PIXEL_SORT_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_intensity;
-uniform float u_threshold;
+uniform float u_params[2]; // [streak length, trigger level]
 uniform float u_unit;
 uniform vec2 u_resolution;
 uniform float u_seed;
@@ -285,8 +275,8 @@ float rand(vec2 co) {
 }
 
 void main() {
-    float threshold = (100.0 - u_threshold) / 100.0;
-    float triggerProb = u_intensity / 100.0;
+    float threshold = (100.0 - u_params[1]) / 100.0;
+    float triggerProb = u_params[0] / 100.0;
     
     vec2 res = u_resolution;
     vec2 pixelSize = 1.0 / res;
@@ -307,7 +297,7 @@ void main() {
     // Max loop 600 ensures performance. 
     // We map 100% intensity to 600 pixels length.
     float maxPixels = 600.0;
-    float sortLength = (u_intensity / 100.0) * maxPixels * pixelSize.y;
+    float sortLength = (u_params[0] / 100.0) * maxPixels * pixelSize.y;
     
     vec2 pullCoord = v_texCoord;
     
@@ -334,8 +324,7 @@ export const DATA_CORRUPTION_SHADER = `#version 300 es
 precision highp float;
 
 uniform sampler2D u_image;
-uniform float u_intensity;
-uniform float u_threshold;
+uniform float u_params[2]; // [mosh length, mosh density]
 uniform float u_unit; // Approximate pixel unit (min(w,h)/100)
 uniform float u_seed;
 uniform vec2 u_resolution;
@@ -354,7 +343,7 @@ float hash(vec2 col, float seed) {
 }
 
 void main() {
-    if (u_intensity < 1.0 || u_threshold < 1.0) {
+    if (u_params[0] < 1.0 || u_params[1] < 1.0) {
         outColor = texture(u_image, v_texCoord);
         return;
     }
@@ -363,7 +352,7 @@ void main() {
     // blockSize = Math.max(16, Math.floor(4 * UNIT))
     float blockSize = max(16.0, floor(4.0 * u_unit));
     
-    float blockDensity = u_threshold / 100.0;
+    float blockDensity = u_params[1] / 100.0;
     
     // Convert current UV to Pixel Coordinates
     vec2 pixelPos = v_texCoord * u_resolution;
@@ -375,7 +364,7 @@ void main() {
     // Max velocity scaling based on intensity
     // Original code had fixed 5 * UNIT.
     // We map 0-100 intensity to 0-5 factor for linear control.
-    float moveFactor = u_intensity * 0.05;
+    float moveFactor = u_params[0] * 0.05;
     
     int radius = 2; 
     
@@ -415,8 +404,7 @@ void main() {
 export const COLOR_BLEED_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_intensity;
-uniform float u_threshold;
+uniform float u_params[2]; // [bleed, ghosting]
 uniform float u_unit;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
@@ -429,8 +417,8 @@ void main() {
     // int=100 -> 10 * u_unit.
     // factor = 0.1.
     
-    float bleedAmount = (u_intensity * 0.1 * u_unit) * pixelSize.x;
-    float ghostShift = (u_threshold * 0.1 * u_unit) * pixelSize.x;
+    float bleedAmount = (u_params[0] * 0.1 * u_unit) * pixelSize.x;
+    float ghostShift = (u_params[1] * 0.1 * u_unit) * pixelSize.x;
     
     vec4 color = texture(u_image, v_texCoord);
     float r = texture(u_image, v_texCoord - vec2(bleedAmount, 0.0)).r;
@@ -448,16 +436,15 @@ void main() {
 export const COMPRESSION_HELL_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_intensity;
-uniform float u_threshold;
+uniform float u_params[2]; // [block size, artifacting]
 uniform float u_unit;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
 
 void main() {
-    float blockSize = max(1.0, floor((0.1 + (u_intensity * 0.2)) * u_unit));
-    float factor = u_threshold / 10.0;
+    float blockSize = max(1.0, floor((0.1 + (u_params[0] * 0.2)) * u_unit));
+    float factor = u_params[1] / 10.0;
     float q = 1.0 + factor * 4.0;
     
     vec2 res = u_resolution;
@@ -476,8 +463,7 @@ void main() {
 export const RANDOM_CHAOS_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_intensity;
-uniform float u_threshold;
+uniform float u_params[2]; // [entropy, jitter]
 uniform float u_unit;
 uniform float u_seed;
 uniform vec2 u_resolution;
@@ -495,8 +481,8 @@ float hash(vec2 col, float seed) {
 }
 
 void main() {
-    float blockSize = max(1.0, floor((u_threshold * 0.1) * u_unit));
-    float probThreshold = 1.0 - pow(u_intensity / 100.0, 0.5) * 0.5;
+    float blockSize = max(1.0, floor((u_params[1] * 0.1) * u_unit));
+    float probThreshold = 1.0 - pow(u_params[0] / 100.0, 0.5) * 0.5;
     
     vec2 pixelPos = v_texCoord * u_resolution;
     vec2 blockIndex = floor(pixelPos / blockSize);
@@ -523,17 +509,16 @@ void main() {
 export const ZOOM_PAN_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_intensity;
-uniform float u_threshold;
+uniform float u_params[2]; // [zoom/scale, pan]
 in vec2 v_texCoord;
 out vec4 outColor;
 
 void main() {
-    float zoom = 1.0 + (u_intensity / 100.0) * 0.5;
+    float zoom = 1.0 + (u_params[0] / 100.0) * 0.5;
     vec2 center = vec2(0.5, 0.5);
     
     // Slight offset based on threshold (pan)
-    vec2 offset = vec2(u_threshold / 1000.0, sin(u_intensity * 0.1) * 0.01);
+    vec2 offset = vec2(u_params[1] / 1000.0, sin(u_params[0] * 0.1) * 0.01);
     
     vec2 coord = (v_texCoord - center - offset) / zoom + center + offset;
     
@@ -548,8 +533,7 @@ void main() {
 export const SCREEN_SHAKE_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_intensity;
-uniform float u_threshold;
+uniform float u_params[1]; // [intensity]
 uniform float u_seed;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
@@ -560,7 +544,7 @@ float rand(vec2 co) {
 }
 
 void main() {
-    float amount = u_intensity / 100.0 * 0.05;
+    float amount = u_params[0] / 100.0 * 0.05;
     float jitterX = (rand(vec2(u_seed, 0.0)) - 0.5) * amount;
     float jitterY = (rand(vec2(0.0, u_seed)) - 0.5) * amount;
     

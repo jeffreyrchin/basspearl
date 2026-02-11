@@ -26,15 +26,9 @@ export type GlitchEffectType =
 
 export interface EffectConfig {
   type: GlitchEffectType;
-  intensity: number; // 0 to 100
-  threshold: number; // 0 to 100
+  params: { param: string, value: number, reactive: boolean }[];
   active: boolean;
   seed?: number;
-  // Reactive fields
-  reactiveIntensity?: boolean;
-  reactiveThreshold?: boolean;
-  maxIntensity?: number;
-  maxThreshold?: number;
   frequencyBand?: 'BASS' | 'MID' | 'TREBLE' | 'ENERGY';
 }
 

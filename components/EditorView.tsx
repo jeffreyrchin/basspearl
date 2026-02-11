@@ -442,8 +442,12 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
       return {
         ...effect,
         active: isActive,
-        intensity: Math.floor(Math.random() * 80) + 10, // 10-90%
-        threshold: Math.floor(Math.random() * 80) + 10,
+        params: effect.params.map(param => {
+          return {
+            ...param,
+            value: Math.floor(Math.random() * 80) + 10,
+          };
+        }),
         seed: Math.floor(Math.random() * 1000000)
       };
     });
@@ -735,24 +739,16 @@ const EditorView: React.FC<EditorViewProps> = ({ state, onUpdateState, onNavigat
             </div>
             {isActive && (
               <div className="space-y-4 px-1 pb-2 mt-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-[10px] font-bold text-white/60"><span>{meta.intensityLabel?.toUpperCase() || 'INTENSITY'}</span><span>{effect.intensity}%</span></div>
-                  <EffectSlider
-                    value={effect.intensity}
-                    onChange={(val) => handleEffectChange(idx, { intensity: val })}
-                    onCommit={handleHistoryCommit}
-                  />
-                </div>
-                {(meta.showThreshold ?? true) && (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-[10px] font-bold text-white/60"><span>{meta.thresholdLabel?.toUpperCase() || 'THRESHOLD'}</span><span>{effect.threshold}%</span></div>
+                {effect.params.map((param, paramIdx) => (
+                  <div key={paramIdx} className="space-y-2">
+                    <div className="flex justify-between text-[10px] font-bold text-white/60"><span>{param.param.toUpperCase()}</span><span>{param.value}%</span></div>
                     <EffectSlider
-                      value={effect.threshold}
-                      onChange={(val) => handleEffectChange(idx, { threshold: val })}
+                      value={param.value}
+                      onChange={(val) => handleEffectChange(idx, { params: effect.params.map((p, i) => i === paramIdx ? { ...p, value: val } : p) })}
                       onCommit={handleHistoryCommit}
                     />
                   </div>
-                )}
+                ))}
               </div>
             )}
           </div>
