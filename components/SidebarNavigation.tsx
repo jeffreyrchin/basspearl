@@ -127,7 +127,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
                                     {/* Frequency Bands */}
                                     <div className="space-y-4 bg-white/[0.03] p-5 rounded-2xl border border-white/5">
-                                        <label className="text-[9px] font-bold text-white/40 uppercase tracking-widest block">Frequency Target</label>
+                                        <label className="text-[9px] font-bold text-white/40 uppercase tracking-widest block">Frequency</label>
                                         <div className="grid grid-cols-4 gap-1.5 bg-black/40 p-1.5 rounded-[22px] border border-white/5">
                                             {['BASS', 'MID', 'TREBLE', 'ENERGY'].map(band => (
                                                 <button key={band} onClick={() => {
@@ -188,7 +188,8 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                                     ));
                                 }}
                                 className={`absolute top-2 right-2 w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 z-10 border ${effect.active ? 'text-primary hover:bg-primary/10 hover:border-primary/40 border-transparent' : 'text-white hover:bg-white/10 hover:border-white/50 border-transparent'}`}
-                                title={effect.active ? 'Deactivate' : 'Activate'}
+                                title={effect.active ? 'Deactivate effect' : 'Activate effect'}
+                                aria-label={effect.active ? 'Deactivate effect' : 'Activate effect'}
                             >
                                 <span className="text-xl material-symbols-outlined">power_settings_new</span>
                             </button>

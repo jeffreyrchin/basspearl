@@ -10,8 +10,8 @@ interface AudioReactiveViewProps {
 }
 
 const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
-    const [image, setImage] = useState<string | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [imageFile, setImageFile] = useState<File | null>(null);
     const [audioFile, setAudioFile] = useState<File | null>(null);
     const [effects, setEffects] = useState<EffectConfig[]>(INITIAL_REACTIVE_EFFECTS);
     const [selectedEffectIndex, setSelectedEffectIndex] = useState(0);
@@ -24,7 +24,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const requestRef = useRef<number>();
     const dataArrayRef = useRef<Uint8Array | null>(null);
     const effectsRef = useRef<EffectConfig[]>(effects);
-    const imageRef = useRef<string | null>(null);
+    const imageFileRef = useRef<File | null>(null);
+    const audioFileRef = useRef<File | null>(null);
+    const imageInputRef = useRef<HTMLInputElement>(null);
+    const audioInputRef = useRef<HTMLInputElement>(null);
     const smoothedBassRef = useRef(0);
     const smoothedMidRef = useRef(0);
     const smoothedTrebleRef = useRef(0);
@@ -42,8 +45,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
     // Sync refs with state
     useEffect(() => { effectsRef.current = effects; }, [effects]);
-    useEffect(() => { imageRef.current = image; }, [image]);
     useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
+    useEffect(() => { imageFileRef.current = imageFile; }, [imageFile]);
+    useEffect(() => { audioFileRef.current = audioFile; }, [audioFile]);
 
     useEffect(() => {
         return () => {
@@ -55,22 +59,24 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const reader = new FileReader();
-            reader.onload = async (event) => {
-                const result = event.target?.result as string;
-                setImage(result);
+            const file = e.target.files[0];
+            setImageFile(file);
+            reader.onload = async () => {
+                const imageBlob = URL.createObjectURL(file);
+                imageFileRef.current = imageBlob;
 
                 // Show initial preview
                 if (canvasRef.current) {
                     await glitchEngine.renderToCanvas(
                         canvasRef.current,
-                        result,
+                        imageBlob,
                         effects,
                         false,
                         960
                     );
                 }
             };
-            reader.readAsDataURL(e.target.files[0]);
+            reader.readAsDataURL(file);
         }
     };
 
@@ -168,7 +174,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             return;
         }
 
-        if (!imageRef.current || !canvasRef.current || !analyserRef.current || !dataArrayRef.current) {
+        if (!imageFileRef.current || !canvasRef.current || !analyserRef.current || !dataArrayRef.current) {
             requestRef.current = requestAnimationFrame(animate);
             return;
         }
@@ -296,7 +302,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
             await glitchEngine.renderToCanvas(
                 canvasRef.current,
-                imageRef.current,
+                imageFileRef.current,
                 reactiveEffects,
                 false,
                 960
@@ -345,48 +351,73 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         return `${m}:${sec.toString().padStart(2, '0')}`;
     };
 
+    const scrubberPercent = duration ? (currentTime / duration) * 100 : 0;
+
     return (
         <div className="h-screen bg-[#050B14] text-white flex flex-col overflow-hidden font-display leading-relaxed">
             <Navbar editorView={true} />
-
             <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
                 {/* Main Content Area */}
                 <main className="flex-1 flex flex-col min-h-0 min-w-0 bg-[#050B14]">
                     {/* Source Header: Quick-load controls centered above image */}
                     <div className="h-14 border-b border-white/5 bg-black/20 flex items-center justify-center px-6 gap-3 shrink-0">
-                        {/* Image Source Action */}
-                        <label className={`h-9 px-4 rounded-xl border transition-all duration-300 flex items-center gap-3 cursor-pointer ${image ? 'border-[#00F0FF]/30 bg-[#00F0FF]/5 text-[#00F0FF]' : 'border-white/5 bg-white/[0.03] text-white hover:border-white/20'}`}>
-                            <input id="image-file-input" type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                        {/* Choose Image */}
+                        <input
+                            ref={imageInputRef}
+                            id="image-file-input"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="sr-only"
+                            aria-label="Image file input"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => imageInputRef.current?.click()}
+                            className={`h-9 px-4 rounded-xl border transition-all duration-300 flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-[#00F0FF] ${imageFile ? "border-[#00F0FF]/30 bg-[#00F0FF]/5 text-[#00F0FF]" : "border-white/5 bg-white/[0.03] text-white hover:border-white/20"}`}
+                            aria-label="Choose image button">
                             <span className="material-symbols-outlined text-base">image</span>
                             <span className="text-[9px] font-bold uppercase tracking-widest truncate max-w-[120px]">
-                                {image ? (document.getElementById('image-file-input') as HTMLInputElement)?.files?.[0]?.name || 'Image' : 'Choose Image'}
+                                {imageFile ? imageFile.name || "Image File" : "Choose Image"}
                             </span>
-                        </label>
+                        </button>
 
-                        {/* Audio Source Action */}
-                        <label className={`h-9 px-4 rounded-xl border transition-all duration-300 flex items-center gap-3 cursor-pointer ${audioFile ? 'border-[#3B82F6]/30 bg-[#3B82F6]/5 text-[#3B82F6]' : 'border-white/5 bg-white/[0.03] text-white hover:border-white/20'}`}>
-                            <input id="audio-file-input" type="file" accept="audio/*" onChange={handleAudioUpload} className="hidden" />
+                        {/* Choose Audio */}
+                        <input
+                            ref={audioInputRef}
+                            id="audio-file-input"
+                            type="file"
+                            accept="audio/*"
+                            onChange={handleAudioUpload}
+                            className="sr-only"
+                            aria-label="Audio file input"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => audioInputRef.current?.click()}
+                            className={`h-9 px-4 rounded-xl border transition-all duration-300 flex items-center gap-3 cursor-pointer ${audioFile ? 'border-[#3B82F6]/30 bg-[#3B82F6]/5 text-[#3B82F6]' : 'border-white/5 bg-white/[0.03] text-white hover:border-white/20'}`}
+                            aria-label="Choose audio button">
                             <span className="material-symbols-outlined text-base">graphic_eq</span>
                             <span className="text-[9px] font-bold uppercase tracking-widest truncate max-w-[120px]">
-                                {audioFile ? audioFile.name || 'Audio' : 'Choose Audio'}
+                                {audioFile ? audioFile.name || "Audio File" : "Choose Audio"}
                             </span>
-                        </label>
+                        </button>
                     </div>
 
                     {/* Viewport */}
-                    <div className="flex-1 flex items-center justify-center min-h-0 relative">
+                    <div className="flex-1 flex items-center justify-center min-h-0 relative" aria-label="Viewport">
                         <div className="relative w-full h-full overflow-hidden bg-black/40 shadow-2xl flex items-center justify-center">
                             <canvas
                                 ref={canvasRef}
-                                className={`max-w-full max-h-full object-contain ${!image ? 'hidden' : ''}`}
+                                className={`max-w-full max-h-full object-contain ${!imageFile ? 'hidden' : ''}`}
                             />
-                            {!image && (
+                            {!imageFile && (
                                 <div className="flex flex-col items-center gap-6 p-8 text-center max-w-md">
                                     <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-white/60 border border-white/20">
                                         <span className="material-symbols-outlined text-4xl">stream</span>
                                     </div>
                                     <div className="space-y-1">
-                                        <h3 className="text-lg font-bold tracking-tight text-white uppercase tracking-[0.2em]">Upload Image and Audio</h3>
+                                        <h2 className="text-lg font-bold tracking-tight text-white uppercase tracking-[0.2em]">Upload Image and Audio</h2>
                                         <p className="text-[9px] text-white/60 uppercase tracking-widest">Awaiting local assets for initialization</p>
                                     </div>
                                 </div>
@@ -399,41 +430,35 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         {/* Play/Pause */}
                         <button
                             onClick={togglePlay}
-                            disabled={!image || !audioFile}
-                            className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-all border ${isPlaying ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)] text-primary' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'}`}
-                        >
+                            disabled={!imageFile || !audioFile}
+                            aria-label={isPlaying ? "Pause audio" : "Play audio"}
+                            className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-all border ${isPlaying ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)] text-primary' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'}`}>
                             <span className="material-symbols-outlined text-[20px] fill">{isPlaying ? 'pause' : 'play_arrow'}</span>
                         </button>
 
                         {/* Current Time */}
-                        <span className="text-[10px] font-mono text-white/40 shrink-0 w-8">
+                        <span className="text-[10px] font-mono text-white/60 shrink-0 w-8" aria-label="Current playback time">
                             {formatTime(currentTime)}
                         </span>
 
                         {/* Scrubber */}
-                        <div className="flex-1 relative flex items-center group">
-                            {/* Track */}
-                            <div className="absolute w-full h-[2px] bg-white/10 rounded-full" />
-                            {/* Fill */}
-                            <div
-                                className="absolute h-[2px] bg-primary/60 rounded-full pointer-events-none"
-                                style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
-                            />
-                            {/* Input */}
-                            <input
-                                type="range"
-                                min={0}
-                                max={duration || 0}
-                                step={0.01}
-                                value={currentTime}
-                                onChange={handleSeek}
-                                disabled={!audioFile}
-                                className="relative w-full h-full opacity-0 cursor-pointer z-10"
-                            />
-                        </div>
+                        <input
+                            type="range"
+                            min={0}
+                            max={duration || 0}
+                            step={0.1}
+                            value={currentTime}
+                            onChange={handleSeek}
+                            disabled={!audioFile}
+                            aria-label="Seek audio"
+                            className="flex-1 h-[3px] rounded-full appearance-none cursor-pointer bg-white/10 accent-white focus:outline-none group-hover:h-[5px] transition-all"
+                            style={{
+                                background: `linear-gradient(to right, #fb00ff 0%, #fb00ff ${scrubberPercent}%, rgba(255, 255, 255, 0.1) ${scrubberPercent}%, rgba(255, 255, 255, 0.1) 100%)`
+                            }}
+                        />
 
                         {/* Duration */}
-                        <span className="text-[10px] font-mono text-white/40 shrink-0 w-8">
+                        <span className="text-[10px] font-mono text-white/60 shrink-0 w-8" aria-label="Total duration">
                             {formatTime(duration)}
                         </span>
                     </div>
