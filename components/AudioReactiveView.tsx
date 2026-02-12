@@ -34,6 +34,12 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const baselinesRef = useRef<Record<string, number | null>>({ bass: null, mid: null, treble: null, energy: null });
     const frameCountRef = useRef(0);
 
+    const audioBufferRef = useRef<AudioBuffer | null>(null);
+    const startTimeRef = useRef<number>(0);
+    const offsetRef = useRef<number>(0);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+
     // Sync refs with state
     useEffect(() => { effectsRef.current = effects; }, [effects]);
     useEffect(() => { imageRef.current = image; }, [image]);
@@ -68,55 +74,97 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         }
     };
 
-    const handleAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setAudioFile(e.target.files[0]);
+            const file = e.target.files[0];
+            setAudioFile(file);
             setIsPlaying(false);
+
+            // Stop and cleanup existing audio
             if (audioContextRef.current) {
                 audioContextRef.current.close();
                 audioContextRef.current = null;
             }
+
+            // Reset state
+            audioBufferRef.current = null;
+            offsetRef.current = 0;
+            setCurrentTime(0);
+
+            // Decode audio and set duration immediately
+            try {
+                const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+                const arrayBuffer = await file.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                audioBufferRef.current = audioBuffer;
+                setDuration(audioBuffer.duration);
+                audioContext.close();
+            } catch (err) {
+                console.error('Error decoding audio:', err);
+            }
         }
     };
 
-    const initAudio = async () => {
+    const playAudio = async (startOffset = 0) => {
         if (!audioFile) return;
+
+        // Stop existing source if any
+        if (sourceRef.current) {
+            try {
+                sourceRef.current.onended = null; // Remove handler to prevent it from firing
+                sourceRef.current.stop();
+            } catch (e) {
+                // Source may already be stopped
+            }
+        }
 
         if (!audioContextRef.current) {
             audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
         }
 
-        const arrayBuffer = await audioFile.arrayBuffer();
-        const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
-
         analyserRef.current = audioContextRef.current.createAnalyser();
         analyserRef.current.fftSize = 2048;
-        analyserRef.current.smoothingTimeConstant = 0; // Instant frequency data response
+        analyserRef.current.smoothingTimeConstant = 0;
 
         const bufferLength = analyserRef.current.frequencyBinCount;
         dataArrayRef.current = new Uint8Array(bufferLength);
 
         const source = audioContextRef.current.createBufferSource();
-        source.buffer = audioBuffer;
+        source.buffer = audioBufferRef.current;
         source.connect(analyserRef.current);
         analyserRef.current.connect(audioContextRef.current.destination);
 
         source.onended = () => {
+            // Audio naturally ended
             setIsPlaying(false);
+            setCurrentTime(0);
             isPlayingRef.current = false;
+            offsetRef.current = 0;
         };
+
         sourceRef.current = source;
-        source.start(0);
+        source.start(0, startOffset);
+        startTimeRef.current = audioContextRef.current.currentTime;
+        offsetRef.current = startOffset;
         setIsPlaying(true);
         isPlayingRef.current = true;
 
-        animate();
+        // Start animation loop if not already running
+        if (!requestRef.current) {
+            animate();
+        }
+    };
+
+    const getElapsedSeconds = () => {
+        if (!audioContextRef.current) return 0;
+        return offsetRef.current + (audioContextRef.current.currentTime - startTimeRef.current);
     };
 
     const animate = async () => {
         if (!isPlayingRef.current) {
             frameCountRef.current = 0;
             baselinesRef.current = { bass: null, mid: null, treble: null, energy: null };
+            requestRef.current = undefined;
             return;
         }
 
@@ -132,6 +180,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             const binCount = data.length;
             const sampleRate = audioContextRef.current!.sampleRate;
             const nyquist = sampleRate / 2;
+
+            setCurrentTime(Math.min(getElapsedSeconds(), duration));
 
             if (!prevBinsRef.current) {
                 prevBinsRef.current = new Float32Array(binCount).fill(0);
@@ -263,12 +313,36 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
     const togglePlay = () => {
         if (isPlayingRef.current) {
-            sourceRef.current?.stop();
+            // Pause: save current position
+            offsetRef.current = getElapsedSeconds();
+            // Remove onended handler before stopping to prevent it from resetting time
+            if (sourceRef.current) {
+                sourceRef.current.onended = null;
+                sourceRef.current.stop();
+            }
             setIsPlaying(false);
             isPlayingRef.current = false;
         } else {
-            initAudio();
+            // Play/Resume from saved offset
+            playAudio(offsetRef.current);
         }
+    };
+
+    const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const seekTo = parseFloat(e.target.value);
+        offsetRef.current = seekTo;
+        setCurrentTime(seekTo);
+
+        // If playing, restart from new position
+        if (isPlayingRef.current) {
+            playAudio(seekTo);
+        }
+    };
+
+    const formatTime = (s: number) => {
+        const m = Math.floor(s / 60);
+        const sec = Math.floor(s % 60);
+        return `${m}:${sec.toString().padStart(2, '0')}`;
     };
 
     return (
@@ -321,14 +395,47 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     </div>
 
                     {/* Playback Bar */}
-                    <div className={`h-14 bg-black/20 border-t border-white/5 flex items-center justify-center px-6 shrink-0`}>
+                    <div className="h-14 bg-black/20 border-t border-white/5 flex items-center px-6 gap-4 shrink-0">
+                        {/* Play/Pause */}
                         <button
                             onClick={togglePlay}
                             disabled={!image || !audioFile}
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all border ${isPlaying ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)] text-primary' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'}`}
+                            className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-all border ${isPlaying ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)] text-primary' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'}`}
                         >
                             <span className="material-symbols-outlined text-[20px] fill">{isPlaying ? 'pause' : 'play_arrow'}</span>
                         </button>
+
+                        {/* Current Time */}
+                        <span className="text-[10px] font-mono text-white/40 shrink-0 w-8">
+                            {formatTime(currentTime)}
+                        </span>
+
+                        {/* Scrubber */}
+                        <div className="flex-1 relative flex items-center group">
+                            {/* Track */}
+                            <div className="absolute w-full h-[2px] bg-white/10 rounded-full" />
+                            {/* Fill */}
+                            <div
+                                className="absolute h-[2px] bg-primary/60 rounded-full pointer-events-none"
+                                style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
+                            />
+                            {/* Input */}
+                            <input
+                                type="range"
+                                min={0}
+                                max={duration || 0}
+                                step={0.01}
+                                value={currentTime}
+                                onChange={handleSeek}
+                                disabled={!audioFile}
+                                className="relative w-full h-full opacity-0 cursor-pointer z-10"
+                            />
+                        </div>
+
+                        {/* Duration */}
+                        <span className="text-[10px] font-mono text-white/40 shrink-0 w-8">
+                            {formatTime(duration)}
+                        </span>
                     </div>
                 </main>
 
