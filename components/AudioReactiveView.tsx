@@ -5,29 +5,42 @@ import SidebarNavigation from './SidebarNavigation';
 import Navbar from './Navbar';
 import { Footer } from './Footer';
 import { INITIAL_REACTIVE_EFFECTS } from '@/constants';
+import { calculateReactiveEffects } from '@/services/calculateReactiveEffects';
+import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 
 interface AudioReactiveViewProps {
 }
 
 const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
-    const [isPlaying, setIsPlaying] = useState(false);
+    const {
+        audioFile,
+        isPlaying,
+        currentTime,
+        duration,
+        analyserRef,
+        dataArrayRef,
+        audioContextRef,
+        handleAudioUpload,
+        togglePlay,
+        handleSeek,
+        getElapsedSeconds,
+        formatTime,
+        setCurrentTime,
+        isPlayingRef
+    } = useAudioProcessor();
+
     const [imageFile, setImageFile] = useState<File | null>(null);
-    const [audioFile, setAudioFile] = useState<File | null>(null);
     const [effects, setEffects] = useState<EffectConfig[]>(INITIAL_REACTIVE_EFFECTS);
     const [selectedEffectIndex, setSelectedEffectIndex] = useState(0);
 
-    const isPlayingRef = useRef(false);
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const audioContextRef = useRef<AudioContext | null>(null);
-    const analyserRef = useRef<AnalyserNode | null>(null);
-    const sourceRef = useRef<AudioBufferSourceNode | null>(null);
     const requestRef = useRef<number>();
-    const dataArrayRef = useRef<Uint8Array | null>(null);
     const effectsRef = useRef<EffectConfig[]>(effects);
     const imageFileRef = useRef<File | null>(null);
-    const audioFileRef = useRef<File | null>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
     const audioInputRef = useRef<HTMLInputElement>(null);
+
+    // Reactive math refs
     const smoothedBassRef = useRef(0);
     const smoothedMidRef = useRef(0);
     const smoothedTrebleRef = useRef(0);
@@ -37,22 +50,13 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const baselinesRef = useRef<Record<string, number | null>>({ bass: null, mid: null, treble: null, energy: null });
     const frameCountRef = useRef(0);
 
-    const audioBufferRef = useRef<AudioBuffer | null>(null);
-    const startTimeRef = useRef<number>(0);
-    const offsetRef = useRef<number>(0);
-    const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(0);
-
     // Sync refs with state
     useEffect(() => { effectsRef.current = effects; }, [effects]);
-    useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
     useEffect(() => { imageFileRef.current = imageFile; }, [imageFile]);
-    useEffect(() => { audioFileRef.current = audioFile; }, [audioFile]);
 
     useEffect(() => {
         return () => {
             if (requestRef.current) cancelAnimationFrame(requestRef.current);
-            if (audioContextRef.current) audioContextRef.current.close();
         };
     }, []);
 
@@ -80,96 +84,16 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         }
     };
 
-    const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            setAudioFile(file);
-            setIsPlaying(false);
-
-            // Stop and cleanup existing audio
-            if (audioContextRef.current) {
-                audioContextRef.current.close();
-                audioContextRef.current = null;
-            }
-
-            // Reset state
-            audioBufferRef.current = null;
-            offsetRef.current = 0;
-            setCurrentTime(0);
-
-            // Decode audio and set duration immediately
-            try {
-                const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-                const arrayBuffer = await file.arrayBuffer();
-                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                audioBufferRef.current = audioBuffer;
-                setDuration(audioBuffer.duration);
-                audioContext.close();
-            } catch (err) {
-                console.error('Error decoding audio:', err);
-            }
-        }
-    };
-
-    const playAudio = async (startOffset = 0) => {
-        if (!audioFile) return;
-
-        // Stop existing source if any
-        if (sourceRef.current) {
-            try {
-                sourceRef.current.onended = null; // Remove handler to prevent it from firing
-                sourceRef.current.stop();
-            } catch (e) {
-                // Source may already be stopped
-            }
-        }
-
-        if (!audioContextRef.current) {
-            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        }
-
-        analyserRef.current = audioContextRef.current.createAnalyser();
-        analyserRef.current.fftSize = 2048;
-        analyserRef.current.smoothingTimeConstant = 0;
-
-        const bufferLength = analyserRef.current.frequencyBinCount;
-        dataArrayRef.current = new Uint8Array(bufferLength);
-
-        const source = audioContextRef.current.createBufferSource();
-        source.buffer = audioBufferRef.current;
-        source.connect(analyserRef.current);
-        analyserRef.current.connect(audioContextRef.current.destination);
-
-        source.onended = () => {
-            // Audio naturally ended
-            setIsPlaying(false);
-            setCurrentTime(0);
-            isPlayingRef.current = false;
-            offsetRef.current = 0;
-        };
-
-        sourceRef.current = source;
-        source.start(0, startOffset);
-        startTimeRef.current = audioContextRef.current.currentTime;
-        offsetRef.current = startOffset;
-        setIsPlaying(true);
-        isPlayingRef.current = true;
-
-        // Start animation loop if not already running
-        if (!requestRef.current) {
-            animate();
-        }
-    };
-
-    const getElapsedSeconds = () => {
-        if (!audioContextRef.current) return 0;
-        return offsetRef.current + (audioContextRef.current.currentTime - startTimeRef.current);
-    };
-
     const animate = async () => {
         if (!isPlayingRef.current) {
             frameCountRef.current = 0;
             baselinesRef.current = { bass: null, mid: null, treble: null, energy: null };
+            smoothedBassRef.current = 0;
+            smoothedMidRef.current = 0;
+            smoothedTrebleRef.current = 0;
+            smoothedEnergyRef.current = 0;
+            kickBaselineRef.current = 0;
+            prevBinsRef.current = dataArrayRef.current ? new Float32Array(dataArrayRef.current.length).fill(0) : null;
             requestRef.current = undefined;
             return;
         }
@@ -180,126 +104,40 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         }
 
         try {
-            // Get frequency data
+            // 1. Get current audio data
             analyserRef.current.getByteFrequencyData(dataArrayRef.current);
-            const data = dataArrayRef.current;
-            const binCount = data.length;
-            const sampleRate = audioContextRef.current!.sampleRate;
-            const nyquist = sampleRate / 2;
-
             setCurrentTime(Math.min(getElapsedSeconds(), duration));
 
-            if (!prevBinsRef.current) {
-                prevBinsRef.current = new Float32Array(binCount).fill(0);
-            }
-
-            for (let i = 0; i < binCount; i++) {
-                const normalized = data[i] / 255;
-                prevBinsRef.current[i] = normalized;
-            }
-
-            // Helper: map frequency to FFT bin
-            const freqToBin = (freq: number) =>
-                Math.min(binCount - 1, Math.floor((freq / nyquist) * binCount));
-
-            // Helper: compute RMS for a range of smoothed bins
-            const bandRMS = (startBin: number, endBin: number) => {
-                let sum = 0;
-                const len = Math.max(1, endBin - startBin);
-                for (let i = startBin; i < endBin; i++) {
-                    const v = prevBinsRef.current[i];
-                    sum += v * v;
+            // 2. Get next state
+            const { reactiveEffects, nextState } = calculateReactiveEffects(
+                dataArrayRef.current,
+                dataArrayRef.current.length,
+                audioContextRef.current!.sampleRate,
+                effectsRef.current,
+                frameCountRef.current,
+                {
+                    baselines: baselinesRef.current,
+                    smoothed: {
+                        bass: smoothedBassRef.current,
+                        mid: smoothedMidRef.current,
+                        treble: smoothedTrebleRef.current,
+                        energy: smoothedEnergyRef.current
+                    },
+                    kickBaseline: kickBaselineRef.current,
+                    prevBins: prevBinsRef.current
                 }
-                return Math.sqrt(sum / len);
-            };
+            );
 
-            // Frequency bands
-            const bassBins: [number, number] = [freqToBin(20), freqToBin(200)];
-            const midBins: [number, number] = [freqToBin(200), freqToBin(1500)];
-            const trebleBins: [number, number] = [freqToBin(1500), freqToBin(5000)];
+            // 3. Sync state back (Keep the refs updated)
+            baselinesRef.current = nextState.baselines;
+            smoothedBassRef.current = nextState.smoothed.bass;
+            smoothedMidRef.current = nextState.smoothed.mid;
+            smoothedTrebleRef.current = nextState.smoothed.treble;
+            smoothedEnergyRef.current = nextState.smoothed.energy;
+            kickBaselineRef.current = nextState.kickBaseline;
+            prevBinsRef.current = nextState.prevBins;
 
-            const rawBass = bandRMS(bassBins[0], bassBins[1]);
-            const rawMid = bandRMS(midBins[0], midBins[1]);
-            const rawTreble = bandRMS(trebleBins[0], trebleBins[1]);
-
-            // Overall energy from weighted band combination
-            const rawEnergy = (rawBass * 0.7) + (rawMid * 0.2) + (rawTreble * 0.1);
-
-            // Transient Detection
-            const transientBoost = {
-                bass: 10.0,
-                mid: 10.0,
-                treble: 10.0,
-                energy: 10.0
-            };
-
-            // Helper to update band and apply transient detection
-            const updateBand = (raw: number, key: string) => {
-                // Initialize baseline once
-                if (baselinesRef.current[key] === null) {
-                    baselinesRef.current[key] = raw;
-                    return raw;
-                }
-
-                const delta = Math.max(0, raw - baselinesRef.current[key]!) * 0.005;
-                const transient = delta * (transientBoost as any)[key];
-
-                return Math.min(1, raw + transient);
-            };
-
-            const reactiveBassValue = updateBand(rawBass, 'bass');
-            const reactiveMidValue = updateBand(rawMid, 'mid');
-            const reactiveTrebleValue = updateBand(rawTreble, 'treble');
-            const reactiveEnergyValue = updateBand(rawEnergy, 'energy');
-
-            // Kick detection (Specific helper for bass-heavy spikes)
-            if (!kickBaselineRef.current) kickBaselineRef.current = rawBass;
-            kickBaselineRef.current += (rawBass - kickBaselineRef.current) * 0.1;
-            const kickDelta = rawBass - kickBaselineRef.current;
-            const dynamicThreshold = Math.max(0.1, Math.min(0.6, rawBass * 0.7));
-            const isKick = kickDelta > dynamicThreshold;
-
-            // Final Composition: merge the band-specific reactive values with a final smooth
-            const adaptiveSmooth = (current: number, target: number) => {
-                const delta = target - current;
-                const attack = delta > 0 ? 0.5 : 0.1;
-                return current + delta * attack;
-            };
-
-            const expandRange = (v: number) => {
-                const adjustedExponent = (v < 0.3) ? 5 : 3;
-                return Math.min(1, Math.pow(v, adjustedExponent));
-            };
-
-            const pBass = adaptiveSmooth(smoothedBassRef.current, expandRange(reactiveBassValue + (isKick ? 0.3 : 0)));
-            const pMid = adaptiveSmooth(smoothedMidRef.current, expandRange(reactiveMidValue));
-            const pTreble = adaptiveSmooth(smoothedTrebleRef.current, expandRange(reactiveTrebleValue));
-            const pEnergy = adaptiveSmooth(smoothedEnergyRef.current, expandRange(reactiveEnergyValue));
-
-            smoothedBassRef.current = pBass;
-            smoothedMidRef.current = pMid;
-            smoothedTrebleRef.current = pTreble;
-            smoothedEnergyRef.current = pEnergy;
-
-            // Create reactive effects
-            const reactiveEffects = effectsRef.current.map(effect => {
-                let energyValue = pEnergy;
-                if (effect.frequencyBand === 'BASS') energyValue = pBass;
-                else if (effect.frequencyBand === 'MID') energyValue = pMid;
-                else if (effect.frequencyBand === 'TREBLE') energyValue = pTreble;
-
-                const reactiveParams = effect.params.map(param => ({
-                    ...param,
-                    value: param.reactive ? param.value * energyValue : param.value
-                }));
-
-                return {
-                    ...effect,
-                    params: reactiveParams,
-                    seed: (effect.seed ?? 0) + (requestRef.current ?? 0)
-                };
-            });
-
+            // 4. Draw
             await glitchEngine.renderToCanvas(
                 canvasRef.current,
                 imageFileRef.current,
@@ -309,46 +147,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             );
         } catch (err) {
             console.error("Animation loop error:", err);
-            console.error("Error stack:", err.stack);
         }
 
-        if (isPlayingRef.current) {
-            requestRef.current = requestAnimationFrame(animate);
-        }
-    };
-
-    const togglePlay = () => {
-        if (isPlayingRef.current) {
-            // Pause: save current position
-            offsetRef.current = getElapsedSeconds();
-            // Remove onended handler before stopping to prevent it from resetting time
-            if (sourceRef.current) {
-                sourceRef.current.onended = null;
-                sourceRef.current.stop();
-            }
-            setIsPlaying(false);
-            isPlayingRef.current = false;
-        } else {
-            // Play/Resume from saved offset
-            playAudio(offsetRef.current);
-        }
-    };
-
-    const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const seekTo = parseFloat(e.target.value);
-        offsetRef.current = seekTo;
-        setCurrentTime(seekTo);
-
-        // If playing, restart from new position
-        if (isPlayingRef.current) {
-            playAudio(seekTo);
-        }
-    };
-
-    const formatTime = (s: number) => {
-        const m = Math.floor(s / 60);
-        const sec = Math.floor(s % 60);
-        return `${m}:${sec.toString().padStart(2, '0')}`;
+        requestRef.current = requestAnimationFrame(animate);
+        frameCountRef.current++;
     };
 
     const scrubberPercent = duration ? (currentTime / duration) * 100 : 0;
@@ -429,7 +231,12 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     <div className="h-14 bg-black/20 border-t border-white/5 flex items-center px-6 gap-4 shrink-0">
                         {/* Play/Pause */}
                         <button
-                            onClick={togglePlay}
+                            onClick={() => togglePlay(() => {
+                                // Start animation loop if not already running
+                                if (!requestRef.current) {
+                                    requestRef.current = requestAnimationFrame(animate);
+                                }
+                            })}
                             disabled={!imageFile || !audioFile}
                             aria-label={isPlaying ? "Pause audio" : "Play audio"}
                             className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-all border ${isPlaying ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)] text-primary' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'}`}>
@@ -448,7 +255,11 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             max={duration || 0}
                             step={0.1}
                             value={currentTime}
-                            onChange={handleSeek}
+                            onChange={(e) => handleSeek(e, () => {
+                                if (!requestRef.current) {
+                                    requestRef.current = requestAnimationFrame(animate);
+                                }
+                            })}
                             disabled={!audioFile}
                             aria-label="Seek audio"
                             className="flex-1 h-[3px] rounded-full appearance-none cursor-pointer bg-white/10 accent-white focus:outline-none group-hover:h-[5px] transition-all"
