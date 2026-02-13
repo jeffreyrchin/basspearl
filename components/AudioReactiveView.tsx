@@ -39,8 +39,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const imageInputRef = useRef<HTMLInputElement>(null);
     const audioInputRef = useRef<HTMLInputElement>(null);
 
-    // Sync ref with state
-    useEffect(() => { effectsRef.current = effects; }, [effects]);
+    // Sync ref with state (Direct update during render)
+    effectsRef.current = effects;
 
     useEffect(() => {
         return () => {
@@ -51,8 +51,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            const imageBlob = URL.createObjectURL(file);
             setImageFile(file);
+            const imageBlob = URL.createObjectURL(file);
             imageFileRef.current = imageBlob; // Store the URL string for the animation loop
 
             // Show initial preview
@@ -68,61 +68,52 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         }
     };
 
+    const renderFrame = async (time: number) => {
+        if (!imageFileRef.current || !canvasRef.current) return;
+        const currentFrame = Math.floor(time * 60);
+        let reactiveEffects = effectsRef.current;
+
+        if (reactivityMapRef.current) {
+            const map = reactivityMapRef.current;
+            const frame = Math.min(map.bass.length - 1, currentFrame); // Ensures frame <= last valid FFT frame index
+            const smoothed = {
+                bass: map.bass[frame], mid: map.mid[frame],
+                treble: map.treble[frame], energy: map.energy[frame]
+            };
+            reactiveEffects = mapReactivityToEffects(smoothed, effectsRef.current, currentFrame);
+        }
+
+        await glitchEngine.renderToCanvas(canvasRef.current, imageFileRef.current, reactiveEffects, false, 960);
+    };
+
     const animate = async () => {
         if (!isPlayingRef.current) {
             requestRef.current = undefined;
             return;
         }
 
-        if (!imageFileRef.current || !canvasRef.current) {
-            requestRef.current = requestAnimationFrame(animate);
-            return;
-        }
+        const elapsed = Math.min(getElapsedSeconds(), duration);
 
-        try {
-            const elapsed = Math.min(getElapsedSeconds(), duration);
-            const currentFrame = Math.floor(elapsed * 60); // 60fps timeline
-
-            // Update UI via refs to keep the component "Lean" (no re-renders)
-            if (currentTimeLabelRef.current) {
-                currentTimeLabelRef.current.innerText = formatTime(elapsed);
-            }
-            if (scrubberRef.current && duration > 0) {
-                scrubberRef.current.value = elapsed.toString();
-                const percent = duration ? (elapsed / duration) * 100 : 0;
+        if (currentTimeLabelRef.current) currentTimeLabelRef.current.innerText = formatTime(elapsed);
+        if (scrubberRef.current && duration > 0) {
+            const val = elapsed.toString(); // Current playback time as a string
+            if (scrubberRef.current.value !== val) {
+                scrubberRef.current.value = val;
+                const percent = (elapsed / duration) * 100;
                 scrubberRef.current.style.background = `linear-gradient(to right, #fb00ff 0%, #fb00ff ${percent}%, rgba(255, 255, 255, 0.1) ${percent}%, rgba(255, 255, 255, 0.1) 100%)`;
             }
-
-            let reactiveEffects = effectsRef.current; // Default to current effects
-
-            if (reactivityMapRef.current) {
-                const map = reactivityMapRef.current;
-                const frame = Math.min(map.bass.length - 1, currentFrame);
-                const smoothed = {
-                    bass: map.bass[frame],
-                    mid: map.mid[frame],
-                    treble: map.treble[frame],
-                    energy: map.energy[frame]
-                };
-                reactiveEffects = mapReactivityToEffects(smoothed, effectsRef.current, currentFrame);
-            }
-
-            // Draw
-            await glitchEngine.renderToCanvas(
-                canvasRef.current!,
-                imageFileRef.current!,
-                reactiveEffects,
-                false,
-                960
-            );
-        } catch (err) {
-            console.error("Animation loop error:", err);
         }
 
-        requestRef.current = requestAnimationFrame(animate);
+        await renderFrame(elapsed);
+        requestRef.current = requestAnimationFrame(animate); // Keep animation loop going even if no image or canvas
     };
 
-    // Calculate for static renders (Pause, Seek, Stop)
+    // Update preview when state changes while paused
+    useEffect(() => {
+        if (!isPlaying) renderFrame(currentTime);
+    }, [effects, imageFile, currentTime, isPlaying]);
+
+    // Calculate for static renders (Seek, Pause)
     const scrubberPercent = duration ? (currentTime / duration) * 100 : 0;
 
     return (

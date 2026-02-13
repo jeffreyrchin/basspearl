@@ -37,7 +37,7 @@ export const useAudioProcessor = () => {
             energy: new Float32Array(totalFrames)
         };
 
-        // 1. Setup Offline Context
+        // 1. Set up Offline Context
         const offlineCtx = new OfflineAudioContext(1, buffer.length, buffer.sampleRate);
         const source = offlineCtx.createBufferSource();
         source.buffer = buffer;
@@ -179,7 +179,7 @@ export const useAudioProcessor = () => {
             // Pause: save current position
             const pausedAt = getElapsedSeconds();
             offsetRef.current = pausedAt;
-            setCurrentTime(pausedAt);
+            setCurrentTime(pausedAt); // Update current time state for UI
 
             // Remove onended handler before stopping to prevent it from resetting time
             if (sourceRef.current) {
@@ -201,8 +201,6 @@ export const useAudioProcessor = () => {
 
         if (isPlayingRef.current) {
             playAudio(seekTo, onStart);
-        } else {
-            onStart?.();
         }
     };
 

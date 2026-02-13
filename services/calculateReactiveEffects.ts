@@ -16,7 +16,7 @@ export const calculateNextState = (
     sampleRate: number,
     prevState: ReactivityState
 ) => {
-    // 1. Setup FFT helpers
+    // 1. Set up FFT helpers
     const nyquist = sampleRate / 2;
     const freqToBin = (freq: number) =>
         Math.min(binCount - 1, Math.floor((freq / nyquist) * binCount));
