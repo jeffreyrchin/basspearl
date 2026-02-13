@@ -5,7 +5,7 @@ import SidebarNavigation from './SidebarNavigation';
 import Navbar from './Navbar';
 import { Footer } from './Footer';
 import { INITIAL_REACTIVE_EFFECTS } from '@/constants';
-import { calculateReactiveEffects } from '@/services/calculateReactiveEffects';
+import { mapReactivityToEffects } from '@/services/calculateReactiveEffects';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 
 interface AudioReactiveViewProps {
@@ -17,16 +17,13 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         isPlaying,
         currentTime,
         duration,
-        analyserRef,
-        dataArrayRef,
-        audioContextRef,
         handleAudioUpload,
         togglePlay,
         handleSeek,
         getElapsedSeconds,
         formatTime,
-        setCurrentTime,
-        isPlayingRef
+        isPlayingRef,
+        reactivityMapRef
     } = useAudioProcessor();
 
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -35,24 +32,15 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const requestRef = useRef<number>();
+    const currentTimeLabelRef = useRef<HTMLSpanElement>(null);
+    const scrubberRef = useRef<HTMLInputElement>(null);
     const effectsRef = useRef<EffectConfig[]>(effects);
-    const imageFileRef = useRef<File | null>(null);
+    const imageFileRef = useRef<string | null>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
     const audioInputRef = useRef<HTMLInputElement>(null);
 
-    // Reactive math refs
-    const smoothedBassRef = useRef(0);
-    const smoothedMidRef = useRef(0);
-    const smoothedTrebleRef = useRef(0);
-    const smoothedEnergyRef = useRef(0);
-    const prevBinsRef = useRef<Float32Array | null>(null);
-    const kickBaselineRef = useRef<number | null>(null);
-    const baselinesRef = useRef<Record<string, number | null>>({ bass: null, mid: null, treble: null, energy: null });
-    const frameCountRef = useRef(0);
-
-    // Sync refs with state
+    // Sync ref with state
     useEffect(() => { effectsRef.current = effects; }, [effects]);
-    useEffect(() => { imageFileRef.current = imageFile; }, [imageFile]);
 
     useEffect(() => {
         return () => {
@@ -62,85 +50,67 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            const reader = new FileReader();
             const file = e.target.files[0];
+            const imageBlob = URL.createObjectURL(file);
             setImageFile(file);
-            reader.onload = async () => {
-                const imageBlob = URL.createObjectURL(file);
-                imageFileRef.current = imageBlob;
+            imageFileRef.current = imageBlob; // Store the URL string for the animation loop
 
-                // Show initial preview
-                if (canvasRef.current) {
-                    await glitchEngine.renderToCanvas(
-                        canvasRef.current,
-                        imageBlob,
-                        effects,
-                        false,
-                        960
-                    );
-                }
-            };
-            reader.readAsDataURL(file);
+            // Show initial preview
+            if (canvasRef.current) {
+                glitchEngine.renderToCanvas(
+                    canvasRef.current,
+                    imageBlob,
+                    effects,
+                    false,
+                    960
+                );
+            }
         }
     };
 
     const animate = async () => {
         if (!isPlayingRef.current) {
-            frameCountRef.current = 0;
-            baselinesRef.current = { bass: null, mid: null, treble: null, energy: null };
-            smoothedBassRef.current = 0;
-            smoothedMidRef.current = 0;
-            smoothedTrebleRef.current = 0;
-            smoothedEnergyRef.current = 0;
-            kickBaselineRef.current = 0;
-            prevBinsRef.current = dataArrayRef.current ? new Float32Array(dataArrayRef.current.length).fill(0) : null;
             requestRef.current = undefined;
             return;
         }
 
-        if (!imageFileRef.current || !canvasRef.current || !analyserRef.current || !dataArrayRef.current) {
+        if (!imageFileRef.current || !canvasRef.current) {
             requestRef.current = requestAnimationFrame(animate);
             return;
         }
 
         try {
-            // 1. Get current audio data
-            analyserRef.current.getByteFrequencyData(dataArrayRef.current);
-            setCurrentTime(Math.min(getElapsedSeconds(), duration));
+            const elapsed = Math.min(getElapsedSeconds(), duration);
+            const currentFrame = Math.floor(elapsed * 60); // 60fps timeline
 
-            // 2. Get next state
-            const { reactiveEffects, nextState } = calculateReactiveEffects(
-                dataArrayRef.current,
-                dataArrayRef.current.length,
-                audioContextRef.current!.sampleRate,
-                effectsRef.current,
-                frameCountRef.current,
-                {
-                    baselines: baselinesRef.current,
-                    smoothed: {
-                        bass: smoothedBassRef.current,
-                        mid: smoothedMidRef.current,
-                        treble: smoothedTrebleRef.current,
-                        energy: smoothedEnergyRef.current
-                    },
-                    kickBaseline: kickBaselineRef.current,
-                    prevBins: prevBinsRef.current
-                }
-            );
+            // Update UI via refs to keep the component "Lean" (no re-renders)
+            if (currentTimeLabelRef.current) {
+                currentTimeLabelRef.current.innerText = formatTime(elapsed);
+            }
+            if (scrubberRef.current && duration > 0) {
+                scrubberRef.current.value = elapsed.toString();
+                const percent = duration ? (elapsed / duration) * 100 : 0;
+                scrubberRef.current.style.background = `linear-gradient(to right, #fb00ff 0%, #fb00ff ${percent}%, rgba(255, 255, 255, 0.1) ${percent}%, rgba(255, 255, 255, 0.1) 100%)`;
+            }
 
-            // 3. Sync state back (Keep the refs updated)
-            baselinesRef.current = nextState.baselines;
-            smoothedBassRef.current = nextState.smoothed.bass;
-            smoothedMidRef.current = nextState.smoothed.mid;
-            smoothedTrebleRef.current = nextState.smoothed.treble;
-            smoothedEnergyRef.current = nextState.smoothed.energy;
-            kickBaselineRef.current = nextState.kickBaseline;
-            prevBinsRef.current = nextState.prevBins;
+            let reactiveEffects = effectsRef.current; // Default to current effects
 
-            // 4. Draw
+            if (reactivityMapRef.current) {
+                const map = reactivityMapRef.current;
+                const frame = Math.min(map.bass.length - 1, currentFrame);
+                const smoothed = {
+                    bass: map.bass[frame],
+                    mid: map.mid[frame],
+                    treble: map.treble[frame],
+                    energy: map.energy[frame]
+                };
+                reactiveEffects = mapReactivityToEffects(smoothed, effectsRef.current, currentFrame);
+            }
+
+            // Draw
             await glitchEngine.renderToCanvas(
-                canvasRef.current,
-                imageFileRef.current,
+                canvasRef.current!,
+                imageFileRef.current!,
                 reactiveEffects,
                 false,
                 960
@@ -150,9 +120,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         }
 
         requestRef.current = requestAnimationFrame(animate);
-        frameCountRef.current++;
     };
 
+    // Calculate for static renders (Pause, Seek, Stop)
     const scrubberPercent = duration ? (currentTime / duration) * 100 : 0;
 
     return (
@@ -244,12 +214,17 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         </button>
 
                         {/* Current Time */}
-                        <span className="text-[10px] font-mono text-white/60 shrink-0 w-8" aria-label="Current playback time">
+                        <span
+                            ref={currentTimeLabelRef}
+                            className="text-[10px] font-mono text-white/60 shrink-0 w-8"
+                            aria-label="Current playback time"
+                        >
                             {formatTime(currentTime)}
                         </span>
 
                         {/* Scrubber */}
                         <input
+                            ref={scrubberRef}
                             type="range"
                             min={0}
                             max={duration || 0}

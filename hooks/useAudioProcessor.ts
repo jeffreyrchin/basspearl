@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, ChangeEvent } from 'react';
+import { calculateNextState, ReactivityState } from '@/services/calculateReactiveEffects';
 
 export const useAudioProcessor = () => {
     const [audioFile, setAudioFile] = useState<File | null>(null);
@@ -7,10 +8,8 @@ export const useAudioProcessor = () => {
     const [duration, setDuration] = useState(0);
 
     const audioContextRef = useRef<AudioContext | null>(null);
-    const analyserRef = useRef<AnalyserNode | null>(null);
     const audioBufferRef = useRef<AudioBuffer | null>(null);
     const sourceRef = useRef<AudioBufferSourceNode | null>(null);
-    const dataArrayRef = useRef<Uint8Array | null>(null);
     const startTimeRef = useRef<number>(0);
     const offsetRef = useRef<number>(0);
     const isPlayingRef = useRef(false);
@@ -19,6 +18,78 @@ export const useAudioProcessor = () => {
     useEffect(() => {
         isPlayingRef.current = isPlaying;
     }, [isPlaying]);
+
+    const reactivityMapRef = useRef<{
+        bass: Float32Array;
+        mid: Float32Array;
+        treble: Float32Array;
+        energy: Float32Array;
+    } | null>(null);
+
+    const precomputeReactivity = async (buffer: AudioBuffer, fps = 60) => {
+        console.log("Precomputing audio reactivity...");
+
+        const totalFrames = Math.ceil(buffer.duration * fps);
+        const map = {
+            bass: new Float32Array(totalFrames),
+            mid: new Float32Array(totalFrames),
+            treble: new Float32Array(totalFrames),
+            energy: new Float32Array(totalFrames)
+        };
+
+        // 1. Setup Offline Context
+        const offlineCtx = new OfflineAudioContext(1, buffer.length, buffer.sampleRate);
+        const source = offlineCtx.createBufferSource();
+        source.buffer = buffer;
+        const analyser = offlineCtx.createAnalyser();
+        analyser.fftSize = 2048;
+        analyser.smoothingTimeConstant = 0;
+
+        source.connect(analyser);
+        analyser.connect(offlineCtx.destination);
+        source.start(0);
+
+        // 2. Prepare state & buffers
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        let state: ReactivityState = {
+            baselines: { bass: null, mid: null, treble: null, energy: null },
+            smoothed: { bass: 0, mid: 0, treble: 0, energy: 0 },
+            kickBaseline: null,
+            prevBins: new Float32Array(analyser.frequencyBinCount).fill(0)
+        };
+
+        // 3. Schedule "suspend" events for every frame to grab data
+        for (let i = 0; i < totalFrames; i++) {
+            const time = i / fps;
+
+            // Scheduling analysis at specific timestamps
+            offlineCtx.suspend(time).then(() => {
+                analyser.getByteFrequencyData(dataArray);
+
+                // Calculate reactivity for this frame
+                state = calculateNextState(dataArray, dataArray.length, buffer.sampleRate, state);
+
+                map.bass[i] = state.smoothed.bass;
+                map.mid[i] = state.smoothed.mid;
+                map.treble[i] = state.smoothed.treble;
+                map.energy[i] = state.smoothed.energy;
+
+                // Resume processing to get to the next frame
+                offlineCtx.resume();
+            });
+        }
+
+        // 4. Run the rendering (this triggers all the suspends in order)
+        try {
+            await offlineCtx.startRendering();
+            console.log("Precomputation complete.");
+            reactivityMapRef.current = map;
+            return map;
+        } catch (err) {
+            console.error("Precomputation failed:", err);
+            return null;
+        }
+    };
 
     const getElapsedSeconds = useCallback(() => {
         if (!audioContextRef.current || !isPlayingRef.current) return offsetRef.current;
@@ -45,12 +116,16 @@ export const useAudioProcessor = () => {
 
             // Decode audio and set duration immediately
             try {
-                const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+                if (!audioContextRef.current) {
+                    audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+                }
                 const arrayBuffer = await file.arrayBuffer();
-                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
                 audioBufferRef.current = audioBuffer;
                 setDuration(audioBuffer.duration);
-                audioContext.close();
+
+                // Start precomputation
+                await precomputeReactivity(audioBuffer);
             } catch (err) {
                 console.error('Error decoding audio:', err);
             }
@@ -78,17 +153,9 @@ export const useAudioProcessor = () => {
             await audioContextRef.current.resume();
         }
 
-        analyserRef.current = audioContextRef.current.createAnalyser();
-        analyserRef.current.fftSize = 2048;
-        analyserRef.current.smoothingTimeConstant = 0;
-
-        const bufferLength = analyserRef.current.frequencyBinCount;
-        dataArrayRef.current = new Uint8Array(bufferLength);
-
         const source = audioContextRef.current.createBufferSource();
         source.buffer = audioBufferRef.current;
-        source.connect(analyserRef.current);
-        analyserRef.current.connect(audioContextRef.current.destination);
+        source.connect(audioContextRef.current.destination);
 
         source.onended = () => {
             setIsPlaying(false);
@@ -110,7 +177,10 @@ export const useAudioProcessor = () => {
     const togglePlay = (onStart?: () => void) => {
         if (isPlayingRef.current) {
             // Pause: save current position
-            offsetRef.current = getElapsedSeconds();
+            const pausedAt = getElapsedSeconds();
+            offsetRef.current = pausedAt;
+            setCurrentTime(pausedAt);
+
             // Remove onended handler before stopping to prevent it from resetting time
             if (sourceRef.current) {
                 sourceRef.current.onended = null;
@@ -131,6 +201,8 @@ export const useAudioProcessor = () => {
 
         if (isPlayingRef.current) {
             playAudio(seekTo, onStart);
+        } else {
+            onStart?.();
         }
     };
 
@@ -154,8 +226,6 @@ export const useAudioProcessor = () => {
         isPlaying,
         currentTime,
         duration,
-        analyserRef,
-        dataArrayRef,
         audioContextRef,
         handleAudioUpload,
         togglePlay,
@@ -163,6 +233,7 @@ export const useAudioProcessor = () => {
         getElapsedSeconds,
         formatTime,
         setCurrentTime,
-        isPlayingRef
+        isPlayingRef,
+        reactivityMapRef
     };
 };

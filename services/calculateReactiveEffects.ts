@@ -1,20 +1,20 @@
 import { EffectConfig } from "@/types";
 
+export interface ReactivityState {
+    baselines: Record<string, number | null>;
+    smoothed: { bass: number; mid: number; treble: number; energy: number };
+    kickBaseline: number | null;
+    prevBins: Float32Array | null;
+}
+
 /**
- * Given raw audio data and previous state, returns new effects and next state
+ * Calculates the next reactivity state from raw FFT data.
  */
-export const calculateReactiveEffects = (
-    data: Uint8Array,
+export const calculateNextState = (
+    data: Uint8Array | Float32Array,
     binCount: number,
     sampleRate: number,
-    currentEffects: EffectConfig[],
-    frameCount: number,
-    prevState: {
-        baselines: Record<string, number | null>,
-        smoothed: { bass: number, mid: number, treble: number, energy: number },
-        kickBaseline: number | null,
-        prevBins: Float32Array | null
-    }
+    prevState: ReactivityState
 ) => {
     // 1. Setup FFT helpers
     const nyquist = sampleRate / 2;
@@ -22,9 +22,10 @@ export const calculateReactiveEffects = (
         Math.min(binCount - 1, Math.floor((freq / nyquist) * binCount));
 
     const bins = prevState.prevBins || new Float32Array(binCount).fill(0);
+    const isUint8 = data instanceof Uint8Array;
+
     for (let i = 0; i < binCount; i++) {
-        const normalized = data[i] / 255
-        bins[i] = normalized;
+        bins[i] = isUint8 ? (data as Uint8Array)[i] / 255 : (data as Float32Array)[i];
     }
 
     const bandRMS = (startBin: number, endBin: number) => {
@@ -89,12 +90,28 @@ export const calculateReactiveEffects = (
     const pTreble = adaptiveSmooth(prevState.smoothed.treble, expandRange(reactiveTrebleValue));
     const pEnergy = adaptiveSmooth(prevState.smoothed.energy, expandRange(reactiveEnergyValue));
 
-    // 6. Map to effects
-    const reactiveEffects = currentEffects.map(effect => {
-        let energyValue = pEnergy;
-        if (effect.frequencyBand === 'BASS') energyValue = pBass;
-        else if (effect.frequencyBand === 'MID') energyValue = pMid;
-        else if (effect.frequencyBand === 'TREBLE') energyValue = pTreble;
+    return {
+        baselines: newBaselines,
+        smoothed: { bass: pBass, mid: pMid, treble: pTreble, energy: pEnergy },
+        kickBaseline: newKickBaseline,
+        prevBins: bins
+    };
+};
+
+/**
+ * Maps smoothed reactivity values to effect configurations.
+ */
+export const mapReactivityToEffects = (
+    smoothed: { bass: number; mid: number; treble: number; energy: number },
+    currentEffects: EffectConfig[],
+    frameCount: number
+) => {
+    const { bass, mid, treble, energy } = smoothed;
+    return currentEffects.map(effect => {
+        let energyValue = energy;
+        if (effect.frequencyBand === 'BASS') energyValue = bass;
+        else if (effect.frequencyBand === 'MID') energyValue = mid;
+        else if (effect.frequencyBand === 'TREBLE') energyValue = treble;
 
         return {
             ...effect,
@@ -105,14 +122,4 @@ export const calculateReactiveEffects = (
             seed: (effect.seed ?? 0) + frameCount
         };
     });
-
-    return {
-        reactiveEffects,
-        nextState: {
-            baselines: newBaselines,
-            smoothed: { bass: pBass, mid: pMid, treble: pTreble, energy: pEnergy },
-            kickBaseline: newKickBaseline,
-            prevBins: bins
-        }
-    };
 };
