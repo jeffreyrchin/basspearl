@@ -7,6 +7,7 @@ import { Footer } from './Footer';
 import { INITIAL_REACTIVE_EFFECTS } from '@/constants';
 import { mapReactivityToEffects } from '@/services/calculateReactiveEffects';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
+import { exportVideo } from '@/services/exportService';
 
 interface AudioReactiveViewProps {
 }
@@ -23,8 +24,12 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         getElapsedSeconds,
         formatTime,
         isPlayingRef,
-        reactivityMapRef
+        reactivityMapRef,
+        audioBufferRef
     } = useAudioProcessor();
+
+    const [isExporting, setIsExporting] = useState(false);
+    const [exportProgress, setExportProgress] = useState(0);
 
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [effects, setEffects] = useState<EffectConfig[]>(INITIAL_REACTIVE_EFFECTS);
@@ -119,6 +124,31 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             updateScrubberUI(currentTime);
         }
     }, [effects, imageFile, currentTime, isPlaying, audioFile, duration]);
+
+    const handleExport = async () => {
+        if (!imageFileRef.current || !reactivityMapRef.current || !audioBufferRef.current) return;
+
+        setIsExporting(true);
+        setExportProgress(0);
+
+        try {
+            await exportVideo({
+                audioBuffer: audioBufferRef.current,
+                reactivityMap: reactivityMapRef.current,
+                imageSrc: imageFileRef.current,
+                effects: effects,
+                duration: duration,
+                fps: 60,
+                maxSize: 1280,
+                onProgress: (p) => setExportProgress(p)
+            });
+        } catch (err) {
+            console.error("Export failed:", err);
+            alert("Export failed. See console for details.");
+        } finally {
+            setIsExporting(false);
+        }
+    };
 
     return (
         <div className="h-screen bg-[#050B14] text-white flex flex-col overflow-hidden font-display leading-relaxed">
@@ -239,6 +269,23 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         <span className="text-[10px] font-mono text-white/60 shrink-0 w-8" aria-label="Total duration">
                             {formatTime(duration)}
                         </span>
+
+                        {/* Export Button */}
+                        <div className="flex items-center gap-2 pl-4 border-l border-white/10 ml-2">
+                            <button
+                                onClick={handleExport}
+                                disabled={!imageFile || !audioFile || isExporting}
+                                className={`h-9 px-4 rounded-xl flex items-center gap-2 transition-all border ${isExporting ? 'bg-white/5 border-white/5 text-white/40 cursor-wait' : 'bg-[#FB00FF]/10 border-[#FB00FF]/20 text-[#FB00FF] hover:bg-[#FB00FF]/20 hover:border-[#FB00FF]/40 shadow-[0_0_15px_rgba(251,0,255,0.1)]'}`}
+                                aria-label="Export video"
+                            >
+                                <span className={`material-symbols-outlined text-[18px] ${isExporting ? 'animate-spin' : ''}`}>
+                                    {isExporting ? 'sync' : 'download'}
+                                </span>
+                                <span className="text-[9px] font-bold uppercase tracking-widest leading-none">
+                                    {isExporting ? `Exporting ${Math.round(exportProgress * 100)}%` : 'Export Video'}
+                                </span>
+                            </button>
+                        </div>
                     </div>
                 </main>
 

@@ -65,6 +65,10 @@ export class GlitchEngine {
           height = Math.floor(height * ratio);
         }
 
+        // Force even dimensions (round down) for WebCodecs H.264 (avc) support (ensures preview exactly matches export)
+        width = width & ~1;
+        height = height & ~1;
+
         if (this.canvas.width !== width || this.canvas.height !== height) {
           this.canvas.width = width;
           this.canvas.height = height;

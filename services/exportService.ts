@@ -1,0 +1,154 @@
+import {
+    Output,
+    Mp4OutputFormat,
+    BufferTarget,
+    CanvasSource,
+    AudioBufferSource
+} from 'mediabunny';
+import { GlitchEngine } from './glitchEngine';
+import { mapReactivityToEffects } from './calculateReactiveEffects';
+import { EffectConfig } from '../types';
+
+export interface ExportOptions {
+    audioBuffer: AudioBuffer | null;
+    reactivityMap: {
+        bass: Float32Array;
+        mid: Float32Array;
+        treble: Float32Array;
+        energy: Float32Array;
+    } | null;
+    imageSrc: string;
+    effects: EffectConfig[];
+    duration: number;
+    fps?: number;
+    maxSize?: number;
+    onProgress?: (progress: number) => void;
+}
+
+/**
+ * Service to export the glitch art to a video file using WebCodecs via Mediabunny.
+ */
+export const exportVideo = async (options: ExportOptions) => {
+    const {
+        audioBuffer,
+        reactivityMap,
+        imageSrc,
+        effects,
+        duration,
+        fps = 60,
+        maxSize = 1280,
+        onProgress
+    } = options;
+
+    if (!reactivityMap) throw new Error("Reactivity map is required for export");
+
+    // Must decode image to get dimensions (new calculations needed for maxSize, which may be different from preview maxSize of 960)
+    const img = new Image();
+    img.src = imageSrc;
+    await img.decode();
+
+    let outWidth = img.width;
+    let outHeight = img.height;
+
+    // Apply maxSize constraint (Longest Edge)
+    if (outWidth > maxSize || outHeight > maxSize) {
+        const ratio = Math.min(maxSize / outWidth, maxSize / outHeight);
+        outWidth = Math.floor(outWidth * ratio);
+        outHeight = Math.floor(outHeight * ratio);
+    }
+
+    // Force even for H.264 support
+    outWidth = outWidth & ~1;
+    outHeight = outHeight & ~1;
+
+    console.log(`Exporting at ${outWidth}x${outHeight}`);
+
+    // 2. Initialize Mediabunny Output
+    const target = new BufferTarget();
+    const output = new Output({
+        format: new Mp4OutputFormat(),
+        target: target
+    });
+
+    // 3. Setup Render Canvas
+    const renderCanvas = document.createElement('canvas');
+    renderCanvas.width = outWidth;
+    renderCanvas.height = outHeight;
+
+    // 4. Setup Video Track
+    const videoSource = new CanvasSource(renderCanvas, {
+        codec: 'avc',
+        bitrate: 8_000_000 // 8 Mbps
+    });
+    output.addVideoTrack(videoSource);
+
+    // 4. Setup Audio Track
+    let audioSource: AudioBufferSource | null = null;
+    if (audioBuffer) {
+        audioSource = new AudioBufferSource({
+            codec: 'aac',
+            bitrate: 192_000
+        });
+        output.addAudioTrack(audioSource);
+    }
+
+    // 5. Start the output
+    await output.start();
+
+    // 6. Add Audio (if available)
+    if (audioSource && audioBuffer) {
+        await audioSource.add(audioBuffer);
+    }
+
+    // 7. Initialize Rendering Engine
+    const exportEngine = new GlitchEngine();
+    const totalFrames = Math.ceil(duration * fps);
+
+    console.log(`Starting export: ${totalFrames} frames at ${fps}fps`);
+
+    // 8. Generation Loop (Deterministic offline rendering)
+    for (let i = 0; i < totalFrames; i++) {
+        const time = i / fps;
+
+        // Grab precomputed audio data for this frame index
+        const frameData = {
+            bass: reactivityMap.bass[i] ?? 0,
+            mid: reactivityMap.mid[i] ?? 0,
+            treble: reactivityMap.treble[i] ?? 0,
+            energy: reactivityMap.energy[i] ?? 0
+        };
+
+        // Calculate reactive effects for this frame
+        const reactiveEffects = mapReactivityToEffects(frameData, effects, i);
+
+        // Render glitch to our hidden canvas
+        await exportEngine.renderToCanvas(renderCanvas, imageSrc, reactiveEffects, false, maxSize);
+
+        // Inject the current state of the canvas into the video pipeline
+        // Mediabunny takes timestamps in seconds
+        await videoSource.add(time, 1 / fps);
+
+        if (onProgress) {
+            onProgress((i + 1) / totalFrames);
+        }
+    }
+
+    // 9. Finalize and Download
+    console.log("Finalizing video file...");
+    await output.finalize();
+
+    if (target.buffer) {
+        const blob = new Blob([target.buffer], { type: 'video/mp4' });
+        const downloadUrl = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `glitchbrain_${Date.now()}.mp4`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(downloadUrl);
+        console.log("Export complete!");
+    }
+};

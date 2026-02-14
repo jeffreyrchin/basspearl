@@ -232,6 +232,7 @@ export const useAudioProcessor = () => {
         formatTime,
         setCurrentTime,
         isPlayingRef,
-        reactivityMapRef
+        reactivityMapRef,
+        audioBufferRef
     };
 };
