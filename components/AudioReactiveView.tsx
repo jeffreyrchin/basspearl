@@ -279,7 +279,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                 aria-label="Export video"
                             >
                                 <span className={`material-symbols-outlined text-[18px] ${isExporting ? 'animate-spin' : ''}`}>
-                                    {isExporting ? 'sync' : 'download'}
+                                    {isExporting ? 'autorenew' : 'download'}
                                 </span>
                                 <span className="text-[9px] font-bold uppercase tracking-widest leading-none">
                                     {isExporting ? `Exporting ${Math.round(exportProgress * 100)}%` : 'Export Video'}
