@@ -86,6 +86,19 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         await glitchEngine.renderToCanvas(canvasRef.current, imageFileRef.current, reactiveEffects, false, 960);
     };
 
+    const scrubberPercent = (time: number, duration: number) => {
+        return duration > 0 ? (time / duration) * 100 : 0;
+    }
+
+    const updateScrubberUI = (time: number) => {
+        if (currentTimeLabelRef.current) currentTimeLabelRef.current.innerText = formatTime(time);
+        if (scrubberRef.current) {
+            scrubberRef.current.value = time.toString();
+            const percent = scrubberPercent(time, duration);
+            scrubberRef.current.style.background = `linear-gradient(to right, #fb00ff 0%, #fb00ff ${percent}%, rgba(255, 255, 255, 0.1) ${percent}%, rgba(255, 255, 255, 0.1) 100%)`;
+        }
+    };
+
     const animate = async () => {
         if (!isPlayingRef.current) {
             requestRef.current = undefined;
@@ -93,28 +106,19 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         }
 
         const elapsed = Math.min(getElapsedSeconds(), duration);
-
-        if (currentTimeLabelRef.current) currentTimeLabelRef.current.innerText = formatTime(elapsed);
-        if (scrubberRef.current && duration > 0) {
-            const val = elapsed.toString(); // Current playback time as a string
-            if (scrubberRef.current.value !== val) {
-                scrubberRef.current.value = val;
-                const percent = (elapsed / duration) * 100;
-                scrubberRef.current.style.background = `linear-gradient(to right, #fb00ff 0%, #fb00ff ${percent}%, rgba(255, 255, 255, 0.1) ${percent}%, rgba(255, 255, 255, 0.1) 100%)`;
-            }
-        }
-
+        updateScrubberUI(elapsed);
         await renderFrame(elapsed);
+
         requestRef.current = requestAnimationFrame(animate); // Keep animation loop going even if no image or canvas
     };
 
-    // Update preview when state changes while paused
+    // Update preview and scrubber UI when not playing (seeking while paused, audio upload)
     useEffect(() => {
-        if (!isPlaying) renderFrame(currentTime);
-    }, [effects, imageFile, currentTime, isPlaying]);
-
-    // Calculate for static renders (Seek, Pause)
-    const scrubberPercent = duration ? (currentTime / duration) * 100 : 0;
+        if (!isPlaying) {
+            renderFrame(currentTime);
+            updateScrubberUI(currentTime);
+        }
+    }, [effects, imageFile, currentTime, isPlaying, audioFile, duration]);
 
     return (
         <div className="h-screen bg-[#050B14] text-white flex flex-col overflow-hidden font-display leading-relaxed">
@@ -229,9 +233,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             disabled={!audioFile}
                             aria-label="Seek audio"
                             className="flex-1 h-[3px] rounded-full appearance-none cursor-pointer bg-white/10 accent-white focus:outline-none group-hover:h-[5px] transition-all"
-                            style={{
-                                background: `linear-gradient(to right, #fb00ff 0%, #fb00ff ${scrubberPercent}%, rgba(255, 255, 255, 0.1) ${scrubberPercent}%, rgba(255, 255, 255, 0.1) 100%)`
-                            }}
                         />
 
                         {/* Duration */}
