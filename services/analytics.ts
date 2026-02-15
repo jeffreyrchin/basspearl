@@ -2,9 +2,12 @@
 // Handles event tracking for Google Analytics 4
 
 export type AnalyticsEvent =
+    | 'toggle_playback'
+    | 'effect_toggled'
     | 'image_upload_succeeded'
     | 'audio_upload_succeeded'
     | 'audio_upload_failed'
+    | 'export_started'
     | 'export_succeeded'
     | 'export_failed'
     | 'auth_google_succeeded'

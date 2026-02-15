@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { EffectConfig } from '../types';
 import { EFFECT_METADATA } from '../constants';
 import { EffectSlider } from './EffectSlider';
+import { trackEvent } from '@/services/analytics';
 
 interface SidebarNavigationProps {
     effects: EffectConfig[];
@@ -55,6 +56,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                                     </div>
                                     <button
                                         onClick={() => {
+                                            trackEvent('effect_toggled', { effect: effect.type });
                                             setEffects(prev => prev.map((e, idx) =>
                                                 idx === selectedEffectIndex ? { ...e, active: !e.active } : e
                                             ));
@@ -182,6 +184,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                             {/* Quick Toggle Corner Button */}
                             <button
                                 onClick={(e) => {
+                                    trackEvent('effect_toggled', { effect: effect.type });
                                     e.stopPropagation();
                                     setEffects(prev => prev.map((curr, i) =>
                                         i === idx ? { ...curr, active: !curr.active } : curr

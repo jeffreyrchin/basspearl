@@ -140,6 +140,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         setExportProgress(0);
 
         try {
+            trackEvent('export_started');
             await exportVideo({
                 audioBuffer: audioBufferRef.current,
                 reactivityMap: reactivityMapRef.current,
@@ -243,6 +244,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         {/* Play/Pause */}
                         <button
                             onClick={() => togglePlay(() => {
+                                trackEvent('toggle_playback');
                                 // Start animation loop if not already running
                                 if (!requestRef.current) {
                                     requestRef.current = requestAnimationFrame(animate);
