@@ -6,6 +6,7 @@ export const useAudioProcessor = () => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const audioContextRef = useRef<AudioContext | null>(null);
     const audioBufferRef = useRef<AudioBuffer | null>(null);
@@ -27,7 +28,6 @@ export const useAudioProcessor = () => {
     } | null>(null);
 
     const precomputeReactivity = async (buffer: AudioBuffer, fps = 60) => {
-        console.log("Analyzing audio buffer (PCM)...");
         const sampleRate = buffer.sampleRate;
         const channelData = buffer.getChannelData(0); // Analyze mono
         const totalFrames = Math.ceil(buffer.duration * fps);
@@ -121,9 +121,13 @@ export const useAudioProcessor = () => {
             map.mid[frameIndex] = state.smoothed.mid;
             map.treble[frameIndex] = state.smoothed.treble;
             map.energy[frameIndex] = state.smoothed.energy;
+
+            // Yield every 200 frames to keep UI responsive
+            if (frameIndex % 200 === 0) {
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
         }
 
-        console.log("Precomputation complete (Direct PCM).");
         reactivityMapRef.current = map;
         return map;
     };
@@ -151,8 +155,12 @@ export const useAudioProcessor = () => {
             offsetRef.current = 0;
             setCurrentTime(0);
 
-            // Decode audio and set duration immediately
+            // Decode audio and set duration
             try {
+                setIsProcessing(true);
+                // Yield to ensure the spinner appears immediately
+                await new Promise(resolve => setTimeout(resolve, 0));
+
                 if (!audioContextRef.current) {
                     audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
                 }
@@ -161,9 +169,11 @@ export const useAudioProcessor = () => {
                 audioBufferRef.current = audioBuffer;
                 setDuration(audioBuffer.duration);
 
-                // Start precomputation
                 await precomputeReactivity(audioBuffer);
+
+                setIsProcessing(false);
             } catch (err) {
+                setIsProcessing(false);
                 console.error('Error decoding audio:', err);
             }
         }
@@ -270,6 +280,7 @@ export const useAudioProcessor = () => {
         setCurrentTime,
         isPlayingRef,
         reactivityMapRef,
-        audioBufferRef
+        audioBufferRef,
+        isProcessing
     };
 };

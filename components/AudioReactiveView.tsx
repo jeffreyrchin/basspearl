@@ -25,7 +25,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         formatTime,
         isPlayingRef,
         reactivityMapRef,
-        audioBufferRef
+        audioBufferRef,
+        isProcessing
     } = useAudioProcessor();
 
     const [isExporting, setIsExporting] = useState(false);
@@ -166,8 +167,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             accept="image/*"
                             onChange={handleImageUpload}
                             className="sr-only"
-                            aria-label="Image file input"
-                        />
+                            aria-label="Image file input" />
                         <button
                             type="button"
                             onClick={() => imageInputRef.current?.click()}
@@ -187,8 +187,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             accept="audio/*"
                             onChange={handleAudioUpload}
                             className="sr-only"
-                            aria-label="Audio file input"
-                        />
+                            aria-label="Audio file input" />
                         <button
                             type="button"
                             onClick={() => audioInputRef.current?.click()}
@@ -204,11 +203,17 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     {/* Viewport */}
                     <div className="flex-1 flex items-center justify-center min-h-0 relative" aria-label="Viewport">
                         <div className="relative w-full h-full overflow-hidden bg-black/40 shadow-2xl flex items-center justify-center">
-                            <canvas
-                                ref={canvasRef}
-                                className={`max-w-full max-h-full object-contain ${!imageFile ? 'hidden' : ''}`}
-                            />
-                            {!imageFile && (
+                            <canvas ref={canvasRef} className={`max-w-full max-h-full object-contain ${!imageFile ? 'hidden' : ''}`} />
+                            {isProcessing && (
+                                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-4 animate-in fade-in duration-300 z-10 backdrop-blur-sm">
+                                    <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                                    <div className="flex flex-col items-center gap-1">
+                                        <h3 className="text-xs font-bold tracking-widest text-white uppercase">Analyzing Audio</h3>
+                                        <p className="text-[9px] text-white/40 uppercase tracking-[0.2em]">Synchronizing frequencies</p>
+                                    </div>
+                                </div>
+                            )}
+                            {!imageFile && !isProcessing && (
                                 <div className="flex flex-col items-center gap-6 p-8 text-center max-w-md">
                                     <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-white/60 border border-white/20">
                                         <span className="material-symbols-outlined text-4xl">stream</span>
@@ -232,9 +237,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                     requestRef.current = requestAnimationFrame(animate);
                                 }
                             })}
-                            disabled={!imageFile || !audioFile}
+                            disabled={!imageFile || !audioFile || isProcessing}
                             aria-label={isPlaying ? "Pause audio" : "Play audio"}
-                            className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-all border ${isPlaying ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)] text-primary' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'}`}>
+                            className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-all border ${isPlaying ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)] text-primary' : (isProcessing ? 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white')}`}>
                             <span className="material-symbols-outlined text-[20px] fill">{isPlaying ? 'pause' : 'play_arrow'}</span>
                         </button>
 
@@ -242,8 +247,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         <span
                             ref={currentTimeLabelRef}
                             className="text-[10px] font-mono text-white/60 shrink-0 w-8"
-                            aria-label="Current playback time"
-                        >
+                            aria-label="Current playback time">
                             {formatTime(currentTime)}
                         </span>
 
@@ -260,10 +264,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                     requestRef.current = requestAnimationFrame(animate);
                                 }
                             })}
-                            disabled={!audioFile}
+                            disabled={!audioFile || isProcessing}
                             aria-label="Seek audio"
-                            className="flex-1 h-[3px] rounded-full appearance-none cursor-pointer bg-white/10 accent-white focus:outline-none group-hover:h-[5px] transition-all"
-                        />
+                            className={`flex-1 h-[3px] rounded-full appearance-none bg-white/10 accent-white focus:outline-none transition-all ${isProcessing ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`} />
 
                         {/* Duration */}
                         <span className="text-[10px] font-mono text-white/60 shrink-0 w-8" aria-label="Total duration">
@@ -274,10 +277,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         <div className="flex items-center gap-2 pl-4 border-l border-white/10 ml-2">
                             <button
                                 onClick={handleExport}
-                                disabled={!imageFile || !audioFile || isExporting}
-                                className={`h-9 px-4 rounded-xl flex items-center gap-2 transition-all border ${isExporting ? 'bg-white/5 border-white/5 text-white/40 cursor-wait' : 'bg-[#FB00FF]/10 border-[#FB00FF]/20 text-[#FB00FF] hover:bg-[#FB00FF]/20 hover:border-[#FB00FF]/40 shadow-[0_0_15px_rgba(251,0,255,0.1)]'}`}
-                                aria-label="Export video"
-                            >
+                                disabled={!imageFile || !audioFile || isExporting || isProcessing}
+                                className={`h-9 px-4 rounded-xl flex items-center gap-2 transition-all border ${isExporting || isProcessing ? 'bg-white/5 border-white/5 text-white/40 cursor-wait' : 'bg-[#FB00FF]/10 border-[#FB00FF]/20 text-[#FB00FF] hover:bg-[#FB00FF]/20 hover:border-[#FB00FF]/40 shadow-[0_0_15px_rgba(251,0,255,0.1)]'}`}
+                                aria-label="Export video">
                                 <span className={`material-symbols-outlined text-[18px] ${isExporting ? 'animate-spin' : ''}`}>
                                     {isExporting ? 'autorenew' : 'download'}
                                 </span>
@@ -295,8 +297,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         effects={effects}
                         setEffects={setEffects}
                         selectedEffectIndex={selectedEffectIndex}
-                        setSelectedEffectIndex={setSelectedEffectIndex}
-                    />
+                        setSelectedEffectIndex={setSelectedEffectIndex} />
                 </aside>
             </div>
             <Footer />
