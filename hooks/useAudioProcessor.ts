@@ -27,9 +27,12 @@ export const useAudioProcessor = () => {
     } | null>(null);
 
     const precomputeReactivity = async (buffer: AudioBuffer, fps = 60) => {
-        console.log("Precomputing audio reactivity...");
-
+        console.log("Analyzing audio buffer (PCM)...");
+        const sampleRate = buffer.sampleRate;
+        const channelData = buffer.getChannelData(0); // Analyze mono
         const totalFrames = Math.ceil(buffer.duration * fps);
+        const fftSize = 2048;
+
         const map = {
             bass: new Float32Array(totalFrames),
             mid: new Float32Array(totalFrames),
@@ -37,58 +40,92 @@ export const useAudioProcessor = () => {
             energy: new Float32Array(totalFrames)
         };
 
-        // 1. Set up Offline Context
-        const offlineCtx = new OfflineAudioContext(1, buffer.length, buffer.sampleRate);
-        const source = offlineCtx.createBufferSource();
-        source.buffer = buffer;
-        const analyser = offlineCtx.createAnalyser();
-        analyser.fftSize = 2048;
-        analyser.smoothingTimeConstant = 0;
-
-        source.connect(analyser);
-        analyser.connect(offlineCtx.destination);
-        source.start(0);
-
-        // 2. Prepare state & buffers
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
         let state: ReactivityState = {
             baselines: { bass: null, mid: null, treble: null, energy: null },
             smoothed: { bass: 0, mid: 0, treble: 0, energy: 0 },
             kickBaseline: null,
-            prevBins: new Float32Array(analyser.frequencyBinCount).fill(0)
+            prevBins: new Float32Array(fftSize / 2).fill(0)
         };
 
-        // 3. Schedule "suspend" events for every frame to grab data
-        for (let i = 0; i < totalFrames; i++) {
-            const time = i / fps;
-
-            // Scheduling analysis at specific timestamps
-            offlineCtx.suspend(time).then(() => {
-                analyser.getByteFrequencyData(dataArray);
-
-                // Calculate reactivity for this frame
-                state = calculateNextState(dataArray, dataArray.length, buffer.sampleRate, state);
-
-                map.bass[i] = state.smoothed.bass;
-                map.mid[i] = state.smoothed.mid;
-                map.treble[i] = state.smoothed.treble;
-                map.energy[i] = state.smoothed.energy;
-
-                // Resume processing to get to the next frame
-                offlineCtx.resume();
-            });
+        // Hann Window to reduce spectral leakage
+        const window = new Float32Array(fftSize);
+        for (let i = 0; i < fftSize; i++) {
+            window[i] = 0.5 * (1 - Math.cos(2 * Math.PI * i / (fftSize - 1)));
         }
 
-        // 4. Run the rendering (this triggers all the suspends in order)
-        try {
-            await offlineCtx.startRendering();
-            console.log("Precomputation complete.");
-            reactivityMapRef.current = map;
-            return map;
-        } catch (err) {
-            console.error("Precomputation failed:", err);
-            return null;
+        const re = new Float32Array(fftSize);
+        const im = new Float32Array(fftSize);
+        const magnitudes = new Float32Array(fftSize / 2);
+        const minDb = -100;
+        const maxDb = -30;
+
+        for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
+            const centerSample = Math.floor((frameIndex / fps) * sampleRate);
+            const startSample = centerSample - fftSize / 2;
+
+            // 1. Prepare Windowed Buffer
+            re.fill(0);
+            im.fill(0);
+            for (let i = 0; i < fftSize; i++) {
+                const sampleIndex = startSample + i;
+                if (sampleIndex >= 0 && sampleIndex < channelData.length) {
+                    re[i] = channelData[sampleIndex] * window[i];
+                }
+            }
+
+            // 2. Cooley-Tukey FFT (Iterative)
+            const n = fftSize;
+            for (let i = 1, j = 0; i < n; i++) {
+                let bit = n >> 1;
+                for (; j & bit; bit >>= 1) j ^= bit;
+                j ^= bit;
+                if (i < j) [re[i], re[j]] = [re[j], re[i]];
+            }
+            for (let len = 2; len <= n; len <<= 1) {
+                const ang = 2 * Math.PI / len;
+                const wlen_re = Math.cos(ang), wlen_im = -Math.sin(ang);
+                for (let i = 0; i < n; i += len) {
+                    let w_re = 1, w_im = 0;
+                    for (let j = 0; j < len / 2; j++) {
+                        const u_re = re[i + j], u_im = im[i + j];
+                        const v_re = re[i + j + len / 2] * w_re - im[i + j + len / 2] * w_im;
+                        const v_im = re[i + j + len / 2] * w_im + im[i + j + len / 2] * w_re;
+                        re[i + j] = u_re + v_re;
+                        im[i + j] = u_im + v_im;
+                        re[i + j + len / 2] = u_re - v_re;
+                        im[i + j + len / 2] = u_im - v_im;
+                        const next_w_re = w_re * wlen_re - w_im * wlen_im;
+                        w_im = w_re * wlen_im + w_im * wlen_re;
+                        w_re = next_w_re;
+                    }
+                }
+            }
+
+            // 3. Magnitudes (Convert to Decibels, matching Web Audio Analyser defaults)
+            for (let i = 0; i < fftSize / 2; i++) {
+                // Normalize by 1/N and calculate linear magnitude
+                const mag = Math.sqrt(re[i] * re[i] + im[i] * im[i]) / fftSize;
+
+                // Convert to Decibels
+                const db = mag > 0.000001 ? 20 * Math.log10(mag) : minDb;
+
+                // Map dB to 0..1 scale (clamping to minDb/maxDb)
+                const scaled = (db - minDb) / (maxDb - minDb);
+                magnitudes[i] = Math.max(0, Math.min(1, scaled));
+            }
+
+            // 4. Feed to existing reactivity service
+            state = calculateNextState(magnitudes, magnitudes.length, sampleRate, state);
+
+            map.bass[frameIndex] = state.smoothed.bass;
+            map.mid[frameIndex] = state.smoothed.mid;
+            map.treble[frameIndex] = state.smoothed.treble;
+            map.energy[frameIndex] = state.smoothed.energy;
         }
+
+        console.log("Precomputation complete (Direct PCM).");
+        reactivityMapRef.current = map;
+        return map;
     };
 
     const getElapsedSeconds = useCallback(() => {
