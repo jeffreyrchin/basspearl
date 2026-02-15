@@ -3,7 +3,8 @@ import {
     Mp4OutputFormat,
     BufferTarget,
     CanvasSource,
-    AudioBufferSource
+    AudioBufferSource,
+    canEncode
 } from 'mediabunny';
 import { GlitchEngine } from './glitchEngine';
 import { mapReactivityToEffects } from './calculateReactiveEffects';
@@ -70,23 +71,28 @@ export const exportVideo = async (options: ExportOptions) => {
         target: target
     });
 
-    // 3. Setup Render Canvas
+    // 3. Set up Render Canvas
     const renderCanvas = document.createElement('canvas');
     renderCanvas.width = outWidth;
     renderCanvas.height = outHeight;
 
-    // 4. Setup Video Track
+    // 4. Set up Video Track
     const videoSource = new CanvasSource(renderCanvas, {
         codec: 'avc',
         bitrate: 8_000_000 // 8 Mbps
     });
     output.addVideoTrack(videoSource);
 
-    // 4. Setup Audio Track
+    // 4. Set up Audio Track (with Firefox fallback)
     let audioSource: AudioBufferSource | null = null;
     if (audioBuffer) {
+        const supportsAac = await canEncode('aac');
+        const audioCodec = supportsAac ? 'aac' : 'opus';
+
+        console.log(`Using audio codec: ${audioCodec} ${supportsAac ? '' : '(fallback)'}`);
+
         audioSource = new AudioBufferSource({
-            codec: 'aac',
+            codec: audioCodec,
             bitrate: 192_000
         });
         output.addAudioTrack(audioSource);
