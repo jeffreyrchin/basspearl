@@ -133,7 +133,7 @@ export const exportVideo = async (options: ExportOptions) => {
         const reactiveEffects = mapReactivityToEffects(frameData, effects, i);
 
         // Render glitch to our hidden canvas
-        await exportEngine.renderToCanvas(renderCanvas, imageSrc, reactiveEffects, false, maxSize);
+        await exportEngine.renderToCanvas(renderCanvas, imageSrc, reactiveEffects, maxSize);
 
         // Inject the current state of the canvas into the video pipeline
         // Mediabunny takes timestamps in seconds

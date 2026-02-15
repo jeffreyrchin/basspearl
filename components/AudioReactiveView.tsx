@@ -8,6 +8,7 @@ import { INITIAL_REACTIVE_EFFECTS } from '@/constants';
 import { mapReactivityToEffects } from '@/services/calculateReactiveEffects';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 import { exportVideo } from '@/services/exportService';
+import { trackEvent } from '@/services/analytics';
 
 interface AudioReactiveViewProps {
 }
@@ -67,10 +68,16 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     canvasRef.current,
                     imageBlob,
                     effects,
-                    false,
                     960
                 );
             }
+            trackEvent('image_upload_succeeded', {
+                file_name: e.target.files[0].name,
+                file_size: e.target.files[0].size,
+                file_type: e.target.files[0].type,
+                image_width: e.target.files[0].width,
+                image_height: e.target.files[0].height
+            });
         }
     };
 
@@ -89,7 +96,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             reactiveEffects = mapReactivityToEffects(smoothed, effectsRef.current, currentFrame);
         }
 
-        await glitchEngine.renderToCanvas(canvasRef.current, imageFileRef.current, reactiveEffects, false, 960);
+        await glitchEngine.renderToCanvas(canvasRef.current, imageFileRef.current, reactiveEffects, 960);
     };
 
     const scrubberPercent = (time: number, duration: number) => {
@@ -143,7 +150,11 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 maxSize: 1280,
                 onProgress: (p) => setExportProgress(p)
             });
+            trackEvent('export_succeeded', { effects: effects });
         } catch (err) {
+            trackEvent('export_failed', {
+                error: err
+            });
             console.error("Export failed:", err);
             alert("Export failed. See console for details.");
         } finally {

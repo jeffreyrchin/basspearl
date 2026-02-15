@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, ChangeEvent } from 'react';
 import { calculateNextState, ReactivityState } from '@/services/calculateReactiveEffects';
+import { trackEvent } from '@/services/analytics';
 
 export const useAudioProcessor = () => {
     const [audioFile, setAudioFile] = useState<File | null>(null);
@@ -172,7 +173,16 @@ export const useAudioProcessor = () => {
                 await precomputeReactivity(audioBuffer);
 
                 setIsProcessing(false);
+                trackEvent('audio_upload_succeeded', {
+                    file_name: e.target.files[0].name,
+                    file_size: e.target.files[0].size,
+                    file_type: e.target.files[0].type,
+                    duration: audioBuffer.duration
+                });
             } catch (err) {
+                trackEvent('audio_upload_failed', {
+                    error: err
+                });
                 setIsProcessing(false);
                 console.error('Error decoding audio:', err);
             }

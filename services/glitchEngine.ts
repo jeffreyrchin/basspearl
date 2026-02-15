@@ -41,8 +41,8 @@ export class GlitchEngine {
     });
   }
 
-  public async renderToCanvas(targetCanvas: HTMLCanvasElement, imageSrc: string, effects: EffectConfig[], shouldWatermark: boolean = false, maxSize?: number): Promise<void> {
-    await this.processInternal(imageSrc, effects, shouldWatermark, maxSize);
+  public async renderToCanvas(targetCanvas: HTMLCanvasElement, imageSrc: string, effects: EffectConfig[], maxSize?: number): Promise<void> {
+    await this.processInternal(imageSrc, effects, maxSize);
 
     // Copy internal canvas to target canvas
     targetCanvas.width = this.canvas.width;
@@ -53,7 +53,7 @@ export class GlitchEngine {
     }
   }
 
-  private async processInternal(imageSrc: string, effects: EffectConfig[], shouldWatermark: boolean = false, maxSize?: number): Promise<void> {
+  private async processInternal(imageSrc: string, effects: EffectConfig[], maxSize?: number): Promise<void> {
     return new Promise((resolve, reject) => {
       const processCachedImage = (img: HTMLImageElement) => {
         let width = img.width;

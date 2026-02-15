@@ -41,9 +41,12 @@ const AuthModal = () => {
         setError(null);
         try {
             await signInWithGoogle();
-            trackEvent('auth_success', { method: 'google', mode: authMode });
+            trackEvent('auth_google_succeeded', { mode: authMode });
             closeAuth();
         } catch (err: any) {
+            trackEvent('auth_google_failed', {
+                error: err
+            });
             setError(getErrorMessage(err.code));
         } finally {
             setIsLoading(false);
@@ -66,9 +69,12 @@ const AuthModal = () => {
             } else {
                 await signUpWithEmail(email, password, displayName);
             }
-            trackEvent('auth_success', { method: 'email', mode: authMode });
+            trackEvent('auth_email_succeeded', { mode: authMode });
             closeAuth();
         } catch (err: any) {
+            trackEvent('auth_email_failed', {
+                error: err
+            });
             setError(getErrorMessage(err.code));
         } finally {
             setIsLoading(false);

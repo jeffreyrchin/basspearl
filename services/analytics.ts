@@ -1,14 +1,16 @@
-
 // Analytics Service Utility
 // Handles event tracking for Google Analytics 4
 
 export type AnalyticsEvent =
-    | 'image_upload'
-    | 'media_upload'
-    | 'terms_accepted'
-    | 'effect_applied'
-    | 'glitch_export'
-    | 'auth_success'
+    | 'image_upload_succeeded'
+    | 'audio_upload_succeeded'
+    | 'audio_upload_failed'
+    | 'export_succeeded'
+    | 'export_failed'
+    | 'auth_google_succeeded'
+    | 'auth_google_failed'
+    | 'auth_email_succeeded'
+    | 'auth_email_failed'
     | 'auth_view';
 
 interface EventParams {
