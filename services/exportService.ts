@@ -44,12 +44,15 @@ export const exportVideo = async (options: ExportOptions) => {
     if (!reactivityMap) throw new Error("Reactivity map is required for export");
 
     // Must decode image to get dimensions (new calculations needed for maxSize, which may be different from preview maxSize of 960)
-    const img = new Image();
-    img.src = imageSrc;
-    await img.decode();
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = (e) => reject(new Error("Failed to load image for export"));
+        i.src = imageSrc;
+    });
 
-    let outWidth = img.width;
-    let outHeight = img.height;
+    let outWidth = img.naturalWidth;
+    let outHeight = img.naturalHeight;
 
     // Apply maxSize constraint (Longest Edge)
     if (outWidth > maxSize || outHeight > maxSize) {
@@ -62,7 +65,7 @@ export const exportVideo = async (options: ExportOptions) => {
     outWidth = outWidth & ~1;
     outHeight = outHeight & ~1;
 
-    console.log(`Exporting at ${outWidth}x${outHeight}`);
+    console.log(`Initializing output at ${outWidth}x${outHeight}...`);
 
     // 2. Initialize Mediabunny Output
     const target = new BufferTarget();
@@ -83,19 +86,28 @@ export const exportVideo = async (options: ExportOptions) => {
     });
     output.addVideoTrack(videoSource);
 
-    // 4. Set up Audio Track (with Firefox fallback)
+    // 4. Set up Audio Track (Adaptive Probing)
     let audioSource: AudioBufferSource | null = null;
     if (audioBuffer) {
-        const supportsAac = await canEncode('aac');
-        const audioCodec = supportsAac ? 'aac' : 'opus';
+        const bestCodec = await (async () => {
+            if (typeof AudioEncoder === 'undefined') return null;
+            const preferences: ('aac' | 'opus')[] = ['aac', 'opus'];
+            for (const codec of preferences) {
+                if (await canEncode(codec)) return codec;
+            }
+            return null;
+        })();
 
-        console.log(`Using audio codec: ${audioCodec} ${supportsAac ? '' : '(fallback)'}`);
-
-        audioSource = new AudioBufferSource({
-            codec: audioCodec,
-            bitrate: 192_000
-        });
-        output.addAudioTrack(audioSource);
+        if (bestCodec) {
+            console.log(`Audio encoding supported. Using: ${bestCodec}`);
+            audioSource = new AudioBufferSource({
+                codec: bestCodec,
+                bitrate: 192_000
+            });
+            output.addAudioTrack(audioSource);
+        } else {
+            console.warn("Audio encoding not supported in this browser. Exporting as silent video.");
+        }
     }
 
     // 5. Start the output
@@ -133,6 +145,11 @@ export const exportVideo = async (options: ExportOptions) => {
         // Inject the current state of the canvas into the video pipeline
         // Mediabunny takes timestamps in seconds
         await videoSource.add(time, 1 / fps);
+
+        // Yield to the main thread every 10 frames to avoid hanging
+        if (i % 10 === 0) {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
 
         if (onProgress) {
             onProgress((i + 1) / totalFrames);
