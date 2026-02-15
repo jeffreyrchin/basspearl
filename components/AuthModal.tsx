@@ -45,7 +45,9 @@ const AuthModal = () => {
             closeAuth();
         } catch (err: any) {
             trackEvent('auth_google_failed', {
-                error: err
+                error_name: err.name || 'Unknown error name',
+                error_code: err.code || 'Unknown error code',
+                error_message: err.message || 'Unknown Google sign-in error'
             });
             setError(getErrorMessage(err.code));
         } finally {
@@ -73,7 +75,9 @@ const AuthModal = () => {
             closeAuth();
         } catch (err: any) {
             trackEvent('auth_email_failed', {
-                error: err
+                error_name: err.name || 'Unknown error name',
+                error_code: err.code || 'Unknown error code',
+                error_message: err.message || 'Unknown email sign-in error'
             });
             setError(getErrorMessage(err.code));
         } finally {

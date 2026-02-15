@@ -62,6 +62,24 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             const imageBlob = URL.createObjectURL(file);
             imageFileRef.current = imageBlob; // Store the URL string for the animation loop
 
+            // For analytics
+            const fileData = {
+                name: file.name,
+                size: file.size,
+                type: file.type
+            };
+            const img = new Image();
+            img.onload = () => {
+                trackEvent('image_upload_succeeded', {
+                    file_name: fileData.name,
+                    file_size: fileData.size,
+                    file_type: fileData.type,
+                    image_width: img.width,
+                    image_height: img.height
+                });
+            };
+            img.src = imageBlob;
+
             // Show initial preview
             if (canvasRef.current) {
                 glitchEngine.renderToCanvas(
@@ -71,13 +89,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     960
                 );
             }
-            trackEvent('image_upload_succeeded', {
-                file_name: e.target.files[0].name,
-                file_size: e.target.files[0].size,
-                file_type: e.target.files[0].type,
-                image_width: e.target.files[0].width,
-                image_height: e.target.files[0].height
-            });
         }
     };
 
@@ -151,10 +162,15 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 maxSize: 1280,
                 onProgress: (p) => setExportProgress(p)
             });
-            trackEvent('export_succeeded', { effects: effects });
-        } catch (err) {
+            trackEvent('export_succeeded', {
+                effect_count: effects.filter(e => e.active).length,
+                active_effects: effects.filter(e => e.active).map(e => e.type).join(', ')
+            });
+        } catch (err: any) {
             trackEvent('export_failed', {
-                error: err
+                error_name: err.name || 'Unknown error name',
+                error_code: err.code || 'Unknown error code',
+                error_message: err.message || 'Unknown export error'
             });
             console.error("Export failed:", err);
             alert("Export failed. See console for details.");

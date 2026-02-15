@@ -179,9 +179,11 @@ export const useAudioProcessor = () => {
                     file_type: e.target.files[0].type,
                     duration: audioBuffer.duration
                 });
-            } catch (err) {
+            } catch (err: any) {
                 trackEvent('audio_upload_failed', {
-                    error: err
+                    error_name: err.name || 'Unknown error name',
+                    error_code: err.code || 'Unknown error code',
+                    error_message: err.message || 'Unknown audio processing error'
                 });
                 setIsProcessing(false);
                 console.error('Error decoding audio:', err);
