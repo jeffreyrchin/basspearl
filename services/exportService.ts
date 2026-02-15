@@ -4,7 +4,7 @@ import {
     BufferTarget,
     CanvasSource,
     AudioBufferSource,
-    canEncode
+    getFirstEncodableAudioCodec
 } from 'mediabunny';
 import { GlitchEngine } from './glitchEngine';
 import { mapReactivityToEffects } from './calculateReactiveEffects';
@@ -89,24 +89,17 @@ export const exportVideo = async (options: ExportOptions) => {
     // 4. Set up Audio Track (Adaptive Probing)
     let audioSource: AudioBufferSource | null = null;
     if (audioBuffer) {
-        const bestCodec = await (async () => {
-            if (typeof AudioEncoder === 'undefined') return null;
-            const preferences: ('aac' | 'opus')[] = ['aac', 'opus'];
-            for (const codec of preferences) {
-                if (await canEncode(codec)) return codec;
-            }
-            return null;
-        })();
+        const bestCodec = await getFirstEncodableAudioCodec(['aac', 'opus', 'mp3', 'vorbis', 'flac', 'ac3', 'eac3', 'pcm-s16', 'pcm-s16be', 'pcm-s24', 'pcm-s24be', 'pcm-s32', 'pcm-s32be', 'pcm-f32', 'pcm-f32be', 'pcm-f64', 'pcm-f64be', 'pcm-u8', 'pcm-s8', 'ulaw', 'alaw']);
 
         if (bestCodec) {
-            console.log(`Audio encoding supported. Using: ${bestCodec}`);
+            console.log(`Using audio codec: ${bestCodec}`);
             audioSource = new AudioBufferSource({
                 codec: bestCodec,
-                bitrate: 192_000
+                bitrate: 192_000,
             });
             output.addAudioTrack(audioSource);
         } else {
-            console.warn("Audio encoding not supported in this browser. Exporting as silent video.");
+            console.warn('No encodable audio codec found. Exporting as silent video.');
         }
     }
 
