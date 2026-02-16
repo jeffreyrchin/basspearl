@@ -118,8 +118,6 @@ export class GlitchEngine {
     const meta = SHADER_REGISTRY[type];
     if (!meta) return;
 
-    const extraInputs = [];
-
     const uniforms: Record<string, any> = {
       u_params: params.map(p => p.value),
       u_unit: UNIT,
@@ -129,7 +127,7 @@ export class GlitchEngine {
       u_frame: Math.floor((seed || 0) * 1000) % 5000
     };
 
-    this.pipeline.applyPass(type, uniforms, extraInputs);
+    this.pipeline.applyPass(type, uniforms);
   }
 }
 

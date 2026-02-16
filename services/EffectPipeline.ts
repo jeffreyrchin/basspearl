@@ -144,11 +144,10 @@ export class EffectPipeline {
         this.currentFBIndex = 0;
     }
 
-    public applyPass(programName: string, uniforms: Record<string, any>, extraInputs: { name: string, texture: WebGLTexture }[] = []) {
+    public applyPass(programName: string, uniforms: Record<string, any>) {
         const input = this.pingPongTextures[this.currentFBIndex];
         const outputFB = this.pingPongFBs[1 - this.currentFBIndex];
-        const allInputs = [{ name: 'u_image', texture: input }, ...extraInputs];
-        this.draw(programName, outputFB, allInputs, uniforms);
+        this.draw(programName, outputFB, [{ name: 'u_image', texture: input }], uniforms);
         this.currentFBIndex = 1 - this.currentFBIndex;
     }
 
