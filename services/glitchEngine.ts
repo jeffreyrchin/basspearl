@@ -166,7 +166,6 @@ export class GlitchEngine {
       u_seed: (seed !== undefined && seed !== null) ? seed : Math.random(),
       u_resolution: [width, height],
       u_time: currentTime,
-      u_frame: Math.floor((seed || 0) * 1000) % 5000,
       u_integrated_value: integratedValue
     };
 

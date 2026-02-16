@@ -264,7 +264,6 @@ export const PIXEL_SORT_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[2]; // [streak length, trigger level]
-uniform float u_unit;
 uniform vec2 u_resolution;
 uniform float u_seed;
 in vec2 v_texCoord;
@@ -487,7 +486,6 @@ export const SCREEN_SHAKE_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[2]; // [displacement, speed]
-uniform float u_seed;
 uniform float u_integrated_value;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
@@ -545,7 +543,6 @@ precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[2]; // [density, speed]
 uniform float u_integrated_value;
-uniform float u_time;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
