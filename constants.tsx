@@ -96,7 +96,7 @@ export const PRESETS: Preset[] = [
       { type: 'STARFIELD', values: [100, 59], active: true, reactive: true, frequencyBand: 'ENERGY' },
       { type: 'HUE_ROTATION', values: [8, 73], active: true, reactive: true, frequencyBand: 'ENERGY' },
       { type: 'CHANNEL_SHIFT', values: [12, 12], active: true, reactive: true, frequencyBand: 'BASS' },
-      { type: 'ZOOM_PAN', values: [63, 0], reactive: true, frequencyBand: 'ENERGY' },
+      { type: 'ZOOM_PAN', values: [63, 0], active: true, reactive: true, frequencyBand: 'ENERGY' },
     ])
   }
 ];

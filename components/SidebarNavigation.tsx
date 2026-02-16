@@ -9,6 +9,7 @@ interface SidebarNavigationProps {
     setEffects: React.Dispatch<React.SetStateAction<EffectConfig[]>>;
     selectedEffectIndex: number;
     setSelectedEffectIndex: React.Dispatch<React.SetStateAction<number>>;
+    onClose?: () => void;
 }
 
 const CATEGORIES: EffectCategory[] = ['All', 'Color', 'Glitch', 'Motion', 'Particles', 'Retro'];
@@ -18,6 +19,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     setEffects,
     selectedEffectIndex,
     setSelectedEffectIndex,
+    onClose,
 }) => {
     const [view, setView] = useState<'rack' | 'params'>('rack');
     const [selectedCategory, setSelectedCategory] = useState<EffectCategory>('All');
@@ -30,14 +32,25 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         const effect = effects[selectedEffectIndex];
         return (
             <div className="flex-1 flex flex-col min-h-0 animate-in fade-in slide-in-from-right-4 duration-300">
-                <div className="p-6 border-b border-white/5 flex items-center gap-4 bg-black/20">
-                    <button
-                        onClick={() => setView('rack')}
-                        className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
-                    >
-                        <span className="material-symbols-outlined text-sm">arrow_back</span>
-                    </button>
-                    <label className="text-[10px] font-bold text-white uppercase tracking-[0.4em]">Parameters</label>
+                <div className="p-6 pt-20 lg:pt-6 border-b border-white/5 flex items-center justify-between bg-black/20">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setView('rack')}
+                            className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
+                        >
+                            <span className="material-symbols-outlined text-sm">arrow_back</span>
+                        </button>
+                        <label className="text-[10px] font-bold text-white uppercase tracking-[0.4em]">Parameters</label>
+                    </div>
+
+                    {onClose && (
+                        <button
+                            onClick={onClose}
+                            className="lg:hidden w-8 h-8 rounded-xl flex items-center justify-center bg-white/5 text-white/40 hover:text-white"
+                        >
+                            <span className="material-symbols-outlined text-xl">close</span>
+                        </button>
+                    )}
                 </div>
 
                 <div
@@ -155,9 +168,17 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
     return (
         <div className="flex-1 flex flex-col min-h-0 animate-in fade-in slide-in-from-left-4 duration-300">
-            <div className="px-6 pt-6 pb-2 border-b border-white/5 flex flex-col gap-4 bg-black/20">
+            <div className="px-6 pt-20 lg:pt-6 pb-2 border-b border-white/5 flex flex-col gap-4 bg-black/20">
                 <div className="flex items-center justify-between">
                     <label className="text-[10px] font-bold text-white uppercase tracking-[0.4em]">Effects</label>
+                    {onClose && (
+                        <button
+                            onClick={onClose}
+                            className="lg:hidden w-8 h-8 rounded-xl flex items-center justify-center bg-white/5 text-white/40 hover:text-white"
+                        >
+                            <span className="material-symbols-outlined text-xl">close</span>
+                        </button>
+                    )}
                 </div>
 
                 {/* Effect Category Tabs */}

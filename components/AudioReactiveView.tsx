@@ -38,6 +38,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [effects, setEffects] = useState<EffectConfig[]>(INITIAL_REACTIVE_EFFECTS);
     const [selectedEffectIndex, setSelectedEffectIndex] = useState(0);
+    const [sidebarVisible, setSidebarVisible] = useState(false); // Default to hidden
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const requestRef = useRef<number>();
@@ -237,11 +238,11 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             <Navbar editorView={true} />
             <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
                 {/* Main Content Area */}
-                <main className="flex-1 flex flex-col min-h-0 min-w-0 bg-[#050B14]">
+                <main className={`flex-1 flex flex-col min-h-0 min-w-0 bg-[#050B14] transition-all duration-500 ease-in-out ${sidebarVisible ? 'lg:mr-0' : ''}`}>
                     {/* Source Header: Preset loading and local asset uploading */}
-                    <div className="h-14 border-b border-white/5 bg-black/20 flex items-center justify-center px-6 gap-4 shrink-0">
+                    <div className="h-14 border-b border-white/5 bg-black/20 flex items-center justify-between lg:justify-center px-6 gap-4 shrink-0 overflow-x-auto no-scrollbar">
                         {/* Presets Group */}
-                        <div className="flex items-center gap-2 border-r border-white/10 pr-4 mr-2">
+                        <div className="flex items-center gap-2 border-r border-white/10 pr-4 mr-2 shrink-0">
                             {PRESETS.map(preset => (
                                 <button
                                     key={preset.id}
@@ -257,7 +258,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         </div>
 
                         {/* Local Assets Group */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 shrink-0">
                             {/* Choose Image */}
                             <input
                                 ref={imageInputRef}
@@ -274,7 +275,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                 aria-label="Choose image button">
                                 <span className={`material-symbols-outlined text-base ${imageFile ? "text-[#00F0FF]" : "text-white"}`}>image</span>
                                 <span className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
-                                    Choose Image
+                                    <span>
+                                        <span className="hidden sm:inline">Choose </span>Image
+                                    </span>
                                     {imageFile && <span className="w-1.5 h-1.5 rounded-full bg-[#00F0FF] shadow-[0_0_8px_rgba(0,240,255,0.8)]" />}
                                 </span>
                             </button>
@@ -295,15 +298,36 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                 aria-label="Choose audio button">
                                 <span className={`material-symbols-outlined text-base ${audioFile ? "text-[#3B82F6]" : "text-white"}`}>graphic_eq</span>
                                 <span className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
-                                    Choose Audio
+                                    <span>
+                                        <span className="hidden sm:inline">Choose </span>Audio
+                                    </span>
                                     {audioFile && <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] shadow-[0_0_8px_rgba(59,130,246,0.8)]" />}
                                 </span>
                             </button>
                         </div>
+
+                        {/* Sidebar Toggle (Desktop only in header) */}
+                        <button
+                            onClick={() => setSidebarVisible(!sidebarVisible)}
+                            className={`hidden lg:flex h-9 w-9 items-center justify-center rounded-xl border transition-all ml-4 ${sidebarVisible ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
+                            title={sidebarVisible ? "Hide sidebar" : "Show sidebar"}
+                            aria-label={sidebarVisible ? "Hide sidebar" : "Show sidebar"}>
+                            <span className="material-symbols-outlined text-base">tune</span>
+                        </button>
                     </div>
 
                     {/* Viewport */}
-                    <div className="flex-1 flex items-center justify-center min-h-0 relative" aria-label="Viewport">
+                    <div className="flex-1 flex items-center justify-center min-h-0 relative group" aria-label="Viewport">
+                        {/* Mobile Floating Toggle */}
+                        {!sidebarVisible && (
+                            <button
+                                onClick={() => setSidebarVisible(true)}
+                                className="absolute top-6 right-6 z-20 w-12 h-12 rounded-2xl bg-black/90 border border-[#FB00FF]/40 text-white shadow-[0_0_30px_rgba(0,0,0,0.5),0_0_15px_rgba(251,0,255,0.2)] flex items-center justify-center lg:hidden animate-in fade-in zoom-in duration-300 active:scale-90 hover:bg-black transition-all"
+                                aria-label="Show sidebar">
+                                <span className="material-symbols-outlined text-2xl">tune</span>
+                            </button>
+                        )}
+
                         <div className="relative w-full h-full overflow-hidden bg-black/40 shadow-2xl flex items-center justify-center">
                             <canvas ref={canvasRef} className={`max-w-full max-h-full object-contain ${!imageFile ? 'hidden' : ''}`} />
                             {isProcessing && (
@@ -330,7 +354,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     </div>
 
                     {/* Playback Bar */}
-                    <div className="h-14 bg-black/20 border-t border-white/5 flex items-center px-6 gap-4 shrink-0">
+                    <div className="h-14 bg-black/20 border-t border-white/5 flex items-center px-3 sm:px-6 gap-2 sm:gap-4 shrink-0 overflow-hidden">
                         {/* Play/Pause */}
                         <button
                             onClick={() => togglePlay(() => {
@@ -342,14 +366,14 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             })}
                             disabled={!imageFile || !audioFile || isProcessing}
                             aria-label={isPlaying ? "Pause audio" : "Play audio"}
-                            className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-all border ${isPlaying ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)] text-primary' : (isProcessing ? 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white')}`}>
-                            <span className="material-symbols-outlined text-[20px] fill">{isPlaying ? 'pause' : 'play_arrow'}</span>
+                            className={`w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-xl flex items-center justify-center transition-all border ${isPlaying ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)] text-primary' : (isProcessing ? 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white')}`}>
+                            <span className="material-symbols-outlined text-[18px] sm:text-[20px] fill">{isPlaying ? 'pause' : 'play_arrow'}</span>
                         </button>
 
                         {/* Current Time */}
                         <span
                             ref={currentTimeLabelRef}
-                            className="text-[10px] font-mono text-white/60 shrink-0 w-8"
+                            className="text-[9px] sm:text-[10px] font-mono text-white/60 shrink-0 w-7 sm:w-8"
                             aria-label="Current playback time">
                             {formatTime(currentTime)}
                         </span>
@@ -369,25 +393,32 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             })}
                             disabled={!audioFile || isProcessing}
                             aria-label="Seek audio"
-                            className={`flex-1 h-[3px] rounded-full appearance-none bg-white/10 accent-white focus:outline-none transition-all ${isProcessing ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`} />
+                            className={`flex-1 h-[3px] min-w-0 rounded-full appearance-none bg-white/10 accent-white focus:outline-none transition-all ${isProcessing ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`} />
 
                         {/* Duration */}
-                        <span className="text-[10px] font-mono text-white/60 shrink-0 w-8" aria-label="Total duration">
+                        <span className="text-[9px] sm:text-[10px] font-mono text-white/60 shrink-0 w-7 sm:w-8" aria-label="Total duration">
                             {formatTime(duration)}
                         </span>
 
                         {/* Export Button */}
-                        <div className="flex items-center gap-2 pl-4 border-l border-white/10 ml-2">
+                        <div className="flex items-center gap-1 sm:gap-2 pl-2 sm:pl-4 border-l border-white/10 ml-1 sm:ml-2">
                             <button
                                 onClick={handleExport}
                                 disabled={!imageFile || !audioFile || isExporting || isProcessing}
-                                className={`h-9 px-4 rounded-xl flex items-center gap-2 transition-all border ${isExporting || isProcessing ? 'bg-white/5 border-white/5 text-white/40 cursor-wait' : 'bg-[#FB00FF]/10 border-[#FB00FF]/20 text-[#FB00FF] hover:bg-[#FB00FF]/20 hover:border-[#FB00FF]/40 shadow-[0_0_15px_rgba(251,0,255,0.1)]'}`}
+                                className={`h-9 px-3 sm:px-4 rounded-xl flex items-center gap-2 transition-all border ${isExporting || isProcessing ? 'bg-white/5 border-white/5 text-white/40 cursor-wait' : 'bg-[#FB00FF]/10 border-[#FB00FF]/20 text-[#FB00FF] hover:bg-[#FB00FF]/20 hover:border-[#FB00FF]/40 shadow-[0_0_15px_rgba(251,0,251,0.1)]'}`}
                                 aria-label="Export video">
                                 <span className={`material-symbols-outlined text-[18px] ${isExporting ? 'animate-spin' : ''}`}>
                                     {isExporting ? 'autorenew' : 'download'}
                                 </span>
                                 <span className="text-[9px] font-bold uppercase tracking-widest leading-none">
-                                    {isExporting ? `Exporting ${Math.round(exportProgress * 100)}%` : 'Export Video'}
+                                    {isExporting ? (
+                                        <>
+                                            <span className="hidden md:inline">Exporting </span>
+                                            {`${Math.round(exportProgress * 100)}%`}
+                                        </>
+                                    ) : (
+                                        <span>Export<span className="hidden sm:inline"> Video</span></span>
+                                    )}
                                 </span>
                             </button>
                         </div>
@@ -395,13 +426,25 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 </main>
 
                 {/* Sidebar: Effects Rack & Parameters */}
-                <aside className="w-[400px] border-l border-white/5 bg-[#050B14] flex flex-col overflow-hidden shrink-0">
-                    <SidebarNavigation
-                        effects={effects}
-                        setEffects={setEffects}
-                        selectedEffectIndex={selectedEffectIndex}
-                        setSelectedEffectIndex={setSelectedEffectIndex} />
+                <aside className={`fixed inset-y-0 right-0 z-[60] lg:relative w-full sm:w-[400px] border-l border-white/5 bg-[#050B14] flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] lg:shadow-none ${sidebarVisible ? 'translate-x-0' : 'translate-x-full lg:hidden'}`}>
+                    {/* Inner wrapper */}
+                    <div className="flex-1 flex flex-col min-h-0 relative">
+                        <SidebarNavigation
+                            effects={effects}
+                            setEffects={setEffects}
+                            selectedEffectIndex={selectedEffectIndex}
+                            setSelectedEffectIndex={setSelectedEffectIndex}
+                            onClose={() => setSidebarVisible(false)} />
+                    </div>
                 </aside>
+
+                {/* Mobile Backdrop */}
+                {sidebarVisible && (
+                    <div
+                        onClick={() => setSidebarVisible(false)}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden animate-in fade-in duration-300"
+                    />
+                )}
             </div>
             <Footer />
         </div>
