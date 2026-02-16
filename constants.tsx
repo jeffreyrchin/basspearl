@@ -1,28 +1,29 @@
 
-import { GlitchEffectType, EffectConfig } from './types';
+import { GlitchEffectType, EffectConfig, EffectCategory } from './types';
 
 export const EFFECT_METADATA: Record<GlitchEffectType, {
   label: string;
   subLabel: string;
   icon: string;
+  category: EffectCategory;
   paramNames: { name: string }[];
 }> = {
-  PIXEL_SORT: { label: 'Pixel Sort', subLabel: 'VERTICAL SCAN', icon: 'sort', paramNames: [{ name: 'Streak Length' }, { name: 'Trigger Level' }] },
-  CHANNEL_SHIFT: { label: 'RGB Shift', subLabel: 'CHROMATIC ABERRATION', icon: 'layers', paramNames: [{ name: 'Offset' }, { name: 'Vertical Tear' }] },
-  DATA_CORRUPTION: { label: 'Datamosh', subLabel: 'DELTA COMPRESSION', icon: 'grid_4x4', paramNames: [{ name: 'Mosh Length' }, { name: 'Mosh Density' }] },
-  DEEP_FRY: { label: 'Deep Fry', subLabel: 'SATURATION HELL', icon: 'local_fire_department', paramNames: [{ name: 'Heat' }, { name: 'Posterize' }] },
-  SCAN_LINES: { label: 'Scan Lines', subLabel: 'CRT SIMULATION', icon: 'reorder', paramNames: [{ name: 'Opacity' }, { name: 'Line Spacing' }] },
-  BIT_CRUSH: { label: 'Bit Crush', subLabel: '8-BIT DECIMATION', icon: 'developer_board', paramNames: [{ name: 'Quantize' }, { name: 'Resample' }] },
-  WAVE_DISTORTION: { label: 'Wave Distortion', subLabel: 'SINE WAVE MAP', icon: 'waves', paramNames: [{ name: 'Amplitude' }, { name: 'Frequency' }] },
-  COLOR_BLEED: { label: 'Color Bleed', subLabel: 'HORIZONTAL SMEAR', icon: 'palette', paramNames: [{ name: 'Bleed' }, { name: 'Ghosting' }] },
-  COMPRESSION_HELL: { label: 'Compression Hell', subLabel: 'JPEG ARTIFACTS', icon: 'compress', paramNames: [{ name: 'Block Size' }, { name: 'Artifacting' }] },
-  RANDOM_CHAOS: { label: 'Random Chaos', subLabel: 'SYSTEM COLLAPSE', icon: 'bolt', paramNames: [{ name: 'Entropy' }, { name: 'Jitter' }] },
-  ANALOG_NOISE: { label: 'Analog Noise', subLabel: 'FILM GRAIN', icon: 'grain', paramNames: [{ name: 'Gain' }, { name: 'Greyscale' }] },
-  HUE_ROTATION: { label: 'Acid Trip', subLabel: 'COLOR CYCLING', icon: 'change_circle', paramNames: [{ name: 'Spectrum' }, { name: 'Vibrance' }] },
-  INVERT_GHOST: { label: 'Spectral', subLabel: 'NEGATIVE MIX', icon: 'invert_colors', paramNames: [{ name: 'Inversion' }] },
-  ZOOM_PAN: { label: 'Zoom Pulse', subLabel: 'RADIAL SCALE', icon: 'zoom_in', paramNames: [{ name: 'Scale' }, { name: 'Pan' }] },
-  SCREEN_SHAKE: { label: 'Shake', subLabel: 'CAMERA JITTER', icon: 'vibration', paramNames: [{ name: 'Displacement' }, { name: 'Speed' }] },
-  STARFIELD: { label: 'Starfield', subLabel: 'WARP SPEED', icon: 'auto_awesome', paramNames: [{ name: 'Density' }, { name: 'Speed' }] },
+  PIXEL_SORT: { label: 'Pixel Sort', subLabel: 'VERTICAL SCAN', icon: 'sort', category: 'Glitch', paramNames: [{ name: 'Streak Length' }, { name: 'Trigger Level' }] },
+  CHANNEL_SHIFT: { label: 'RGB Shift', subLabel: 'CHROMATIC ABERRATION', icon: 'layers', category: 'Color', paramNames: [{ name: 'Offset' }, { name: 'Vertical Tear' }] },
+  DATA_CORRUPTION: { label: 'Datamosh', subLabel: 'DELTA COMPRESSION', icon: 'grid_4x4', category: 'Glitch', paramNames: [{ name: 'Mosh Length' }, { name: 'Mosh Density' }] },
+  DEEP_FRY: { label: 'Deep Fry', subLabel: 'SATURATION HELL', icon: 'local_fire_department', category: 'Color', paramNames: [{ name: 'Heat' }, { name: 'Posterize' }] },
+  SCAN_LINES: { label: 'Scan Lines', subLabel: 'CRT SIMULATION', icon: 'reorder', category: 'Retro', paramNames: [{ name: 'Opacity' }, { name: 'Line Spacing' }] },
+  BIT_CRUSH: { label: 'Bit Crush', subLabel: '8-BIT DECIMATION', icon: 'developer_board', category: 'Glitch', paramNames: [{ name: 'Quantize' }, { name: 'Resample' }] },
+  WAVE_DISTORTION: { label: 'Wave Distortion', subLabel: 'SINE WAVE MAP', icon: 'waves', category: 'Motion', paramNames: [{ name: 'Amplitude' }, { name: 'Frequency' }] },
+  COLOR_BLEED: { label: 'Color Bleed', subLabel: 'HORIZONTAL SMEAR', icon: 'palette', category: 'Color', paramNames: [{ name: 'Bleed' }, { name: 'Ghosting' }] },
+  COMPRESSION_HELL: { label: 'Compression Hell', subLabel: 'JPEG ARTIFACTS', icon: 'compress', category: 'Glitch', paramNames: [{ name: 'Block Size' }, { name: 'Artifacting' }] },
+  RANDOM_CHAOS: { label: 'Random Chaos', subLabel: 'SYSTEM COLLAPSE', icon: 'bolt', category: 'Particles', paramNames: [{ name: 'Entropy' }, { name: 'Jitter' }] },
+  ANALOG_NOISE: { label: 'Analog Noise', subLabel: 'FILM GRAIN', icon: 'grain', category: 'Retro', paramNames: [{ name: 'Gain' }, { name: 'Greyscale' }] },
+  HUE_ROTATION: { label: 'Acid Trip', subLabel: 'COLOR CYCLING', icon: 'change_circle', category: 'Color', paramNames: [{ name: 'Spectrum' }, { name: 'Vibrance' }] },
+  INVERT_GHOST: { label: 'Spectral', subLabel: 'NEGATIVE MIX', icon: 'invert_colors', category: 'Color', paramNames: [{ name: 'Inversion' }] },
+  ZOOM_PAN: { label: 'Zoom Pulse', subLabel: 'RADIAL SCALE', icon: 'zoom_in', category: 'Motion', paramNames: [{ name: 'Scale' }, { name: 'Pan' }] },
+  SCREEN_SHAKE: { label: 'Shake', subLabel: 'CAMERA JITTER', icon: 'vibration', category: 'Motion', paramNames: [{ name: 'Displacement' }, { name: 'Speed' }] },
+  STARFIELD: { label: 'Starfield', subLabel: 'WARP SPEED', icon: 'auto_awesome', category: 'Particles', paramNames: [{ name: 'Density' }, { name: 'Speed' }] },
 };
 
 const buildParams = (

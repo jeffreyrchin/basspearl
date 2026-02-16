@@ -1,3 +1,5 @@
+export type EffectCategory = 'All' | 'Color' | 'Glitch' | 'Motion' | 'Particles' | 'Retro';
+
 export type GlitchEffectType =
   | 'PIXEL_SORT'
   | 'CHANNEL_SHIFT'
