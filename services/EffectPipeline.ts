@@ -1,4 +1,3 @@
-
 import { TextureManager } from './TextureManager';
 import { ShaderManager } from './ShaderManager';
 
@@ -15,8 +14,6 @@ export class EffectPipeline {
     private currentFBIndex = 0;
 
     private sourceTexture: WebGLTexture | null = null;
-    private feedbackTexture: WebGLTexture | null = null;
-    private feedbackFB: WebGLFramebuffer | null = null;
 
     constructor(gl: WebGL2RenderingContext, textureManager: TextureManager, shaderManager: ShaderManager) {
         this.gl = gl;
@@ -63,19 +60,14 @@ export class EffectPipeline {
         this.pingPongFBs[0] = this.textureManager.createFramebuffer(this.pingPongTextures[0]);
         this.pingPongFBs[1] = this.textureManager.createFramebuffer(this.pingPongTextures[1]);
 
-        this.feedbackTexture = this.textureManager.createTexture(width, height);
-        this.feedbackFB = this.textureManager.createFramebuffer(this.feedbackTexture);
-
         this.currentFBIndex = 0;
     }
 
     private cleanupTextures() {
         this.textureManager.destroyTexture(this.pingPongTextures[0]);
         this.textureManager.destroyTexture(this.pingPongTextures[1]);
-        this.textureManager.destroyTexture(this.feedbackTexture);
         this.textureManager.destroyFramebuffer(this.pingPongFBs[0]);
         this.textureManager.destroyFramebuffer(this.pingPongFBs[1]);
-        this.textureManager.destroyFramebuffer(this.feedbackFB);
     }
 
     /**
@@ -152,41 +144,20 @@ export class EffectPipeline {
         this.currentFBIndex = 0;
     }
 
-    public applyEffect(programName: string, uniforms: Record<string, any>) {
-        const program = this.shaderManager.getProgram(programName);
-        if (!program) return;
-
+    public applyPass(programName: string, uniforms: Record<string, any>, extraInputs: { name: string, texture: WebGLTexture }[] = []) {
         const input = this.pingPongTextures[this.currentFBIndex];
         const outputFB = this.pingPongFBs[1 - this.currentFBIndex];
-
-        // Check if shader needs feedback texture
-        const prevFrameLoc = this.shaderManager.getUniformLocation(program, 'u_prevFrame');
-
-        if (prevFrameLoc !== null && this.feedbackTexture) {
-            this.draw(programName, outputFB, [
-                { name: 'u_prevFrame', texture: this.feedbackTexture },
-                { name: 'u_image', texture: input }
-            ], uniforms);
-        } else {
-            this.draw(programName, outputFB, [{ name: 'u_image', texture: input }], uniforms);
-        }
-
+        const allInputs = [{ name: 'u_image', texture: input }, ...extraInputs];
+        this.draw(programName, outputFB, allInputs, uniforms);
         this.currentFBIndex = 1 - this.currentFBIndex;
     }
 
-    public saveFeedback() {
-        if (!this.feedbackFB) return;
-        const currentResult = this.pingPongTextures[this.currentFBIndex];
-        this.draw('pass-through', this.feedbackFB, [{ name: 'u_image', texture: currentResult }]);
+    public getVAO(): WebGLVertexArrayObject | null {
+        return this.vao;
     }
 
-    public initializeFeedback() {
-        if (!this.sourceTexture || !this.feedbackFB) return;
-        // Seed feedback
-        this.draw('pass-through', this.feedbackFB, [{ name: 'u_image', texture: this.sourceTexture }]);
-        // Seed ping-pong 0
-        this.draw('pass-through', this.pingPongFBs[0], [{ name: 'u_image', texture: this.sourceTexture }]);
-        this.currentFBIndex = 0;
+    public getResultTexture(): WebGLTexture {
+        return this.pingPongTextures[this.currentFBIndex];
     }
 
     public renderToScreen(flipY: boolean = true) {
@@ -196,9 +167,5 @@ export class EffectPipeline {
 
     public setInputTexture(texture: WebGLTexture) {
         this.sourceTexture = texture;
-    }
-
-    public getResultTexture(): WebGLTexture {
-        return this.pingPongTextures[this.currentFBIndex];
     }
 }

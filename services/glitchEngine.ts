@@ -1,4 +1,3 @@
-
 import { EffectConfig } from '../types';
 import { TextureManager } from './TextureManager';
 import { ShaderManager, BASE_VERTEX_SHADER, PASS_THROUGH_FRAGMENT_SHADER } from './ShaderManager';
@@ -78,11 +77,9 @@ export class GlitchEngine {
           if (this.inputTexture) this.textureManager.destroyTexture(this.inputTexture);
           this.inputTexture = this.textureManager.createTexture(width, height, img);
           this.pipeline.setInputTexture(this.inputTexture!);
-          this.pipeline.initializeFeedback();
         } else if (this.currentImageSrc !== imageSrc) {
           this.textureManager.updateTexture(this.inputTexture!, img);
           this.pipeline.setInputTexture(this.inputTexture!);
-          this.pipeline.initializeFeedback();
         }
 
         const UNIT = Math.min(width, height) / 100;
@@ -117,25 +114,22 @@ export class GlitchEngine {
   }
 
   private applyEffect(effect: EffectConfig, UNIT: number, width: number, height: number) {
-    const { params, seed } = effect;
+    const { type, params, seed } = effect;
+    const meta = SHADER_REGISTRY[type];
+    if (!meta) return;
+
+    const extraInputs = [];
+
     const uniforms: Record<string, any> = {
       u_params: params.map(p => p.value),
       u_unit: UNIT,
       u_seed: (seed !== undefined && seed !== null) ? seed : Math.random(),
       u_resolution: [width, height],
-      u_time: performance.now() * 0.001
+      u_time: performance.now() * 0.001,
+      u_frame: Math.floor((seed || 0) * 1000) % 5000
     };
 
-    const definition = SHADER_REGISTRY[effect.type];
-    if (!definition) {
-      console.warn(`Shader not found for effect type: ${effect.type}`);
-      return;
-    }
-
-    const seedOffset = Math.floor((seed || 0) * 1000) % 5000;
-
-    uniforms.u_frame = seedOffset;
-    this.pipeline.applyEffect(effect.type, uniforms);
+    this.pipeline.applyPass(type, uniforms, extraInputs);
   }
 }
 

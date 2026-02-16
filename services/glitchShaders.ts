@@ -1,4 +1,3 @@
-
 export interface ShaderDefinition {
     name: string;
     fragmentSource: string;
@@ -325,79 +324,32 @@ precision highp float;
 
 uniform sampler2D u_image;
 uniform float u_params[2]; // [mosh length, mosh density]
-uniform float u_unit; // Approximate pixel unit (min(w,h)/100)
-uniform float u_seed;
 uniform vec2 u_resolution;
 
 in vec2 v_texCoord;
 out vec4 outColor;
 
-// Robust Integer Hash
-float hash(vec2 col, float seed) {
-    uvec3 p = uvec3(uvec2(col), uint(seed * 12345.0));
-    p = p * 0x74779649u + (p >> 1u);
-    p.x *= p.y * p.z;
-    p.y *= p.x * p.z;
-    p.z *= p.x * p.y;
-    return float(p.x ^ p.y ^ p.z) * (1.0 / 4294967295.0);
-}
-
 void main() {
-    if (u_params[0] < 1.0 || u_params[1] < 1.0) {
-        outColor = texture(u_image, v_texCoord);
+    float moshLength  = u_params[0] / 10.0;
+    float moshDensity = u_params[1] / 100.0;
+
+    float blockSize = 1.0; // smaller = more fine-grained
+    vec2 pixelPos   = v_texCoord * u_resolution;
+    vec2 blockId    = floor(pixelPos / blockSize);
+    vec2 blockUV    = (blockId * blockSize) / u_resolution;
+
+    vec4 src   = texture(u_image, blockUV);
+    float luma = dot(src.rgb, vec3(0.299, 0.587, 0.114));
+
+    if (luma < 1.0 - moshDensity) {
+        outColor = src;
         return;
     }
 
-    // Parameters from CPU code
-    // blockSize = Math.max(16, Math.floor(4 * UNIT))
-    float blockSize = max(16.0, floor(4.0 * u_unit));
-    
-    float blockDensity = u_params[1] / 100.0;
-    
-    // Convert current UV to Pixel Coordinates
-    vec2 pixelPos = v_texCoord * u_resolution;
-    vec2 currentBlock = floor(pixelPos / blockSize);
-    
-    // Default color is the original pixel
-    vec4 finalColor = texture(u_image, v_texCoord);
-    
-    // Max velocity scaling based on intensity
-    // Original code had fixed 5 * UNIT.
-    // We map 0-100 intensity to 0-5 factor for linear control.
-    float moveFactor = u_params[0] * 0.05;
-    
-    int radius = 2; 
-    
-    for (int y = -radius; y <= radius; y++) {
-        for (int x = -radius; x <= radius; x++) {
-            vec2 neighborBlock = currentBlock + vec2(float(x), float(y));
-            
-            // Generate random 'move' for this neighbor
-            if (hash(neighborBlock, u_seed) < blockDensity) {
-                // vx = floor((random - 0.5) * moveFactor * UNIT)
-                float vx = floor((hash(neighborBlock, u_seed + 1.1) - 0.5) * moveFactor * u_unit);
-                float vy = floor((hash(neighborBlock, u_seed + 1.2) - 0.5) * moveFactor * u_unit);
-                
-                if (vx == 0.0 && vy == 0.0) continue;
-                
-                // Calculate where this neighbor block lands
-                vec2 neighborOrigin = neighborBlock * blockSize;
-                vec2 destStart = neighborOrigin + vec2(vx, vy);
-                vec2 destEnd = destStart + vec2(blockSize);
-                
-                if (pixelPos.x >= destStart.x && pixelPos.x < destEnd.x &&
-                    pixelPos.y >= destStart.y && pixelPos.y < destEnd.y) {
-                    
-                    vec2 offsetInBlock = pixelPos - destStart;
-                    vec2 sourcePixel = neighborOrigin + offsetInBlock;
-                    
-                    finalColor = texture(u_image, sourcePixel / u_resolution);
-                }
-            }
-        }
-    }
-    
-    outColor = finalColor;
+    vec2 motion = (src.rg - 0.5) * moshLength * 64.0;
+    vec2 disp   = floor(motion) * blockSize / u_resolution;
+
+    outColor = texture(u_image, v_texCoord - disp);
 }
 `;
 
