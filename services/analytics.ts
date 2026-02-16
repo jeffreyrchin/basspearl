@@ -14,7 +14,8 @@ export type AnalyticsEvent =
     | 'auth_google_failed'
     | 'auth_email_succeeded'
     | 'auth_email_failed'
-    | 'auth_view';
+    | 'auth_view'
+    | 'preset_loaded';
 
 interface EventParams {
     [key: string]: any;

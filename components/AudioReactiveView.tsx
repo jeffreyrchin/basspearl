@@ -4,7 +4,7 @@ import { glitchEngine } from '../services/glitchEngine';
 import SidebarNavigation from './SidebarNavigation';
 import Navbar from './Navbar';
 import { Footer } from './Footer';
-import { INITIAL_REACTIVE_EFFECTS } from '@/constants';
+import { INITIAL_REACTIVE_EFFECTS, PRESETS, Preset } from '@/constants';
 import { mapReactivityToEffects } from '@/services/calculateReactiveEffects';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 import { exportVideo } from '@/services/exportService';
@@ -28,7 +28,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         reactivityMapRef,
         integratedReactivityMapRef,
         audioBufferRef,
-        isProcessing
+        isProcessing,
+        loadAudioFromUrl
     } = useAudioProcessor();
 
     const [isExporting, setIsExporting] = useState(false);
@@ -49,6 +50,41 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
     // Sync ref with state (Direct update during render)
     effectsRef.current = effects;
+
+    const loadPreset = async (preset: Preset) => {
+        trackEvent('preset_loaded', { preset_id: preset.id });
+
+        try {
+            // 1. Load Image
+            const response = await fetch(preset.image);
+            const blob = await response.blob();
+            const file = new File([blob], preset.label, { type: 'image/jpeg' });
+            setImageFile(file);
+            const imageUrl = URL.createObjectURL(blob);
+            imageFileRef.current = imageUrl;
+
+            // 2. Load Audio
+            await loadAudioFromUrl(preset.audio, preset.label);
+
+            // 3. Load Effects (Merge preset effects into the full rack)
+            const fullRack = INITIAL_REACTIVE_EFFECTS.map(templateEffect => {
+                const presetEffect = preset.effects.find(e => e.type === templateEffect.type);
+                if (presetEffect) {
+                    return { ...presetEffect, active: presetEffect.active ?? true };
+                }
+                return { ...templateEffect, active: false };
+            });
+
+            setEffects(fullRack);
+
+            // Render initial frame
+            if (canvasRef.current) {
+                glitchEngine.renderToCanvas(canvasRef.current, imageUrl, fullRack, 960);
+            }
+        } catch (err) {
+            console.error('Error loading preset:', err);
+        }
+    };
 
     useEffect(() => {
         return () => {
@@ -202,47 +238,68 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
                 {/* Main Content Area */}
                 <main className="flex-1 flex flex-col min-h-0 min-w-0 bg-[#050B14]">
-                    {/* Source Header: Quick-load controls centered above image */}
-                    <div className="h-14 border-b border-white/5 bg-black/20 flex items-center justify-center px-6 gap-3 shrink-0">
-                        {/* Choose Image */}
-                        <input
-                            ref={imageInputRef}
-                            id="image-file-input"
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            className="sr-only"
-                            aria-label="Image file input" />
-                        <button
-                            type="button"
-                            onClick={() => imageInputRef.current?.click()}
-                            className={`h-9 px-4 rounded-xl border transition-all duration-300 flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-[#00F0FF] ${imageFile ? "border-[#00F0FF]/30 bg-[#00F0FF]/5 text-[#00F0FF]" : "border-white/5 bg-white/[0.03] text-white hover:border-white/20"}`}
-                            aria-label="Choose image button">
-                            <span className="material-symbols-outlined text-base">image</span>
-                            <span className="text-[9px] font-bold uppercase tracking-widest truncate max-w-[120px]">
-                                {imageFile ? imageFile.name || "Image File" : "Choose Image"}
-                            </span>
-                        </button>
+                    {/* Source Header: Preset loading and local asset uploading */}
+                    <div className="h-14 border-b border-white/5 bg-black/20 flex items-center justify-center px-6 gap-4 shrink-0">
+                        {/* Presets Group */}
+                        <div className="flex items-center gap-2 border-r border-white/10 pr-4 mr-2">
+                            {PRESETS.map(preset => (
+                                <button
+                                    key={preset.id}
+                                    onClick={() => loadPreset(preset)}
+                                    disabled={isProcessing}
+                                    title={`Load ${preset.label} preset`}
+                                    aria-label={`Load ${preset.label} preset`}
+                                    className="h-8 px-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-[9px] font-bold uppercase tracking-widest disabled:opacity-30"
+                                >
+                                    {preset.label.split(' ')[0]}
+                                </button>
+                            ))}
+                        </div>
 
-                        {/* Choose Audio */}
-                        <input
-                            ref={audioInputRef}
-                            id="audio-file-input"
-                            type="file"
-                            accept="audio/*"
-                            onChange={handleAudioUpload}
-                            className="sr-only"
-                            aria-label="Audio file input" />
-                        <button
-                            type="button"
-                            onClick={() => audioInputRef.current?.click()}
-                            className={`h-9 px-4 rounded-xl border transition-all duration-300 flex items-center gap-3 cursor-pointer ${audioFile ? 'border-[#3B82F6]/30 bg-[#3B82F6]/5 text-[#3B82F6]' : 'border-white/5 bg-white/[0.03] text-white hover:border-white/20'}`}
-                            aria-label="Choose audio button">
-                            <span className="material-symbols-outlined text-base">graphic_eq</span>
-                            <span className="text-[9px] font-bold uppercase tracking-widest truncate max-w-[120px]">
-                                {audioFile ? audioFile.name || "Audio File" : "Choose Audio"}
-                            </span>
-                        </button>
+                        {/* Local Assets Group */}
+                        <div className="flex items-center gap-3">
+                            {/* Choose Image */}
+                            <input
+                                ref={imageInputRef}
+                                id="image-file-input"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                className="sr-only"
+                                aria-label="Image file input" />
+                            <button
+                                type="button"
+                                onClick={() => imageInputRef.current?.click()}
+                                className={`h-9 px-4 rounded-xl border transition-all duration-300 flex items-center gap-3 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#00F0FF] text-white ${imageFile ? "border-[#00F0FF]/30 bg-[#00F0FF]/5" : "border-white/5 bg-white/[0.03] hover:border-white/20"}`}
+                                aria-label="Choose image button">
+                                <span className={`material-symbols-outlined text-base ${imageFile ? "text-[#00F0FF]" : "text-white"}`}>image</span>
+                                <span className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                    Choose Image
+                                    {imageFile && <span className="w-1.5 h-1.5 rounded-full bg-[#00F0FF] shadow-[0_0_8px_rgba(0,240,255,0.8)]" />}
+                                </span>
+                            </button>
+
+                            {/* Choose Audio */}
+                            <input
+                                ref={audioInputRef}
+                                id="audio-file-input"
+                                type="file"
+                                accept="audio/*"
+                                onChange={handleAudioUpload}
+                                className="sr-only"
+                                aria-label="Audio file input" />
+                            <button
+                                type="button"
+                                onClick={() => audioInputRef.current?.click()}
+                                className={`h-9 px-4 rounded-xl border transition-all duration-300 flex items-center gap-3 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#3B82F6] text-white ${audioFile ? 'border-[#3B82F6]/30 bg-[#3B82F6]/5' : 'border-white/5 bg-white/[0.03] hover:border-white/20'}`}
+                                aria-label="Choose audio button">
+                                <span className={`material-symbols-outlined text-base ${audioFile ? "text-[#3B82F6]" : "text-white"}`}>graphic_eq</span>
+                                <span className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                    Choose Audio
+                                    {audioFile && <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] shadow-[0_0_8px_rgba(59,130,246,0.8)]" />}
+                                </span>
+                            </button>
+                        </div>
                     </div>
 
                     {/* Viewport */}

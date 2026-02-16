@@ -77,3 +77,26 @@ export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
 ]);
 
 export const FEEDBACK_FORM_URL = 'https://forms.gle/CBVXwJv9s3ZvXyWr8';
+
+export interface Preset {
+  id: string;
+  label: string;
+  image: string;
+  audio: string;
+  effects: EffectConfig[];
+}
+
+export const PRESETS: Preset[] = [
+  {
+    id: 'sunset',
+    label: 'Sunset',
+    image: '/presets/sunset.jpeg',
+    audio: '/presets/6_19_21 gain staged 2_1_22.mp3',
+    effects: buildEffects([
+      { type: 'STARFIELD', values: [100, 59], active: true, reactive: true, frequencyBand: 'ENERGY' },
+      { type: 'HUE_ROTATION', values: [8, 73], active: true, reactive: true, frequencyBand: 'ENERGY' },
+      { type: 'CHANNEL_SHIFT', values: [12, 12], active: true, reactive: true, frequencyBand: 'BASS' },
+      { type: 'ZOOM_PAN', values: [63, 0], reactive: true, frequencyBand: 'ENERGY' },
+    ])
+  }
+];

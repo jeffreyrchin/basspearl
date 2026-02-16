@@ -3,6 +3,13 @@ import { calculateNextState, ReactivityState } from '@/services/calculateReactiv
 import { computeIntegratedReactivity, IntegratedReactivityMap } from '@/services/SpeedManager';
 import { trackEvent } from '@/services/analytics';
 
+const analysisCache = new Map<string, {
+    buffer: AudioBuffer;
+    map: any;
+    integrated: any;
+    duration: number;
+}>();
+
 export const useAudioProcessor = () => {
     const [audioFile, setAudioFile] = useState<File | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -178,9 +185,9 @@ export const useAudioProcessor = () => {
 
                 setIsProcessing(false);
                 trackEvent('audio_upload_succeeded', {
-                    file_name: e.target.files[0].name,
-                    file_size: e.target.files[0].size,
-                    file_type: e.target.files[0].type,
+                    file_name: file.name,
+                    file_size: file.size,
+                    file_type: file.type,
                     duration: audioBuffer.duration
                 });
             } catch (err: any) {
@@ -192,6 +199,57 @@ export const useAudioProcessor = () => {
                 setIsProcessing(false);
                 console.error('Error decoding audio:', err);
             }
+        }
+    };
+
+    const loadAudioFromUrl = async (url: string, label: string) => {
+        setIsPlaying(false);
+        isPlayingRef.current = false;
+        audioBufferRef.current = null;
+        offsetRef.current = 0;
+        setCurrentTime(0);
+
+        if (analysisCache.has(url)) {
+            const cached = analysisCache.get(url)!;
+            audioBufferRef.current = cached.buffer;
+            setDuration(cached.duration);
+            reactivityMapRef.current = cached.map;
+            integratedReactivityMapRef.current = cached.integrated;
+            setAudioFile(new File([], label, { type: 'audio/mpeg' }));
+            return;
+        }
+
+        if (audioContextRef.current) {
+            audioContextRef.current.close();
+            audioContextRef.current = null;
+        }
+
+        try {
+            setIsProcessing(true);
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+
+            if (!audioContextRef.current) {
+                audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+            }
+
+            const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+            audioBufferRef.current = audioBuffer;
+            setDuration(audioBuffer.duration);
+            const map = await precomputeReactivity(audioBuffer);
+
+            analysisCache.set(url, {
+                buffer: audioBuffer,
+                map: map,
+                integrated: integratedReactivityMapRef.current,
+                duration: audioBuffer.duration
+            });
+
+            setAudioFile(new File([arrayBuffer], label, { type: 'audio/mpeg' }));
+            setIsProcessing(false);
+        } catch (err) {
+            console.error('Error loading audio from URL:', err);
+            setIsProcessing(false);
         }
     };
 
@@ -298,6 +356,7 @@ export const useAudioProcessor = () => {
         reactivityMapRef,
         integratedReactivityMapRef,
         audioBufferRef,
-        isProcessing
+        isProcessing,
+        loadAudioFromUrl
     };
 };
