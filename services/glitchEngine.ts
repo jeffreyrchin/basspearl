@@ -40,8 +40,15 @@ export class GlitchEngine {
     });
   }
 
-  public async renderToCanvas(targetCanvas: HTMLCanvasElement, imageSrc: string, effects: EffectConfig[], maxSize?: number): Promise<void> {
-    await this.processInternal(imageSrc, effects, maxSize);
+  public async renderToCanvas(
+    targetCanvas: HTMLCanvasElement,
+    imageSrc: string,
+    effects: EffectConfig[],
+    maxSize?: number,
+    integratedReactivity?: { bass: number, mid: number, treble: number, energy: number },
+    currentTime?: number
+  ): Promise<void> {
+    await this.processInternal(imageSrc, effects, maxSize, integratedReactivity, currentTime);
 
     // Copy internal canvas to target canvas
     targetCanvas.width = this.canvas.width;
@@ -52,7 +59,13 @@ export class GlitchEngine {
     }
   }
 
-  private async processInternal(imageSrc: string, effects: EffectConfig[], maxSize?: number): Promise<void> {
+  private async processInternal(
+    imageSrc: string,
+    effects: EffectConfig[],
+    maxSize?: number,
+    integratedReactivity?: { bass: number, mid: number, treble: number, energy: number },
+    currentTime?: number
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
       const processCachedImage = (img: HTMLImageElement) => {
         let width = img.width;
@@ -89,7 +102,7 @@ export class GlitchEngine {
 
         // Apply active effects sequentially
         effects.filter(e => e.active).forEach(effect => {
-          this.applyEffect(effect, UNIT, width, height);
+          this.applyEffect(effect, UNIT, width, height, integratedReactivity, currentTime);
         });
 
         this.pipeline.renderToScreen(false);
@@ -113,18 +126,48 @@ export class GlitchEngine {
     });
   }
 
-  private applyEffect(effect: EffectConfig, UNIT: number, width: number, height: number) {
-    const { type, params, seed } = effect;
+  private applyEffect(
+    effect: EffectConfig,
+    UNIT: number,
+    width: number,
+    height: number,
+    integratedReactivity?: { bass: number, mid: number, treble: number, energy: number },
+    currentTime?: number
+  ) {
+    const { type, params, seed, frequencyBand } = effect;
     const meta = SHADER_REGISTRY[type];
     if (!meta) return;
+
+    // Select the appropriate integrated value based on the effect's frequency band
+    let integratedValue = integratedReactivity?.energy ?? 0; // Default to energy
+    if (integratedReactivity) {
+      if (frequencyBand === 'BASS') integratedValue = integratedReactivity.bass;
+      else if (frequencyBand === 'MID') integratedValue = integratedReactivity.mid;
+      else if (frequencyBand === 'TREBLE') integratedValue = integratedReactivity.treble;
+      else if (frequencyBand === 'ENERGY') integratedValue = integratedReactivity.energy;
+    }
+
+    // VELOCITY CONTROLLED EFFECTS:
+    // If the shader handles velocity (via u_integrated_value * speed),
+    // we switch the source of that value:
+    // 1. Sync on (reactive): Use integrated reactivity (p-value accumulation)
+    // 2. Sync off (manual):  Use time (constant linear accumulation)
+    if (meta.velocityParamIndex !== undefined) {
+      const velocityParam = params[meta.velocityParamIndex];
+      if (velocityParam && !velocityParam.reactive) {
+        // Manual mode: Use the current song time as the "integrated value" for constant acceleration
+        integratedValue = currentTime * 0.5; // Scale to match audio range roughly
+      }
+    }
 
     const uniforms: Record<string, any> = {
       u_params: params.map(p => p.value),
       u_unit: UNIT,
       u_seed: (seed !== undefined && seed !== null) ? seed : Math.random(),
       u_resolution: [width, height],
-      u_time: performance.now() * 0.001,
-      u_frame: Math.floor((seed || 0) * 1000) % 5000
+      u_time: currentTime,
+      u_frame: Math.floor((seed || 0) * 1000) % 5000,
+      u_integrated_value: integratedValue
     };
 
     this.pipeline.applyPass(type, uniforms);

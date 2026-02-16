@@ -26,6 +26,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         formatTime,
         isPlayingRef,
         reactivityMapRef,
+        integratedReactivityMapRef,
         audioBufferRef,
         isProcessing
     } = useAudioProcessor();
@@ -96,7 +97,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         if (!imageFileRef.current || !canvasRef.current) return;
         const currentFrame = Math.floor(time * 60);
         let reactiveEffects = effectsRef.current;
+        let frameIntegrated: { bass: number, mid: number, treble: number, energy: number } | undefined;
 
+        // 1. Get Instantaneous Reactivity for standard effects
         if (reactivityMapRef.current) {
             const map = reactivityMapRef.current;
             const frame = Math.min(map.bass.length - 1, currentFrame); // Ensures frame <= last valid FFT frame index
@@ -107,7 +110,20 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             reactiveEffects = mapReactivityToEffects(smoothed, effectsRef.current, currentFrame);
         }
 
-        await glitchEngine.renderToCanvas(canvasRef.current, imageFileRef.current, reactiveEffects, 960);
+        // 2. Get Integrated Reactivity for time-based/motion effects (Starfield)
+        // This ensures 100% deterministic motion that supports seeking
+        if (integratedReactivityMapRef.current) {
+            const iMap = integratedReactivityMapRef.current;
+            const frame = Math.min(iMap.bass.length - 1, currentFrame);
+            frameIntegrated = {
+                bass: iMap.bass[frame],
+                mid: iMap.mid[frame],
+                treble: iMap.treble[frame],
+                energy: iMap.energy[frame]
+            };
+        }
+
+        await glitchEngine.renderToCanvas(canvasRef.current, imageFileRef.current, reactiveEffects, 960, frameIntegrated, time);
     };
 
     const scrubberPercent = (time: number, duration: number) => {
@@ -155,6 +171,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             await exportVideo({
                 audioBuffer: audioBufferRef.current,
                 reactivityMap: reactivityMapRef.current,
+                integratedReactivity: integratedReactivityMapRef.current,
                 imageSrc: imageFileRef.current,
                 effects: effects,
                 duration: duration,

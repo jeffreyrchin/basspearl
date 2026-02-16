@@ -1,6 +1,7 @@
 export interface ShaderDefinition {
     name: string;
     fragmentSource: string;
+    velocityParamIndex?: number;
 }
 
 export const CHANNEL_SHIFT_SHADER = `#version 300 es
@@ -485,8 +486,9 @@ void main() {
 export const SCREEN_SHAKE_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[1]; // [intensity]
+uniform float u_params[2]; // [displacement, speed]
 uniform float u_seed;
+uniform float u_integrated_value;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -496,9 +498,37 @@ float rand(vec2 co) {
 }
 
 void main() {
-    float amount = u_params[0] / 100.0 * 0.05;
-    float jitterX = (rand(vec2(u_seed, 0.0)) - 0.5) * amount;
-    float jitterY = (rand(vec2(0.0, u_seed)) - 0.5) * amount;
+    // Param 0: Amplitude of displacement
+    // Param 1: Speed/Frequency of shake
+    
+    // Speed scales the frequency of the noise (Hz).
+    // Range 0-100 maps to 0-20 Hz smooth frequency.
+    float updateFreq = u_params[1] * 0.2;
+    
+    // "Travel" through noise space.
+    float t = u_integrated_value * updateFreq;
+    
+    // Smooth Value Noise Interpolation
+    float i = floor(t);
+    float f = fract(t);
+    // Cubic smoothing (smoothstep) for better flow
+    float u = f * f * (3.0 - 2.0 * f);
+    
+    // Jitter X
+    float r1 = rand(vec2(i, 12.345));
+    float r2 = rand(vec2(i + 1.0, 12.345));
+    float smoothX = mix(r1, r2, u);
+    
+    // Jitter Y
+    float r3 = rand(vec2(i, 67.890));
+    float r4 = rand(vec2(i + 1.0, 67.890));
+    float smoothY = mix(r3, r4, u);
+    
+    // Amplitude scales the displacement
+    float amount = (u_params[0] / 100.0) * 0.05;
+    
+    float jitterX = (smoothX - 0.5) * amount;
+    float jitterY = (smoothY - 0.5) * amount;
     
     vec2 coord = v_texCoord + vec2(jitterX, jitterY);
     
@@ -507,6 +537,77 @@ void main() {
     } else {
         outColor = vec4(0.0, 0.0, 0.0, 1.0);
     }
+}
+`;
+
+export const STARFIELD_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[2]; // [density, speed]
+uniform float u_integrated_value;
+uniform float u_time;
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+float rand(vec2 co) {
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+void main() {
+    float density = u_params[0] / 100.0; // Normalized density 0.0 - 1.0
+    float speedScale = u_params[1] / 10.0; 
+    
+    // 'travel' represents our total displacement through the starfield.
+    // It is driven by u_integrated_value, which is either:
+    // 1. Time-integrated (Manual mode) for constant speed.
+    // 2. Audio-integrated (Sync mode) for reactive acceleration.
+    float travel = (u_integrated_value * 2.0) * speedScale;
+    
+    // Normalize UVs to center (0,0) and handle aspect ratio to prevent stretching.
+    vec2 uv = (v_texCoord - 0.5) * u_resolution / u_resolution.y;
+    vec3 color = vec3(0.0);
+    
+    // Render 3 parallax layers of stars at different depth offsets.
+    for(float i=0.0; i<3.0; i++) {
+        // z represents the fractional depth of the layer (0.0=Far/Center, 1.0=Near/Edges).
+        // Using fract() creates a continuous loop as we travel forward.
+        float z = fract(travel + i * 0.333); 
+        
+        // Perspective projection: Divide position by depth.
+        // To move outward, we want depth to increase over time.
+        float depth = z; 
+        if (depth < 0.001) depth = 0.001; 
+        
+        vec2 layerUV = uv / depth;
+        
+        // Partition space into a grid to place one potential star per cell.
+        float numGridCells = 10.0 + (i * 5.0);
+        vec2 gridID = floor(layerUV * numGridCells);
+        vec2 gridUV = fract(layerUV * numGridCells) - 0.5;
+
+        // travel is continuous (e.g., 2.45)
+        // lap is discrete (e.g., 2.0)
+        float lap = floor(travel + i * 0.333); 
+        
+        // Seed is based on grid position and the current loop number
+        float r = rand(gridID + i * 111.0 + lap);
+        
+        // Probability check for star existence based on density.
+        if (r > (1.0 - (density * 0.2))) {
+             float d = length(gridUV);
+             
+             // Fade stars out as they approach the camera (z -> 0) or recede into the distance (z -> 1).
+             float fade = smoothstep(0.0, 0.2, z) * smoothstep(1.0, 0.8, z);
+             
+             // Create a soft point light effect (Glow) using 1/distance.
+             float star = 0.01 / d; 
+             color += vec3(star) * fade * r;
+        }
+    }
+    
+    vec4 src = texture(u_image, v_texCoord);
+    outColor = src + vec4(color, 0.0);
 }
 `;
 
@@ -525,5 +626,6 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     COMPRESSION_HELL: { name: 'COMPRESSION_HELL', fragmentSource: COMPRESSION_HELL_SHADER },
     RANDOM_CHAOS: { name: 'RANDOM_CHAOS', fragmentSource: RANDOM_CHAOS_SHADER },
     ZOOM_PAN: { name: 'ZOOM_PAN', fragmentSource: ZOOM_PAN_SHADER },
-    SCREEN_SHAKE: { name: 'SCREEN_SHAKE', fragmentSource: SCREEN_SHAKE_SHADER },
+    SCREEN_SHAKE: { name: 'SCREEN_SHAKE', fragmentSource: SCREEN_SHAKE_SHADER, velocityParamIndex: 1 },
+    STARFIELD: { name: 'STARFIELD', fragmentSource: STARFIELD_SHADER, velocityParamIndex: 1 },
 };

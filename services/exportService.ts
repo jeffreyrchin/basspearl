@@ -18,6 +18,12 @@ export interface ExportOptions {
         treble: Float32Array;
         energy: Float32Array;
     } | null;
+    integratedReactivity: {
+        bass: Float32Array;
+        mid: Float32Array;
+        treble: Float32Array;
+        energy: Float32Array;
+    } | null;
     imageSrc: string;
     effects: EffectConfig[];
     duration: number;
@@ -33,6 +39,7 @@ export const exportVideo = async (options: ExportOptions) => {
     const {
         audioBuffer,
         reactivityMap,
+        integratedReactivity,
         imageSrc,
         effects,
         duration,
@@ -129,11 +136,22 @@ export const exportVideo = async (options: ExportOptions) => {
             energy: reactivityMap.energy[i] ?? 0
         };
 
+        // Grab integrated data for this frame index (Starfield/Motion)
+        let frameIntegrated = undefined;
+        if (integratedReactivity) {
+            frameIntegrated = {
+                bass: integratedReactivity.bass[i] ?? 0,
+                mid: integratedReactivity.mid[i] ?? 0,
+                treble: integratedReactivity.treble[i] ?? 0,
+                energy: integratedReactivity.energy[i] ?? 0
+            };
+        }
+
         // Calculate reactive effects for this frame
         const reactiveEffects = mapReactivityToEffects(frameData, effects, i);
 
         // Render glitch to our hidden canvas
-        await exportEngine.renderToCanvas(renderCanvas, imageSrc, reactiveEffects, maxSize);
+        await exportEngine.renderToCanvas(renderCanvas, imageSrc, reactiveEffects, maxSize, frameIntegrated, time);
 
         // Inject the current state of the canvas into the video pipeline
         // Mediabunny takes timestamps in seconds

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, ChangeEvent } from 'react';
 import { calculateNextState, ReactivityState } from '@/services/calculateReactiveEffects';
+import { computeIntegratedReactivity, IntegratedReactivityMap } from '@/services/SpeedManager';
 import { trackEvent } from '@/services/analytics';
 
 export const useAudioProcessor = () => {
@@ -27,6 +28,8 @@ export const useAudioProcessor = () => {
         treble: Float32Array;
         energy: Float32Array;
     } | null>(null);
+
+    const integratedReactivityMapRef = useRef<IntegratedReactivityMap | null>(null);
 
     const precomputeReactivity = async (buffer: AudioBuffer, fps = 60) => {
         const sampleRate = buffer.sampleRate;
@@ -130,6 +133,7 @@ export const useAudioProcessor = () => {
         }
 
         reactivityMapRef.current = map;
+        integratedReactivityMapRef.current = computeIntegratedReactivity(map);
         return map;
     };
 
@@ -292,6 +296,7 @@ export const useAudioProcessor = () => {
         setCurrentTime,
         isPlayingRef,
         reactivityMapRef,
+        integratedReactivityMapRef,
         audioBufferRef,
         isProcessing
     };

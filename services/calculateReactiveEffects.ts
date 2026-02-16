@@ -1,4 +1,5 @@
 import { EffectConfig } from "@/types";
+import { SHADER_REGISTRY } from "./glitchShaders";
 
 export interface ReactivityState {
     baselines: Record<string, number | null>;
@@ -115,10 +116,18 @@ export const mapReactivityToEffects = (
 
         return {
             ...effect,
-            params: effect.params.map(param => ({
-                ...param,
-                value: param.reactive ? param.value * energyValue : param.value
-            })),
+            params: effect.params.map((param, index) => {
+                // Velocity/Speed parameters that control integrated motion should not be
+                // modulated by instantaneous reactivity, as this causes teleporting.
+                // The integration itself provides the smooth reactivity.
+                const meta = SHADER_REGISTRY[effect.type];
+                const shouldSkipModulation = meta?.velocityParamIndex === index;
+
+                return {
+                    ...param,
+                    value: (param.reactive && !shouldSkipModulation) ? param.value * energyValue : param.value
+                };
+            }),
             seed: (effect.seed ?? 0) + frameCount
         };
     });

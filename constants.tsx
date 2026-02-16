@@ -21,7 +21,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   HUE_ROTATION: { label: 'Acid Trip', subLabel: 'COLOR CYCLING', icon: 'change_circle', paramNames: [{ name: 'Spectrum' }, { name: 'Vibrance' }] },
   INVERT_GHOST: { label: 'Spectral', subLabel: 'NEGATIVE MIX', icon: 'invert_colors', paramNames: [{ name: 'Inversion' }] },
   ZOOM_PAN: { label: 'Zoom Pulse', subLabel: 'RADIAL SCALE', icon: 'zoom_in', paramNames: [{ name: 'Scale' }, { name: 'Pan' }] },
-  SCREEN_SHAKE: { label: 'Shake', subLabel: 'CAMERA JITTER', icon: 'vibration', paramNames: [{ name: 'Intensity' }, { name: 'Roughness' }] },
+  SCREEN_SHAKE: { label: 'Shake', subLabel: 'CAMERA JITTER', icon: 'vibration', paramNames: [{ name: 'Displacement' }, { name: 'Speed' }] },
+  STARFIELD: { label: 'Starfield', subLabel: 'WARP SPEED', icon: 'auto_awesome', paramNames: [{ name: 'Density' }, { name: 'Speed' }] },
 };
 
 const buildParams = (
@@ -70,7 +71,8 @@ export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
   { type: 'COMPRESSION_HELL', values: [33, 55], reactive: true, frequencyBand: 'MID' },
   { type: 'DEEP_FRY', values: [15, 88], reactive: true, frequencyBand: 'ENERGY' },
   { type: 'ZOOM_PAN', values: [63, 0], active: true, reactive: true, frequencyBand: 'ENERGY' },
-  { type: 'SCREEN_SHAKE', values: [30, 0], reactive: true, frequencyBand: 'BASS' },
+  { type: 'SCREEN_SHAKE', values: [50, 50], reactive: false, frequencyBand: 'BASS' },
+  { type: 'STARFIELD', values: [80, 10], active: true, reactive: false, frequencyBand: 'BASS' },
 ]);
 
 export const FEEDBACK_FORM_URL = 'https://forms.gle/CBVXwJv9s3ZvXyWr8';

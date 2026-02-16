@@ -13,7 +13,8 @@ export type GlitchEffectType =
   | 'HUE_ROTATION'
   | 'INVERT_GHOST'
   | 'ZOOM_PAN'
-  | 'SCREEN_SHAKE';
+  | 'SCREEN_SHAKE'
+  | 'STARFIELD';
 
 export interface EffectConfig {
   type: GlitchEffectType;
