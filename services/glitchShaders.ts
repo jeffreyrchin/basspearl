@@ -575,34 +575,34 @@ void main() {
         // Using fract() creates a continuous loop as we travel forward.
         float z = fract(travel + i * 0.333); 
         
-        // Perspective projection: Divide position by depth.
-        // To move outward, we want depth to increase over time.
-        float depth = z; 
-        if (depth < 0.001) depth = 0.001; 
+        // Stabilize the singular point at (0,0,0) with a softening offset.
+        // This allows stars to appear very close to the center without math errors.
+        float depth = z + 0.04; 
         
         vec2 layerUV = uv / depth;
-        
-        // Partition space into a grid to place one potential star per cell.
-        float numGridCells = 10.0 + (i * 5.0);
+
+        // Layer 0: 12.0 + (0 * 5.0) = 12.0 columns/rows
+        // Layer 1: 12.0 + (1 * 5.0) = 17.0 columns/rows
+        // Layer 2: 12.0 + (2 * 5.0) = 22.0 columns/rows
+        float numGridCells = 12.0 + (i * 5.0);
         vec2 gridID = floor(layerUV * numGridCells);
         vec2 gridUV = fract(layerUV * numGridCells) - 0.5;
 
-        // travel is continuous (e.g., 2.45)
-        // lap is discrete (e.g., 2.0)
         float lap = floor(travel + i * 0.333); 
-        
-        // Seed is based on grid position and the current loop number
         float r = rand(gridID + i * 111.0 + lap);
         
         // Probability check for star existence based on density.
-        if (r > (1.0 - (density * 0.2))) {
+        if (r > (1.0 - (density * 0.25))) {
              float d = length(gridUV);
              
-             // Fade stars out as they approach the camera (z -> 0) or recede into the distance (z -> 1).
-             float fade = smoothstep(0.0, 0.2, z) * smoothstep(1.0, 0.8, z);
+             // Smoothly bloom stars in at the center (z -> 0) and fade at the edges (z -> 1).
+             float fade = smoothstep(0.0, 0.3, z) * smoothstep(1.0, 0.8, z);
              
-             // Create a soft point light effect (Glow) using 1/distance.
-             float star = 0.01 / d; 
+             // Stable Exponential Glow: 
+             // We use a lower "sharpness" (25 instead of 100) to avoid sub-pixel flickering.
+             float star = exp(-d * 25.0) * 1.5; // Base glow/soft halo
+             star += exp(-d * 50.0) * 1.5; // Hotspot/core
+             
              color += vec3(star) * fade * r;
         }
     }
