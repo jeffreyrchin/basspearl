@@ -156,7 +156,7 @@ export class GlitchEngine {
       const velocityParam = params[meta.velocityParamIndex];
       if (velocityParam && !velocityParam.reactive) {
         // Manual mode: Use the current song time as the "integrated value" for constant acceleration
-        integratedValue = currentTime * 0.5; // Scale to match audio range roughly
+        integratedValue = currentTime;
       }
     }
 

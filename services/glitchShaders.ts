@@ -555,14 +555,18 @@ float rand(vec2 co) {
 }
 
 void main() {
-    float density = u_params[0] / 100.0; // Normalized density 0.0 - 1.0
-    float speedScale = u_params[1] / 10.0; 
+    // Normalize parameters to 0..1
+    float density = u_params[0] / 100.0;
+    float speedScale = u_params[1] / 100.0; 
     
     // 'travel' represents our total displacement through the starfield.
     // It is driven by u_integrated_value, which is either:
     // 1. Time-integrated (Manual mode) for constant speed.
     // 2. Audio-integrated (Sync mode) for reactive acceleration.
-    float travel = (u_integrated_value * 2.0) * speedScale;
+
+    // Use a single "Aesthetic Multiplier" to get the speed you want
+    // 4.0 means: at Speed 100, 4 laps per second.
+    float travel = u_integrated_value * speedScale * 4.0;
     
     // Normalize UVs to center (0,0) and handle aspect ratio to prevent stretching.
     vec2 uv = (v_texCoord - 0.5) * u_resolution / u_resolution.y;
