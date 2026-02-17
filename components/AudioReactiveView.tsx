@@ -29,6 +29,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         integratedReactivityMapRef,
         audioBufferRef,
         isProcessing,
+        setIsProcessing,
         loadAudioFromUrl
     } = useAudioProcessor();
 
@@ -53,8 +54,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     effectsRef.current = effects;
 
     const loadPreset = async (preset: Preset) => {
-        trackEvent('preset_loaded', { preset_id: preset.id });
-
+        setIsProcessing(true);
+        trackEvent('preset_load', { preset_id: preset.id });
         try {
             // 1. Load Image
             const response = await fetch(preset.image);
@@ -82,8 +83,12 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             if (canvasRef.current) {
                 glitchEngine.renderToCanvas(canvasRef.current, imageUrl, fullRack, 960);
             }
+            trackEvent('preset_load_succeeded', { preset_id: preset.id });
         } catch (err) {
+            trackEvent('preset_load_failed', { preset_id: preset.id });
             console.error('Error loading preset:', err);
+        } finally {
+            setIsProcessing(false);
         }
     };
 

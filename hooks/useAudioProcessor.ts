@@ -220,7 +220,6 @@ export const useAudioProcessor = () => {
                     duration: audioBuffer.duration
                 });
 
-                setIsProcessing(false);
                 trackEvent('audio_upload_succeeded', {
                     file_name: file.name,
                     file_size: file.size,
@@ -233,8 +232,9 @@ export const useAudioProcessor = () => {
                     error_code: err.code || 'Unknown error code',
                     error_message: err.message || 'Unknown audio processing error'
                 });
-                setIsProcessing(false);
                 console.error('Error decoding audio:', err);
+            } finally {
+                setIsProcessing(false);
             }
         }
     };
@@ -261,7 +261,6 @@ export const useAudioProcessor = () => {
         }
 
         try {
-            setIsProcessing(true);
             const response = await fetch(url);
             const arrayBuffer = await response.arrayBuffer();
 
@@ -280,10 +279,9 @@ export const useAudioProcessor = () => {
             });
 
             setAudioFile(new File([arrayBuffer], label, { type: 'audio/mpeg' }));
-            setIsProcessing(false);
         } catch (err) {
             console.error('Error loading audio from URL:', err);
-            setIsProcessing(false);
+            throw err; // Re-throw so the caller can handle its own state/analytics
         }
     };
 
@@ -372,6 +370,7 @@ export const useAudioProcessor = () => {
         integratedReactivityMapRef,
         audioBufferRef,
         isProcessing,
+        setIsProcessing,
         loadAudioFromUrl
     };
 };
