@@ -5,6 +5,7 @@ export type AnalyticsEvent =
     | 'toggle_playback'
     | 'effect_toggled'
     | 'image_upload_succeeded'
+    | 'image_upload_failed'
     | 'audio_upload_succeeded'
     | 'audio_upload_failed'
     | 'export_started'

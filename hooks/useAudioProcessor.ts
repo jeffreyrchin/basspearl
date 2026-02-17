@@ -24,11 +24,6 @@ export const useAudioProcessor = () => {
     const offsetRef = useRef<number>(0);
     const isPlayingRef = useRef(false);
 
-    // Sync ref with state for use in animation loops
-    useEffect(() => {
-        isPlayingRef.current = isPlaying;
-    }, [isPlaying]);
-
     const reactivityMapRef = useRef<{
         bass: Float32Array;
         mid: Float32Array;
@@ -37,6 +32,31 @@ export const useAudioProcessor = () => {
     } | null>(null);
 
     const integratedReactivityMapRef = useRef<IntegratedReactivityMap | null>(null);
+
+    const getAudioContext = useCallback(() => {
+        if (!audioContextRef.current) {
+            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
+        return audioContextRef.current;
+    }, []);
+
+    const stopPlayback = useCallback((resetTime = false) => {
+        if (sourceRef.current) {
+            try {
+                sourceRef.current.onended = null;
+                sourceRef.current.stop();
+            } catch (e) { }
+            sourceRef.current = null;
+        }
+
+        setIsPlaying(false);
+        isPlayingRef.current = false;
+
+        if (resetTime) {
+            setCurrentTime(0);
+            offsetRef.current = 0;
+        }
+    }, []);
 
     const precomputeReactivity = async (buffer: AudioBuffer, fps = 60) => {
         const sampleRate = buffer.sampleRate;
@@ -152,11 +172,24 @@ export const useAudioProcessor = () => {
     const handleAudioUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            setAudioFile(file);
-            setIsPlaying(false);
-            isPlayingRef.current = false;
+            const cacheKey = `file:${file.name}:${file.size}`;
 
-            // Stop and cleanup existing audio
+            // Check Cache
+            if (analysisCache.has(cacheKey)) {
+                stopPlayback(true);
+                const cached = analysisCache.get(cacheKey)!;
+                setAudioFile(file);
+                audioBufferRef.current = cached.buffer;
+                setDuration(cached.duration);
+                reactivityMapRef.current = cached.map;
+                integratedReactivityMapRef.current = cached.integrated;
+                return;
+            }
+
+            stopPlayback(true);
+            setAudioFile(file);
+
+            // Reset context to ensure fresh state on new upload
             if (audioContextRef.current) {
                 audioContextRef.current.close();
                 audioContextRef.current = null;
@@ -164,8 +197,6 @@ export const useAudioProcessor = () => {
 
             // Reset state
             audioBufferRef.current = null;
-            offsetRef.current = 0;
-            setCurrentTime(0);
 
             // Decode audio and set duration
             try {
@@ -173,15 +204,21 @@ export const useAudioProcessor = () => {
                 // Yield to ensure the spinner appears immediately
                 await new Promise(resolve => setTimeout(resolve, 0));
 
-                if (!audioContextRef.current) {
-                    audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-                }
+                const ctx = getAudioContext();
                 const arrayBuffer = await file.arrayBuffer();
-                const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+                const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
                 audioBufferRef.current = audioBuffer;
                 setDuration(audioBuffer.duration);
 
-                await precomputeReactivity(audioBuffer);
+                const map = await precomputeReactivity(audioBuffer);
+
+                // Cache the result
+                analysisCache.set(cacheKey, {
+                    buffer: audioBuffer,
+                    map: map,
+                    integrated: integratedReactivityMapRef.current,
+                    duration: audioBuffer.duration
+                });
 
                 setIsProcessing(false);
                 trackEvent('audio_upload_succeeded', {
@@ -203,14 +240,13 @@ export const useAudioProcessor = () => {
     };
 
     const loadAudioFromUrl = async (url: string, label: string) => {
-        setIsPlaying(false);
-        isPlayingRef.current = false;
+        stopPlayback(true);
         audioBufferRef.current = null;
-        offsetRef.current = 0;
-        setCurrentTime(0);
 
-        if (analysisCache.has(url)) {
-            const cached = analysisCache.get(url)!;
+        const cacheKey = `url:${url}`;
+
+        if (analysisCache.has(cacheKey)) {
+            const cached = analysisCache.get(cacheKey)!;
             audioBufferRef.current = cached.buffer;
             setDuration(cached.duration);
             reactivityMapRef.current = cached.map;
@@ -229,16 +265,14 @@ export const useAudioProcessor = () => {
             const response = await fetch(url);
             const arrayBuffer = await response.arrayBuffer();
 
-            if (!audioContextRef.current) {
-                audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-            }
+            const ctx = getAudioContext();
 
-            const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+            const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
             audioBufferRef.current = audioBuffer;
             setDuration(audioBuffer.duration);
             const map = await precomputeReactivity(audioBuffer);
 
-            analysisCache.set(url, {
+            analysisCache.set(cacheKey, {
                 buffer: audioBuffer,
                 map: map,
                 integrated: integratedReactivityMapRef.current,
@@ -256,38 +290,25 @@ export const useAudioProcessor = () => {
     const playAudio = async (startOffset = 0, onStart?: () => void) => {
         if (!audioFile || !audioBufferRef.current) return;
 
-        // Stop existing source if any
-        if (sourceRef.current) {
-            try {
-                sourceRef.current.onended = null;
-                sourceRef.current.stop();
-            } catch (e) {
-                // Already stopped
-            }
+        stopPlayback();
+
+        const ctx = getAudioContext();
+
+        if (ctx.state === 'suspended') {
+            await ctx.resume();
         }
 
-        if (!audioContextRef.current) {
-            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        }
-
-        if (audioContextRef.current.state === 'suspended') {
-            await audioContextRef.current.resume();
-        }
-
-        const source = audioContextRef.current.createBufferSource();
+        const source = ctx.createBufferSource();
         source.buffer = audioBufferRef.current;
-        source.connect(audioContextRef.current.destination);
+        source.connect(ctx.destination);
 
         source.onended = () => {
-            setIsPlaying(false);
-            isPlayingRef.current = false;
-            setCurrentTime(0);
-            offsetRef.current = 0;
+            stopPlayback(true);
         };
 
         sourceRef.current = source;
         source.start(0, startOffset);
-        startTimeRef.current = audioContextRef.current.currentTime;
+        startTimeRef.current = ctx.currentTime;
         offsetRef.current = startOffset;
         setIsPlaying(true);
         isPlayingRef.current = true;
@@ -302,13 +323,7 @@ export const useAudioProcessor = () => {
             offsetRef.current = pausedAt;
             setCurrentTime(pausedAt); // Update current time state for UI
 
-            // Remove onended handler before stopping to prevent it from resetting time
-            if (sourceRef.current) {
-                sourceRef.current.onended = null;
-                sourceRef.current.stop();
-            }
-            setIsPlaying(false);
-            isPlayingRef.current = false;
+            stopPlayback();
         } else {
             // Play/Resume from saved offset
             playAudio(offsetRef.current, onStart);

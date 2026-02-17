@@ -115,18 +115,31 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     image_width: img.width,
                     image_height: img.height
                 });
+
+                // Show initial preview
+                if (canvasRef.current) {
+                    glitchEngine.renderToCanvas(
+                        canvasRef.current,
+                        imageBlob,
+                        effects,
+                        960
+                    );
+                }
+            };
+            img.onerror = () => {
+                trackEvent('image_upload_failed', {
+                    file_name: fileData.name,
+                    file_size: fileData.size,
+                    file_type: fileData.type,
+                    image_width: img.width,
+                    image_height: img.height
+                });
+                console.error("Failed to load image");
+                URL.revokeObjectURL(imageBlob);
+                imageFileRef.current = null;
+                setImageFile(null);
             };
             img.src = imageBlob;
-
-            // Show initial preview
-            if (canvasRef.current) {
-                glitchEngine.renderToCanvas(
-                    canvasRef.current,
-                    imageBlob,
-                    effects,
-                    960
-                );
-            }
         }
     };
 
@@ -265,6 +278,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                 id="image-file-input"
                                 type="file"
                                 accept="image/*"
+                                onClick={(e) => { (e.target as HTMLInputElement).value = ''; }} // Clear input so onChange always fires
                                 onChange={handleImageUpload}
                                 className="sr-only"
                                 aria-label="Image file input" />
@@ -288,6 +302,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                 id="audio-file-input"
                                 type="file"
                                 accept="audio/*"
+                                onClick={(e) => { (e.target as HTMLInputElement).value = ''; }} // Clear input so onChange always fires
                                 onChange={handleAudioUpload}
                                 className="sr-only"
                                 aria-label="Audio file input" />
