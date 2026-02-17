@@ -164,6 +164,53 @@ export const useAudioProcessor = () => {
         return map;
     };
 
+    /**
+     * Helper to apply cached results to the current state
+     */
+    const applyCachedAudio = useCallback((cached: any, file: File) => {
+        stopPlayback(true);
+        audioBufferRef.current = cached.buffer;
+        reactivityMapRef.current = cached.map;
+        integratedReactivityMapRef.current = cached.integrated;
+        setDuration(cached.duration);
+        setAudioFile(file);
+    }, [stopPlayback]);
+
+    /**
+     * Completely resets the audio context and internal reactivity maps
+     */
+    const resetAudioEngine = useCallback(() => {
+        if (audioContextRef.current) {
+            audioContextRef.current.close();
+            audioContextRef.current = null;
+        }
+        audioBufferRef.current = null;
+        reactivityMapRef.current = null;
+        integratedReactivityMapRef.current = null;
+    }, []);
+
+    /**
+     * Processor: Centralizes analysis, state updates, and caching.
+     */
+    const processAndStoreAudio = useCallback(async (buffer: AudioBuffer, cacheKey: string, file: File) => {
+        // Reset state for new data
+        audioBufferRef.current = buffer;
+        setDuration(buffer.duration);
+
+        // Compute FFT Reactivity
+        const map = await precomputeReactivity(buffer);
+
+        // Store in memory cache
+        analysisCache.set(cacheKey, {
+            buffer,
+            map,
+            integrated: integratedReactivityMapRef.current,
+            duration: buffer.duration
+        });
+
+        setAudioFile(file);
+    }, [precomputeReactivity]);
+
     const getElapsedSeconds = useCallback(() => {
         if (!audioContextRef.current || !isPlayingRef.current) return offsetRef.current;
         return offsetRef.current + (audioContextRef.current.currentTime - startTimeRef.current);
@@ -171,62 +218,34 @@ export const useAudioProcessor = () => {
 
     const handleAudioUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
+            stopPlayback(true);
             const file = e.target.files[0];
             analytics.audio.started(file);
             const cacheKey = `file:${file.name}:${file.size}`;
 
-            // Check Cache
+            // 1. Cache Check
             if (analysisCache.has(cacheKey)) {
-                stopPlayback(true);
-                const cached = analysisCache.get(cacheKey)!;
-                setAudioFile(file);
-                audioBufferRef.current = cached.buffer;
-                setDuration(cached.duration);
-                reactivityMapRef.current = cached.map;
-                integratedReactivityMapRef.current = cached.integrated;
-
-                analytics.audio.succeeded(file, cached.duration, true);
+                applyCachedAudio(analysisCache.get(cacheKey)!, file);
+                analytics.audio.succeeded(file, analysisCache.get(cacheKey)!.duration, true);
                 return;
             }
 
-            stopPlayback(true);
-            setAudioFile(file);
+            // 2. Clear context & Reset
+            resetAudioEngine();
 
-            // Reset context to ensure fresh state on new upload
-            if (audioContextRef.current) {
-                audioContextRef.current.close();
-                audioContextRef.current = null;
-            }
-
-            // Reset state
-            audioBufferRef.current = null;
-
-            // Decode audio and set duration
             try {
                 setIsProcessing(true);
                 // Yield to ensure the spinner appears immediately
                 await new Promise(resolve => setTimeout(resolve, 0));
 
-                const ctx = getAudioContext();
                 const arrayBuffer = await file.arrayBuffer();
-                const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-                audioBufferRef.current = audioBuffer;
-                setDuration(audioBuffer.duration);
+                const audioBuffer = await getAudioContext().decodeAudioData(arrayBuffer);
 
-                const map = await precomputeReactivity(audioBuffer);
-
-                // Cache the result
-                analysisCache.set(cacheKey, {
-                    buffer: audioBuffer,
-                    map: map,
-                    integrated: integratedReactivityMapRef.current,
-                    duration: audioBuffer.duration
-                });
-
+                await processAndStoreAudio(audioBuffer, cacheKey, file);
                 analytics.audio.succeeded(file, audioBuffer.duration);
             } catch (err: any) {
                 analytics.audio.failed(file, err);
-                console.error('Error decoding audio:', err);
+                console.error('Error processing uploaded audio:', err);
             } finally {
                 setIsProcessing(false);
             }
@@ -235,44 +254,24 @@ export const useAudioProcessor = () => {
 
     const loadAudioFromUrl = async (url: string, label: string) => {
         stopPlayback(true);
-        audioBufferRef.current = null;
-
         const cacheKey = `url:${url}`;
+        const virtualFile = new File([], label, { type: 'audio/mpeg' });
 
+        // 1. Cache Check
         if (analysisCache.has(cacheKey)) {
-            const cached = analysisCache.get(cacheKey)!;
-            audioBufferRef.current = cached.buffer;
-            setDuration(cached.duration);
-            reactivityMapRef.current = cached.map;
-            integratedReactivityMapRef.current = cached.integrated;
-            setAudioFile(new File([], label, { type: 'audio/mpeg' }));
+            applyCachedAudio(analysisCache.get(cacheKey)!, virtualFile);
             return;
         }
 
-        if (audioContextRef.current) {
-            audioContextRef.current.close();
-            audioContextRef.current = null;
-        }
+        // 2. Clear context & Reset
+        resetAudioEngine();
 
         try {
             const response = await fetch(url);
             const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await getAudioContext().decodeAudioData(arrayBuffer);
 
-            const ctx = getAudioContext();
-
-            const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-            audioBufferRef.current = audioBuffer;
-            setDuration(audioBuffer.duration);
-            const map = await precomputeReactivity(audioBuffer);
-
-            analysisCache.set(cacheKey, {
-                buffer: audioBuffer,
-                map: map,
-                integrated: integratedReactivityMapRef.current,
-                duration: audioBuffer.duration
-            });
-
-            setAudioFile(new File([arrayBuffer], label, { type: 'audio/mpeg' }));
+            await processAndStoreAudio(audioBuffer, cacheKey, new File([arrayBuffer], label, { type: 'audio/mpeg' }));
         } catch (err) {
             console.error('Error loading audio from URL:', err);
             throw err; // Re-throw so the caller can handle its own state/analytics
