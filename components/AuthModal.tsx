@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { trackEvent } from '../services/analytics';
 import { useLegalStore } from '../store/useLegalStore';
 import { useAuthStore } from '../store/useAuthStore';
+import { analytics } from '../services/analytics';
 
 const AuthModal = () => {
     const { openLegal } = useLegalStore();
@@ -20,7 +20,7 @@ const AuthModal = () => {
         if (isAuthOpen) {
             setError(null);
             setAgreedToTerms(false);
-            trackEvent('auth_view', { mode: authMode });
+            analytics.auth.view(authMode);
         }
     }, [isAuthOpen, authMode]);
 
@@ -41,14 +41,10 @@ const AuthModal = () => {
         setError(null);
         try {
             await signInWithGoogle();
-            trackEvent('auth_google_succeeded', { mode: authMode });
+            analytics.auth.google.succeeded(authMode);
             closeAuth();
         } catch (err: any) {
-            trackEvent('auth_google_failed', {
-                error_name: err.name || 'Unknown error name',
-                error_code: err.code || 'Unknown error code',
-                error_message: err.message || 'Unknown Google sign-in error'
-            });
+            analytics.auth.google.failed(err);
             setError(getErrorMessage(err.code));
         } finally {
             setIsLoading(false);
@@ -71,14 +67,10 @@ const AuthModal = () => {
             } else {
                 await signUpWithEmail(email, password, displayName);
             }
-            trackEvent('auth_email_succeeded', { mode: authMode });
+            analytics.auth.email.succeeded(authMode);
             closeAuth();
         } catch (err: any) {
-            trackEvent('auth_email_failed', {
-                error_name: err.name || 'Unknown error name',
-                error_code: err.code || 'Unknown error code',
-                error_message: err.message || 'Unknown email sign-in error'
-            });
+            analytics.auth.email.failed(err);
             setError(getErrorMessage(err.code));
         } finally {
             setIsLoading(false);

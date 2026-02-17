@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, ChangeEvent } from 'react';
 import { calculateNextState, ReactivityState } from '@/services/calculateReactiveEffects';
 import { computeIntegratedReactivity, IntegratedReactivityMap } from '@/services/SpeedManager';
-import { trackEvent } from '@/services/analytics';
+import { analytics } from '@/services/analytics';
 
 const analysisCache = new Map<string, {
     buffer: AudioBuffer;
@@ -172,11 +172,7 @@ export const useAudioProcessor = () => {
     const handleAudioUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            trackEvent('audio_upload_started', {
-                file_name: file.name,
-                file_size: file.size,
-                file_type: file.type,
-            });
+            analytics.audio.started(file);
             const cacheKey = `file:${file.name}:${file.size}`;
 
             // Check Cache
@@ -189,13 +185,7 @@ export const useAudioProcessor = () => {
                 reactivityMapRef.current = cached.map;
                 integratedReactivityMapRef.current = cached.integrated;
 
-                trackEvent('audio_upload_succeeded', {
-                    file_name: file.name,
-                    file_size: file.size,
-                    file_type: file.type,
-                    duration: cached.duration,
-                    from_cache: true
-                });
+                analytics.audio.succeeded(file, cached.duration, true);
                 return;
             }
 
@@ -233,21 +223,9 @@ export const useAudioProcessor = () => {
                     duration: audioBuffer.duration
                 });
 
-                trackEvent('audio_upload_succeeded', {
-                    file_name: file.name,
-                    file_size: file.size,
-                    file_type: file.type,
-                    duration: audioBuffer.duration
-                });
+                analytics.audio.succeeded(file, audioBuffer.duration);
             } catch (err: any) {
-                trackEvent('audio_upload_failed', {
-                    file_name: file.name,
-                    file_size: file.size,
-                    file_type: file.type,
-                    error_name: err.name || 'Unknown error name',
-                    error_code: err.code || 'Unknown error code',
-                    error_message: err.message || 'Unknown audio processing error'
-                });
+                analytics.audio.failed(file, err);
                 console.error('Error decoding audio:', err);
             } finally {
                 setIsProcessing(false);

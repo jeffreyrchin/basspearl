@@ -4,11 +4,11 @@ import { glitchEngine } from '../services/glitchEngine';
 import SidebarNavigation from './SidebarNavigation';
 import Navbar from './Navbar';
 import { Footer } from './Footer';
-import { INITIAL_REACTIVE_EFFECTS, PRESETS, Preset } from '@/constants';
+import { Preset, INITIAL_REACTIVE_EFFECTS, PRESETS } from '@/constants';
 import { mapReactivityToEffects } from '@/services/calculateReactiveEffects';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 import { exportVideo } from '@/services/exportService';
-import { trackEvent } from '@/services/analytics';
+import { analytics } from '@/services/analytics';
 
 interface AudioReactiveViewProps {
 }
@@ -55,7 +55,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
     const loadPreset = async (preset: Preset) => {
         setIsProcessing(true);
-        trackEvent('preset_load_started', { preset_id: preset.id });
+        analytics.preset.started(preset.id);
         try {
             // 1. Load Image
             const response = await fetch(preset.image);
@@ -83,14 +83,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             if (canvasRef.current) {
                 glitchEngine.renderToCanvas(canvasRef.current, imageUrl, fullRack, 960);
             }
-            trackEvent('preset_load_succeeded', { preset_id: preset.id });
+            analytics.preset.succeeded(preset.id);
         } catch (err: any) {
-            trackEvent('preset_load_failed', {
-                preset_id: preset.id,
-                error_name: err.name || 'Unknown error name',
-                error_code: err.code || 'Unknown error code',
-                error_message: err.message || 'Unknown preset load error'
-            });
+            analytics.preset.failed(preset.id, err);
             console.error('Error loading preset:', err);
         } finally {
             setIsProcessing(false);
@@ -106,21 +101,11 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            trackEvent('image_upload_started', {
-                file_name: file.name,
-                file_size: file.size,
-                file_type: file.type
-            });
+            analytics.image.started(file);
             setImageFile(file);
             const imageBlob = URL.createObjectURL(file);
             imageFileRef.current = imageBlob; // Store the URL string for the animation loop
 
-            // For analytics
-            const fileData = {
-                name: file.name,
-                size: file.size,
-                type: file.type
-            };
             const img = new Image();
             img.src = imageBlob;
 
@@ -135,24 +120,11 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             effects,
                             960
                         );
-                        trackEvent('image_upload_succeeded', {
-                            file_name: fileData.name,
-                            file_size: fileData.size,
-                            file_type: fileData.type,
-                            image_width: img.width,
-                            image_height: img.height
-                        });
+                        analytics.image.succeeded(file, img.width, img.height);
                     }
                 })
                 .catch((err: any) => {
-                    trackEvent('image_upload_failed', {
-                        file_name: fileData.name,
-                        file_size: fileData.size,
-                        file_type: fileData.type,
-                        error_name: err.name || 'Unknown error name',
-                        error_code: err.code || 'Unknown error code',
-                        error_message: err.message || 'Unknown image upload error'
-                    });
+                    analytics.image.failed(file, err);
                     console.error("Image decode failed:", err);
                     URL.revokeObjectURL(imageBlob);
                     imageFileRef.current = null;
@@ -235,7 +207,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         setExportProgress(0);
 
         try {
-            trackEvent('export_started');
+            analytics.export.started();
             await exportVideo({
                 audioBuffer: audioBufferRef.current,
                 reactivityMap: reactivityMapRef.current,
@@ -247,16 +219,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 maxSize: 1280,
                 onProgress: (p) => setExportProgress(p)
             });
-            trackEvent('export_succeeded', {
-                effect_count: effects.filter(e => e.active).length,
-                active_effects: effects.filter(e => e.active).map(e => e.type).join(', ')
-            });
+            analytics.export.succeeded(effects);
         } catch (err: any) {
-            trackEvent('export_failed', {
-                error_name: err.name || 'Unknown error name',
-                error_code: err.code || 'Unknown error code',
-                error_message: err.message || 'Unknown export error'
-            });
+            analytics.export.failed(err);
             console.error("Export failed:", err);
             alert("Export failed. See console for details.");
         } finally {
@@ -390,13 +355,15 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     <div className="h-14 bg-black/20 border-t border-white/5 flex items-center px-3 sm:px-6 gap-2 sm:gap-4 shrink-0 overflow-hidden">
                         {/* Play/Pause */}
                         <button
-                            onClick={() => togglePlay(() => {
-                                trackEvent('toggle_playback');
-                                // Start animation loop if not already running
-                                if (!requestRef.current) {
-                                    requestRef.current = requestAnimationFrame(animate);
-                                }
-                            })}
+                            onClick={() => {
+                                analytics.playback.toggled(!isPlaying);
+                                togglePlay(() => {
+                                    // Start animation loop if not already running
+                                    if (!requestRef.current) {
+                                        requestRef.current = requestAnimationFrame(animate);
+                                    }
+                                })
+                            }}
                             disabled={!imageFile || !audioFile || isProcessing}
                             aria-label={isPlaying ? "Pause audio" : "Play audio"}
                             className={`w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-xl flex items-center justify-center transition-all border ${isPlaying ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)] text-primary' : (isProcessing ? 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white')}`}>

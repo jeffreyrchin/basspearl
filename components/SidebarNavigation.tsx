@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { EffectConfig, EffectCategory } from '../types';
 import { EFFECT_METADATA } from '../constants';
 import { EffectSlider } from './EffectSlider';
-import { trackEvent } from '@/services/analytics';
+import { analytics } from '@/services/analytics';
 
 interface SidebarNavigationProps {
     effects: EffectConfig[];
@@ -72,7 +72,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                                         <p className={`text-[8px] uppercase tracking-widest ${effect.active ? 'text-primary' : 'text-white/60'}`}>{effect.active ? 'Active' : 'Inactive'}</p>
                                         <button
                                             onClick={() => {
-                                                trackEvent('effect_toggled', { effect: effect.type });
+                                                analytics.effect.toggled(effect.type, !effect.active);
                                                 setEffects(prev => prev.map((e, idx) =>
                                                     idx === selectedEffectIndex ? { ...e, active: !e.active } : e
                                                 ));
@@ -227,7 +227,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                             {/* Quick Toggle Corner Button */}
                             <button
                                 onClick={(e) => {
-                                    trackEvent('effect_toggled', { effect: effect.type });
+                                    analytics.effect.toggled(effect.type, !effect.active);
                                     e.stopPropagation();
                                     setEffects(prev => prev.map((curr, i) =>
                                         i === effect.originalIndex ? { ...curr, active: !curr.active } : curr
