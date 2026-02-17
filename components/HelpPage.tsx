@@ -15,7 +15,7 @@ const HelpPage = () => {
                     <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-20">
                         <div className="text-center mb-12 md:mb-16">
                             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold uppercase tracking-tighter mb-6 active-glow">
-                                Help & <span className="text-primary">Documentation</span>
+                                Help & Documentation
                             </h1>
                         </div>
 

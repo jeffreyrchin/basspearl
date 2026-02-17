@@ -5,31 +5,24 @@ const AboutContent: React.FC = () => {
         <div className="max-w-4xl mx-auto space-y-12">
             {/* What is GlitchBrain */}
             <section className="space-y-4">
-                <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">What is GlitchBrain?</h2>
+                <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">Audio-Reactive Graphics Engine</h2>
                 <p className="text-white/70 text-base md:text-lg leading-relaxed">
-                    GlitchBrain is a powerful web-based glitch art generator that transforms your images into stunning digital artifacts.
-                    Harness the beauty of controlled chaos with our suite of professional-grade distortion effects - all running directly in your browser.
-                </p>
-                <p className="text-white/70 text-base md:text-lg leading-relaxed">
-                    Whether you're a digital artist, designer, or creative enthusiast, GlitchBrain provides an intuitive interface
-                    for exploring the aesthetic possibilities of data corruption, pixel manipulation, and chromatic aberration.
+                    GlitchBrain is a high-performance visual synthesizer that combines images and audio to create audio-reactive visualizers. Your creations can be exported as MP4 files to share or use in any of your creative projects.
                 </p>
             </section>
 
             {/* Features */}
             <section className="space-y-6">
-                <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">Features</h2>
+                <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">Core Technology</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
-                        { title: '13+ Glitch Effects', desc: 'Pixel sorting, RGB shifting, datamoshing, and more' },
-                        { title: 'Real-Time Preview', desc: 'See your changes instantly with our optimized rendering engine' },
-                        { title: 'Full Resolution Export', desc: 'Download your creations in original quality' },
-                        { title: 'Preset Library', desc: 'Quick-start templates for instant glitch aesthetics' },
-                        { title: 'Layer System', desc: 'Stack and combine multiple effects for complex results' },
-                        { title: 'Undo/Redo', desc: 'Experiment freely with history control' }
+                        { title: 'Dynamic FFT Analysis', desc: 'Precomputed audio mapping for sub-frame accuracy across Bass, Mid, and Treble ranges.' },
+                        { title: 'Hardware Acceleration', desc: 'Custom GLSL shaders running directly on your GPU for real-time previews.' },
+                        { title: 'MP4 Video Export', desc: 'High-definition video rendering with hardware-encoded MP4 support.' },
+                        { title: 'Dual-Mode Control', desc: 'Toggle between Manual mode for fixed effect levels or Sync mode for audio-reactive effects.' }
                     ].map(feature => (
                         <div key={feature.title} className="glass-panel p-5 rounded-xl border border-white/10 hover:border-primary/30 transition-all">
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-white mb-2">{feature.title}</h3>
+                            <h3 className="text-[11px] font-bold uppercase tracking-widest text-primary mb-2">{feature.title}</h3>
                             <p className="text-white/60 text-sm leading-relaxed">{feature.desc}</p>
                         </div>
                     ))}
@@ -38,17 +31,17 @@ const AboutContent: React.FC = () => {
 
             {/* How It Works */}
             <section className="space-y-4">
-                <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">How It Works</h2>
+                <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">The Process</h2>
                 <div className="space-y-4">
                     <div className="glass-panel p-6 rounded-xl border border-white/10">
                         <div className="flex items-start gap-4">
                             <div className="size-10 shrink-0 rounded-lg bg-primary/20 flex items-center justify-center">
-                                <span className="text-primary font-bold text-xl">1</span>
+                                <span className="text-primary font-black text-xl">1</span>
                             </div>
                             <div>
-                                <h3 className="text-base font-bold uppercase tracking-wider text-white mb-1">Upload Your Image</h3>
+                                <h3 className="text-base font-bold uppercase tracking-wider text-white mb-1">Load Assets</h3>
                                 <p className="text-white/60 text-sm leading-relaxed">
-                                    Drag and drop any image file (PNG, JPG, TIFF) up to 50MB. Your image is processed entirely in your browser - nothing is uploaded to our servers.
+                                    Upload your own image and audio files, or choose a preset located above the viewport. Audio is analyzed locally to create high-fidelity reactivity maps.
                                 </p>
                             </div>
                         </div>
@@ -56,13 +49,12 @@ const AboutContent: React.FC = () => {
                     <div className="glass-panel p-6 rounded-xl border border-white/10">
                         <div className="flex items-start gap-4">
                             <div className="size-10 shrink-0 rounded-lg bg-primary/20 flex items-center justify-center">
-                                <span className="text-primary font-bold text-xl">2</span>
+                                <span className="text-primary font-black text-xl">2</span>
                             </div>
                             <div>
-                                <h3 className="text-base font-bold uppercase tracking-wider text-white mb-1">Apply Effects</h3>
+                                <h3 className="text-base font-bold uppercase tracking-wider text-white mb-1">Build your effects</h3>
                                 <p className="text-white/60 text-sm leading-relaxed">
-                                    Choose from our extensive effect library or use presets. Adjust effect parameters for precise control.
-                                    Our Web Worker-based engine ensures smooth, real-time processing even at full resolution.
+                                    Activate effects such as Pixel Sort, RGB Shift, and Wave Distortion. Click on an effect to open its controls.
                                 </p>
                             </div>
                         </div>
@@ -70,12 +62,12 @@ const AboutContent: React.FC = () => {
                     <div className="glass-panel p-6 rounded-xl border border-white/10">
                         <div className="flex items-start gap-4">
                             <div className="size-10 shrink-0 rounded-lg bg-primary/20 flex items-center justify-center">
-                                <span className="text-primary font-bold text-xl">3</span>
+                                <span className="text-primary font-black text-xl">3</span>
                             </div>
                             <div>
-                                <h3 className="text-base font-bold uppercase tracking-wider text-white mb-1">Export & Share</h3>
+                                <h3 className="text-base font-bold uppercase tracking-wider text-white mb-1">Export your video</h3>
                                 <p className="text-white/60 text-sm leading-relaxed">
-                                    Download your glitched masterpiece in PNG format. Signed-in users can export without watermarks and share directly to social media.
+                                    Click the Export Video button below the viewport to download your creation as an MP4 video, ready for social media or live performance.
                                 </p>
                             </div>
                         </div>
@@ -85,10 +77,10 @@ const AboutContent: React.FC = () => {
 
             {/* Tech Stack */}
             <section className="space-y-4">
-                <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">Technology</h2>
+                <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">Under the Hood</h2>
                 <p className="text-white/70 text-base md:text-lg leading-relaxed">
-                    Built with modern web technologies including React, TypeScript, and Web Workers for maximum performance.
-                    To ensure your privacy, all image processing happens client-side using the Canvas API.
+                    GlitchBrain uses advanced Web Audio and WebGL 2.0 APIs to deliver workstation-grade performance in the browser.
+                    By leveraging client-side processing, your creative data remains private and never leaves your machine.
                 </p>
             </section>
         </div>
