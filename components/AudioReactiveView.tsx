@@ -55,7 +55,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
     const loadPreset = async (preset: Preset) => {
         setIsProcessing(true);
-        trackEvent('preset_load', { preset_id: preset.id });
+        trackEvent('preset_load_started', { preset_id: preset.id });
         try {
             // 1. Load Image
             const response = await fetch(preset.image);
@@ -84,8 +84,13 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 glitchEngine.renderToCanvas(canvasRef.current, imageUrl, fullRack, 960);
             }
             trackEvent('preset_load_succeeded', { preset_id: preset.id });
-        } catch (err) {
-            trackEvent('preset_load_failed', { preset_id: preset.id });
+        } catch (err: any) {
+            trackEvent('preset_load_failed', {
+                preset_id: preset.id,
+                error_name: err.name || 'Unknown error name',
+                error_code: err.code || 'Unknown error code',
+                error_message: err.message || 'Unknown preset load error'
+            });
             console.error('Error loading preset:', err);
         } finally {
             setIsProcessing(false);
@@ -101,6 +106,11 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
+            trackEvent('image_upload_started', {
+                file_name: file.name,
+                file_size: file.size,
+                file_type: file.type
+            });
             setImageFile(file);
             const imageBlob = URL.createObjectURL(file);
             imageFileRef.current = imageBlob; // Store the URL string for the animation loop
@@ -112,39 +122,42 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 type: file.type
             };
             const img = new Image();
-            img.onload = () => {
-                trackEvent('image_upload_succeeded', {
-                    file_name: fileData.name,
-                    file_size: fileData.size,
-                    file_type: fileData.type,
-                    image_width: img.width,
-                    image_height: img.height
-                });
-
-                // Show initial preview
-                if (canvasRef.current) {
-                    glitchEngine.renderToCanvas(
-                        canvasRef.current,
-                        imageBlob,
-                        effects,
-                        960
-                    );
-                }
-            };
-            img.onerror = () => {
-                trackEvent('image_upload_failed', {
-                    file_name: fileData.name,
-                    file_size: fileData.size,
-                    file_type: fileData.type,
-                    image_width: img.width,
-                    image_height: img.height
-                });
-                console.error("Failed to load image");
-                URL.revokeObjectURL(imageBlob);
-                imageFileRef.current = null;
-                setImageFile(null);
-            };
             img.src = imageBlob;
+
+            // Use .decode() to get a real promise that rejects with a meaningful error
+            img.decode()
+                .then(() => {
+                    // Success!
+                    if (canvasRef.current) {
+                        glitchEngine.renderToCanvas(
+                            canvasRef.current,
+                            imageBlob,
+                            effects,
+                            960
+                        );
+                        trackEvent('image_upload_succeeded', {
+                            file_name: fileData.name,
+                            file_size: fileData.size,
+                            file_type: fileData.type,
+                            image_width: img.width,
+                            image_height: img.height
+                        });
+                    }
+                })
+                .catch((err: any) => {
+                    trackEvent('image_upload_failed', {
+                        file_name: fileData.name,
+                        file_size: fileData.size,
+                        file_type: fileData.type,
+                        error_name: err.name || 'Unknown error name',
+                        error_code: err.code || 'Unknown error code',
+                        error_message: err.message || 'Unknown image upload error'
+                    });
+                    console.error("Image decode failed:", err);
+                    URL.revokeObjectURL(imageBlob);
+                    imageFileRef.current = null;
+                    setImageFile(null);
+                });
         }
     };
 

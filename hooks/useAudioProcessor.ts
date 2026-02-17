@@ -172,6 +172,11 @@ export const useAudioProcessor = () => {
     const handleAudioUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
+            trackEvent('audio_upload_started', {
+                file_name: file.name,
+                file_size: file.size,
+                file_type: file.type,
+            });
             const cacheKey = `file:${file.name}:${file.size}`;
 
             // Check Cache
@@ -183,6 +188,14 @@ export const useAudioProcessor = () => {
                 setDuration(cached.duration);
                 reactivityMapRef.current = cached.map;
                 integratedReactivityMapRef.current = cached.integrated;
+
+                trackEvent('audio_upload_succeeded', {
+                    file_name: file.name,
+                    file_size: file.size,
+                    file_type: file.type,
+                    duration: cached.duration,
+                    from_cache: true
+                });
                 return;
             }
 
@@ -228,6 +241,9 @@ export const useAudioProcessor = () => {
                 });
             } catch (err: any) {
                 trackEvent('audio_upload_failed', {
+                    file_name: file.name,
+                    file_size: file.size,
+                    file_type: file.type,
                     error_name: err.name || 'Unknown error name',
                     error_code: err.code || 'Unknown error code',
                     error_message: err.message || 'Unknown audio processing error'
