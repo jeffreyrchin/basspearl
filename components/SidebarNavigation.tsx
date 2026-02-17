@@ -78,6 +78,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                                                 ));
                                             }}
                                             className={`w-12 h-6 rounded-full transition-all duration-300 relative border ${effect.active ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)]' : 'bg-white/10 border-transparent'}`}
+                                            aria-label={effect.active ? 'Deactivate effect' : 'Activate effect'}
                                         >
                                             <div className={`absolute top-[3px] w-4 h-4 rounded-full bg-white transition-all duration-300 ${effect.active ? 'left-7' : 'left-1'} shadow-md`} />
                                         </button>
