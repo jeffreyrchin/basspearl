@@ -40,7 +40,7 @@ const LegalConsentModal = () => {
                 <div className="flex-1 overflow-y-auto p-6 space-y-8 text-white/80 text-sm leading-relaxed custom-scrollbar">
                     <section>
                         <h1 className="text-2xl font-bold text-white mb-2">Privacy Policy</h1>
-                        <p className="text-white/60 mb-6 text-xs">Last Updated: February 4, 2026</p>
+                        <p className="text-white/60 mb-6 text-xs">Last Updated: February 17, 2026</p>
 
                         <div className="space-y-6">
                             <div>
@@ -56,8 +56,8 @@ const LegalConsentModal = () => {
                                     <li><strong>Contact Data:</strong> Includes email address for account management.</li>
                                     <li><strong>Technical Data:</strong> Includes internet protocol (IP) address, your login data, browser type and version, time zone setting and location, browser plug-in types and versions, operating system and platform, and other technology on the devices you use to access this website.</li>
                                     <li><strong>Usage Data:</strong> Includes information about how you use our website, products and services.</li>
-                                    <li><strong>Media Data (Images and Audio):</strong> Images and audio files you upload are processed locally in your browser. Audio files are analyzed to extract acoustic features and generate abstract art—no audio data leaves your device. We do not permanently store your original files on our servers unless explicitly saved by you to a cloud gallery feature (if available).</li>
-                                    <li><strong>Analytics Data:</strong> We collect anonymized usage data such as which effects you use, your interaction with presets, and successful image exports. This data is used solely to improve the user experience and feature set of GlitchBrain.io.</li>
+                                    <li><strong>Media Data (Images and Audio):</strong> Images and audio files you upload are processed locally in your browser to generate high-performance audio-reactive visualizers. Audio files are analyzed to create deterministic reactivity maps—no raw media data leaves your device. We do not store your original files on our servers.</li>
+                                    <li><strong>Analytics Data:</strong> We collect refined telemetry using Google Analytics 4, including interaction timestamps, preset selections, effect toggles, and processing performance metrics. This data is anonymized and used exclusively to optimize the visual engine and identify performance bottlenecks.</li>
                                 </ul>
                             </div>
 
@@ -182,7 +182,7 @@ const LegalConsentModal = () => {
 
                     <section>
                         <h1 className="text-2xl font-bold text-white mb-2">Terms of Service</h1>
-                        <p className="text-white/60 mb-6 text-xs">Last Updated: February 4, 2026</p>
+                        <p className="text-white/60 mb-6 text-xs">Last Updated: February 17, 2026</p>
 
                         <div className="space-y-6">
                             <div>
@@ -192,7 +192,7 @@ const LegalConsentModal = () => {
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">2. Description of Service</h3>
-                                <p>GlitchBrain.io provides a web-based tool for applying visual effects ("glitch effects") to user-uploaded images and generating abstract art from audio files. All image and audio processing occurs client-side within your browser—no files are uploaded to our servers.</p>
+                                <p>GlitchBrain.io provides a web-based graphics engine for generating audio-reactive visualizers and applying visual effects ("glitch effects") to user-uploaded images. The service allows for the real-time simulation and hardware-accelerated export of MP4 video files. All processing occurs client-side within your browser—no media files are uploaded to our servers.</p>
                             </div>
 
                             <div>
@@ -202,7 +202,7 @@ const LegalConsentModal = () => {
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">4. User Content and Conduct</h3>
-                                <p>By uploading images or audio files, you represent and warrant that you own or have the necessary rights, licenses, consents, and permissions to use and authorize us to process such content. You retain whatever ownership rights you have in your uploaded content. By uploading content, you grant GlitchBrain.io a temporary, limited license to process that content solely for providing the requested visual effects or generative art. All processing happens locally in your browser. You are solely responsible for ensuring you have the right to upload and process any content you submit to the Service.</p>
+                                <p>By uploading images or audio files, you represent and warrant that you own or have the necessary rights, licenses, consents, and permissions to use and authorize us to process such content. You retain full ownership of your uploaded content and any visualizer videos generated by the Service. By using the Service, you grant GlitchBrain.io a temporary, limited license to process your content locally in your browser solely to provide the requested visual effects. You are responsible for ensuring your use of generated content complies with third-party copyrights (e.g., music licensing).</p>
                             </div>
 
                             <div>
