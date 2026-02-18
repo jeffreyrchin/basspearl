@@ -24,35 +24,35 @@
  */
 
 export interface IntegratedReactivityMap {
+    sub: Float32Array;
     bass: Float32Array;
     mid: Float32Array;
     treble: Float32Array;
-    energy: Float32Array;
 }
 
 export const computeIntegratedReactivity = (
     reactivityMap: {
+        sub: Float32Array;
         bass: Float32Array;
         mid: Float32Array;
         treble: Float32Array;
-        energy: Float32Array;
     }
 ): IntegratedReactivityMap => {
     const length = reactivityMap.bass.length;
 
     // Create output arrays
     const integrated = {
+        sub: new Float32Array(length),
         bass: new Float32Array(length),
         mid: new Float32Array(length),
-        treble: new Float32Array(length),
-        energy: new Float32Array(length)
+        treble: new Float32Array(length)
     };
 
     // Running sums
+    let sumSub = 0;
     let sumBass = 0;
     let sumMid = 0;
     let sumTreble = 0;
-    let sumEnergy = 0;
 
     // Compute integrals
     // We assume a standard scaling factor so values don't get astronomical too fast
@@ -60,15 +60,15 @@ export const computeIntegratedReactivity = (
     const TIME_STEP = 0.01;
 
     for (let i = 0; i < length; i++) {
+        sumSub += reactivityMap.sub[i] * TIME_STEP;
         sumBass += reactivityMap.bass[i] * TIME_STEP;
         sumMid += reactivityMap.mid[i] * TIME_STEP;
         sumTreble += reactivityMap.treble[i] * TIME_STEP;
-        sumEnergy += reactivityMap.energy[i] * TIME_STEP;
 
+        integrated.sub[i] = sumSub;
         integrated.bass[i] = sumBass;
         integrated.mid[i] = sumMid;
         integrated.treble[i] = sumTreble;
-        integrated.energy[i] = sumEnergy;
     }
 
     return integrated;

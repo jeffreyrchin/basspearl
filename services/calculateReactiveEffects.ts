@@ -3,8 +3,7 @@ import { SHADER_REGISTRY } from "./glitchShaders";
 
 export interface ReactivityState {
     baselines: Record<string, number | null>;
-    smoothed: { bass: number; mid: number; treble: number; energy: number };
-    kickBaseline: number | null;
+    smoothed: { sub: number; bass: number; mid: number; treble: number };
     prevBins: Float32Array | null;
 }
 
@@ -40,17 +39,18 @@ export const calculateNextState = (
     };
 
     // 2. Extract frequency bands
-    const bassBins: [number, number] = [freqToBin(20), freqToBin(200)];
-    const midBins: [number, number] = [freqToBin(200), freqToBin(1500)];
-    const trebleBins: [number, number] = [freqToBin(1500), freqToBin(5000)];
+    const subBins: [number, number] = [freqToBin(20), freqToBin(100)];
+    const bassBins: [number, number] = [freqToBin(100), freqToBin(300)];
+    const midBins: [number, number] = [freqToBin(300), freqToBin(1500)];
+    const trebleBins: [number, number] = [freqToBin(1500), freqToBin(8000)];
 
+    const rawSub = bandRMS(subBins[0], subBins[1]);
     const rawBass = bandRMS(bassBins[0], bassBins[1]);
     const rawMid = bandRMS(midBins[0], midBins[1]);
     const rawTreble = bandRMS(trebleBins[0], trebleBins[1]);
-    const rawEnergy = (rawBass * 0.7) + (rawMid * 0.2) + (rawTreble * 0.1);
 
     // 3. Transient detection & smoothing
-    const transientBoost = { bass: 10.0, mid: 10.0, treble: 10.0, energy: 10.0 };
+    const transientBoost = { sub: 10.0, bass: 10.0, mid: 10.0, treble: 10.0 };
     const newBaselines = { ...prevState.baselines };
     const updateBand = (raw: number, key: string) => {
         if (newBaselines[key] === null) {
@@ -62,17 +62,10 @@ export const calculateNextState = (
         return Math.min(1, raw + transient);
     };
 
+    const reactiveSubValue = updateBand(rawSub, 'sub');
     const reactiveBassValue = updateBand(rawBass, 'bass');
     const reactiveMidValue = updateBand(rawMid, 'mid');
     const reactiveTrebleValue = updateBand(rawTreble, 'treble');
-    const reactiveEnergyValue = updateBand(rawEnergy, 'energy');
-
-    // 4. Kick detection
-    let newKickBaseline = prevState.kickBaseline || rawBass;
-    newKickBaseline += (rawBass - newKickBaseline) * 0.1;
-    const kickDelta = rawBass - newKickBaseline;
-    const dynamicThreshold = Math.max(0.1, Math.min(0.6, rawBass * 0.7));
-    const isKick = kickDelta > dynamicThreshold;
 
     // 5. Final Adaptive Smoothing
     const adaptiveSmooth = (current: number, target: number) => {
@@ -82,19 +75,18 @@ export const calculateNextState = (
     };
 
     const expandRange = (v: number) => {
-        const adjustedExponent = (v < 0.3) ? 5 : 3;
+        const adjustedExponent = (v < 0.9) ? 5 : 1;
         return Math.min(1, Math.pow(v, adjustedExponent));
     };
 
-    const pBass = adaptiveSmooth(prevState.smoothed.bass, expandRange(reactiveBassValue + (isKick ? 0.3 : 0)));
+    const pSub = adaptiveSmooth(prevState.smoothed.sub, expandRange(reactiveSubValue));
+    const pBass = adaptiveSmooth(prevState.smoothed.bass, expandRange(reactiveBassValue));
     const pMid = adaptiveSmooth(prevState.smoothed.mid, expandRange(reactiveMidValue));
     const pTreble = adaptiveSmooth(prevState.smoothed.treble, expandRange(reactiveTrebleValue));
-    const pEnergy = adaptiveSmooth(prevState.smoothed.energy, expandRange(reactiveEnergyValue));
 
     return {
         baselines: newBaselines,
-        smoothed: { bass: pBass, mid: pMid, treble: pTreble, energy: pEnergy },
-        kickBaseline: newKickBaseline,
+        smoothed: { sub: pSub, bass: pBass, mid: pMid, treble: pTreble },
         prevBins: bins
     };
 };
@@ -103,14 +95,15 @@ export const calculateNextState = (
  * Maps smoothed reactivity values to effect configurations.
  */
 export const mapReactivityToEffects = (
-    smoothed: { bass: number; mid: number; treble: number; energy: number },
+    smoothed: { sub: number; bass: number; mid: number; treble: number },
     currentEffects: EffectConfig[],
     frameCount: number
 ) => {
-    const { bass, mid, treble, energy } = smoothed;
+    const { sub, bass, mid, treble } = smoothed;
     return currentEffects.map(effect => {
-        let energyValue = energy;
-        if (effect.frequencyBand === 'BASS') energyValue = bass;
+        let energyValue = bass; // Default to bass if not specified
+        if (effect.frequencyBand === 'SUB') energyValue = sub;
+        else if (effect.frequencyBand === 'BASS') energyValue = bass;
         else if (effect.frequencyBand === 'MID') energyValue = mid;
         else if (effect.frequencyBand === 'TREBLE') energyValue = treble;
 

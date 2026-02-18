@@ -137,15 +137,17 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         if (!imageFileRef.current || !canvasRef.current) return;
         const currentFrame = Math.floor(time * 60);
         let reactiveEffects = effectsRef.current;
-        let frameIntegrated: { bass: number, mid: number, treble: number, energy: number } | undefined;
+        let frameIntegrated: { sub: number, bass: number, mid: number, treble: number } | undefined;
 
         // 1. Get Instantaneous Reactivity for standard effects
         if (reactivityMapRef.current) {
             const map = reactivityMapRef.current;
             const frame = Math.min(map.bass.length - 1, currentFrame); // Ensures frame <= last valid FFT frame index
             const smoothed = {
-                bass: map.bass[frame], mid: map.mid[frame],
-                treble: map.treble[frame], energy: map.energy[frame]
+                sub: map.sub[frame],
+                bass: map.bass[frame],
+                mid: map.mid[frame],
+                treble: map.treble[frame]
             };
             reactiveEffects = mapReactivityToEffects(smoothed, effectsRef.current, currentFrame);
         }
@@ -156,10 +158,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             const iMap = integratedReactivityMapRef.current;
             const frame = Math.min(iMap.bass.length - 1, currentFrame);
             frameIntegrated = {
+                sub: iMap.sub[frame],
                 bass: iMap.bass[frame],
                 mid: iMap.mid[frame],
-                treble: iMap.treble[frame],
-                energy: iMap.energy[frame]
+                treble: iMap.treble[frame]
             };
         }
 

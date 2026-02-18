@@ -25,10 +25,10 @@ export const useAudioProcessor = () => {
     const isPlayingRef = useRef(false);
 
     const reactivityMapRef = useRef<{
+        sub: Float32Array;
         bass: Float32Array;
         mid: Float32Array;
         treble: Float32Array;
-        energy: Float32Array;
     } | null>(null);
 
     const integratedReactivityMapRef = useRef<IntegratedReactivityMap | null>(null);
@@ -65,16 +65,15 @@ export const useAudioProcessor = () => {
         const fftSize = 2048;
 
         const map = {
+            sub: new Float32Array(totalFrames),
             bass: new Float32Array(totalFrames),
             mid: new Float32Array(totalFrames),
-            treble: new Float32Array(totalFrames),
-            energy: new Float32Array(totalFrames)
+            treble: new Float32Array(totalFrames)
         };
 
         let state: ReactivityState = {
-            baselines: { bass: null, mid: null, treble: null, energy: null },
-            smoothed: { bass: 0, mid: 0, treble: 0, energy: 0 },
-            kickBaseline: null,
+            baselines: { sub: null, bass: null, mid: null, treble: null },
+            smoothed: { sub: 0, bass: 0, mid: 0, treble: 0 },
             prevBins: new Float32Array(fftSize / 2).fill(0)
         };
 
@@ -88,7 +87,7 @@ export const useAudioProcessor = () => {
         const im = new Float32Array(fftSize);
         const magnitudes = new Float32Array(fftSize / 2);
         const minDb = -100;
-        const maxDb = -30;
+        const maxDb = -15;
 
         for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
             const centerSample = Math.floor((frameIndex / fps) * sampleRate);
@@ -148,10 +147,10 @@ export const useAudioProcessor = () => {
             // 4. Feed to existing reactivity service
             state = calculateNextState(magnitudes, magnitudes.length, sampleRate, state);
 
+            map.sub[frameIndex] = state.smoothed.sub;
             map.bass[frameIndex] = state.smoothed.bass;
             map.mid[frameIndex] = state.smoothed.mid;
             map.treble[frameIndex] = state.smoothed.treble;
-            map.energy[frameIndex] = state.smoothed.energy;
 
             // Yield every 200 frames to keep UI responsive
             if (frameIndex % 200 === 0) {

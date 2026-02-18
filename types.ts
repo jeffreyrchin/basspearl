@@ -23,5 +23,5 @@ export interface EffectConfig {
   params: { param: string, value: number, reactive: boolean }[];
   active: boolean;
   seed?: number;
-  frequencyBand?: 'BASS' | 'MID' | 'TREBLE' | 'ENERGY';
+  frequencyBand?: 'SUB' | 'BASS' | 'MID' | 'TREBLE';
 }

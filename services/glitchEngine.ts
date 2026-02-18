@@ -45,7 +45,7 @@ export class GlitchEngine {
     imageSrc: string,
     effects: EffectConfig[],
     maxSize?: number,
-    integratedReactivity?: { bass: number, mid: number, treble: number, energy: number },
+    integratedReactivity?: { sub: number, bass: number, mid: number, treble: number },
     currentTime?: number
   ): Promise<void> {
     await this.processInternal(imageSrc, effects, maxSize, integratedReactivity, currentTime);
@@ -63,7 +63,7 @@ export class GlitchEngine {
     imageSrc: string,
     effects: EffectConfig[],
     maxSize?: number,
-    integratedReactivity?: { bass: number, mid: number, treble: number, energy: number },
+    integratedReactivity?: { sub: number, bass: number, mid: number, treble: number },
     currentTime?: number
   ): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -131,7 +131,7 @@ export class GlitchEngine {
     UNIT: number,
     width: number,
     height: number,
-    integratedReactivity?: { bass: number, mid: number, treble: number, energy: number },
+    integratedReactivity?: { sub: number, bass: number, mid: number, treble: number },
     currentTime?: number
   ) {
     const { type, params, seed, frequencyBand } = effect;
@@ -139,12 +139,12 @@ export class GlitchEngine {
     if (!meta) return;
 
     // Select the appropriate integrated value based on the effect's frequency band
-    let integratedValue = integratedReactivity?.energy ?? 0; // Default to energy
+    let integratedValue = integratedReactivity?.bass ?? 0; // Default to bass
     if (integratedReactivity) {
-      if (frequencyBand === 'BASS') integratedValue = integratedReactivity.bass;
+      if (frequencyBand === 'SUB') integratedValue = integratedReactivity.sub;
+      else if (frequencyBand === 'BASS') integratedValue = integratedReactivity.bass;
       else if (frequencyBand === 'MID') integratedValue = integratedReactivity.mid;
       else if (frequencyBand === 'TREBLE') integratedValue = integratedReactivity.treble;
-      else if (frequencyBand === 'ENERGY') integratedValue = integratedReactivity.energy;
     }
 
     // VELOCITY CONTROLLED EFFECTS:

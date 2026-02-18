@@ -149,7 +149,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                                     <div className="space-y-4 bg-white/[0.03] p-5 rounded-2xl border border-white/5">
                                         <label className="text-[9px] font-bold text-white/40 uppercase tracking-widest block">Frequency</label>
                                         <div className="grid grid-cols-4 gap-1.5 bg-black/40 p-1.5 rounded-[22px] border border-white/5">
-                                            {['BASS', 'MID', 'TREBLE', 'ENERGY'].map(band => (
+                                            {['SUB', 'BASS', 'MID', 'TREBLE'].map(band => (
                                                 <button key={band} onClick={() => {
                                                     setEffects(prev => prev.map((e, idx) =>
                                                         idx === selectedEffectIndex ? { ...e, frequencyBand: band as any } : e

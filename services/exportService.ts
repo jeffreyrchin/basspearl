@@ -13,16 +13,16 @@ import { EffectConfig } from '../types';
 export interface ExportOptions {
     audioBuffer: AudioBuffer | null;
     reactivityMap: {
+        sub: Float32Array;
         bass: Float32Array;
         mid: Float32Array;
         treble: Float32Array;
-        energy: Float32Array;
     } | null;
     integratedReactivity: {
+        sub: Float32Array;
         bass: Float32Array;
         mid: Float32Array;
         treble: Float32Array;
-        energy: Float32Array;
     } | null;
     imageSrc: string;
     effects: EffectConfig[];
@@ -130,20 +130,20 @@ export const exportVideo = async (options: ExportOptions) => {
 
         // Grab precomputed audio data for this frame index
         const frameData = {
+            sub: reactivityMap.sub[i] ?? 0,
             bass: reactivityMap.bass[i] ?? 0,
             mid: reactivityMap.mid[i] ?? 0,
-            treble: reactivityMap.treble[i] ?? 0,
-            energy: reactivityMap.energy[i] ?? 0
+            treble: reactivityMap.treble[i] ?? 0
         };
 
         // Grab integrated data for this frame index (Starfield/Motion)
         let frameIntegrated = undefined;
         if (integratedReactivity) {
             frameIntegrated = {
+                sub: integratedReactivity.sub[i] ?? 0,
                 bass: integratedReactivity.bass[i] ?? 0,
                 mid: integratedReactivity.mid[i] ?? 0,
-                treble: integratedReactivity.treble[i] ?? 0,
-                energy: integratedReactivity.energy[i] ?? 0
+                treble: integratedReactivity.treble[i] ?? 0
             };
         }
 
