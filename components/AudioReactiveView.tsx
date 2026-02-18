@@ -345,8 +345,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                         <span className="material-symbols-outlined text-4xl">stream</span>
                                     </div>
                                     <div className="space-y-1">
-                                        <h2 className="text-lg font-bold tracking-tight text-white uppercase tracking-[0.2em]">Upload Image and Audio</h2>
-                                        <p className="text-[9px] text-white/60 uppercase tracking-widest">Awaiting local assets for initialization</p>
+                                        <h2 className="text-lg font-bold tracking-tight text-white uppercase tracking-[0.2em]">Choose Image and Audio</h2>
+                                        <p className="text-[9px] text-white/60 uppercase tracking-widest">Animate your images with audio</p>
                                     </div>
                                 </div>
                             )}

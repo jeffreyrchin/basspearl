@@ -89,14 +89,26 @@ export interface Preset {
 export const PRESETS: Preset[] = [
   {
     id: 'sunset',
-    label: 'Sunset',
+    label: '🌅',
     image: '/presets/sunset.jpeg',
-    audio: '/presets/6_19_21 gain staged 2_1_22.mp3',
+    audio: '/presets/sampler testing 11_20_21.mp3',
     effects: buildEffects([
-      { type: 'STARFIELD', values: [100, 59], active: true, reactive: true, frequencyBand: 'SUB' },
+      { type: 'STARFIELD', values: [50, 100], active: true, reactive: true, frequencyBand: 'SUB' },
+      { type: 'CHANNEL_SHIFT', values: [18, 0], active: true, reactive: true, frequencyBand: 'SUB' },
+      { type: 'ZOOM_PAN', values: [50, 0], active: true, reactive: true, frequencyBand: 'SUB' },
+    ])
+  },
+  {
+    id: 'underwater',
+    label: '🌊',
+    image: '/presets/underwater.png',
+    audio: '/presets/1_17_22 new instrument.mp3',
+    effects: buildEffects([
+      { type: 'BIT_CRUSH', values: [0, 27], active: true, reactive: true, frequencyBand: 'SUB' },
+      { type: 'INVERT_GHOST', values: [100], active: true, reactive: true, frequencyBand: 'MID' },
+      { type: 'DATA_CORRUPTION', values: [11, 100], active: true, reactive: true, frequencyBand: 'SUB' },
       { type: 'HUE_ROTATION', values: [8, 73], active: true, reactive: true, frequencyBand: 'BASS' },
-      { type: 'CHANNEL_SHIFT', values: [12, 12], active: true, reactive: true, frequencyBand: 'BASS' },
-      { type: 'ZOOM_PAN', values: [63, 0], active: true, reactive: true, frequencyBand: 'SUB' },
+      { type: 'ZOOM_PAN', values: [100, 0], active: true, reactive: true, frequencyBand: 'SUB' },
     ])
   }
 ];

@@ -15,8 +15,7 @@ const Navbar = () => {
                 {/* Left: Logo */}
                 <Link to="/" className="flex items-center gap-2 group">
                     <h1 className="text-xl font-bold tracking-normal uppercase">
-                        Glitch<span className="text-primary">Brain</span>
-                        <span className="lowercase">.io</span>
+                        Glitchbrain<span className="lowercase">.io</span>
                     </h1>
                 </Link>
 
@@ -33,7 +32,6 @@ const Navbar = () => {
                                     className={`relative px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.15em] transition-all duration-300 flex items-center gap-2 ${isLinkActive ? 'text-primary bg-primary/10' : 'text-white/60 hover:text-white hover:bg-white/20'}`}
                                     title={link.label}>
                                     <span className="material-symbols-outlined text-[18px]">{link.icon}</span>
-                                    <span className="hidden sm:inline">{link.label}</span>
                                 </Link>
                             );
                         })}
