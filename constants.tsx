@@ -59,21 +59,21 @@ const buildEffects = (
 
 export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
   { type: 'CHANNEL_SHIFT', values: [50, 50], active: true, reactive: true, frequencyBand: 'BASS' },
-  { type: 'WAVE_DISTORTION', values: [4, 24], reactive: true, frequencyBand: 'SUB' },
-  { type: 'SCAN_LINES', values: [60, 40], reactive: true, frequencyBand: 'MID' },
-  { type: 'PIXEL_SORT', values: [50, 80], reactive: true, frequencyBand: 'SUB' },
-  { type: 'BIT_CRUSH', values: [0, 40], reactive: true, frequencyBand: 'MID' },
+  { type: 'WAVE_DISTORTION', values: [18, 24], reactive: true, frequencyBand: 'SUB' },
+  { type: 'SCAN_LINES', values: [37, 3], reactive: false, frequencyBand: 'BASS' },
+  { type: 'PIXEL_SORT', values: [50, 50], reactive: true, frequencyBand: 'SUB' },
+  { type: 'BIT_CRUSH', values: [0, 24], reactive: true, frequencyBand: 'BASS' },
   { type: 'ANALOG_NOISE', values: [100, 50], reactive: true, frequencyBand: 'BASS' },
   { type: 'INVERT_GHOST', values: [15], reactive: true, frequencyBand: 'BASS' },
-  { type: 'DATA_CORRUPTION', values: [40, 100], reactive: true, frequencyBand: 'MID' },
+  { type: 'DATA_CORRUPTION', values: [40, 77], reactive: true, frequencyBand: 'BASS' },
   { type: 'COLOR_BLEED', values: [59, 23], reactive: true, frequencyBand: 'MID' },
-  { type: 'RANDOM_CHAOS', values: [7, 11], reactive: true, frequencyBand: 'TREBLE' },
+  { type: 'RANDOM_CHAOS', values: [51, 10], reactive: true, frequencyBand: 'SUB' },
   { type: 'HUE_ROTATION', values: [8, 73], reactive: true, frequencyBand: 'BASS' },
-  { type: 'COMPRESSION_HELL', values: [33, 55], reactive: true, frequencyBand: 'MID' },
+  { type: 'COMPRESSION_HELL', values: [33, 55], reactive: true, frequencyBand: 'BASS' },
   { type: 'DEEP_FRY', values: [15, 88], reactive: true, frequencyBand: 'SUB' },
   { type: 'ZOOM_PAN', values: [63, 0], active: true, reactive: true, frequencyBand: 'SUB' },
   { type: 'SCREEN_SHAKE', values: [50, 50], reactive: false, frequencyBand: 'BASS' },
-  { type: 'STARFIELD', values: [80, 10], active: true, reactive: false, frequencyBand: 'BASS' },
+  { type: 'STARFIELD', values: [80, 53], active: true, reactive: true, frequencyBand: 'BASS' },
 ]);
 
 export const FEEDBACK_FORM_URL = 'https://forms.gle/CBVXwJv9s3ZvXyWr8';
