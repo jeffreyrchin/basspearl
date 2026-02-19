@@ -57,19 +57,16 @@ export const analytics = {
     },
     audio: {
         started: (file: File) => trackEvent('audio_upload_started', {
-            file_name: file.name,
             file_size: file.size,
             file_type: file.type
         }),
         succeeded: (file: File, duration: number, fromCache = false) => trackEvent('audio_upload_succeeded', {
-            file_name: file.name,
             file_size: file.size,
             file_type: file.type,
             duration,
             from_cache: fromCache
         }),
         failed: (file: File, err: any) => trackEvent('audio_upload_failed', {
-            file_name: file.name,
             file_size: file.size,
             file_type: file.type,
             error_name: err?.name || 'Error',
@@ -78,19 +75,16 @@ export const analytics = {
     },
     image: {
         started: (file: File) => trackEvent('image_upload_started', {
-            file_name: file.name,
             file_size: file.size,
             file_type: file.type
         }),
         succeeded: (file: File, width: number, height: number) => trackEvent('image_upload_succeeded', {
-            file_name: file.name,
             file_size: file.size,
             file_type: file.type,
             image_width: width,
             image_height: height
         }),
         failed: (file: File, err?: any) => trackEvent('image_upload_failed', {
-            file_name: file.name,
             file_size: file.size,
             file_type: file.type,
             error_message: err?.message || "Browser failed to decode image source"
