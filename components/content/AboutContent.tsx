@@ -5,9 +5,9 @@ const AboutContent: React.FC = () => {
         <div className="max-w-4xl mx-auto space-y-12">
             {/* What is GlitchBrain */}
             <section className="space-y-4">
-                <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">Audio-Reactive Graphics Engine</h2>
+                <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">Audio-Reactive Effects Engine</h2>
                 <p className="text-white/70 text-base md:text-lg leading-relaxed">
-                    GlitchBrain is a high-performance visual synthesizer that combines images and audio to create audio-reactive visualizers. Your creations can be exported as MP4 files to share or use in any of your creative projects.
+                    Glitchbrain is a high-performance visual synthesizer that combines images and audio to create audio-reactive visualizers. Your creations can be exported as MP4 files to share or use in any of your creative projects.
                 </p>
             </section>
 
@@ -16,8 +16,8 @@ const AboutContent: React.FC = () => {
                 <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">Core Technology</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
-                        { title: 'Dynamic FFT Analysis', desc: 'Precomputed audio mapping for sub-frame accuracy across Bass, Mid, and Treble ranges.' },
-                        { title: 'Hardware Acceleration', desc: 'Custom GLSL shaders running directly on your GPU for real-time previews.' },
+                        { title: 'Dynamic Audio Analysis', desc: 'Advanced audio mapping for sub-frame accuracy across sub, bass, mid, and treble ranges.' },
+                        { title: 'Hardware Acceleration', desc: 'Custom effect modules running directly on your GPU for real-time previews.' },
                         { title: 'MP4 Video Export', desc: 'High-definition video rendering with hardware-encoded MP4 support.' },
                         { title: 'Dual-Mode Control', desc: 'Toggle between Manual mode for fixed effect levels or Sync mode for audio-reactive effects.' }
                     ].map(feature => (
@@ -73,15 +73,6 @@ const AboutContent: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            </section>
-
-            {/* Tech Stack */}
-            <section className="space-y-4">
-                <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">Under the Hood</h2>
-                <p className="text-white/70 text-base md:text-lg leading-relaxed">
-                    GlitchBrain uses advanced Web Audio and WebGL 2.0 APIs to deliver workstation-grade performance in the browser.
-                    By leveraging client-side processing, your creative data remains private and never leaves your machine.
-                </p>
             </section>
         </div>
     );

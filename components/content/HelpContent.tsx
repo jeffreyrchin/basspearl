@@ -14,7 +14,7 @@ const HelpContent: React.FC = () => {
                         <span className="font-bold text-white">2. Enable effects:</span> Browse visual effects in the sidebar. Click on a power icon to activate an effect. Effect controls can be opened by clicking on the effect.
                     </p>
                     <p className="text-white/70 text-base leading-relaxed">
-                        <span className="font-bold text-white">3. Adjust parameters:</span> Adjust parameter sliders to control effect levels. For each parameter, toggle “Sync” mode to tie the parameter level to the selected frequency at the bottom of the parameter controls. In “Sync” mode, the parameter will fluctuate between 0 and the set parameter level. Toggle “Manual” mode to apply a fixed parameter level for the effect.
+                        <span className="font-bold text-white">3. Adjust parameters:</span> Adjust parameter sliders to control effect levels. For each parameter, toggle “Sync” mode to sync the parameter level to the selected frequency at the bottom of the parameter controls. In “Sync” mode, the parameter will fluctuate between 0 and the set parameter level. Toggle “Manual” mode to apply a fixed parameter level for the effect.
                     </p>
                     <p className="text-white/70 text-base leading-relaxed">
                         <span className="font-bold text-white">4. Export video:</span> Click the "Export Video" button below the viewport to export your creation as an MP4 video synced to your audio.
@@ -35,7 +35,7 @@ const HelpContent: React.FC = () => {
                     <div className="glass-panel p-5 rounded-xl border border-white/10">
                         <h3 className="text-[11px] font-bold uppercase tracking-widest text-primary mb-2">Sync Mode (Audio-Driven)</h3>
                         <p className="text-white/60 text-sm leading-relaxed">
-                            The parameter value jumps and pulses based on the audio frequency data (Bass, Mids, or Treble) for a particular frame.
+                            The parameter value fluctuates based on the audio frequency data (sub, bass, mids, or treble) for a particular frame.
                         </p>
                     </div>
                 </div>
@@ -49,7 +49,7 @@ const HelpContent: React.FC = () => {
                         { name: 'Pixel Sort', desc: 'Streaks pixels based on the set brightness threshold.' },
                         { name: 'RGB Shift', desc: 'Separates color channels vertically and horizontally.' },
                         { name: 'Wave Distortion', desc: 'Applies orthogonal sine-wave displacement. In Sync mode, higher audio energy increases the frequency and amplitude of the waves.' },
-                        { name: 'Scan Lines', desc: 'Applies horizontal rows of pixels to emulate the look of CRT monitors. Spacing between rows can be adjusted or tied to an audio frequency range.' },
+                        { name: 'Scan Lines', desc: 'Applies horizontal rows of pixels to emulate the look of CRT monitors. Spacing between rows can be adjusted or synced to an audio frequency range.' },
                         { name: 'Color Bleed', desc: 'Smears and bleeds colors across the image. This effect can be used to apply a glow that reacts to your audio.' },
                         { name: 'Acid Trip', desc: 'Rotates color hues across the spectrum for psychedelic color shifts.' },
                         { name: 'Starfield', desc: 'Adds a particle system that can accelerate outward to the frequencies of the audio.' }
