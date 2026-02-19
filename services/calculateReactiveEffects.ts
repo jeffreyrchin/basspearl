@@ -30,13 +30,31 @@ export const calculateNextState = (
 
     const bandRMS = (startBin: number, endBin: number) => {
         let sum = 0;
-        const len = Math.max(1, endBin - startBin);
+        let totalWeight = 0;
+        const range = Math.max(1, endBin - startBin);
+
         for (let i = startBin; i < endBin; i++) {
+            // Sine-based Bell Curve weighting (0.0 at edges, 1.0 at center)
+            const normalizedPosition = (i - startBin) / range;
+            const weight = Math.sin(Math.PI * normalizedPosition);
+
             const v = bins[i];
-            sum += v * v;
+            sum += (v * v) * weight;
+            totalWeight += weight;
         }
-        return Math.sqrt(sum / len);
+
+        return Math.sqrt(sum / Math.max(0.001, totalWeight));
     };
+
+    // const bandRMS = (startBin: number, endBin: number) => {
+    //     let sum = 0;
+    //     const len = Math.max(1, endBin - startBin);
+    //     for (let i = startBin; i < endBin; i++) {
+    //         const v = bins[i];
+    //         sum += v * v;
+    //     }
+    //     return Math.sqrt(sum / len);
+    // };
 
     // 2. Extract frequency bands
     const subBins: [number, number] = [freqToBin(20), freqToBin(100)];
@@ -70,7 +88,7 @@ export const calculateNextState = (
     // 5. Final Adaptive Smoothing
     const adaptiveSmooth = (current: number, target: number) => {
         const delta = target - current;
-        const attack = delta > 0 ? 0.5 : 0.1;
+        const attack = delta > 0 ? 0.9 : 0.1;
         return current + delta * attack;
     };
 
