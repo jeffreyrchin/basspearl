@@ -55,9 +55,7 @@ export const computeIntegratedReactivity = (
     let sumTreble = 0;
 
     // Compute integrals
-    // We assume a standard scaling factor so values don't get astronomical too fast
-    // 0.01 per frame provides a reasonable baseline "speed unit"
-    const TIME_STEP = 0.01;
+    const TIME_STEP = 1 / 60;
 
     for (let i = 0; i < length; i++) {
         sumSub += reactivityMap.sub[i] * TIME_STEP;
