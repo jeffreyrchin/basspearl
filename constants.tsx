@@ -14,7 +14,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   DEEP_FRY: { label: 'Deep Fry', subLabel: 'SATURATION HELL', icon: 'local_fire_department', category: 'Color', paramNames: [{ name: 'Heat' }, { name: 'Posterize' }] },
   SCAN_LINES: { label: 'Scan Lines', subLabel: 'CRT SIMULATION', icon: 'reorder', category: 'Retro', paramNames: [{ name: 'Opacity' }, { name: 'Line Spacing' }] },
   BIT_CRUSH: { label: 'Bit Crush', subLabel: '8-BIT DECIMATION', icon: 'developer_board', category: 'Glitch', paramNames: [{ name: 'Quantize' }, { name: 'Resample' }] },
-  WAVE_DISTORTION: { label: 'Wave Distortion', subLabel: 'SINE WAVE MAP', icon: 'waves', category: 'Motion', paramNames: [{ name: 'Amplitude' }, { name: 'Frequency' }] },
+  WAVE_DISTORTION: { label: 'Wave Distortion', subLabel: 'SINE WAVE MAP', icon: 'waves', category: 'Motion', paramNames: [{ name: 'Amplitude' }, { name: 'Frequency' }, { name: 'Speed' }] },
   COLOR_BLEED: { label: 'Color Bleed', subLabel: 'HORIZONTAL SMEAR', icon: 'palette', category: 'Color', paramNames: [{ name: 'Bleed' }, { name: 'Ghosting' }] },
   COMPRESSION_HELL: { label: 'Compression Hell', subLabel: 'JPEG ARTIFACTS', icon: 'compress', category: 'Glitch', paramNames: [{ name: 'Block Size' }, { name: 'Artifacting' }] },
   RANDOM_CHAOS: { label: 'Random Chaos', subLabel: 'SYSTEM COLLAPSE', icon: 'bolt', category: 'Particles', paramNames: [{ name: 'Entropy' }, { name: 'Jitter' }] },
@@ -59,7 +59,7 @@ const buildEffects = (
 
 export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
   { type: 'CHANNEL_SHIFT', values: [50, 50], active: true, reactive: true, frequencyBand: 'BASS' },
-  { type: 'WAVE_DISTORTION', values: [18, 24], reactive: true, frequencyBand: 'SUB' },
+  { type: 'WAVE_DISTORTION', values: [18, 24, 50], reactive: true, frequencyBand: 'SUB' },
   { type: 'SCAN_LINES', values: [37, 3], reactive: false, frequencyBand: 'BASS' },
   { type: 'PIXEL_SORT', values: [50, 50], reactive: true, frequencyBand: 'SUB' },
   { type: 'BIT_CRUSH', values: [0, 24], reactive: true, frequencyBand: 'BASS' },

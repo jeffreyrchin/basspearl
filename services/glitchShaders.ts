@@ -116,16 +116,12 @@ void main() {
 export const WAVE_DISTORTION_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[2]; // [amplitude, frequency]
+uniform float u_params[3]; // [amplitude, frequency, speed]
 uniform float u_unit;
-uniform float u_seed;
+uniform float u_integrated_value;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
-
-float rand(vec2 co) {
-    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
 
 void main() {
     if (u_params[0] == 0.0) {
@@ -141,12 +137,23 @@ void main() {
     // We only distort X, so use pixelSize.x
     float amp = ampPixels / u_resolution.x;
     
+    // Param 1 functions as purely wave count
     float waves = max(1.0, u_params[1] * 0.5);
-    float startPhase = rand(vec2(u_seed, u_seed)) * 3.14159 * 2.0;
     
-    float angle = v_texCoord.y * 3.14159 * 2.0 * waves + startPhase;
+    // Param 2 functions as purely scroll speed
+    float speed = u_params[2] * 0.3;
+    
+    // We use u_integrated_value for the phase to ensure smooth, non-jittery motion.
+    float startPhase = u_integrated_value * speed;
+
+    // We use a centered Y coordinate to anchor the wave distortion to the middle
+    // of the screen. This ensures that frequency-synced jitter is distributed
+    // symmetrically (expanding from center) rather than accumulating at the bottom.
+    float centeredY = v_texCoord.y - 0.5;
+    float angle = centeredY * 3.14159 * 2.0 * waves + startPhase;
+    
     float xOffset = sin(angle) * amp;
-    xOffset += cos(angle * 2.0 - startPhase) * (amp * 0.2);
+    xOffset += cos(angle * 2.0 - startPhase * 0.5) * (amp * 0.2);
     
     vec2 coord = vec2(v_texCoord.x + xOffset, v_texCoord.y);
     if (coord.x >= 0.0 && coord.x <= 1.0) {
@@ -617,7 +624,7 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     BIT_CRUSH: { name: 'BIT_CRUSH', fragmentSource: BIT_CRUSH_SHADER },
     SCAN_LINES: { name: 'SCAN_LINES', fragmentSource: SCAN_LINES_SHADER },
     DEEP_FRY: { name: 'DEEP_FRY', fragmentSource: DEEP_FRY_SHADER },
-    WAVE_DISTORTION: { name: 'WAVE_DISTORTION', fragmentSource: WAVE_DISTORTION_SHADER },
+    WAVE_DISTORTION: { name: 'WAVE_DISTORTION', fragmentSource: WAVE_DISTORTION_SHADER, velocityParamIndex: 2 },
     HUE_ROTATION: { name: 'HUE_ROTATION', fragmentSource: HUE_ROTATION_SHADER },
     INVERT_GHOST: { name: 'INVERT_GHOST', fragmentSource: INVERT_GHOST_SHADER },
     ANALOG_NOISE: { name: 'ANALOG_NOISE', fragmentSource: ANALOG_NOISE_SHADER },
