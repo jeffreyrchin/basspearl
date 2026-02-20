@@ -88,13 +88,12 @@ export const calculateNextState = (
     // 5. Final Adaptive Smoothing
     const adaptiveSmooth = (current: number, target: number) => {
         const delta = target - current;
-        const attack = delta > 0 ? 0.9 : 0.1;
+        const attack = delta > 0 ? 0.9 : 0.05; // Fast attack (0.9), very slow release (0.05)
         return current + delta * attack;
     };
 
     const expandRange = (v: number) => {
-        const adjustedExponent = (v < 0.9) ? 5 : 1;
-        return Math.min(1, Math.pow(v, adjustedExponent));
+        return Math.min(1, (v * 0.3) + (Math.pow(v, 7) * 0.7)); // linear + exponential curve
     };
 
     const pSub = adaptiveSmooth(prevState.smoothed.sub, expandRange(reactiveSubValue));
