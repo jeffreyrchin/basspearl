@@ -24,7 +24,7 @@ export interface ExportOptions {
         mid: Float32Array;
         treble: Float32Array;
     } | null;
-    imageSrc: string;
+    imageSrc: string | null;
     effects: EffectConfig[];
     duration: number;
     fps?: number;
@@ -50,19 +50,24 @@ export const exportVideo = async (options: ExportOptions) => {
 
     if (!reactivityMap) throw new Error("Reactivity map is required for export");
 
-    // Must decode image to get dimensions (new calculations needed for maxSize, which may be different from preview maxSize of 960)
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const i = new Image();
-        i.onload = () => resolve(i);
-        i.onerror = (e) => reject(new Error("Failed to load image for export"));
-        i.src = imageSrc;
-    });
+    let outWidth = maxSize;
+    let outHeight = Math.floor(maxSize * (9 / 16));
 
-    let outWidth = img.naturalWidth;
-    let outHeight = img.naturalHeight;
+    if (imageSrc) {
+        // Must decode image to get dimensions (new calculations needed for maxSize, which may be different from preview maxSize of 1920)
+        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+            const i = new Image();
+            i.onload = () => resolve(i);
+            i.onerror = (e) => reject(new Error("Failed to load image for export"));
+            i.src = imageSrc;
+        });
 
-    // Apply maxSize constraint (Longest Edge)
-    if (outWidth > maxSize || outHeight > maxSize) {
+        outWidth = img.naturalWidth;
+        outHeight = img.naturalHeight;
+    }
+
+    // Apply maxSize constraint (Longest Edge) for images
+    if (imageSrc && (outWidth > maxSize || outHeight > maxSize)) {
         const ratio = Math.min(maxSize / outWidth, maxSize / outHeight);
         outWidth = Math.floor(outWidth * ratio);
         outHeight = Math.floor(outHeight * ratio);
@@ -151,7 +156,13 @@ export const exportVideo = async (options: ExportOptions) => {
         const reactiveEffects = mapReactivityToEffects(frameData, effects, i);
 
         // Render glitch to our hidden canvas
-        await exportEngine.renderToCanvas(renderCanvas, imageSrc, reactiveEffects, maxSize, frameIntegrated, time);
+        await exportEngine.renderToCanvas(renderCanvas, imageSrc, reactiveEffects, {
+            maxSize,
+            integratedReactivity: frameIntegrated,
+            currentTime: time,
+            imagelessWidth: outWidth,
+            imagelessHeight: outHeight
+        });
 
         // Inject the current state of the canvas into the video pipeline
         // Mediabunny takes timestamps in seconds

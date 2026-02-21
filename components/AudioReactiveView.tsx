@@ -81,7 +81,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
             // Render initial frame
             if (canvasRef.current) {
-                glitchEngine.renderToCanvas(canvasRef.current, imageUrl, fullRack, 960);
+                glitchEngine.renderToCanvas(canvasRef.current, imageUrl, fullRack, { maxSize: 1920 });
             }
             analytics.preset.succeeded(preset.id);
         } catch (err: any) {
@@ -93,6 +93,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     };
 
     useEffect(() => {
+        // Render initial imageless frame on mount
+        renderFrame(0);
+
         return () => {
             if (requestRef.current) cancelAnimationFrame(requestRef.current);
         };
@@ -118,7 +121,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             canvasRef.current,
                             imageBlob,
                             effects,
-                            960
+                            { maxSize: 1920 }
                         );
                         analytics.image.succeeded(file, img.width, img.height);
                     }
@@ -134,7 +137,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     };
 
     const renderFrame = async (time: number) => {
-        if (!imageFileRef.current || !canvasRef.current) return;
+        if (!canvasRef.current) return;
         const currentFrame = Math.floor(time * 60);
         let reactiveEffects = effectsRef.current;
         let frameIntegrated: { sub: number, bass: number, mid: number, treble: number } | undefined;
@@ -165,7 +168,16 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             };
         }
 
-        await glitchEngine.renderToCanvas(canvasRef.current, imageFileRef.current, reactiveEffects, 960, frameIntegrated, time);
+        await glitchEngine.renderToCanvas(
+            canvasRef.current,
+            imageFileRef.current,
+            reactiveEffects,
+            {
+                maxSize: 1920,
+                integratedReactivity: frameIntegrated,
+                currentTime: time
+            }
+        );
     };
 
     const scrubberPercent = (time: number, duration: number) => {
@@ -203,7 +215,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     }, [effects, imageFile, currentTime, isPlaying, audioFile, duration]);
 
     const handleExport = async () => {
-        if (!imageFileRef.current || !reactivityMapRef.current || !audioBufferRef.current) return;
+        if (!reactivityMapRef.current || !audioBufferRef.current) return;
 
         setIsExporting(true);
         setExportProgress(0);
@@ -329,7 +341,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         )}
 
                         <div className="relative w-full h-full overflow-hidden bg-black/40 shadow-2xl flex items-center justify-center">
-                            <canvas ref={canvasRef} className={`max-w-full max-h-full object-contain ${!imageFile ? 'hidden' : ''}`} />
+                            <canvas ref={canvasRef} className="max-w-full max-h-full object-contain" />
                             {isProcessing && (
                                 <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-4 animate-in fade-in duration-300 z-10 backdrop-blur-sm">
                                     <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -339,14 +351,16 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                     </div>
                                 </div>
                             )}
-                            {!imageFile && !isProcessing && (
-                                <div className="flex flex-col items-center gap-6 p-8 text-center max-w-md">
-                                    <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-white/60 border border-white/20">
-                                        <span className="material-symbols-outlined text-4xl">stream</span>
+                            {!imageFile && !audioFile && !isProcessing && (
+                                <div className="absolute bottom-8 left-8 z-10 flex flex-col items-start gap-4 p-6 text-left max-w-xs bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 animate-in slide-in-from-bottom-4 fade-in duration-700">
+                                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/60 border border-white/10">
+                                        <span className="material-symbols-outlined text-2xl">auto_awesome</span>
                                     </div>
                                     <div className="space-y-1">
-                                        <h2 className="text-lg font-bold tracking-tight text-white uppercase tracking-[0.2em]">Choose Image and Audio</h2>
-                                        <p className="text-[9px] text-white/60 uppercase tracking-widest">Animate your images with audio</p>
+                                        <h2 className="text-sm font-bold tracking-tight text-white uppercase tracking-[0.2em]">Ready to Animate</h2>
+                                        <p className="text-[9px] text-white/60 uppercase tracking-widest leading-relaxed">
+                                            Choose audio or select one of the presets above to begin animating.
+                                        </p>
                                     </div>
                                 </div>
                             )}
@@ -366,7 +380,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                     }
                                 })
                             }}
-                            disabled={!imageFile || !audioFile || isProcessing}
+                            disabled={!audioFile || isProcessing}
                             aria-label={isPlaying ? "Pause audio" : "Play audio"}
                             className={`w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-xl flex items-center justify-center transition-all border ${isPlaying ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)] text-primary' : (isProcessing ? 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white')}`}>
                             <span className="material-symbols-outlined text-[18px] sm:text-[20px] fill">{isPlaying ? 'pause' : 'play_arrow'}</span>
@@ -406,7 +420,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         <div className="flex items-center gap-1 sm:gap-2 pl-2 sm:pl-4 border-l border-white/10 ml-1 sm:ml-2">
                             <button
                                 onClick={handleExport}
-                                disabled={!imageFile || !audioFile || isExporting || isProcessing}
+                                disabled={!audioFile || isExporting || isProcessing}
                                 className={`h-9 px-3 sm:px-4 rounded-xl flex items-center gap-2 transition-all border ${isExporting || isProcessing ? 'bg-white/5 border-white/5 text-white/40 cursor-wait' : 'bg-[#FB00FF]/10 border-[#FB00FF]/20 text-[#FB00FF] hover:bg-[#FB00FF]/20 hover:border-[#FB00FF]/40 shadow-[0_0_15px_rgba(251,0,251,0.1)]'}`}
                                 aria-label="Export video">
                                 <span className={`material-symbols-outlined text-[18px] ${isExporting ? 'animate-spin' : ''}`}>

@@ -615,7 +615,8 @@ void main() {
     }
     
     vec4 src = texture(u_image, v_texCoord);
-    outColor = src + vec4(color, 0.0);
+    float starAlpha = clamp(length(color) * 2.0, 0.0, 1.0);
+    outColor = vec4(src.rgb + color, clamp(src.a + starAlpha, 0.0, 1.0));
 }
 `;
 

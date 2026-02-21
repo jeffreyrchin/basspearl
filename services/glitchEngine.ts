@@ -4,6 +4,14 @@ import { ShaderManager, BASE_VERTEX_SHADER, PASS_THROUGH_FRAGMENT_SHADER } from 
 import { EffectPipeline } from './EffectPipeline';
 import { SHADER_REGISTRY } from './glitchShaders';
 
+export interface GlitchRenderOptions {
+  maxSize?: number;
+  integratedReactivity?: { sub: number, bass: number, mid: number, treble: number };
+  currentTime?: number;
+  imagelessWidth?: number;
+  imagelessHeight?: number;
+}
+
 export class GlitchEngine {
   private canvas: HTMLCanvasElement;
   private gl: WebGL2RenderingContext;
@@ -42,13 +50,11 @@ export class GlitchEngine {
 
   public async renderToCanvas(
     targetCanvas: HTMLCanvasElement,
-    imageSrc: string,
+    imageSrc: string | null,
     effects: EffectConfig[],
-    maxSize?: number,
-    integratedReactivity?: { sub: number, bass: number, mid: number, treble: number },
-    currentTime?: number
+    options: GlitchRenderOptions = {}
   ): Promise<void> {
-    await this.processInternal(imageSrc, effects, maxSize, integratedReactivity, currentTime);
+    await this.processInternal(imageSrc || '', effects, options);
 
     // Copy internal canvas to target canvas
     targetCanvas.width = this.canvas.width;
@@ -62,14 +68,23 @@ export class GlitchEngine {
   private async processInternal(
     imageSrc: string,
     effects: EffectConfig[],
-    maxSize?: number,
-    integratedReactivity?: { sub: number, bass: number, mid: number, treble: number },
-    currentTime?: number
+    options: GlitchRenderOptions = {}
   ): Promise<void> {
+    const { maxSize, integratedReactivity, currentTime, imagelessWidth, imagelessHeight } = options;
+
     return new Promise((resolve, reject) => {
-      const processCachedImage = (img: HTMLImageElement) => {
-        let width = img.width;
-        let height = img.height;
+      const processCachedImage = (img: HTMLImageElement | null) => {
+        let width: number;
+        let height: number;
+
+        if (img) {
+          width = img.width;
+          height = img.height;
+        } else {
+          // If no image uploaded, prioritize explicit dimensions, then default to a 16:9 cinematic aspect ratio
+          width = imagelessWidth || maxSize || 1920;
+          height = imagelessHeight || Math.floor(width * 9 / 16);
+        }
 
         if (maxSize && (width > maxSize || height > maxSize)) {
           const ratio = Math.min(maxSize / width, maxSize / height);
@@ -91,10 +106,17 @@ export class GlitchEngine {
           this.inputTexture = this.textureManager.createTexture(width, height, img);
           this.pipeline.setInputTexture(this.inputTexture!);
         } else if (this.currentImageSrc !== imageSrc) {
-          this.textureManager.updateTexture(this.inputTexture!, img);
+          // If switching to imageless mode (null imageSrc), we recreate the texture as null
+          if (!img) {
+            if (this.inputTexture) this.textureManager.destroyTexture(this.inputTexture);
+            this.inputTexture = this.textureManager.createTexture(width, height, null);
+          } else {
+            this.textureManager.updateTexture(this.inputTexture!, img);
+          }
           this.pipeline.setInputTexture(this.inputTexture!);
         }
 
+        this.currentImageSrc = imageSrc; // update this.currentImageSrc so that texture is updated (previous block) only when imageSrc changes
         const UNIT = Math.min(width, height) / 100;
 
         this.pipeline.setInputTexture(this.inputTexture!);
@@ -108,6 +130,13 @@ export class GlitchEngine {
         this.pipeline.renderToScreen(false);
         resolve();
       };
+
+      // If no imageSrc is provided, we just process with a null image
+      if (!imageSrc) {
+        this.currentImage = null;
+        processCachedImage(null);
+        return;
+      }
 
       if (this.currentImageSrc === imageSrc && this.currentImage) {
         processCachedImage(this.currentImage);
