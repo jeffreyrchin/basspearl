@@ -13,6 +13,14 @@ uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
 
+// Branchless (no if/else) sampling that returns transparent black outside 0..1 range (eliminates streaks)
+vec4 sampleTexture(sampler2D tex, vec2 uv) {
+    // Returns 1.0 if inside [0, 1], 0.0 if outside
+    vec2 inside = step(vec2(0.0), uv) * step(uv, vec2(1.0));
+    float isVisible = inside.x * inside.y;
+    return texture(tex, uv) * isVisible;
+}
+
 void main() {
     vec2 pixelSize = 1.0 / u_resolution;
     
@@ -23,9 +31,9 @@ void main() {
     float shiftX = u_params[0] * 0.1 * u_unit * pixelSize.x;
     float shiftY = u_params[1] * 0.1 * u_unit * pixelSize.y;
     
-    vec4 color = texture(u_image, v_texCoord);
-    float r = texture(u_image, v_texCoord - vec2(shiftX, shiftY)).r;
-    float b = texture(u_image, v_texCoord + vec2(shiftX, shiftY)).b;
+    vec4 color = sampleTexture(u_image, v_texCoord);
+    float r = sampleTexture(u_image, v_texCoord - vec2(shiftX, shiftY)).r;
+    float b = sampleTexture(u_image, v_texCoord + vec2(shiftX, shiftY)).b;
     
     outColor = vec4(r, color.g, b, color.a);
 }
