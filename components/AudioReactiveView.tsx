@@ -9,6 +9,7 @@ import { mapReactivityToEffects } from '@/services/calculateReactiveEffects';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 import { exportVideo } from '@/services/exportService';
 import { analytics } from '@/services/analytics';
+import { useEffectStore } from '../store/useEffectStore';
 
 interface AudioReactiveViewProps {
 }
@@ -37,8 +38,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const [exportProgress, setExportProgress] = useState(0);
 
     const [imageFile, setImageFile] = useState<File | null>(null);
-    const [effects, setEffects] = useState<EffectConfig[]>(INITIAL_REACTIVE_EFFECTS);
-    const [selectedEffectIndex, setSelectedEffectIndex] = useState(0);
+    const { effects, setEffects } = useEffectStore();
     const [sidebarVisible, setSidebarVisible] = useState(false); // Default to hidden
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -50,8 +50,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const imageInputRef = useRef<HTMLInputElement>(null);
     const audioInputRef = useRef<HTMLInputElement>(null);
 
-    // Sync ref with state (Direct update during render)
-    effectsRef.current = effects;
+    // Sync ref with store state (Direct update during render)
+    useEffect(() => {
+        effectsRef.current = effects;
+    }, [effects]);
 
     const loadPreset = async (preset: Preset) => {
         setIsProcessing(true);
@@ -446,10 +448,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     {/* Inner wrapper */}
                     <div className="flex-1 flex flex-col min-h-0 relative">
                         <SidebarNavigation
-                            effects={effects}
-                            setEffects={setEffects}
-                            selectedEffectIndex={selectedEffectIndex}
-                            setSelectedEffectIndex={setSelectedEffectIndex}
                             onClose={() => setSidebarVisible(false)} />
                     </div>
                 </aside>

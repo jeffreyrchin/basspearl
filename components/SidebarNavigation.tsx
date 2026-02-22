@@ -1,251 +1,107 @@
 import React, { useState } from 'react';
-import { EffectConfig, EffectCategory } from '../types';
-import { EFFECT_METADATA } from '../constants';
-import { EffectSlider } from './EffectSlider';
-import { analytics } from '@/services/analytics';
+import EffectRack from './EffectRack';
+import EffectLibrary from './EffectLibrary';
+import EffectParams from './EffectParams';
+
+import { useEffectStore } from '../store/useEffectStore';
 
 interface SidebarNavigationProps {
-    effects: EffectConfig[];
-    setEffects: React.Dispatch<React.SetStateAction<EffectConfig[]>>;
-    selectedEffectIndex: number;
-    setSelectedEffectIndex: React.Dispatch<React.SetStateAction<number>>;
     onClose?: () => void;
 }
 
-const CATEGORIES: EffectCategory[] = ['All', 'Color', 'Glitch', 'Motion', 'Particles', 'Retro'];
-
 const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
-    effects,
-    setEffects,
-    selectedEffectIndex,
-    setSelectedEffectIndex,
     onClose,
 }) => {
     const [view, setView] = useState<'rack' | 'params'>('rack');
-    const [selectedCategory, setSelectedCategory] = useState<EffectCategory>('All');
+    const [selectedTab, setSelectedTab] = useState<'active' | 'effects'>('active');
+    const { effects } = useEffectStore();
 
-    const filteredEffects = effects
+    const activeEffectsList = effects
         .map((effect, originalIndex) => ({ ...effect, originalIndex }))
-        .filter(effect => selectedCategory === 'All' || EFFECT_METADATA[effect.type].category === selectedCategory);
+        .filter(e => e.active);
 
     if (view === 'params') {
-        const effect = effects[selectedEffectIndex];
         return (
-            <div className="flex-1 flex flex-col min-h-0 animate-in fade-in slide-in-from-right-4 duration-300">
-                <div className="p-6 pt-20 lg:pt-6 border-b border-white/5 flex items-center justify-between bg-black/20">
+            <div className="flex-1 flex flex-col min-h-0 pt-20 lg:pt-0 animate-in fade-in slide-in-from-right-4 duration-300 bg-[#050B14]">
+                {/* Header Bar */}
+                <div className="h-14 border-b border-white/5 bg-black/40 flex items-center justify-between px-6 shrink-0">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setView('rack')}
-                            className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
-                        >
-                            <span className="material-symbols-outlined text-sm">arrow_back</span>
+                            className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 hover:bg-white/10 transition-all border border-white/5"
+                            title="Back to library">
+                            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                         </button>
-                        <label className="text-[10px] font-bold text-white uppercase tracking-[0.4em]">Parameters</label>
+                        <span className="text-[10px] font-bold text-white uppercase tracking-[0.3em]">Parameters</span>
                     </div>
-
                     {onClose && (
                         <button
                             onClick={onClose}
-                            className="lg:hidden w-8 h-8 rounded-xl flex items-center justify-center bg-white/5 text-white/40 hover:text-white"
-                        >
-                            <span className="material-symbols-outlined text-xl">close</span>
+                            className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all border border-white/5"
+                            aria-label="Close sidebar">
+                            <span className="material-symbols-outlined text-[20px]">close</span>
                         </button>
                     )}
                 </div>
 
-                <div
-                    key={`params-${selectedEffectIndex}`}
-                    className="flex-1 overflow-y-auto custom-scrollbar p-6"
-                >
-                    {(() => {
-                        if (!effect) return (
-                            <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4 pt-12">
-                                <span className="material-symbols-outlined text-white/5 text-5xl">tune</span>
-                                <p className="text-[10px] font-bold text-white/15 uppercase tracking-[0.2em] leading-relaxed">Select a processor module<br />to begin calibration</p>
-                            </div>
-                        );
-                        return (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                                <div className="flex items-center justify-between border-b border-white/5 pb-6">
-                                    <h3 className="text-primary text-[11px] font-bold uppercase tracking-[0.3em]">{EFFECT_METADATA[effect.type]?.label}</h3>
-                                    <div className="flex items-center space-x-2">
-                                        <p className={`text-[8px] uppercase tracking-widest ${effect.active ? 'text-primary' : 'text-white/60'}`}>{effect.active ? 'Active' : 'Inactive'}</p>
-                                        <button
-                                            onClick={() => {
-                                                analytics.effect.toggled(effect.type, !effect.active);
-                                                setEffects(prev => prev.map((e, idx) =>
-                                                    idx === selectedEffectIndex ? { ...e, active: !e.active } : e
-                                                ));
-                                            }}
-                                            className={`w-12 h-6 rounded-full transition-all duration-300 relative border ${effect.active ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)]' : 'bg-white/10 border-transparent'}`}
-                                            aria-label={effect.active ? 'Deactivate effect' : 'Activate effect'}
-                                        >
-                                            <div className={`absolute top-[3px] w-4 h-4 rounded-full bg-white transition-all duration-300 ${effect.active ? 'left-7' : 'left-1'} shadow-md`} />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    {EFFECT_METADATA[effect.type]?.paramNames?.map((paramName, paramIdx) => (
-                                        <div key={paramIdx} className="space-y-6 bg-white/[0.03] p-5 rounded-2xl border border-white/5">
-                                            <div className="flex justify-between items-end">
-                                                <div className="space-y-2">
-                                                    <label className="text-[9px] font-bold uppercase tracking-widest text-white/40">
-                                                        {effect.params[paramIdx].reactive ? `Peak ${paramName.name}` : paramName.name}
-                                                    </label>
-                                                    <div className="flex items-center gap-2 bg-black/40 p-1 rounded-xl border border-white/5 w-fit">
-                                                        <button
-                                                            onClick={() => {
-                                                                setEffects(prev => prev.map((e, idx) => {
-                                                                    if (idx === selectedEffectIndex) {
-                                                                        const newParams = [...e.params];
-                                                                        newParams[paramIdx] = { ...newParams[paramIdx], reactive: false };
-                                                                        return { ...e, params: newParams };
-                                                                    }
-                                                                    return e;
-                                                                }));
-                                                            }}
-                                                            className={`px-3 py-2 rounded-lg text-[8px] font-bold uppercase tracking-widest transition-all ${!effect.params[paramIdx].reactive ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white'}`}
-                                                        >
-                                                            Manual
-                                                        </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                setEffects(prev => prev.map((e, idx) => {
-                                                                    if (idx === selectedEffectIndex) {
-                                                                        const newParams = [...e.params];
-                                                                        newParams[paramIdx] = { ...newParams[paramIdx], reactive: true };
-                                                                        return { ...e, params: newParams };
-                                                                    }
-                                                                    return e;
-                                                                }));
-                                                            }}
-                                                            className={`px-3 py-2 rounded-lg text-[8px] font-bold uppercase tracking-widest transition-all ${effect.params[paramIdx].reactive ? 'bg-primary/10 text-primary border border-primary/40 shadow-[inset_0_0_12px_rgba(59,130,246,0.1)]' : 'text-white/60 hover:text-white border border-transparent'}`}
-                                                        >
-                                                            Sync
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <span className="font-mono text-xs font-bold text-white px-2 py-1">{Math.round(effect.params[paramIdx].value)}%</span>
-                                            </div>
-                                            <EffectSlider
-                                                value={effect.params[paramIdx].value}
-                                                onChange={(val) => {
-                                                    setEffects(prev => prev.map((e, idx) => {
-                                                        if (idx === selectedEffectIndex) {
-                                                            const newParams = [...e.params];
-                                                            newParams[paramIdx] = { ...newParams[paramIdx], value: val };
-                                                            return { ...e, params: newParams };
-                                                        }
-                                                        return e;
-                                                    }));
-                                                }}
-                                                onCommit={() => { }}
-                                            />
-                                        </div>
-                                    ))}
-
-                                    {/* Frequency Bands */}
-                                    <div className="space-y-4 bg-white/[0.03] p-5 rounded-2xl border border-white/5">
-                                        <label className="text-[9px] font-bold text-white/40 uppercase tracking-widest block">Frequency</label>
-                                        <div className="grid grid-cols-4 gap-1.5 bg-black/40 p-1.5 rounded-[22px] border border-white/5">
-                                            {['SUB', 'BASS', 'MID', 'TREBLE'].map(band => (
-                                                <button key={band} onClick={() => {
-                                                    setEffects(prev => prev.map((e, idx) =>
-                                                        idx === selectedEffectIndex ? { ...e, frequencyBand: band as any } : e
-                                                    ));
-                                                }} className={`py-3 rounded-xl text-[9px] font-bold uppercase transition-all border ${effect.frequencyBand === band ? 'bg-primary/10 text-primary border-primary/40 shadow-[inset_0_0_12px_rgba(59,130,246,0.1)]' : 'text-white/60 hover:text-white border-transparent'}`}>{band}</button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })()}
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                    <EffectParams />
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex-1 flex flex-col min-h-0 animate-in fade-in slide-in-from-left-4 duration-300">
-            <div className="px-6 pt-20 lg:pt-6 pb-2 border-b border-white/5 flex flex-col gap-4 bg-black/20">
-                <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-bold text-white uppercase tracking-[0.4em]">Effects</label>
-                    {onClose && (
-                        <button
-                            onClick={onClose}
-                            className="lg:hidden w-8 h-8 rounded-xl flex items-center justify-center bg-white/5 text-white/40 hover:text-white"
-                        >
-                            <span className="material-symbols-outlined text-xl">close</span>
-                        </button>
-                    )}
+        <div className="flex-1 flex flex-col min-h-0 pt-20 lg:pt-0 animate-in fade-in slide-in-from-left-4 duration-300 bg-[#050B14]">
+            {/* Header Bar */}
+            <div className="h-14 border-b border-white/5 bg-black/40 flex items-center justify-between px-6 shrink-0 relative">
+                <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-bold text-white uppercase tracking-[0.4em]">Controls</span>
                 </div>
-
-                {/* Effect Category Tabs */}
-                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-2">
-                    {CATEGORIES.map(category => (
-                        <button
-                            key={category}
-                            onClick={() => setSelectedCategory(category)}
-                            className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all whitespace-nowrap border ${selectedCategory === category
-                                ? 'bg-primary/10 text-primary border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.1)]'
-                                : 'text-white/60 hover:text-white/80 border-transparent hover:bg-white/5'
-                                }`}
-                        >
-                            {category}
-                        </button>
-                    ))}
-                </div>
+                {onClose && (
+                    <button
+                        onClick={onClose}
+                        className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all border border-white/5"
+                        aria-label="Close sidebar">
+                        <span className="material-symbols-outlined text-[20px]">close</span>
+                    </button>
+                )}
             </div>
 
-            <div
-                key="rack-scroll"
-                className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-black/10"
-            >
-                <div className="grid grid-cols-2 gap-3">
-                    {filteredEffects.map((effect) => (
-                        <div
-                            key={effect.type}
-                            className={`w-full aspect-square relative group rounded-[20px] border transition-all duration-300 overflow-hidden ${effect.active ? 'bg-primary/10 border-primary/40 shadow-[inset_0_0_12px_rgba(59,130,246,0.1)]' : 'bg-white/[0.01] border-white/5 hover:border-white/10 hover:bg-white/[0.03]'}`}
-                        >
-                            {/* Main Navigation Area */}
-                            <button
-                                onClick={() => {
-                                    setSelectedEffectIndex(effect.originalIndex);
-                                    setView('params');
-                                }}
-                                className="absolute inset-0 flex flex-col items-center justify-center z-0 w-full h-full"
-                            >
-                                <div className={`mb-2 transition-all duration-500 ${effect.active ? 'text-primary' : 'text-white/60'}`}>
-                                    <span className="material-symbols-outlined text-2xl">{EFFECT_METADATA[effect.type]?.icon || 'extension'}</span>
-                                </div>
-                                <span className={`text-[12px] font-bold uppercase tracking-wider px-1 text-center leading-tight w-full ${effect.active ? 'text-white' : 'text-white/60'}`}>
-                                    {EFFECT_METADATA[effect.type]?.label}
-                                </span>
-                            </button>
+            {/* Tab Bar */}
+            <div className="flex px-4 pt-2 pb-0 gap-1 bg-black/40 border-b border-white/5">
+                <button
+                    onClick={() => setSelectedTab('active')}
+                    className={`flex-1 py-3 px-2 rounded-t-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border-b-2 ${selectedTab === 'active' ? 'bg-white/5 text-primary border-primary' : 'text-white/40 border-transparent hover:text-white/60'}`}>
+                    <span>Active</span>
+                    {activeEffectsList.length > 0 && (
+                        <span className="bg-primary/20 text-primary rounded-full text-[8px] font-bold w-[17px] h-[17px] grid place-items-center leading-none border border-primary/30 tracking-normal">
+                            {activeEffectsList.length}
+                        </span>
+                    )}
+                </button>
+                <button
+                    onClick={() => setSelectedTab('effects')}
+                    className={`flex-1 py-3 px-2 rounded-t-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all border-b-2 ${selectedTab === 'effects' ? 'bg-white/5 text-primary border-primary' : 'text-white/40 border-transparent hover:text-white/60'}`}>
+                    Effects
+                </button>
+            </div>
 
-                            {/* Quick Toggle Corner Button */}
-                            <button
-                                onClick={(e) => {
-                                    analytics.effect.toggled(effect.type, !effect.active);
-                                    e.stopPropagation();
-                                    setEffects(prev => prev.map((curr, i) =>
-                                        i === effect.originalIndex ? { ...curr, active: !curr.active } : curr
-                                    ));
-                                }}
-                                className={`absolute top-2 right-2 w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 z-10 border ${effect.active ? 'text-primary hover:bg-primary/10 hover:border-primary/40 border-transparent' : 'text-white hover:bg-white/10 hover:border-white/50 border-transparent'}`}
-                                title={effect.active ? 'Deactivate effect' : 'Activate effect'}
-                                aria-label={effect.active ? 'Deactivate effect' : 'Activate effect'}
-                            >
-                                <span className="text-xl material-symbols-outlined">power_settings_new</span>
-                            </button>
-                        </div>
-                    ))}
-                </div>
+            <div key="rack-scroll" className="flex-1 overflow-y-auto custom-scrollbar bg-black/10">
+                {selectedTab === 'active' ? (
+                    <EffectRack
+                        onSelectEffect={() => setView('params')}
+                        onNavigateToLibrary={() => setSelectedTab('effects')}
+                    />
+                ) : (
+                    <EffectLibrary
+                        onSelectEffect={() => setView('params')}
+                    />
+                )}
             </div>
         </div>
     );
 };
+
 
 export default SidebarNavigation;

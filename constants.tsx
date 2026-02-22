@@ -58,7 +58,7 @@ const buildEffects = (
   }));
 
 export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
-  { type: 'CHANNEL_SHIFT', values: [50, 50], active: true, reactive: true, frequencyBand: 'BASS' },
+  { type: 'CHANNEL_SHIFT', values: [50, 50], reactive: true, frequencyBand: 'BASS' },
   { type: 'WAVE_DISTORTION', values: [18, 24, 50], reactive: true, frequencyBand: 'SUB' },
   { type: 'SCAN_LINES', values: [37, 3], reactive: false, frequencyBand: 'BASS' },
   { type: 'PIXEL_SORT', values: [50, 50], reactive: true, frequencyBand: 'SUB' },
@@ -71,7 +71,7 @@ export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
   { type: 'HUE_ROTATION', values: [8, 73], reactive: true, frequencyBand: 'BASS' },
   { type: 'COMPRESSION_HELL', values: [33, 55], reactive: true, frequencyBand: 'BASS' },
   { type: 'DEEP_FRY', values: [15, 88], reactive: true, frequencyBand: 'SUB' },
-  { type: 'ZOOM_PAN', values: [63, 0], active: true, reactive: true, frequencyBand: 'SUB' },
+  { type: 'ZOOM_PAN', values: [63, 0], reactive: true, frequencyBand: 'SUB' },
   { type: 'SCREEN_SHAKE', values: [50, 50], reactive: false, frequencyBand: 'BASS' },
   { type: 'STARFIELD', values: [80, 53], active: true, reactive: true, frequencyBand: 'BASS' },
 ]);
