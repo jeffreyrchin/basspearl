@@ -8,7 +8,7 @@ interface EffectLibraryProps {
     onSelectEffect: () => void;
 }
 
-const CATEGORIES: EffectCategory[] = ['All', 'Color', 'Glitch', 'Motion', 'Particles', 'Retro'];
+const CATEGORIES: EffectCategory[] = ['All', 'Additive', 'Color', 'Glitch', 'Motion'];
 
 const EffectLibrary: React.FC<EffectLibraryProps> = ({
     onSelectEffect,
@@ -49,12 +49,12 @@ const EffectLibrary: React.FC<EffectLibraryProps> = ({
                 </div>
             </div>
 
-            <div className="p-6">
-                <div className="grid grid-cols-2 gap-3 pb-32">
+            <div className="p-3">
+                <div className="grid grid-cols-3 gap-3">
                     {filteredEffects.map((effect) => (
                         <div
                             key={effect.type}
-                            className={`w-full aspect-square relative group rounded-[20px] border transition-all duration-300 overflow-hidden ${effect.active ? 'bg-primary/10 border-primary/40 shadow-[inset_0_0_12px_rgba(59,130,246,0.1)]' : 'bg-white/[0.01] border-white/5 hover:border-white/10 hover:bg-white/[0.03]'}`}
+                            className={`w-full aspect-square relative group rounded-sm border transition-all duration-300 overflow-hidden ${effect.active ? 'bg-primary/10 border-primary/40 shadow-[inset_0_0_12px_rgba(59,130,246,0.1)]' : 'bg-white/[0.01] border-white/5 hover:border-white/10 hover:bg-white/[0.03]'}`}
                         >
                             {/* Main Navigation Area */}
                             <button
@@ -64,10 +64,7 @@ const EffectLibrary: React.FC<EffectLibraryProps> = ({
                                 }}
                                 className="absolute inset-0 flex flex-col items-center justify-center z-0 w-full h-full"
                             >
-                                <div className={`mb-2 transition-all duration-500 ${effect.active ? 'text-primary' : 'text-white/60'}`}>
-                                    <span className="material-symbols-outlined text-2xl">{EFFECT_METADATA[effect.type]?.icon || 'extension'}</span>
-                                </div>
-                                <span className={`text-[12px] font-bold uppercase tracking-wider px-1 text-center leading-tight w-full ${effect.active ? 'text-white' : 'text-white/60'}`}>
+                                <span className={`text-[12px] uppercase tracking-wider px-1 text-center leading-tight w-full ${effect.active ? 'text-white' : 'text-white/60'}`}>
                                     {EFFECT_METADATA[effect.type]?.label}
                                 </span>
                             </button>
@@ -78,7 +75,7 @@ const EffectLibrary: React.FC<EffectLibraryProps> = ({
                                     e.stopPropagation();
                                     toggleEffect(effect.originalIndex);
                                 }}
-                                className={`absolute top-2 right-2 w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 z-10 border ${effect.active ? 'text-primary hover:bg-primary/10 hover:border-primary/40 border-transparent' : 'text-white hover:bg-white/10 hover:border-white/50 border-transparent'}`}
+                                className={`absolute top-2 right-2 w-8 h-8 rounded-sm flex items-center justify-center transition-all duration-300 z-10 border ${effect.active ? 'text-primary hover:bg-primary/10 hover:border-primary/40 border-transparent' : 'text-white hover:bg-white/10 hover:border-white/50 border-transparent'}`}
                                 title={effect.active ? 'Deactivate effect' : 'Activate effect'}
                                 aria-label={effect.active ? 'Deactivate effect' : 'Activate effect'}
                             >

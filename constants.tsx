@@ -12,18 +12,22 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   CHANNEL_SHIFT: { label: 'RGB Shift', subLabel: 'CHROMATIC ABERRATION', icon: 'layers', category: 'Color', paramNames: [{ name: 'Offset' }, { name: 'Vertical Tear' }] },
   DATA_CORRUPTION: { label: 'Datamosh', subLabel: 'DELTA COMPRESSION', icon: 'grid_4x4', category: 'Glitch', paramNames: [{ name: 'Mosh Length' }, { name: 'Mosh Density' }] },
   DEEP_FRY: { label: 'Deep Fry', subLabel: 'SATURATION HELL', icon: 'local_fire_department', category: 'Color', paramNames: [{ name: 'Heat' }, { name: 'Posterize' }] },
-  SCAN_LINES: { label: 'Scan Lines', subLabel: 'CRT SIMULATION', icon: 'reorder', category: 'Retro', paramNames: [{ name: 'Opacity' }, { name: 'Line Spacing' }] },
+  SCAN_LINES: { label: 'Scan Lines', subLabel: 'CRT SIMULATION', icon: 'reorder', category: 'Additive', paramNames: [{ name: 'Opacity' }, { name: 'Line Spacing' }] },
   BIT_CRUSH: { label: 'Bit Crush', subLabel: '8-BIT DECIMATION', icon: 'developer_board', category: 'Glitch', paramNames: [{ name: 'Quantize' }, { name: 'Resample' }] },
   WAVE_DISTORTION: { label: 'Wave Distortion', subLabel: 'SINE WAVE MAP', icon: 'waves', category: 'Motion', paramNames: [{ name: 'Amplitude' }, { name: 'Frequency' }, { name: 'Speed' }] },
   COLOR_BLEED: { label: 'Color Bleed', subLabel: 'HORIZONTAL SMEAR', icon: 'palette', category: 'Color', paramNames: [{ name: 'Bleed' }, { name: 'Ghosting' }] },
   COMPRESSION_HELL: { label: 'Compression Hell', subLabel: 'JPEG ARTIFACTS', icon: 'compress', category: 'Glitch', paramNames: [{ name: 'Block Size' }, { name: 'Artifacting' }] },
-  RANDOM_CHAOS: { label: 'Random Chaos', subLabel: 'SYSTEM COLLAPSE', icon: 'bolt', category: 'Particles', paramNames: [{ name: 'Entropy' }, { name: 'Jitter' }] },
-  ANALOG_NOISE: { label: 'Analog Noise', subLabel: 'FILM GRAIN', icon: 'grain', category: 'Retro', paramNames: [{ name: 'Gain' }, { name: 'Greyscale' }] },
+  RANDOM_CHAOS: { label: 'Random Chaos', subLabel: 'SYSTEM COLLAPSE', icon: 'bolt', category: 'Additive', paramNames: [{ name: 'Entropy' }, { name: 'Jitter' }] },
   HUE_ROTATION: { label: 'Acid Trip', subLabel: 'COLOR CYCLING', icon: 'change_circle', category: 'Color', paramNames: [{ name: 'Spectrum' }, { name: 'Vibrance' }] },
   INVERT_GHOST: { label: 'Spectral', subLabel: 'NEGATIVE MIX', icon: 'invert_colors', category: 'Color', paramNames: [{ name: 'Inversion' }] },
   ZOOM_PAN: { label: 'Zoom Pulse', subLabel: 'RADIAL SCALE', icon: 'zoom_in', category: 'Motion', paramNames: [{ name: 'Scale' }, { name: 'Pan' }] },
   SCREEN_SHAKE: { label: 'Shake', subLabel: 'CAMERA JITTER', icon: 'vibration', category: 'Motion', paramNames: [{ name: 'Displacement' }, { name: 'Speed' }] },
-  STARFIELD: { label: 'Starfield', subLabel: 'WARP SPEED', icon: 'auto_awesome', category: 'Particles', paramNames: [{ name: 'Density' }, { name: 'Speed' }] },
+  STARFIELD: { label: 'Starfield', subLabel: 'WARP SPEED', icon: 'auto_awesome', category: 'Additive', paramNames: [{ name: 'Density' }, { name: 'Speed' }] },
+  RETRO_GRID: { label: 'Retro Grid', subLabel: 'SYNTHWAVE FLOOR', icon: 'grid_on', category: 'Additive', paramNames: [{ name: 'Thickness' }, { name: 'Speed' }] },
+  TUNNEL_WARP: { label: 'Tunnel Warp', subLabel: 'TUNNEL WARP', icon: 'hub', category: 'Motion', paramNames: [{ name: 'Scale' }, { name: 'Speed' }, { name: 'Twist' }] },
+  NOISE: { label: 'Noise', subLabel: 'NOISE', icon: 'blur_on', category: 'Additive', paramNames: [{ name: 'Horizontal' }, { name: 'Vertical' }, { name: 'Density' }] },
+  BEAM: { label: 'Beam', subLabel: 'BEAM', icon: 'lens_blur', category: 'Additive', paramNames: [{ name: 'Radius' }, { name: 'Intensity' }] },
+  GRID: { label: 'Grid', subLabel: 'GRID', icon: 'grid_3x3', category: 'Additive', paramNames: [{ name: 'Horizontal' }, { name: 'Vertical' }, { name: 'Thickness' }] },
 };
 
 const buildParams = (
@@ -63,7 +67,6 @@ export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
   { type: 'SCAN_LINES', values: [37, 3], reactive: false, frequencyBand: 'BASS' },
   { type: 'PIXEL_SORT', values: [50, 50], reactive: true, frequencyBand: 'SUB' },
   { type: 'BIT_CRUSH', values: [0, 24], reactive: true, frequencyBand: 'BASS' },
-  { type: 'ANALOG_NOISE', values: [100, 50], reactive: true, frequencyBand: 'BASS' },
   { type: 'INVERT_GHOST', values: [15], reactive: true, frequencyBand: 'BASS' },
   { type: 'DATA_CORRUPTION', values: [40, 77], reactive: true, frequencyBand: 'BASS' },
   { type: 'COLOR_BLEED', values: [59, 23], reactive: true, frequencyBand: 'MID' },
@@ -74,6 +77,11 @@ export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
   { type: 'ZOOM_PAN', values: [63, 0], reactive: true, frequencyBand: 'SUB' },
   { type: 'SCREEN_SHAKE', values: [50, 50], reactive: false, frequencyBand: 'BASS' },
   { type: 'STARFIELD', values: [80, 53], active: true, reactive: true, frequencyBand: 'BASS' },
+  { type: 'RETRO_GRID', values: [30, 60], reactive: true, frequencyBand: 'SUB' },
+  { type: 'TUNNEL_WARP', values: [50, 50, 0], reactive: true, frequencyBand: 'SUB' },
+  { type: 'NOISE', values: [100, 100, 50], reactive: false, frequencyBand: 'TREBLE' },
+  { type: 'BEAM', values: [40, 80], reactive: true, frequencyBand: 'BASS' },
+  { type: 'GRID', values: [30, 30, 50], reactive: false, frequencyBand: 'MID' },
 ]);
 
 export const FEEDBACK_FORM_URL = 'https://forms.gle/CBVXwJv9s3ZvXyWr8';

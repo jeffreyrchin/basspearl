@@ -1,4 +1,4 @@
-export type EffectCategory = 'All' | 'Color' | 'Glitch' | 'Motion' | 'Particles' | 'Retro';
+export type EffectCategory = 'All' | 'Additive' | 'Color' | 'Glitch' | 'Motion';
 
 export type GlitchEffectType =
   | 'PIXEL_SORT'
@@ -11,12 +11,16 @@ export type GlitchEffectType =
   | 'COLOR_BLEED'
   | 'COMPRESSION_HELL'
   | 'RANDOM_CHAOS'
-  | 'ANALOG_NOISE'
   | 'HUE_ROTATION'
   | 'INVERT_GHOST'
   | 'ZOOM_PAN'
   | 'SCREEN_SHAKE'
-  | 'STARFIELD';
+  | 'STARFIELD'
+  | 'RETRO_GRID'
+  | 'TUNNEL_WARP'
+  | 'NOISE'
+  | 'BEAM'
+  | 'GRID';
 
 export interface EffectConfig {
   type: GlitchEffectType;

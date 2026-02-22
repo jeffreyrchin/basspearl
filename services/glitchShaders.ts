@@ -221,60 +221,6 @@ void main() {
 }
 `;
 
-export const ANALOG_NOISE_SHADER = `#version 300 es
-precision highp float;
-uniform sampler2D u_image;
-uniform float u_params[2]; // [gain, grayscale]
-uniform float u_seed;
-uniform vec2 u_resolution; 
-in vec2 v_texCoord;
-out vec4 outColor;
-
-// Robust Integer Hash for pixel-perfect noise
-float hash(vec2 col, float seed) {
-    uvec3 p = uvec3(uvec2(col), uint(seed * 12345.0));
-    p = p * 0x74779649u + (p >> 1u);
-    p.x *= p.y * p.z;
-    p.y *= p.x * p.z;
-    p.z *= p.x * p.y;
-    return float(p.x ^ p.y ^ p.z) * (1.0 / 4294967295.0);
-}
-
-void main() {
-    vec4 color = texture(u_image, v_texCoord);
-    
-    if (u_params[0] <= 0.0) {
-        outColor = color;
-        return;
-    }
-
-    float amount = u_params[0] / 100.0;
-    float monoThreshold = u_params[1] / 100.0;
-    vec2 pixelPos = floor(v_texCoord * u_resolution); // Floor ensures we snap to pixels
-    
-    // Random value for this pixel
-    float pixelRand = hash(pixelPos, u_seed);
-    
-    bool isMono = pixelRand < monoThreshold;
-    
-    if (isMono) {
-        float r = hash(pixelPos, u_seed + 1.1);
-        float noise = (r - 0.5) * amount;
-        color.rgb = clamp(color.rgb + noise, 0.0, 1.0);
-    } else {
-        float r1 = hash(pixelPos, u_seed + 1.2);
-        float r2 = hash(pixelPos, u_seed + 1.3);
-        float r3 = hash(pixelPos, u_seed + 1.4);
-        
-        color.r = clamp(color.r + (r1 - 0.5) * amount, 0.0, 1.0);
-        color.g = clamp(color.g + (r2 - 0.5) * amount, 0.0, 1.0);
-        color.b = clamp(color.b + (r3 - 0.5) * amount, 0.0, 1.0);
-    }
-
-    outColor = color;
-}
-`;
-
 export const PIXEL_SORT_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
@@ -635,6 +581,177 @@ void main() {
 }
 `;
 
+export const RETRO_GRID_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[2]; // [thickness, speed]
+uniform float u_integrated_value;
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    float thickness = u_params[0] / 100.0 * 0.1;
+    float speed = u_params[1] / 100.0;
+    float time = u_integrated_value * speed * 10.0;
+
+    vec2 uv = (v_texCoord - 0.5) * u_resolution / u_resolution.y;
+    
+    // Perspective: Split into floor and ceiling
+    float horizon = 0.0;
+    float depth = 1.0 / (abs(uv.y - horizon) + 0.01);
+    
+    // Grid coordinates
+    vec2 gridUV = vec2(uv.x * depth, depth + time);
+    
+    // Line calculation
+    vec2 grid = abs(fract(gridUV - 0.5) - 0.5);
+    float lines = smoothstep(thickness, 0.0, grid.x) + smoothstep(thickness * 2.0, 0.0, grid.y);
+    
+    // Fade out at the horizon and edges
+    float fade = smoothstep(12.0, 3.0, depth) * smoothstep(0.0, 0.1, abs(uv.y));
+    
+    vec3 gridColor = vec3(1.0, 0.0, 1.0) * lines * fade;
+    
+    vec4 src = texture(u_image, v_texCoord);
+    outColor = vec4(src.rgb + gridColor, clamp(src.a + (lines * fade), 0.0, 1.0));
+}
+`;
+
+export const TUNNEL_WARP_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[3]; // [scale, speed, twist]
+uniform float u_integrated_value;
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+void main() {
+    float scale = u_params[0] / 100.0 * 2.0;
+    float speed = u_params[1] / 100.0;
+    float twist = u_params[2] / 100.0 * 5.0;
+    float time  = u_integrated_value * speed * 3.0;
+    
+    vec2 uv = (v_texCoord - 0.5) * u_resolution / u_resolution.y;
+    float r = length(uv);
+    float a = atan(uv.y, uv.x);
+    
+    // Tunnel projection
+    // x = angle, y = depth + motion
+    vec2 warpedUV = vec2(
+        a / 6.28318 + 0.5 + (1.0/max(r, 0.01)) * twist * 0.1, 
+        1.0/max(r, 0.01) * scale + time
+    );
+    
+    outColor = texture(u_image, fract(warpedUV));
+}
+`;
+
+export const NOISE_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[3]; // [horizontal, vertical, density]
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+float hash(vec2 p) { return clamp(fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453), 0.0, 1.0); }
+
+void main() {
+    // 1. Map sliders to frequency and parameters.
+    float normX = u_params[0] / 100.0;
+    float normY = u_params[1] / 100.0;
+    float density = u_params[2] / 100.0;
+
+    vec2 freq = vec2(
+        1.0 + pow(normX, 3.0) * (u_resolution.x - 1.0),
+        1.0 + pow(normY, 3.0) * (u_resolution.y - 1.0)
+    );
+
+    // 2. Sample background image.
+    vec4 src = texture(u_image, v_texCoord);
+
+    // 3. Center-Preserving Cell Projection.
+    vec2 cell = floor(v_texCoord * freq - (freq - 1.0) * 0.5);
+
+    // 4. Generate Random Noise Mask.
+    float threshold = hash(cell); // full [0.0, 1.0] range for fair distribution
+    float brightness = hash(cell + 0.1) * 0.7 + 0.3; // restrict brightness to [0.3, 1.0] to prevent black voids
+    float lit = step(1.0 - density, threshold) * step(0.001, density);
+
+    // 5. Output Final Color.
+    vec3 color = vec3(brightness);
+    outColor = vec4(
+        mix(src.rgb, color, lit),
+        max(src.a, lit)
+    );
+}
+`;
+
+export const BEAM_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[2]; // [radius, intensity]
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    float radius = u_params[0] / 100.0 * 1.5 + 0.1;
+    float intensity = u_params[1] / 100.0;
+    vec2 uv = (v_texCoord - 0.5) * u_resolution / u_resolution.y;
+    float r = length(uv);
+
+    float glow = 1.0 - smoothstep(0.0, radius, r);
+    vec3 color = vec3(1.0);
+    vec4 src = texture(u_image, v_texCoord);
+    outColor = vec4(src.rgb + color * glow * intensity, clamp(src.a + glow * intensity * 0.4, 0.0, 1.0));
+}
+`;
+
+export const GRID_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[3]; // [horizontal, vertical, thickness]
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    // 1. Map sliders to frequency and parameters.
+    float normX = u_params[0] / 100.0;
+    float normY = u_params[1] / 100.0;
+    float thickness = u_params[2] / 100.0;
+
+    vec2 freq = vec2(
+        1.0 + pow(normX, 3.0) * (u_resolution.x * 0.5 - 1.0),
+        1.0 + pow(normY, 3.0) * (u_resolution.y * 0.5 - 1.0)
+    );
+
+    // 2. Sample background image.
+    vec4 src = texture(u_image, v_texCoord);
+
+    // 3. Independent XY Projection (Center-Preserving).
+    vec2 uv = v_texCoord * freq - (freq - 1.0) * 0.5;
+
+    // 4. Calculate Grid Mask with Anti-Aliasing.
+    float targetPixelWidth = mix(1.0, 10.0, thickness);
+    vec2 pWidth = fwidth(uv);
+    vec2 thickUV = pWidth * targetPixelWidth;
+    vec2 dist = abs(fract(uv - 0.5) - 0.5);
+    vec2 grid = smoothstep(thickUV * 0.5, vec2(0.0), dist);
+    
+    // Suppress border artifact when a slider is at 0%.
+    grid.x *= step(0.001, normX);
+    grid.y *= step(0.001, normY);
+    
+    float mask = max(grid.x, grid.y);
+
+    // 5. Output Final Color.
+    outColor = vec4(src.rgb + mask, clamp(src.a + mask * 0.8, 0.0, 1.0));
+}
+`;
+
 export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     CHANNEL_SHIFT: { name: 'CHANNEL_SHIFT', fragmentSource: CHANNEL_SHIFT_SHADER },
     BIT_CRUSH: { name: 'BIT_CRUSH', fragmentSource: BIT_CRUSH_SHADER },
@@ -643,7 +760,6 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     WAVE_DISTORTION: { name: 'WAVE_DISTORTION', fragmentSource: WAVE_DISTORTION_SHADER, velocityParamIndex: 2 },
     HUE_ROTATION: { name: 'HUE_ROTATION', fragmentSource: HUE_ROTATION_SHADER },
     INVERT_GHOST: { name: 'INVERT_GHOST', fragmentSource: INVERT_GHOST_SHADER },
-    ANALOG_NOISE: { name: 'ANALOG_NOISE', fragmentSource: ANALOG_NOISE_SHADER },
     PIXEL_SORT: { name: 'PIXEL_SORT', fragmentSource: PIXEL_SORT_SHADER },
     DATA_CORRUPTION: { name: 'DATA_CORRUPTION', fragmentSource: DATA_CORRUPTION_SHADER },
     COLOR_BLEED: { name: 'COLOR_BLEED', fragmentSource: COLOR_BLEED_SHADER },
@@ -652,4 +768,9 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     ZOOM_PAN: { name: 'ZOOM_PAN', fragmentSource: ZOOM_PAN_SHADER },
     SCREEN_SHAKE: { name: 'SCREEN_SHAKE', fragmentSource: SCREEN_SHAKE_SHADER, velocityParamIndex: 1 },
     STARFIELD: { name: 'STARFIELD', fragmentSource: STARFIELD_SHADER, velocityParamIndex: 1 },
+    RETRO_GRID: { name: 'RETRO_GRID', fragmentSource: RETRO_GRID_SHADER, velocityParamIndex: 1 },
+    TUNNEL_WARP: { name: 'TUNNEL_WARP', fragmentSource: TUNNEL_WARP_SHADER, velocityParamIndex: 1 },
+    NOISE: { name: 'NOISE', fragmentSource: NOISE_SHADER },
+    BEAM: { name: 'BEAM', fragmentSource: BEAM_SHADER },
+    GRID: { name: 'GRID', fragmentSource: GRID_SHADER },
 };

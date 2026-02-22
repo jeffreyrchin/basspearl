@@ -79,7 +79,7 @@ const EffectRack: React.FC<EffectRackProps> = ({
                             <span className="material-symbols-outlined text-xl">{EFFECT_METADATA[effect.type]?.icon || 'extension'}</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-[11px] font-bold text-white uppercase tracking-wider">{EFFECT_METADATA[effect.type]?.label}</span>
+                            <span className="text-[11px] text-white uppercase tracking-wider">{EFFECT_METADATA[effect.type]?.label}</span>
                         </div>
                     </button>
 
