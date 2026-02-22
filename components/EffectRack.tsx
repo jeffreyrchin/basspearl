@@ -44,7 +44,7 @@ const EffectRack: React.FC<EffectRackProps> = ({
         <div className="p-4 space-y-2">
             {activeEffects.map((effect, index) => (
                 <div
-                    key={effect.type}
+                    key={`${effect.type}-${index}`}
                     className="bg-white/5 border border-white/5 rounded-2xl p-2 pr-4 flex items-center gap-3 group hover:border-white/10 transition-none hover:transition-all hover:duration-300"
                 >
                     {/* Order Controls */}
