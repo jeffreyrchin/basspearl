@@ -132,15 +132,10 @@ in vec2 v_texCoord;
 out vec4 outColor;
 
 void main() {
-    if (u_params[0] == 0.0) {
-        outColor = texture(u_image, v_texCoord);
-        return;
-    }
-    
+    // 1. Calculate Physical Scale
     // Target: Max Amplitude 300px (30 units).
     // int=100 -> 30 * u_unit.
     // factor = 0.3.
-    
     float ampPixels = u_params[0] * 0.3 * u_unit;
     // We only distort X, so use pixelSize.x
     float amp = ampPixels / u_resolution.x;
@@ -153,22 +148,18 @@ void main() {
     
     // We use u_integrated_value for the phase to ensure smooth, non-jittery motion.
     float startPhase = u_integrated_value * speed;
-
-    // We use a centered Y coordinate to anchor the wave distortion to the middle
-    // of the screen. This ensures that frequency-synced jitter is distributed
-    // symmetrically (expanding from center) rather than accumulating at the bottom.
+    
+    // 2. Centered Projection
+    // Expansion/contraction happens from the middle (v_texCoord.y - 0.5)
     float centeredY = v_texCoord.y - 0.5;
     float angle = centeredY * 3.14159 * 2.0 * waves + startPhase;
     
     float xOffset = sin(angle) * amp;
-    xOffset += cos(angle * 2.0 - startPhase * 0.5) * (amp * 0.2);
     
+    // 3. Infinite Horizontal Wrap
+    // Using fract() ensures a seamless repeating look.
     vec2 coord = vec2(v_texCoord.x + xOffset, v_texCoord.y);
-    if (coord.x >= 0.0 && coord.x <= 1.0) {
-        outColor = texture(u_image, coord);
-    } else {
-        outColor = vec4(0.0, 0.0, 0.0, 0.0);
-    }
+    outColor = texture(u_image, fract(coord));
 }
 `;
 
