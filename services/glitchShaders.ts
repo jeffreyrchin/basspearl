@@ -212,6 +212,43 @@ void main() {
 }
 `;
 
+export const SPECTRAL_MAP_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[3]; // [frequency, shift, strength]
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    vec4 src = texture(u_image, v_texCoord);
+    
+    // 1. Calculate Luminance (Luma)
+    float lum = dot(src.rgb, vec3(0.299, 0.587, 0.114));
+    
+    // 2. Synthesize Spectrum (Cosine Palette)
+    // t drives the 'time' or 'position' on the color wheel
+    float freq  = u_params[0] / 20.0;    // Scale of the rainbow
+    float shift = u_params[1] / 100.0;   // Rotation of the rainbow
+    float strength = u_params[2] / 100.0; // Blend with original
+    
+    float t = lum * freq + shift;
+    
+    // High-fidelity primitive colors (RGB phases)
+    vec3 a = vec3(0.5);
+    vec3 b = vec3(0.5);
+    vec3 c = vec3(1.0);
+    vec3 d = vec3(0.00, 0.33, 0.67); // Standard 120-degree RGB split
+    
+    vec3 spectral = a + b * cos(6.28318 * (c * t + d));
+    
+    // 3. Application: Multiply-Mixed
+    // This preserves the internal darkness of the original image
+    vec3 finalColor = mix(src.rgb, src.rgb * spectral, strength);
+    
+    outColor = vec4(finalColor, src.a);
+}
+`;
+
 export const PIXEL_SORT_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
@@ -641,7 +678,7 @@ void main() {
 export const NOISE_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[3]; // [horizontal, vertical, density]
+uniform float u_params[6]; // [width, height, x-spacing, y-spacing, density, rounding]
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -652,26 +689,43 @@ void main() {
     // 1. Map sliders to frequency and parameters.
     float normX = u_params[0] / 100.0;
     float normY = u_params[1] / 100.0;
-    float density = u_params[2] / 100.0;
+    float xSpacing = u_params[2] / 100.0;
+    float ySpacing = u_params[3] / 100.0;
+    float density = u_params[4] / 100.0;
+    float rounding = u_params[5] / 100.0;
 
-    // Exponential frequency: freq=1 at 1% (one centered line), doubling from there.
+    // 2. Exponential frequency: freq=1 at 1% (one centered line), doubling from there.
     vec2 freq = vec2(
         round(exp2(normX * log2(u_resolution.x))),
         round(exp2(normY * log2(u_resolution.y)))
     );
 
-    // 2. Sample background image.
+    // 3. Sample background image.
     vec4 src = texture(u_image, v_texCoord);
 
-    // 3. Simple integer projection.
-    vec2 cell = floor(v_texCoord * freq);
+    // 4. Integer projection.
+    vec2 cellCoord = v_texCoord * freq;
+    vec2 cell = floor(cellCoord);
+    vec2 p = fract(cellCoord) - 0.5; // Center coord [-0.5, 0.5]
 
-    // 4. Generate Random Noise Mask.
+    // 5. Generate Random Noise Mask.
     float threshold = hash(cell); // full [0.0, 1.0] range for fair distribution
-    float brightness = hash(cell + 0.1) * 0.7 + 0.3; // restrict brightness to [0.3, 1.0] to prevent black voids
+    float brightness = hash(cell + 0.1) * 0.99 + 0.01; // restrict brightness to [0.01, 1.0] to prevent black voids
     float lit = step(1.0 - density, threshold) * step(0.001, density);
+    
+    // 6. Rounded Box SDF
+    // Size is 1.0 minus spacing on each axis
+    vec2 size = max(vec2(0.5) - vec2(xSpacing, ySpacing) * 0.5, 0.01);
+    float r = rounding * min(size.x, size.y); // Corner radius
+    
+    vec2 q = abs(p) - size + r;
+    float dist = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+    
+    // 7. Sharp mask
+    float shapeMask = step(dist, 0.0);
+    lit *= shapeMask;
 
-    // 5. Output Final Color.
+    // 8. Output Final Color.
     vec3 color = vec3(brightness);
     outColor = vec4(
         mix(src.rgb, color, lit),
@@ -776,4 +830,5 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     NOISE: { name: 'NOISE', fragmentSource: NOISE_SHADER },
     BEAM: { name: 'BEAM', fragmentSource: BEAM_SHADER },
     GRID: { name: 'GRID', fragmentSource: GRID_SHADER },
+    SPECTRAL_MAP: { name: 'SPECTRAL_MAP', fragmentSource: SPECTRAL_MAP_SHADER },
 };

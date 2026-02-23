@@ -25,9 +25,10 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   STARFIELD: { label: 'Starfield', subLabel: 'WARP SPEED', icon: 'auto_awesome', category: 'Additive', paramNames: [{ name: 'Density' }, { name: 'Speed' }] },
   RETRO_GRID: { label: 'Retro Grid', subLabel: 'SYNTHWAVE FLOOR', icon: 'grid_on', category: 'Additive', paramNames: [{ name: 'Thickness' }, { name: 'Speed' }] },
   TUNNEL_WARP: { label: 'Tunnel Warp', subLabel: 'TUNNEL WARP', icon: 'hub', category: 'Motion', paramNames: [{ name: 'Scale' }, { name: 'Speed' }, { name: 'Twist' }] },
-  NOISE: { label: 'Noise', subLabel: 'NOISE', icon: 'blur_on', category: 'Additive', paramNames: [{ name: 'Horizontal' }, { name: 'Vertical' }, { name: 'Density' }] },
+  NOISE: { label: 'Noise', subLabel: 'NOISE', icon: 'blur_on', category: 'Additive', paramNames: [{ name: 'Width' }, { name: 'Height' }, { name: 'X-Spacing' }, { name: 'Y-Spacing' }, { name: 'Density' }, { name: 'Rounding' }] },
   BEAM: { label: 'Beam', subLabel: 'BEAM', icon: 'lens_blur', category: 'Additive', paramNames: [{ name: 'Radius' }, { name: 'Intensity' }] },
   GRID: { label: 'Grid', subLabel: 'GRID', icon: 'grid_3x3', category: 'Additive', paramNames: [{ name: 'Horizontal' }, { name: 'Vertical' }, { name: 'Thickness' }, { name: 'Feather' }] },
+  SPECTRAL_MAP: { label: 'Spectral Map', subLabel: 'SPECTRAL MAP', icon: 'colors', category: 'Color', paramNames: [{ name: 'Frequency' }, { name: 'Shift' }, { name: 'Strength' }] },
 };
 
 const buildParams = (
@@ -79,9 +80,10 @@ export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
   { type: 'STARFIELD', values: [80, 53], active: true, reactive: true, frequencyBand: 'BASS' },
   { type: 'RETRO_GRID', values: [30, 60], reactive: true, frequencyBand: 'SUB' },
   { type: 'TUNNEL_WARP', values: [50, 50, 0], reactive: true, frequencyBand: 'SUB' },
-  { type: 'NOISE', values: [100, 100, 50], reactive: false, frequencyBand: 'TREBLE' },
+  { type: 'NOISE', values: [100, 100, 0, 0, 50, 0], reactive: false, frequencyBand: 'TREBLE' },
   { type: 'BEAM', values: [40, 80], reactive: true, frequencyBand: 'BASS' },
   { type: 'GRID', values: [24, 24, 4, 16], reactive: false, frequencyBand: 'MID' },
+  { type: 'SPECTRAL_MAP', values: [20, 0, 100], reactive: true, frequencyBand: 'BASS' },
 ]);
 
 export const FEEDBACK_FORM_URL = 'https://forms.gle/CBVXwJv9s3ZvXyWr8';

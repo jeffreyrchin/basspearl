@@ -20,7 +20,8 @@ export type GlitchEffectType =
   | 'TUNNEL_WARP'
   | 'NOISE'
   | 'BEAM'
-  | 'GRID';
+  | 'GRID'
+  | 'SPECTRAL_MAP';
 
 export interface EffectConfig {
   type: GlitchEffectType;
