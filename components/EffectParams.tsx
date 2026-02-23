@@ -45,7 +45,7 @@ const EffectParams: React.FC<EffectParamsProps> = ({ }) => {
                         <div className="flex justify-between items-end">
                             <div className="space-y-2">
                                 <label className="text-[9px] font-bold uppercase tracking-widest text-white/40">
-                                    {effect.params[paramIdx].reactive ? `Peak ${paramName.name}` : paramName.name}
+                                    {effect.params[paramIdx].reactive ? `Max ${paramName.name}` : paramName.name}
                                 </label>
                                 <div className="flex items-center gap-2 bg-black/40 p-1 rounded-xl border border-white/5 w-fit">
                                     <button

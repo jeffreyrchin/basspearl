@@ -166,7 +166,8 @@ void main() {
 export const HUE_ROTATION_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[2]; // [hue, saturation/vibrance]
+uniform float u_params[3]; // [phase offset, speed, vibrance]
+uniform float u_integrated_value;
 in vec2 v_texCoord;
 out vec4 outColor;
 
@@ -190,8 +191,13 @@ void main() {
     vec4 color = texture(u_image, v_texCoord);
     vec3 hsv = rgb2hsv(color.rgb);
     
-    hsv.x = fract(hsv.x + u_params[0] / 100.0);
-    hsv.y = min(1.0, hsv.y * (1.0 + (u_params[1] / 100.0) * 2.0));
+    float phase = u_params[0] / 100.0;
+    float speed    = u_params[1] / 100.0;
+    float vibrance = u_params[2] / 100.0;
+    float time     = u_integrated_value * speed;
+
+    hsv.x = fract(hsv.x + phase + time);
+    hsv.y = min(1.0, hsv.y * (1.0 + vibrance * 2.0));
     
     outColor = vec4(hsv2rgb(hsv), color.a);
 }
@@ -215,7 +221,8 @@ void main() {
 export const SPECTRAL_MAP_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[3]; // [frequency, shift, strength]
+uniform float u_params[4]; // [resolution, phase offset, speed, strength]
+uniform float u_integrated_value;
 in vec2 v_texCoord;
 out vec4 outColor;
 
@@ -226,12 +233,13 @@ void main() {
     float lum = dot(src.rgb, vec3(0.299, 0.587, 0.114));
     
     // 2. Synthesize Spectrum (Cosine Palette)
+    float freq     = u_params[0] / 20.0; // Resolution of the rainbow
+    float shift    = u_params[1] / 100.0; // Rotation/phase offset of the rainbow
+    float speed    = u_params[2] / 100.0; // Rotation speed
+    float strength = u_params[3] / 100.0; // Blend with original
+    float time     = u_integrated_value * speed;
     // t drives the 'time' or 'position' on the color wheel
-    float freq  = u_params[0] / 20.0;    // Scale of the rainbow
-    float shift = u_params[1] / 100.0;   // Rotation of the rainbow
-    float strength = u_params[2] / 100.0; // Blend with original
-    
-    float t = lum * freq + shift;
+    float t = lum * freq + shift + time;
     
     // High-fidelity primitive colors (RGB phases)
     vec3 a = vec3(0.5);
@@ -815,7 +823,7 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     SCAN_LINES: { name: 'SCAN_LINES', fragmentSource: SCAN_LINES_SHADER },
     DEEP_FRY: { name: 'DEEP_FRY', fragmentSource: DEEP_FRY_SHADER },
     WAVE_DISTORTION: { name: 'WAVE_DISTORTION', fragmentSource: WAVE_DISTORTION_SHADER, velocityParamIndex: 2 },
-    HUE_ROTATION: { name: 'HUE_ROTATION', fragmentSource: HUE_ROTATION_SHADER },
+    HUE_ROTATION: { name: 'HUE_ROTATION', fragmentSource: HUE_ROTATION_SHADER, velocityParamIndex: 1 },
     INVERT_GHOST: { name: 'INVERT_GHOST', fragmentSource: INVERT_GHOST_SHADER },
     PIXEL_SORT: { name: 'PIXEL_SORT', fragmentSource: PIXEL_SORT_SHADER },
     DATA_CORRUPTION: { name: 'DATA_CORRUPTION', fragmentSource: DATA_CORRUPTION_SHADER },
@@ -830,5 +838,5 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     NOISE: { name: 'NOISE', fragmentSource: NOISE_SHADER },
     BEAM: { name: 'BEAM', fragmentSource: BEAM_SHADER },
     GRID: { name: 'GRID', fragmentSource: GRID_SHADER },
-    SPECTRAL_MAP: { name: 'SPECTRAL_MAP', fragmentSource: SPECTRAL_MAP_SHADER },
+    SPECTRAL_MAP: { name: 'SPECTRAL_MAP', fragmentSource: SPECTRAL_MAP_SHADER, velocityParamIndex: 2 },
 };
