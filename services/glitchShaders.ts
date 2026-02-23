@@ -713,7 +713,7 @@ void main() {
 export const GRID_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[3]; // [horizontal, vertical, thickness]
+uniform float u_params[4]; // [horizontal, vertical, thickness, feather]
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -723,6 +723,7 @@ void main() {
     float normX = u_params[0] / 100.0;
     float normY = u_params[1] / 100.0;
     float thickness = u_params[2] / 100.0;
+    float feather = u_params[3] / 100.0;
 
     // Exponential frequency: freq=1 at 1% (one centered line), doubling from there.
     // Multiply resolution by 0.25 to ensure gridlines are still visible at max horizontal/vertical lines
@@ -737,12 +738,20 @@ void main() {
     // 3. Simple integer projection.
     vec2 uv = v_texCoord * freq;
 
-    // 4. Calculate Grid Mask with Anti-Aliasing.
-    float targetPixelWidth = mix(1.0, 10.0, thickness);
+    // 4. Calculate Grid Mask with Anti-Aliasing & Feathering.
+    float targetPixelWidth = mix(1.0, 200.0, thickness);
+    float featherPixels = mix(0.5, 200.0, feather); // Range from 0.5px (sharp) to 200px (glow)
+    
     vec2 pWidth = fwidth(uv);
     vec2 thickUV = pWidth * targetPixelWidth;
+    vec2 featherUV = pWidth * featherPixels;
+    
+    // Centered transition: line spans from (thickness - feather) to (thickness + feather)
+    vec2 outer = (thickUV + featherUV) * 0.5;
+    vec2 inner = max(thickUV - featherUV, 0.0) * 0.5;
+
     vec2 dist = abs(fract(uv - 0.5) - 0.5);
-    vec2 grid = smoothstep(thickUV * 0.5, vec2(0.0), dist);
+    vec2 grid = smoothstep(outer, inner, dist);
 
     // Suppress border artifact when a slider is at 0%.
     grid.x *= step(0.001, normX);

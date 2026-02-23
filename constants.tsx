@@ -27,7 +27,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   TUNNEL_WARP: { label: 'Tunnel Warp', subLabel: 'TUNNEL WARP', icon: 'hub', category: 'Motion', paramNames: [{ name: 'Scale' }, { name: 'Speed' }, { name: 'Twist' }] },
   NOISE: { label: 'Noise', subLabel: 'NOISE', icon: 'blur_on', category: 'Additive', paramNames: [{ name: 'Horizontal' }, { name: 'Vertical' }, { name: 'Density' }] },
   BEAM: { label: 'Beam', subLabel: 'BEAM', icon: 'lens_blur', category: 'Additive', paramNames: [{ name: 'Radius' }, { name: 'Intensity' }] },
-  GRID: { label: 'Grid', subLabel: 'GRID', icon: 'grid_3x3', category: 'Additive', paramNames: [{ name: 'Horizontal' }, { name: 'Vertical' }, { name: 'Thickness' }] },
+  GRID: { label: 'Grid', subLabel: 'GRID', icon: 'grid_3x3', category: 'Additive', paramNames: [{ name: 'Horizontal' }, { name: 'Vertical' }, { name: 'Thickness' }, { name: 'Feather' }] },
 };
 
 const buildParams = (
@@ -81,7 +81,7 @@ export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
   { type: 'TUNNEL_WARP', values: [50, 50, 0], reactive: true, frequencyBand: 'SUB' },
   { type: 'NOISE', values: [100, 100, 50], reactive: false, frequencyBand: 'TREBLE' },
   { type: 'BEAM', values: [40, 80], reactive: true, frequencyBand: 'BASS' },
-  { type: 'GRID', values: [30, 30, 50], reactive: false, frequencyBand: 'MID' },
+  { type: 'GRID', values: [24, 24, 4, 16], reactive: false, frequencyBand: 'MID' },
 ]);
 
 export const FEEDBACK_FORM_URL = 'https://forms.gle/CBVXwJv9s3ZvXyWr8';
