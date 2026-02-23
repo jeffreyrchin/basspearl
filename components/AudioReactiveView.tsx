@@ -276,7 +276,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                 ref={imageInputRef}
                                 id="image-file-input"
                                 type="file"
-                                accept="image/*"
+                                accept="image/*, .jpg, .jpeg, .png, .webp, .heic"
                                 onClick={(e) => { (e.target as HTMLInputElement).value = ''; }} // Clear input so onChange always fires
                                 onChange={handleImageUpload}
                                 className="sr-only"
@@ -300,7 +300,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                 ref={audioInputRef}
                                 id="audio-file-input"
                                 type="file"
-                                accept="audio/*"
+                                accept="audio/*, .mp3, .wav, .m4a, .aac, .ogg"
                                 onClick={(e) => { (e.target as HTMLInputElement).value = ''; }} // Clear input so onChange always fires
                                 onChange={handleAudioUpload}
                                 className="sr-only"
