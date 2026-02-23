@@ -627,7 +627,7 @@ uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
 void main() {
-    float scale = u_params[0] / 100.0 * 2.0;
+    float scale = max(u_params[0] / 100.0 * 2.0, 0.01); // prevent scale from being 0 to prevent y-coordinates from disappearing (prevents single horizontal pixel-row from stretching vertically across canvas)
     float speed = u_params[1] / 100.0;
     float twist = u_params[2] / 100.0 * 5.0;
     float time  = u_integrated_value * speed * 3.0;
@@ -663,16 +663,17 @@ void main() {
     float normY = u_params[1] / 100.0;
     float density = u_params[2] / 100.0;
 
+    // Exponential frequency: freq=1 at 1% (one centered line), doubling from there.
     vec2 freq = vec2(
-        1.0 + pow(normX, 3.0) * (u_resolution.x - 1.0),
-        1.0 + pow(normY, 3.0) * (u_resolution.y - 1.0)
+        round(exp2(normX * log2(u_resolution.x))),
+        round(exp2(normY * log2(u_resolution.y)))
     );
 
     // 2. Sample background image.
     vec4 src = texture(u_image, v_texCoord);
 
-    // 3. Center-Preserving Cell Projection.
-    vec2 cell = floor(v_texCoord * freq - (freq - 1.0) * 0.5);
+    // 3. Simple integer projection.
+    vec2 cell = floor(v_texCoord * freq);
 
     // 4. Generate Random Noise Mask.
     float threshold = hash(cell); // full [0.0, 1.0] range for fair distribution
@@ -723,16 +724,18 @@ void main() {
     float normY = u_params[1] / 100.0;
     float thickness = u_params[2] / 100.0;
 
+    // Exponential frequency: freq=1 at 1% (one centered line), doubling from there.
+    // Multiply resolution by 0.25 to ensure gridlines are still visible at max horizontal/vertical lines
     vec2 freq = vec2(
-        1.0 + pow(normX, 3.0) * (u_resolution.x * 0.5 - 1.0),
-        1.0 + pow(normY, 3.0) * (u_resolution.y * 0.5 - 1.0)
+        round(exp2(normX * log2(u_resolution.x * 0.25))),
+        round(exp2(normY * log2(u_resolution.y * 0.25)))
     );
 
     // 2. Sample background image.
     vec4 src = texture(u_image, v_texCoord);
 
-    // 3. Independent XY Projection (Center-Preserving).
-    vec2 uv = v_texCoord * freq - (freq - 1.0) * 0.5;
+    // 3. Simple integer projection.
+    vec2 uv = v_texCoord * freq;
 
     // 4. Calculate Grid Mask with Anti-Aliasing.
     float targetPixelWidth = mix(1.0, 10.0, thickness);
@@ -740,11 +743,11 @@ void main() {
     vec2 thickUV = pWidth * targetPixelWidth;
     vec2 dist = abs(fract(uv - 0.5) - 0.5);
     vec2 grid = smoothstep(thickUV * 0.5, vec2(0.0), dist);
-    
+
     // Suppress border artifact when a slider is at 0%.
     grid.x *= step(0.001, normX);
     grid.y *= step(0.001, normY);
-    
+
     float mask = max(grid.x, grid.y);
 
     // 5. Output Final Color.
