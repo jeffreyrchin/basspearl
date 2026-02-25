@@ -8,7 +8,7 @@ interface EffectLibraryProps {
     onSelectEffect: () => void;
 }
 
-const CATEGORIES: EffectCategory[] = ['All', 'Additive', 'Color', 'Glitch', 'Motion'];
+const CATEGORIES: EffectCategory[] = ['All', 'Additive', 'Color', 'Glitch', 'Motion', 'Mask'];
 
 const EffectLibrary: React.FC<EffectLibraryProps> = ({
     onSelectEffect,

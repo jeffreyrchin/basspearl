@@ -203,7 +203,7 @@ void main() {
 }
 `;
 
-export const INVERT_GHOST_SHADER = `#version 300 es
+export const INVERT_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[1]; // [inversion]
@@ -683,10 +683,10 @@ void main() {
 }
 `;
 
-export const NOISE_SHADER = `#version 300 es
+export const GRAIN_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[6]; // [width, height, x-spacing, y-spacing, density, rounding]
+uniform float u_params[6]; // [width, height, x-freq, y-freq, density, roundness]
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -695,17 +695,17 @@ float hash(vec2 p) { return clamp(fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.
 
 void main() {
     // 1. Map sliders to frequency and parameters.
-    float normX = u_params[0] / 100.0;
-    float normY = u_params[1] / 100.0;
-    float xSpacing = u_params[2] / 100.0;
-    float ySpacing = u_params[3] / 100.0;
+    float xScale = u_params[0] / 100.0;
+    float yScale = u_params[1] / 100.0;
+    float xFreq = u_params[2] / 100.0;
+    float yFreq = u_params[3] / 100.0;
     float density = u_params[4] / 100.0;
-    float rounding = u_params[5] / 100.0;
+    float roundness = u_params[5] / 100.0;
 
     // 2. Exponential frequency: freq=1 at 1% (one centered line), doubling from there.
     vec2 freq = vec2(
-        round(exp2(normX * log2(u_resolution.x))),
-        round(exp2(normY * log2(u_resolution.y)))
+        round(exp2(xFreq * log2(u_resolution.x))),
+        round(exp2(yFreq * log2(u_resolution.y)))
     );
 
     // 3. Sample background image.
@@ -722,16 +722,16 @@ void main() {
     float lit = step(1.0 - density, threshold) * step(0.001, density);
     
     // 6. Rounded Box SDF
-    // Size is 1.0 minus spacing on each axis
-    vec2 size = max(vec2(0.5) - vec2(xSpacing, ySpacing) * 0.5, 0.01);
-    float r = rounding * min(size.x, size.y); // Corner radius
+    // Size maps directly to the Width/Height sliders (0.5 is full half-width)
+    vec2 size = vec2(xScale, yScale) * 0.5;
+    float r = roundness * min(size.x, size.y); // Corner radius
     
     vec2 q = abs(p) - size + r;
     float dist = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
     
     // 7. Sharp mask
     float shapeMask = step(dist, 0.0);
-    lit *= shapeMask;
+    lit *= shapeMask * step(0.001, xScale) * step(0.001, yScale); // multiply by 0 when width/height is at 0% to make pixels disappear.
 
     // 8. Output Final Color.
     vec3 color = vec3(brightness);
@@ -742,26 +742,456 @@ void main() {
 }
 `;
 
-export const BEAM_SHADER = `#version 300 es
+export const SHAPE_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[2]; // [radius, intensity]
+uniform float u_params[5]; // [side count, pointiness, roundness, size, blend]
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+float sdStar(vec2 p, float m, float aps, float inr, float edge) {
+    float a = atan(p.y, p.x) + aps;
+    float aps2 = aps * 2.0;
+    vec2 cp = length(p) * vec2(cos(mod(a, aps2) - aps), abs(sin(mod(a, aps2) - aps)));
+    cp.x += m * inr * (1.0 - cp.y / max(edge, 0.001));
+    cp -= vec2(inr, edge);
+    cp.y += clamp(-cp.y, 0.0, edge * 2.0);
+    return length(cp) * sign(cp.x);
+}
+
+void main() {
+    float sides = max(floor(u_params[0]), 3.0);
+    float roundFactor = u_params[2] / 100.0;
+    float pointiness = (u_params[1] / 100.0) * (1.0 - roundFactor) * 0.99;
+    float size = u_params[3] / 100.0;
+    float blend = u_params[4] / 100.0;
+
+    vec2 uv = (v_texCoord - 0.5) * u_resolution / min(u_resolution.x, u_resolution.y);
+    
+    float aps = 3.14159265359 / sides;
+    float inr = 0.5 * size * (1.0 - roundFactor);
+    float edge = inr * tan(aps);
+    float rounding = roundFactor * 0.5 * size;
+
+    float d = sdStar(uv, pointiness, aps, inr, edge) - rounding;
+    float shape = step(d, 0.0);
+    
+    vec4 background = texture(u_image, v_texCoord);
+    
+    // If blend is 0, we output pure white-on-black (Mask mode)
+    // If blend is 1, we output pure white-on-background (Overlay mode)
+    outColor = mix(vec4(vec3(shape), 1.0), vec4(mix(background.rgb, vec3(1.0), shape), 1.0), blend);
+}
+`;
+
+export const TRANSFORM_SHADER = `#version 300 es
+precision highp float;
+
+uniform sampler2D u_image;
+uniform float u_params[4]; // [scaleX, scaleY, rotation, skew]
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
 
 void main() {
-    float radius = u_params[0] / 100.0 * 1.5 + 0.1;
-    float intensity = u_params[1] / 100.0;
-    vec2 uv = (v_texCoord - 0.5) * u_resolution / u_resolution.y;
-    float r = length(uv);
+    // -----------------------
+    // 1. Extract parameters
+    // -----------------------
+    float scaleX   = max(0.01, 2.0 * u_params[0] / 100.0);
+    float scaleY   = max(0.01, 2.0 * u_params[1] / 100.0);
+    float rotation = u_params[2] / 100.0 * 6.28318530718; // radians
+    float skew     = (u_params[3] - 50.0) / 50.0;         // [-1,1]
 
-    float glow = 1.0 - smoothstep(0.0, radius, r);
-    vec3 color = vec3(1.0);
-    vec4 src = texture(u_image, v_texCoord);
-    outColor = vec4(src.rgb + color * glow * intensity, clamp(src.a + glow * intensity * 0.4, 0.0, 1.0));
+    // -----------------------
+    // 2. Map UV to [-0.5,0.5]
+    // -----------------------
+    vec2 uv = v_texCoord - 0.5;
+
+    // -----------------------
+    // 3. Aspect correction
+    // -----------------------
+    float aspect = u_resolution.x / u_resolution.y;
+    uv.x *= aspect;
+
+    // -----------------------
+    // 4. Rotation
+    // -----------------------
+    float c = cos(rotation);
+    float s = sin(rotation);
+    mat2 rot = mat2(c, -s, s, c); // standard rotation
+    uv = rot * uv;
+
+    // -----------------------
+    // 5. Undo aspect correction
+    // -----------------------
+    uv.x /= aspect;
+
+    // -----------------------
+    // 6. Scale and skew combined
+    // -----------------------
+    // Order: skew first, then scale
+    mat2 transform = mat2(1.0/scaleX, -skew/scaleX,
+                          0.0, 1.0/scaleY);
+    uv = transform * uv;
+
+    // -----------------------
+    // 7. Return to [0,1] UV space
+    // -----------------------
+    uv += 0.5;
+
+    // -----------------------
+    // 8. Branch-free bounds check
+    // -----------------------
+    float inBounds = step(0.0, uv.x) * step(uv.x, 1.0) *
+                     step(0.0, uv.y) * step(uv.y, 1.0);
+
+    // -----------------------
+    // 9. Sample texture
+    // -----------------------
+    outColor = texture(u_image, uv) * inBounds;
 }
 `;
+
+export const TILE_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[4]; // [xFreq, yFreq, density, jitter]
+uniform vec2 u_resolution;
+uniform float u_seed;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+// 32-bit integer hash (Adapted for float seed input)
+float hash(uvec2 v, float seed) {
+    uint s = uint(seed * 2246822519.0);
+    uint h = (v.x * 1597334677u) ^ (v.y * 3812015801u) ^ s;
+    h ^= h >> 16u; h *= 0x45d9f3bu; h ^= h >> 16u;
+    return float(h) * (1.0 / 4294967296.0);
+}
+
+vec2 hash2(uvec2 v, float seed) {
+    return vec2(hash(v, seed), hash(v, seed + 1.23));
+}
+
+void main() {
+    vec2 freq = max(vec2(1.0), floor(exp2(vec2(u_params[0], u_params[1]) * 0.08)));
+    float density = u_params[2] / 100.0;
+    float jitter = u_params[3] / 100.0;
+    
+    vec2 uv = v_texCoord * freq;
+    uvec2 currentCell = uvec2(ivec2(floor(uv)));
+    vec2 localV = fract(uv) - 0.5;
+    
+    vec4 finalColor = vec4(0.0);
+    
+    // 3x3 Search loop is required to prevent clipping and allow organic overlap
+    for(int y = -1; y <= 1; y++) {
+        for(int x = -1; x <= 1; x++) {
+            ivec2 off = ivec2(x, y);
+            uvec2 cell = uvec2(ivec2(currentCell) + off);
+            
+            float dActive = step(1.0 - density, hash(cell, u_seed));
+            
+            // Jittered center in cell space
+            vec2 offset = hash2(cell, u_seed) - 0.5;
+            vec2 p = localV - vec2(off) - offset * jitter;
+            
+            // Sample the incoming shape texture (centered at 0.5, 0.5)
+            vec2 sampleUV = p + 0.5;
+            
+            // Bounds check to prevent edge smearing (branch-free)
+            float mask = step(0.0, sampleUV.x) * step(sampleUV.x, 1.0) * 
+                         step(0.0, sampleUV.y) * step(sampleUV.y, 1.0);
+            
+            vec4 sampled = texture(u_image, sampleUV) * dActive * mask;
+            finalColor = max(finalColor, sampled);
+        }
+    }
+    
+    outColor = finalColor;
+}
+`;
+
+export const ORGANIC_NOISE_SHADER = `#version 300 es
+precision highp float;
+
+uniform sampler2D u_image;
+uniform float u_params[5]; // [scale, complexity, warp, speed, blend]
+uniform float u_integrated_value;
+
+in vec2 v_texCoord;
+out vec4 outColor;
+
+#define MAX_OCTAVES 6
+
+// Simplex 2D noise
+vec3 permute(vec3 x) {
+    return mod(((x * 34.0) + 1.0) * x, 289.0);
+}
+
+float snoise(vec2 v){
+    const vec4 C = vec4(
+        0.211324865405187,
+        0.366025403784439,
+        -0.577350269189626,
+        0.024390243902439
+    );
+
+    vec2 i = floor(v + dot(v, C.yy));
+    vec2 x0 = v - i + dot(i, C.xx);
+
+    vec2 i1 = (x0.x > x0.y)
+        ? vec2(1.0, 0.0)
+        : vec2(0.0, 1.0);
+
+    vec4 x12 = x0.xyxy + C.xxzz;
+    x12.xy -= i1;
+
+    i = mod(i, 289.0);
+    vec3 p = permute(
+        permute(i.y + vec3(0.0, i1.y, 1.0))
+        + i.x + vec3(0.0, i1.x, 1.0)
+    );
+
+    vec3 m = max(0.5 - vec3(
+        dot(x0, x0),
+        dot(x12.xy, x12.xy),
+        dot(x12.zw, x12.zw)
+    ), 0.0);
+
+    m *= m;
+    m *= m;
+
+    vec3 x = 2.0 * fract(p * C.www) - 1.0;
+    vec3 h = abs(x) - 0.5;
+    vec3 a0 = x - floor(x + 0.5);
+
+    float g0 = a0.x * x0.x + h.x * x0.y;
+    vec2 g12 = a0.yz * x12.xz + h.yz * x12.yw;
+
+    return 130.0 * dot(m, vec3(g0, g12));
+}
+
+// Fully unrolled, branchless FBM
+float fbm(vec2 p, float octaves) {
+    // Precompute amplitudes
+    float a0 = 0.5;
+    float a1 = 0.25;
+    float a2 = 0.125;
+    float a3 = 0.0625;
+    float a4 = 0.03125;
+    float a5 = 0.015625;
+
+    // Sum of amplitudes
+    float totalAmp = a0 + a1 + a2 + a3 + a4 + a5;
+
+    // Octave fractional weights (clamped 0–1)
+    float w0 = clamp(octaves - 0.0, 0.0, 1.0);
+    float w1 = clamp(octaves - 1.0, 0.0, 1.0);
+    float w2 = clamp(octaves - 2.0, 0.0, 1.0);
+    float w3 = clamp(octaves - 3.0, 0.0, 1.0);
+    float w4 = clamp(octaves - 4.0, 0.0, 1.0);
+    float w5 = clamp(octaves - 5.0, 0.0, 1.0);
+
+    // Compute each octave with scaling
+    float n0 = w0 * a0 * snoise(p);
+    float n1 = w1 * a1 * snoise(p * 2.0);
+    float n2 = w2 * a2 * snoise(p * 4.0);
+    float n3 = w3 * a3 * snoise(p * 8.0);
+    float n4 = w4 * a4 * snoise(p * 16.0);
+    float n5 = w5 * a5 * snoise(p * 32.0);
+
+    float value = n0 + n1 + n2 + n3 + n4 + n5;
+
+    return value / totalAmp; // normalized 0–1
+}
+
+void main() {
+    // ---- Parameter mapping ----
+    float scale = mix(1.0, 20.0, u_params[0] * 0.01);
+    float complexity = mix(1.0, float(MAX_OCTAVES), u_params[1] * 0.01);
+    float warp = u_params[2] * 0.08;
+    float speed = u_params[3] * 0.1;
+    float blend = u_params[4] * 0.01;
+
+    vec2 uv = v_texCoord * scale;
+    float t = u_integrated_value * speed;
+
+    // ---- Domain warp (2 noise calls) ----
+    vec2 warpVec = vec2(
+    snoise(uv + t * 0.5),
+    snoise(uv + vec2(5.2, 1.3) + t * 0.5)
+);
+
+    vec2 warpedUV = uv + warp * warpVec * scale;
+
+    // ---- Main FBM ----
+    float noiseVal = fbm(warpedUV, complexity);
+
+    // Apply contrast and clamp
+    noiseVal = clamp(noiseVal * 0.5 + 0.5, 0.0, 1.0);
+
+    vec4 src = texture(u_image, v_texCoord);
+
+    // Composite: mix current image with noise based on blend
+    // We max the alpha so that the noise can "draw over" previous transparency (like cellular noise)
+    outColor = vec4(mix(src.rgb, vec3(noiseVal), blend), max(src.a, blend));
+}
+`;
+
+export const LUMINANCE_MASK_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[3]; // [threshold, feather, invert]
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    float threshold = u_params[0] / 100.0;
+    float feather = max(u_params[1] / 100.0, 0.001);
+    float invert = u_params[2] / 100.0;
+
+    vec4 src = texture(u_image, v_texCoord);
+    float luma = dot(src.rgb, vec3(0.299, 0.587, 0.114));
+
+    float mask = smoothstep(threshold - feather, threshold + feather, luma);
+    mask = mix(mask, 1.0 - mask, invert);
+
+    outColor = vec4(src.rgb * mask, src.a * mask);
+}
+`;
+
+export const CELLULAR_NOISE_SHADER = `#version 300 es
+precision highp float;
+
+uniform sampler2D u_image;
+uniform float u_params[8]; // [cell width, cell height, x-freq, y-freq, density, jitter, speed, blend]
+uniform float u_integrated_value;
+uniform vec2 u_resolution;
+
+in vec2 v_texCoord;
+out vec4 outColor;
+
+// Robust Integer Hash for performance and stability across large coordinate ranges
+float hash(vec2 p) {
+    uvec2 v = uvec2(ivec2(p));
+    uint h = (v.x * 1597334677u) ^ (v.y * 3812015801u);
+    h = h * (h ^ (h >> 16u));
+    h = h * (h ^ (h >> 16u));
+    return float(h) * (1.0 / 4294967296.0);
+}
+
+void main() {
+    // 1. Map parameters
+    float xFreq = u_params[2] / 100.0;
+    float yFreq = u_params[3] / 100.0;
+    float cellWidth = u_params[0] / 100.0 * 2.0;
+    float cellHeight = u_params[1] / 100.0 * 2.0;
+    float probDensity = u_params[4] / 100.0;
+    float jitter = u_params[5] / 100.0;
+    float speed = u_params[6] / 100.0 * 5.0;
+    float blend = u_params[7] / 100.0;
+
+    // 2. Exponential frequency (consistent with Noise shader)
+    vec2 freq = vec2(
+    round(exp2(xFreq * log2(u_resolution.x))),
+    round(exp2(yFreq * log2(u_resolution.y)))
+);
+
+    float t = u_integrated_value * speed * 0.5;
+    vec2 cellCoord = v_texCoord * freq;
+    vec2 gv = floor(cellCoord);
+    vec2 fv = fract(cellCoord);
+
+    float f1 = 8.0;
+
+    vec2 cellScaling = 1.0 / max(vec2(cellWidth, cellHeight), 0.01);
+
+    // Worley search in 5x5 neighborhood
+    for (int y = -2; y <= 2; y++) {
+        for (int x = -2; x <= 2; x++) {
+            vec2 neighbor = vec2(float(x), float(y));
+            vec2 cell = gv + neighbor;
+
+            // Probability check: should a point exist in this cell?
+            if (hash(cell) > probDensity && probDensity < 0.99) continue;
+            
+            vec2 seed = vec2(hash(cell), hash(cell + vec2(1.0, 7.0)));
+
+            // Morphic Jitter: centers wiggle over time
+            vec2 wiggle = 0.5 + 0.5 * vec2(
+                sin(t + seed.x * 6.2831),
+                cos(t * 0.8 + seed.y * 6.2831)
+            );
+            
+            vec2 offset = mix(vec2(0.5), wiggle, jitter);
+            vec2 diff = neighbor + offset - fv;
+
+            // Apply cell geometry scaling (stretching/spacing)
+            vec2 scaledDiff = diff * cellScaling;
+            
+            float dist = dot(scaledDiff, scaledDiff);
+            f1 = min(f1, dist);
+        }
+    }
+
+    f1 = sqrt(f1);
+    float intensity = smoothstep(1.0, 0.0, f1);
+
+    vec4 src = texture(u_image, v_texCoord);
+    outColor = mix(src, vec4(vec3(intensity), 1.0), blend * step(0.001, probDensity));
+}
+`;
+
+export const EDGE_MASK_SHADER = `#version 300 es
+precision highp float;
+
+uniform sampler2D u_image;    // Input: normalized grayscale or RGB
+uniform float u_params[3];    // [sensitivity, thickness, invert]
+uniform vec2 u_resolution;
+
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    // Map parameters
+    float sensitivity = u_params[0] / 100.0;       // 0 = weak, 1 = strong
+    float thickness = mix(1.0, 15.0, u_params[1] / 100.0);
+    float invert = u_params[2] / 100.0;
+
+    // Compute texel size based on thickness
+    vec2 texel = thickness / u_resolution;
+    vec3 luma = vec3(0.299, 0.587, 0.114);
+
+    // Sample 8-neighbor luminance
+    float c = dot(texture(u_image, v_texCoord).rgb, luma);
+    float l = dot(texture(u_image, v_texCoord + vec2(-texel.x, 0.0)).rgb, luma);
+    float r = dot(texture(u_image, v_texCoord + vec2(texel.x, 0.0)).rgb, luma);
+    float t = dot(texture(u_image, v_texCoord + vec2(0.0, texel.y)).rgb, luma);
+    float b = dot(texture(u_image, v_texCoord + vec2(0.0, -texel.y)).rgb, luma);
+    float tl = dot(texture(u_image, v_texCoord + vec2(-texel.x, texel.y)).rgb, luma);
+    float tr = dot(texture(u_image, v_texCoord + vec2(texel.x, texel.y)).rgb, luma);
+    float bl = dot(texture(u_image, v_texCoord + vec2(-texel.x, -texel.y)).rgb, luma);
+    float br = dot(texture(u_image, v_texCoord + vec2(texel.x, -texel.y)).rgb, luma);
+
+    // Standard Laplacian
+    float laplacian = 8.0 * c - (l + r + t + b + tl + tr + bl + br);
+
+    // Normalize Laplacian to roughly 0–1
+    float lapNorm = abs(laplacian) / 8.0;
+
+    // Apply sensitivity linearly
+    float mask = smoothstep(0.0, sensitivity, lapNorm);
+
+    // Inversion
+    mask = mix(mask, 1.0 - mask, invert);
+
+    // Apply mask to the original image
+    vec4 src = texture(u_image, v_texCoord);
+    outColor = vec4(src.rgb * mask, src.a * mask);
+} `;
 
 export const GRID_SHADER = `#version 300 es
 precision highp float;
@@ -798,7 +1228,7 @@ void main() {
     vec2 pWidth = fwidth(uv);
     vec2 thickUV = pWidth * targetPixelWidth;
     vec2 featherUV = pWidth * featherPixels;
-    
+
     // Centered transition: line spans from (thickness - feather) to (thickness + feather)
     vec2 outer = (thickUV + featherUV) * 0.5;
     vec2 inner = max(thickUV - featherUV, 0.0) * 0.5;
@@ -824,7 +1254,7 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     DEEP_FRY: { name: 'DEEP_FRY', fragmentSource: DEEP_FRY_SHADER },
     WAVE_DISTORTION: { name: 'WAVE_DISTORTION', fragmentSource: WAVE_DISTORTION_SHADER, velocityParamIndex: 2 },
     HUE_ROTATION: { name: 'HUE_ROTATION', fragmentSource: HUE_ROTATION_SHADER, velocityParamIndex: 1 },
-    INVERT_GHOST: { name: 'INVERT_GHOST', fragmentSource: INVERT_GHOST_SHADER },
+    INVERT: { name: 'INVERT', fragmentSource: INVERT_SHADER },
     PIXEL_SORT: { name: 'PIXEL_SORT', fragmentSource: PIXEL_SORT_SHADER },
     DATA_CORRUPTION: { name: 'DATA_CORRUPTION', fragmentSource: DATA_CORRUPTION_SHADER },
     COLOR_BLEED: { name: 'COLOR_BLEED', fragmentSource: COLOR_BLEED_SHADER },
@@ -835,8 +1265,14 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     STARFIELD: { name: 'STARFIELD', fragmentSource: STARFIELD_SHADER, velocityParamIndex: 1 },
     RETRO_GRID: { name: 'RETRO_GRID', fragmentSource: RETRO_GRID_SHADER, velocityParamIndex: 1 },
     TUNNEL_WARP: { name: 'TUNNEL_WARP', fragmentSource: TUNNEL_WARP_SHADER, velocityParamIndex: 1 },
-    NOISE: { name: 'NOISE', fragmentSource: NOISE_SHADER },
-    BEAM: { name: 'BEAM', fragmentSource: BEAM_SHADER },
+    GRAIN: { name: 'GRAIN', fragmentSource: GRAIN_SHADER },
+    SHAPE: { name: 'SHAPE', fragmentSource: SHAPE_SHADER },
+    TRANSFORM: { name: 'TRANSFORM', fragmentSource: TRANSFORM_SHADER },
+    TILE: { name: 'TILE', fragmentSource: TILE_SHADER },
+    ORGANIC_NOISE: { name: 'ORGANIC_NOISE', fragmentSource: ORGANIC_NOISE_SHADER, velocityParamIndex: 3 },
+    CELLULAR_NOISE: { name: 'CELLULAR_NOISE', fragmentSource: CELLULAR_NOISE_SHADER, velocityParamIndex: 6 },
+    LUMINANCE_MASK: { name: 'LUMINANCE_MASK', fragmentSource: LUMINANCE_MASK_SHADER },
+    EDGE_MASK: { name: 'EDGE_MASK', fragmentSource: EDGE_MASK_SHADER },
     GRID: { name: 'GRID', fragmentSource: GRID_SHADER },
     SPECTRAL_MAP: { name: 'SPECTRAL_MAP', fragmentSource: SPECTRAL_MAP_SHADER, velocityParamIndex: 2 },
 };
