@@ -856,6 +856,77 @@ void main() {
 }
 `;
 
+export const BLACK_HOLE_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[4]; // [intensity, radius, centerX, centerY]
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    float intensity = u_params[0] / 100.0;
+    float radius    = u_params[1] / 100.0;
+    float cx        = u_params[2] / 100.0;
+    float cy        = u_params[3] / 100.0;
+
+    vec2 center = vec2(cx, cy);
+    vec2 aspect = vec2(u_resolution.x / u_resolution.y, 1.0);
+
+    vec2 delta       = v_texCoord - center;
+    vec2 deltaAspect = delta * aspect;
+
+    float dist    = length(deltaAspect);
+    float horizon = max(radius, 0.001);
+
+    float t        = clamp(1.0 - dist / horizon, 0.0, 1.0);
+    float strength = intensity * t * t * 10.0;
+
+    // Pull toward center: expand delta
+    vec2 warped = delta * (1.0 + strength);
+    vec2 rawUV  = center + warped;
+
+    vec2 mirroredUV = 1.0 - abs(2.0 * fract(rawUV * 0.5) - 1.0);
+    outColor = textureLod(u_image, mirroredUV, 0.0);
+}
+`;
+
+export const WHITE_HOLE_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[4]; // [intensity, radius, centerX, centerY]
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    float intensity = u_params[0] / 100.0;
+    float radius    = u_params[1] / 100.0;
+    float cx        = u_params[2] / 100.0;
+    float cy        = u_params[3] / 100.0;
+
+    vec2 center = vec2(cx, cy);
+    vec2 aspect = vec2(u_resolution.x / u_resolution.y, 1.0);
+
+    vec2 delta       = v_texCoord - center;
+    vec2 deltaAspect = delta * aspect;
+
+    float dist    = length(deltaAspect);
+    float horizon = max(radius, 0.001);
+
+    float t        = clamp(1.0 - dist / horizon, 0.0, 1.0);
+    float strength = intensity * t * t * 10.0;
+
+    // Push away from center: shrink delta
+    vec2 warped = delta * exp(-strength); // asymptotically approaches 0 to prevent inversion artifacts
+    vec2 rawUV  = center + warped;
+
+    vec2 mirroredUV = 1.0 - abs(2.0 * fract(rawUV * 0.5) - 1.0);
+    outColor = textureLod(u_image, mirroredUV, 0.0);
+}
+`;
+
+
 export const TILE_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
@@ -887,22 +958,22 @@ void main() {
     vec2 localV = fract(uv) - 0.5;
     
     vec4 finalColor = vec4(0.0);
-    
+
     // 3x3 Search loop is required to prevent clipping and allow organic overlap
-    for(int y = -1; y <= 1; y++) {
-        for(int x = -1; x <= 1; x++) {
+    for (int y = -1; y <= 1; y++) {
+        for (int x = -1; x <= 1; x++) {
             ivec2 off = ivec2(x, y);
             uvec2 cell = uvec2(ivec2(currentCell) + off);
             
             float dActive = step(1.0 - density, hash(cell, u_seed));
-            
+
             // Jittered center in cell space
             vec2 offset = hash2(cell, u_seed) - 0.5;
             vec2 p = localV - vec2(off) - offset * jitter;
-            
+
             // Sample the incoming shape texture (centered at 0.5, 0.5)
             vec2 sampleUV = p + 0.5;
-            
+
             // Bounds check to prevent edge smearing (branch-free)
             float mask = step(0.0, sampleUV.x) * step(sampleUV.x, 1.0) * 
                          step(0.0, sampleUV.y) * step(sampleUV.y, 1.0);
@@ -911,7 +982,7 @@ void main() {
             finalColor = max(finalColor, sampled);
         }
     }
-    
+
     outColor = finalColor;
 }
 `;
@@ -1276,6 +1347,8 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     CELLULAR_NOISE: { name: 'CELLULAR_NOISE', fragmentSource: CELLULAR_NOISE_SHADER, velocityParamIndex: 6 },
     LUMINANCE_MASK: { name: 'LUMINANCE_MASK', fragmentSource: LUMINANCE_MASK_SHADER },
     EDGE_MASK: { name: 'EDGE_MASK', fragmentSource: EDGE_MASK_SHADER },
+    BLACK_HOLE: { name: 'BLACK_HOLE', fragmentSource: BLACK_HOLE_SHADER },
+    WHITE_HOLE: { name: 'WHITE_HOLE', fragmentSource: WHITE_HOLE_SHADER },
     GRID: { name: 'GRID', fragmentSource: GRID_SHADER },
     SPECTRAL_MAP: { name: 'SPECTRAL_MAP', fragmentSource: SPECTRAL_MAP_SHADER, velocityParamIndex: 2 },
 };

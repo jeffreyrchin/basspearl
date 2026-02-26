@@ -35,6 +35,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   EDGE_MASK: { label: 'Edge Mask', subLabel: 'GLITCH OUTLINE', icon: 'filter_tilt_shift', category: 'Mask', paramNames: [{ name: 'Sensitivity' }, { name: 'Thickness' }, { name: 'Invert' }] },
   GRID: { label: 'Grid', subLabel: 'GRID', icon: 'grid_3x3', category: 'Additive', paramNames: [{ name: 'Horizontal' }, { name: 'Vertical' }, { name: 'Thickness' }, { name: 'Feather' }] },
   SPECTRAL_MAP: { label: 'Spectral Map', subLabel: 'SPECTRAL MAP', icon: 'colors', category: 'Color', paramNames: [{ name: 'Resolution' }, { name: 'Phase Offset' }, { name: 'Speed' }, { name: 'Strength' }] },
+  BLACK_HOLE: { label: 'Black Hole', subLabel: 'VOID PINCH', icon: 'blur_circular', category: 'Motion', paramNames: [{ name: 'Intensity' }, { name: 'Radius' }, { name: 'Center X' }, { name: 'Center Y' }] },
+  WHITE_HOLE: { label: 'White Hole', subLabel: 'VOID EXPLOSION', icon: 'brightness_7', category: 'Motion', paramNames: [{ name: 'Intensity' }, { name: 'Radius' }, { name: 'Center X' }, { name: 'Center Y' }] },
 };
 
 const buildParams = (
@@ -96,6 +98,8 @@ export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
   { type: 'TRANSFORM', values: [60, 60, 0, 0, 50], reactive: false, frequencyBand: 'SUB' },
   { type: 'TILE', values: [14, 14, 100, 0], reactive: false, frequencyBand: 'MID' },
   { type: 'SHAPE', values: [3, 0, 0, 30, 100], reactive: false, frequencyBand: 'MID' },
+  { type: 'BLACK_HOLE', values: [50, 50, 50, 50], reactive: false, frequencyBand: 'SUB' },
+  { type: 'WHITE_HOLE', values: [50, 50, 50, 50], reactive: false, frequencyBand: 'SUB' },
 ]);
 
 export const FEEDBACK_FORM_URL = 'https://forms.gle/CBVXwJv9s3ZvXyWr8';
