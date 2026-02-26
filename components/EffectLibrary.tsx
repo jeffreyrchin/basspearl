@@ -19,7 +19,7 @@ const EffectLibrary: React.FC<EffectLibraryProps> = ({ onSelectEffect }) => {
 
     const handleAdd = (type: GlitchEffectType) => {
         addEffect(type);
-        // onSelectEffect();
+        onSelectEffect();
     };
 
     return (
@@ -52,7 +52,7 @@ const EffectLibrary: React.FC<EffectLibraryProps> = ({ onSelectEffect }) => {
                             <div
                                 className="absolute inset-0 flex flex-col items-center justify-center z-0 w-full h-full pointer-events-none"
                             >
-                                <span className="text-[12px] uppercase tracking-wider px-1 text-center leading-tight w-full text-white/60">
+                                <span className="text-[12px] uppercase tracking-wider px-1 text-center leading-tight w-full text-white">
                                     {meta.label}
                                 </span>
                             </div>
@@ -63,7 +63,7 @@ const EffectLibrary: React.FC<EffectLibraryProps> = ({ onSelectEffect }) => {
                                     e.stopPropagation();
                                     handleAdd(type);
                                 }}
-                                className="absolute top-2 right-2 w-8 h-8 rounded-sm flex items-center justify-center transition-all duration-300 z-10 border text-white/40 hover:text-white hover:bg-white/10 hover:border-white/30 border-transparent"
+                                className="absolute top-2 right-2 w-8 h-8 rounded-sm flex items-center justify-center transition-all duration-300 z-10 border text-white/60 hover:text-white hover:bg-white/10 hover:border-white/30 border-transparent"
                                 title="Add to rack"
                                 aria-label="Add effect to rack"
                             >

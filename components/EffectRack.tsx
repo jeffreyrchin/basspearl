@@ -26,13 +26,13 @@ const EffectRack: React.FC<EffectRackProps> = ({
     if (activeEffects.length === 0) {
         return (
             <div className="py-20 flex flex-col items-center justify-center text-center px-6">
-                <span className="material-symbols-outlined text-white/5 text-5xl mb-4">layers_clear</span>
-                <p className="text-[10px] font-bold text-white/20 uppercase tracking-[0.2em] leading-relaxed">
-                    No active processing units<br />Select from effects library
+                <span className="material-symbols-outlined text-white/30 text-5xl mb-4">layers_clear</span>
+                <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] leading-relaxed">
+                    No active effects
                 </p>
                 <button
                     onClick={onNavigateToLibrary}
-                    className="mt-6 px-4 py-2 rounded-full border border-white/10 text-[9px] font-bold text-white/40 uppercase tracking-widest hover:bg-white/5 hover:text-white transition-all"
+                    className="mt-6 px-4 py-2 rounded-full border border-white/10 text-[9px] font-bold text-white/60 uppercase tracking-widest hover:bg-white/5 hover:text-white transition-all"
                 >
                     Browse Library
                 </button>
@@ -97,7 +97,7 @@ const EffectRack: React.FC<EffectRackProps> = ({
                         </button>
                         <button
                             onClick={() => removeEffect(effect.originalIndex)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-none hover:transition-all hover:duration-200"
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-white/60 hover:text-red-400 hover:bg-red-400/10 transition-none hover:transition-all hover:duration-200"
                             title="Remove effect"
                         >
                             <span className="material-symbols-outlined text-xl">close</span>

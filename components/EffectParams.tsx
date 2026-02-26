@@ -28,7 +28,7 @@ const EffectParams: React.FC<EffectParamsProps> = ({ }) => {
             <div className="flex items-center justify-between border-b border-white/5 pb-6">
                 <h3 className="text-primary text-[11px] font-bold uppercase tracking-[0.3em]">{EFFECT_METADATA[effect.type]?.label}</h3>
                 <div className="flex items-center space-x-2">
-                    <p className={`text-[8px] uppercase tracking-widest ${effect.active ? 'text-primary' : 'text-white/60'}`}>{effect.active ? 'Active' : 'Inactive'}</p>
+                    <p className={`text-[10px] uppercase tracking-widest ${effect.active ? 'text-primary' : 'text-white/60'}`}>{effect.active ? 'Active' : 'Inactive'}</p>
                     <button
                         onClick={() => toggleEffect(selectedEffectIndex)}
                         className={`w-12 h-6 rounded-full transition-all duration-300 relative border ${effect.active ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)]' : 'bg-white/10 border-transparent'}`}
@@ -44,7 +44,7 @@ const EffectParams: React.FC<EffectParamsProps> = ({ }) => {
                     <div key={paramIdx} className="space-y-6 bg-white/[0.03] p-5 rounded-2xl border border-white/5">
                         <div className="flex justify-between items-end">
                             <div className="space-y-2">
-                                <label className="text-[9px] font-bold uppercase tracking-widest text-white/40">
+                                <label className="text-[9px] font-bold uppercase tracking-widest text-white/60">
                                     {effect.params[paramIdx].reactive ? `Max ${paramName.name}` : paramName.name}
                                 </label>
                                 <div className="flex items-center gap-2 bg-black/40 p-1 rounded-xl border border-white/5 w-fit">
@@ -86,7 +86,7 @@ const EffectParams: React.FC<EffectParamsProps> = ({ }) => {
 
                 {/* Frequency Bands */}
                 <div className="space-y-4 bg-white/[0.03] p-5 rounded-2xl border border-white/5">
-                    <label className="text-[9px] font-bold text-white/40 uppercase tracking-widest block">Frequency</label>
+                    <label className="text-[9px] font-bold text-white/60 uppercase tracking-widest block">Frequency</label>
                     <div className="grid grid-cols-4 gap-1.5 bg-black/40 p-1.5 rounded-[22px] border border-white/5">
                         {['SUB', 'BASS', 'MID', 'TREBLE'].map(band => (
                             <button key={band} onClick={() => updateFrequencyBand(selectedEffectIndex, band as any)} className={`py-3 rounded-xl text-[9px] font-bold uppercase transition-all border ${effect.frequencyBand === band ? 'bg-primary/10 text-primary border-primary/40 shadow-[inset_0_0_12px_rgba(59,130,246,0.1)]' : 'text-white/60 hover:text-white border-transparent'}`}>{band}</button>
