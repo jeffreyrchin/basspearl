@@ -416,52 +416,6 @@ void main() {
 }
 `;
 
-export const RANDOM_CHAOS_SHADER = `#version 300 es
-precision highp float;
-uniform sampler2D u_image;
-uniform float u_params[2]; // [entropy, jitter]
-uniform float u_unit;
-uniform float u_seed;
-uniform vec2 u_resolution;
-in vec2 v_texCoord;
-out vec4 outColor;
-
-// Robust Integer Hash (Triple32 or PCG style) for stability with large coordinates
-float hash(vec2 col, float seed) {
-    uvec3 p = uvec3(uvec2(col), uint(seed * 12345.0));
-    p = p * 0x74779649u + (p >> 1u);
-    p.x *= p.y * p.z;
-    p.y *= p.x * p.z;
-    p.z *= p.x * p.y;
-    return float(p.x ^ p.y ^ p.z) * (1.0 / 4294967295.0);
-}
-
-void main() {
-    float blockSize = max(1.0, floor((u_params[1] * 0.1) * u_unit));
-    float probThreshold = 1.0 - pow(u_params[0] / 100.0, 0.5) * 0.5;
-    
-    vec2 pixelPos = v_texCoord * u_resolution;
-    vec2 blockIndex = floor(pixelPos / blockSize);
-    
-    vec4 color = texture(u_image, v_texCoord);
-    
-    // Use blockIndex for randomness
-    if (hash(blockIndex, u_seed) > probThreshold) {
-        float chaos = hash(blockIndex, u_seed + 1.23);
-        
-        if (chaos < 0.3) {
-            color.rgb = 1.0 - color.rgb;
-        } else if (chaos < 0.6) {
-            color.g = color.b;
-        } else {
-            color.b = 1.0;
-        }
-    }
-    
-    outColor = color;
-}
-`;
-
 export const ZOOM_PAN_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
@@ -1345,7 +1299,6 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     DATA_CORRUPTION: { name: 'DATA_CORRUPTION', fragmentSource: DATA_CORRUPTION_SHADER },
     COLOR_BLEED: { name: 'COLOR_BLEED', fragmentSource: COLOR_BLEED_SHADER },
     COMPRESSION_HELL: { name: 'COMPRESSION_HELL', fragmentSource: COMPRESSION_HELL_SHADER },
-    RANDOM_CHAOS: { name: 'RANDOM_CHAOS', fragmentSource: RANDOM_CHAOS_SHADER },
     ZOOM_PAN: { name: 'ZOOM_PAN', fragmentSource: ZOOM_PAN_SHADER },
     SCREEN_SHAKE: { name: 'SCREEN_SHAKE', fragmentSource: SCREEN_SHAKE_SHADER, velocityParamIndex: 1 },
     STARFIELD: { name: 'STARFIELD', fragmentSource: STARFIELD_SHADER, velocityParamIndex: 1 },

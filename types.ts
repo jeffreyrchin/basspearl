@@ -10,7 +10,6 @@ export type GlitchEffectType =
   | 'WAVE_DISTORTION'
   | 'COLOR_BLEED'
   | 'COMPRESSION_HELL'
-  | 'RANDOM_CHAOS'
   | 'HUE_ROTATION'
   | 'INVERT'
   | 'ZOOM_PAN'
