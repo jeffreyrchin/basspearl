@@ -27,7 +27,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   TUNNEL_WARP: { label: 'Tunnel Warp', subLabel: 'TUNNEL WARP', icon: 'hub', category: 'Motion', paramNames: [{ name: 'Scale' }, { name: 'Speed' }, { name: 'Twist' }] },
   GRAIN: { label: 'Grain', subLabel: 'GRAIN', icon: 'blur_on', category: 'Additive', paramNames: [{ name: 'Width' }, { name: 'Height' }, { name: 'X-Freq' }, { name: 'Y-Freq' }, { name: 'Density' }, { name: 'Roundness' }] },
   SHAPE: { label: 'Shape', subLabel: 'SHAPE', icon: 'category', category: 'Additive', paramNames: [{ name: 'Side Count' }, { name: 'Pointiness' }, { name: 'Roundness' }, { name: 'Size' }, { name: 'Blend' }] },
-  TRANSFORM: { label: 'Transform', subLabel: 'RIGID BODY', icon: 'transform', category: 'Motion', paramNames: [{ name: 'Scale X' }, { name: 'Scale Y' }, { name: 'Rotation' }, { name: 'Skew' }] },
+  TRANSFORM: { label: 'Transform', subLabel: 'TRANSFORM', icon: 'transform', category: 'Motion', paramNames: [{ name: 'Width' }, { name: 'Height' }, { name: 'Rotation' }, { name: 'Rotation Speed' }, { name: 'Skew' }] },
   TILE: { label: 'Tile', subLabel: 'TILE', icon: 'apps', category: 'Motion', paramNames: [{ name: 'X-Freq' }, { name: 'Y-Freq' }, { name: 'Density' }, { name: 'Jitter' }] },
   ORGANIC_NOISE: { label: 'Organic Noise', subLabel: 'PERLIN FLOW', icon: 'cloud', category: 'Additive', paramNames: [{ name: 'Scale' }, { name: 'Complexity' }, { name: 'Warp' }, { name: 'Speed' }, { name: 'Blend' }] },
   CELLULAR_NOISE: { label: 'Cellular Noise', subLabel: 'WORLEY CELLS', icon: 'texture', category: 'Additive', paramNames: [{ name: 'Cell Width' }, { name: 'Cell Height' }, { name: 'X-Freq' }, { name: 'Y-Freq' }, { name: 'Density' }, { name: 'Jitter' }, { name: 'Speed' }, { name: 'Blend' }] },
@@ -93,7 +93,7 @@ export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
   { type: 'EDGE_MASK', values: [50, 10, 0], active: false, reactive: false, frequencyBand: 'MID' },
   { type: 'GRID', values: [24, 24, 4, 16], reactive: false, frequencyBand: 'MID' },
   { type: 'SPECTRAL_MAP', values: [10, 0, 25, 100], reactive: false, frequencyBand: 'SUB' },
-  { type: 'TRANSFORM', values: [60, 60, 0, 50], reactive: false, frequencyBand: 'SUB' },
+  { type: 'TRANSFORM', values: [60, 60, 0, 0, 50], reactive: false, frequencyBand: 'SUB' },
   { type: 'TILE', values: [14, 14, 100, 0], reactive: false, frequencyBand: 'MID' },
   { type: 'SHAPE', values: [3, 0, 0, 30, 100], reactive: false, frequencyBand: 'MID' },
 ]);

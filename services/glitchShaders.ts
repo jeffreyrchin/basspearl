@@ -789,8 +789,9 @@ export const TRANSFORM_SHADER = `#version 300 es
 precision highp float;
 
 uniform sampler2D u_image;
-uniform float u_params[4]; // [scaleX, scaleY, rotation, skew]
+uniform float u_params[5]; // [scaleX, scaleY, rotation, rotation speed, skew]
 uniform vec2 u_resolution;
+uniform float u_integrated_value;
 in vec2 v_texCoord;
 out vec4 outColor;
 
@@ -800,8 +801,10 @@ void main() {
     // -----------------------
     float scaleX   = max(0.01, 2.0 * u_params[0] / 100.0);
     float scaleY   = max(0.01, 2.0 * u_params[1] / 100.0);
-    float rotation = u_params[2] / 100.0 * 6.28318530718; // radians
-    float skew     = (u_params[3] - 50.0) / 50.0;         // [-1,1]
+    float baseRot  = u_params[2] / 100.0 * 6.28318530718;
+    float speed    = u_params[3] / 100.0 * 10.0;
+    float rotation = baseRot + (u_integrated_value * speed);
+    float skew     = 2.0 * (u_params[4] - 50.0) / 50.0;
 
     // -----------------------
     // 2. Map UV to [-0.5,0.5]
@@ -1267,7 +1270,7 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     TUNNEL_WARP: { name: 'TUNNEL_WARP', fragmentSource: TUNNEL_WARP_SHADER, velocityParamIndex: 1 },
     GRAIN: { name: 'GRAIN', fragmentSource: GRAIN_SHADER },
     SHAPE: { name: 'SHAPE', fragmentSource: SHAPE_SHADER },
-    TRANSFORM: { name: 'TRANSFORM', fragmentSource: TRANSFORM_SHADER },
+    TRANSFORM: { name: 'TRANSFORM', fragmentSource: TRANSFORM_SHADER, velocityParamIndex: 3 },
     TILE: { name: 'TILE', fragmentSource: TILE_SHADER },
     ORGANIC_NOISE: { name: 'ORGANIC_NOISE', fragmentSource: ORGANIC_NOISE_SHADER, velocityParamIndex: 3 },
     CELLULAR_NOISE: { name: 'CELLULAR_NOISE', fragmentSource: CELLULAR_NOISE_SHADER, velocityParamIndex: 6 },
