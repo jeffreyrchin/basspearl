@@ -232,7 +232,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 effects: effects,
                 duration: duration,
                 fps: 60,
-                maxSize: 1280,
+                maxSize: 1920,
                 onProgress: (p) => setExportProgress(p)
             });
             analytics.export.succeeded(effects);

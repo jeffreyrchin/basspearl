@@ -44,7 +44,7 @@ export const exportVideo = async (options: ExportOptions) => {
         effects,
         duration,
         fps = 60,
-        maxSize = 1280,
+        maxSize = 1920,
         onProgress
     } = options;
 
