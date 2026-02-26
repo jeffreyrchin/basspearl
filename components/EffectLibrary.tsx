@@ -19,7 +19,7 @@ const EffectLibrary: React.FC<EffectLibraryProps> = ({ onSelectEffect }) => {
 
     const handleAdd = (type: GlitchEffectType) => {
         addEffect(type);
-        onSelectEffect();
+        // onSelectEffect();
     };
 
     return (

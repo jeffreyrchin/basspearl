@@ -75,7 +75,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                     className={`flex-1 py-3 px-2 rounded-t-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border-b-2 ${selectedTab === 'active' ? 'bg-white/5 text-primary border-primary' : 'text-white/40 border-transparent hover:text-white/60'}`}>
                     <span>Active</span>
                     {activeEffectsList.length > 0 && (
-                        <span className="bg-primary/20 text-primary rounded-full text-[8px] font-bold w-[17px] h-[17px] grid place-items-center leading-none border border-primary/30 tracking-normal">
+                        <span className="bg-primary/20 text-primary rounded-full text-[10px] font-bold w-[18px] h-[18px] grid place-items-center leading-none border border-primary/30 tracking-normal">
                             {activeEffectsList.length}
                         </span>
                     )}
