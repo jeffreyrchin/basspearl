@@ -167,27 +167,24 @@ export class GlitchEngine {
     const meta = SHADER_REGISTRY[type];
     if (!meta) return;
 
-    // Select the appropriate integrated value based on the effect's frequency band
-    let integratedValue = integratedReactivity?.bass ?? 0; // Default to bass
-    if (integratedReactivity) {
-      if (frequencyBand === 'SUB') integratedValue = integratedReactivity.sub;
-      else if (frequencyBand === 'BASS') integratedValue = integratedReactivity.bass;
-      else if (frequencyBand === 'MID') integratedValue = integratedReactivity.mid;
-      else if (frequencyBand === 'TREBLE') integratedValue = integratedReactivity.treble;
-    }
+    // Parameter Clocks (Integrated Values):
+    // We provide a dedicated 8-slot array of "clocks", one for each parameter.
+    // 1. Velocity Params + Sync ON: Use Integrated Reactivity (Accumulated motion).
+    // 2. Velocity Params + Sync OFF: Use Time (Constant motion).
+    // 3. Standard Params: Use Time (Normal frame progress).
+    const u_integrated_values = new Float32Array(8);
+    params.forEach((p, i) => {
+      const isVelocityParam = meta.velocityParamIndices?.includes(i);
 
-    // VELOCITY CONTROLLED EFFECTS:
-    // If the shader handles velocity (via u_integrated_value * speed),
-    // we switch the source of that value:
-    // 1. Sync on (reactive): Use integrated reactivity (p-value accumulation)
-    // 2. Sync off (manual):  Use time (constant linear accumulation)
-    if (meta.velocityParamIndex !== undefined) {
-      const velocityParam = params[meta.velocityParamIndex];
-      if (velocityParam && !velocityParam.reactive) {
-        // Manual mode: Use the current song time as the "integrated value" for constant acceleration
-        integratedValue = currentTime;
+      if (isVelocityParam && p.reactive && integratedReactivity) {
+        if (frequencyBand === 'SUB') u_integrated_values[i] = integratedReactivity.sub;
+        else if (frequencyBand === 'MID') u_integrated_values[i] = integratedReactivity.mid;
+        else if (frequencyBand === 'TREBLE') u_integrated_values[i] = integratedReactivity.treble;
+        else u_integrated_values[i] = integratedReactivity.bass; // Default to BASS
+      } else {
+        u_integrated_values[i] = currentTime || 0;
       }
-    }
+    });
 
     const uniforms: Record<string, any> = {
       u_params: params.map(p => p.value),
@@ -195,7 +192,7 @@ export class GlitchEngine {
       u_seed: (seed !== undefined && seed !== null) ? seed : Math.random(),
       u_resolution: [width, height],
       u_time: currentTime,
-      u_integrated_value: integratedValue
+      u_integrated_values: u_integrated_values
     };
 
     this.pipeline.applyPass(type, uniforms);

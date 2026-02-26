@@ -131,7 +131,7 @@ export const mapReactivityToEffects = (
                 // modulated by instantaneous reactivity, as this causes teleporting.
                 // The integration itself provides the smooth reactivity.
                 const meta = SHADER_REGISTRY[effect.type];
-                const shouldSkipModulation = meta?.velocityParamIndex === index;
+                const shouldSkipModulation = meta?.velocityParamIndices?.includes(index);
 
                 return {
                     ...param,

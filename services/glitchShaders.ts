@@ -1,9 +1,3 @@
-export interface ShaderDefinition {
-    name: string;
-    fragmentSource: string;
-    velocityParamIndex?: number;
-}
-
 export const GLSL_HASH = `
 // Robust Integer Hash for stability across large coordinate ranges and seeds
 float hash(vec2 p, float seed) {
@@ -137,7 +131,7 @@ precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[3]; // [amplitude, frequency, speed]
 uniform float u_unit;
-uniform float u_integrated_value;
+uniform float u_integrated_values[8];
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -157,8 +151,8 @@ void main() {
     // Param 2 functions as purely scroll speed
     float speed = u_params[2] * 0.3;
     
-    // We use u_integrated_value for the phase to ensure smooth, non-jittery motion.
-    float startPhase = u_integrated_value * speed;
+    // We use u_integrated_values[2] for the phase to ensure smooth, non-jittery motion.
+    float startPhase = u_integrated_values[2] * speed;
     
     // 2. Centered Projection
     // Expansion/contraction happens from the middle (v_texCoord.y - 0.5)
@@ -178,7 +172,7 @@ export const HUE_ROTATION_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[3]; // [phase offset, speed, vibrance]
-uniform float u_integrated_value;
+uniform float u_integrated_values[8];
 in vec2 v_texCoord;
 out vec4 outColor;
 
@@ -205,7 +199,7 @@ void main() {
     float phase = u_params[0] / 100.0;
     float speed    = u_params[1] / 100.0;
     float vibrance = u_params[2] / 100.0;
-    float time     = u_integrated_value * speed;
+    float time     = u_integrated_values[1] * speed;
 
     hsv.x = fract(hsv.x + phase + time);
     hsv.y = min(1.0, hsv.y * (1.0 + vibrance * 2.0));
@@ -233,7 +227,7 @@ export const SPECTRAL_MAP_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[4]; // [resolution, phase offset, speed, strength]
-uniform float u_integrated_value;
+uniform float u_integrated_values[8];
 in vec2 v_texCoord;
 out vec4 outColor;
 
@@ -248,7 +242,7 @@ void main() {
     float shift    = u_params[1] / 100.0; // Rotation/phase offset of the rainbow
     float speed    = u_params[2] / 100.0; // Rotation speed
     float strength = u_params[3] / 100.0; // Blend with original
-    float time     = u_integrated_value * speed;
+    float time     = u_integrated_values[2] * speed;
     // t drives the 'time' or 'position' on the color wheel
     float t = lum * freq + shift + time;
     
@@ -455,7 +449,7 @@ export const SCREEN_SHAKE_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[2]; // [displacement, speed]
-uniform float u_integrated_value;
+uniform float u_integrated_values[8];
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -473,7 +467,7 @@ void main() {
     float updateFreq = u_params[1] * 0.2;
     
     // "Travel" through noise space.
-    float t = u_integrated_value * updateFreq;
+    float t = u_integrated_values[1] * updateFreq;
     
     // Smooth Value Noise Interpolation
     float i = floor(t);
@@ -512,7 +506,7 @@ precision highp float;
 
 uniform sampler2D u_image;
 uniform float u_params[2]; // [density, speed]
-uniform float u_integrated_value;
+uniform float u_integrated_values[8];
 uniform vec2 u_resolution;
 uniform float u_seed;
 
@@ -525,7 +519,7 @@ void main() {
     float density = u_params[0] / 100.0;
     float speedScale = u_params[1] / 100.0;
 
-    float travel = u_integrated_value * speedScale * 4.0 + u_seed * 0.1;
+    float travel = u_integrated_values[1] * speedScale * 4.0 + u_seed * 0.1;
 
     vec2 uv = (v_texCoord - 0.5) * u_resolution / u_resolution.y;
 
@@ -578,7 +572,7 @@ export const RETRO_GRID_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[2]; // [thickness, speed]
-uniform float u_integrated_value;
+uniform float u_integrated_values[8];
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -586,7 +580,7 @@ out vec4 outColor;
 void main() {
     float thickness = u_params[0] / 100.0 * 0.1;
     float speed = u_params[1] / 100.0;
-    float time = u_integrated_value * speed * 10.0;
+    float time = u_integrated_values[1] * speed * 10.0;
 
     vec2 uv = (v_texCoord - 0.5) * u_resolution / u_resolution.y;
     
@@ -615,7 +609,7 @@ export const TUNNEL_WARP_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[3]; // [scale, speed, twist]
-uniform float u_integrated_value;
+uniform float u_integrated_values[8];
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -623,7 +617,7 @@ void main() {
     float scale = max(u_params[0] / 100.0 * 2.0, 0.01); // prevent scale from being 0 to prevent y-coordinates from disappearing (prevents single horizontal pixel-row from stretching vertically across canvas)
     float speed = u_params[1] / 100.0;
     float twist = u_params[2] / 100.0 * 5.0;
-    float time  = u_integrated_value * speed * 3.0;
+    float time  = u_integrated_values[1] * speed * 3.0;
     
     vec2 uv = (v_texCoord - 0.5) * u_resolution / u_resolution.y;
     float r = length(uv);
@@ -749,7 +743,7 @@ precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[5]; // [scaleX, scaleY, rotation, rotation speed, skew]
 uniform vec2 u_resolution;
-uniform float u_integrated_value;
+uniform float u_integrated_values[8];
 in vec2 v_texCoord;
 out vec4 outColor;
 
@@ -761,7 +755,7 @@ void main() {
     float scaleY   = max(0.01, 2.0 * u_params[1] / 100.0);
     float baseRot  = u_params[2] / 100.0 * 6.28318530718;
     float speed    = u_params[3] / 100.0 * 10.0;
-    float rotation = baseRot + (u_integrated_value * speed);
+    float rotation = baseRot + (u_integrated_values[3] * speed);
     float skew     = 2.0 * (u_params[4] - 50.0) / 50.0;
 
     // -----------------------
@@ -944,7 +938,7 @@ precision highp float;
 
 uniform sampler2D u_image;
 uniform float u_params[5]; // [scale, complexity, warp, speed, blend]
-uniform float u_integrated_value;
+uniform float u_integrated_values[8];
 uniform float u_seed;
 
 in vec2 v_texCoord;
@@ -1045,7 +1039,7 @@ void main() {
     // Use seed to offset noise coordinates
     vec2 seedOffset = vec2(fract(u_seed * 0.123), fract(u_seed * 0.456)) * 10.0;
     vec2 uv = v_texCoord * scale + seedOffset;
-    float t = u_integrated_value * speed;
+    float t = u_integrated_values[3] * speed;
 
     // ---- Domain warp (2 noise calls) ----
     vec2 warpVec = vec2(
@@ -1097,7 +1091,7 @@ precision highp float;
 
 uniform sampler2D u_image;
 uniform float u_params[8]; // [cell width, cell height, x-freq, y-freq, density, jitter, speed, blend]
-uniform float u_integrated_value;
+uniform float u_integrated_values[8];
 uniform float u_seed;
 uniform vec2 u_resolution;
 
@@ -1123,7 +1117,7 @@ void main() {
     round(exp2(yFreq * log2(u_resolution.y)))
 );
 
-    float t = u_integrated_value * speed * 0.5;
+    float t = u_integrated_values[6] * speed * 0.5;
     vec2 cellCoord = v_texCoord * freq;
     vec2 gv = floor(cellCoord);
     vec2 fv = fract(cellCoord);
@@ -1270,33 +1264,77 @@ void main() {
 }
 `;
 
+export const PAN_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[2]; // [X Offset, Y Offset]
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    vec2 offset = vec2(u_params[0], u_params[1]) / 100.0;
+    vec2 coord = fract(v_texCoord - offset);
+    outColor = texture(u_image, coord);
+}
+`;
+
+export const SCROLL_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[4]; // [Left, Right, Up, Down]
+uniform float u_integrated_values[8];
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    // Use independent clots for each direction
+    float left = (u_params[0] / 100.0) * u_integrated_values[0];
+    float right = (u_params[1] / 100.0) * u_integrated_values[1];
+    float up = (u_params[2] / 100.0) * u_integrated_values[2];
+    float down = (u_params[3] / 100.0) * u_integrated_values[3];
+    
+    vec2 scroll = vec2(right - left, up - down) * 2.0;
+    vec2 coord = fract(v_texCoord - scroll);
+    
+    outColor = texture(u_image, coord);
+}
+`;
+
+export interface ShaderDefinition {
+    name: string;
+    fragmentSource: string;
+    velocityParamIndices?: number[]; // Indices of parameters that control speed/velocity
+}
+
 export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     CHANNEL_SHIFT: { name: 'CHANNEL_SHIFT', fragmentSource: CHANNEL_SHIFT_SHADER },
     BIT_CRUSH: { name: 'BIT_CRUSH', fragmentSource: BIT_CRUSH_SHADER },
     SCAN_LINES: { name: 'SCAN_LINES', fragmentSource: SCAN_LINES_SHADER },
     DEEP_FRY: { name: 'DEEP_FRY', fragmentSource: DEEP_FRY_SHADER },
-    WAVE_DISTORTION: { name: 'WAVE_DISTORTION', fragmentSource: WAVE_DISTORTION_SHADER, velocityParamIndex: 2 },
-    HUE_ROTATION: { name: 'HUE_ROTATION', fragmentSource: HUE_ROTATION_SHADER, velocityParamIndex: 1 },
+    WAVE_DISTORTION: { name: 'WAVE_DISTORTION', fragmentSource: WAVE_DISTORTION_SHADER, velocityParamIndices: [2] },
+    HUE_ROTATION: { name: 'HUE_ROTATION', fragmentSource: HUE_ROTATION_SHADER, velocityParamIndices: [1] },
     INVERT: { name: 'INVERT', fragmentSource: INVERT_SHADER },
     PIXEL_SORT: { name: 'PIXEL_SORT', fragmentSource: PIXEL_SORT_SHADER },
     DATA_CORRUPTION: { name: 'DATA_CORRUPTION', fragmentSource: DATA_CORRUPTION_SHADER },
     COLOR_BLEED: { name: 'COLOR_BLEED', fragmentSource: COLOR_BLEED_SHADER },
     COMPRESSION_HELL: { name: 'COMPRESSION_HELL', fragmentSource: COMPRESSION_HELL_SHADER },
     ZOOM_PAN: { name: 'ZOOM_PAN', fragmentSource: ZOOM_PAN_SHADER },
-    SCREEN_SHAKE: { name: 'SCREEN_SHAKE', fragmentSource: SCREEN_SHAKE_SHADER, velocityParamIndex: 1 },
-    STARFIELD: { name: 'STARFIELD', fragmentSource: STARFIELD_SHADER, velocityParamIndex: 1 },
-    RETRO_GRID: { name: 'RETRO_GRID', fragmentSource: RETRO_GRID_SHADER, velocityParamIndex: 1 },
-    TUNNEL_WARP: { name: 'TUNNEL_WARP', fragmentSource: TUNNEL_WARP_SHADER, velocityParamIndex: 1 },
+    SCREEN_SHAKE: { name: 'SCREEN_SHAKE', fragmentSource: SCREEN_SHAKE_SHADER, velocityParamIndices: [1] },
+    STARFIELD: { name: 'STARFIELD', fragmentSource: STARFIELD_SHADER, velocityParamIndices: [1] },
+    RETRO_GRID: { name: 'RETRO_GRID', fragmentSource: RETRO_GRID_SHADER, velocityParamIndices: [1] },
+    TUNNEL_WARP: { name: 'TUNNEL_WARP', fragmentSource: TUNNEL_WARP_SHADER, velocityParamIndices: [1] },
     GRAIN: { name: 'GRAIN', fragmentSource: GRAIN_SHADER },
     SHAPE: { name: 'SHAPE', fragmentSource: SHAPE_SHADER },
-    TRANSFORM: { name: 'TRANSFORM', fragmentSource: TRANSFORM_SHADER, velocityParamIndex: 3 },
+    TRANSFORM: { name: 'TRANSFORM', fragmentSource: TRANSFORM_SHADER, velocityParamIndices: [3] },
     TILE: { name: 'TILE', fragmentSource: TILE_SHADER },
-    ORGANIC_NOISE: { name: 'ORGANIC_NOISE', fragmentSource: ORGANIC_NOISE_SHADER, velocityParamIndex: 3 },
-    CELLULAR_NOISE: { name: 'CELLULAR_NOISE', fragmentSource: CELLULAR_NOISE_SHADER, velocityParamIndex: 6 },
+    ORGANIC_NOISE: { name: 'ORGANIC_NOISE', fragmentSource: ORGANIC_NOISE_SHADER, velocityParamIndices: [3] },
+    CELLULAR_NOISE: { name: 'CELLULAR_NOISE', fragmentSource: CELLULAR_NOISE_SHADER, velocityParamIndices: [6] },
     LUMINANCE_MASK: { name: 'LUMINANCE_MASK', fragmentSource: LUMINANCE_MASK_SHADER },
     EDGE_MASK: { name: 'EDGE_MASK', fragmentSource: EDGE_MASK_SHADER },
     BLACK_HOLE: { name: 'BLACK_HOLE', fragmentSource: BLACK_HOLE_SHADER },
     WHITE_HOLE: { name: 'WHITE_HOLE', fragmentSource: WHITE_HOLE_SHADER },
     GRID: { name: 'GRID', fragmentSource: GRID_SHADER },
-    SPECTRAL_MAP: { name: 'SPECTRAL_MAP', fragmentSource: SPECTRAL_MAP_SHADER, velocityParamIndex: 2 },
+    SPECTRAL_MAP: { name: 'SPECTRAL_MAP', fragmentSource: SPECTRAL_MAP_SHADER, velocityParamIndices: [2] },
+    PAN: { name: 'PAN', fragmentSource: PAN_SHADER },
+    SCROLL: { name: 'SCROLL', fragmentSource: SCROLL_SHADER, velocityParamIndices: [0, 1, 2, 3] },
 };

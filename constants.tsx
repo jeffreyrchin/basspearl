@@ -36,6 +36,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   SPECTRAL_MAP: { label: 'Spectral Map', subLabel: 'SPECTRAL MAP', icon: 'colors', category: 'Color', paramNames: [{ name: 'Resolution' }, { name: 'Phase Offset' }, { name: 'Speed' }, { name: 'Strength' }] },
   BLACK_HOLE: { label: 'Black Hole', subLabel: 'VOID PINCH', icon: 'blur_circular', category: 'Motion', paramNames: [{ name: 'Intensity' }, { name: 'Radius' }, { name: 'Center X' }, { name: 'Center Y' }] },
   WHITE_HOLE: { label: 'White Hole', subLabel: 'VOID EXPLOSION', icon: 'brightness_7', category: 'Motion', paramNames: [{ name: 'Intensity' }, { name: 'Radius' }, { name: 'Center X' }, { name: 'Center Y' }] },
+  PAN: { label: 'Pan', subLabel: 'X/Y PAN', icon: 'open_with', category: 'Motion', paramNames: [{ name: 'Pan X' }, { name: 'Pan Y' }] },
+  SCROLL: { label: 'Scroll', subLabel: '4-WAY SCROLL', icon: 'sync_alt', category: 'Motion', paramNames: [{ name: 'Left Speed' }, { name: 'Right Speed' }, { name: 'Up Speed' }, { name: 'Down Speed' }] },
 };
 
 const buildParams = (
@@ -98,6 +100,8 @@ export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
   { type: 'SHAPE', values: [3, 0, 0, 30, 100], reactive: false, frequencyBand: 'MID' },
   { type: 'BLACK_HOLE', values: [50, 50, 50, 50], reactive: false, frequencyBand: 'SUB' },
   { type: 'WHITE_HOLE', values: [50, 50, 50, 50], reactive: false, frequencyBand: 'SUB' },
+  { type: 'PAN', values: [0, 0], active: false, reactive: false, frequencyBand: 'SUB' },
+  { type: 'SCROLL', values: [15, 0, 0, 0], active: false, reactive: true, frequencyBand: 'SUB' },
 ]);
 
 export const createEffectInstance = (type: GlitchEffectType): EffectConfig => {

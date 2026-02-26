@@ -28,7 +28,9 @@ export type GlitchEffectType =
   | 'CELLULAR_NOISE'
   | 'EDGE_MASK'
   | 'BLACK_HOLE'
-  | 'WHITE_HOLE';
+  | 'WHITE_HOLE'
+  | 'PAN'
+  | 'SCROLL';
 
 export interface EffectConfig {
   type: GlitchEffectType;

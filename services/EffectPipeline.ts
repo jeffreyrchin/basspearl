@@ -105,15 +105,15 @@ export class EffectPipeline {
 
         // Set custom uniforms
         Object.entries(uniforms).forEach(([name, value]) => {
-            const loc =
-                name === 'u_params'
-                    ? this.shaderManager.getUniformLocation(program, `${name}[0]`)
-                    : this.shaderManager.getUniformLocation(program, name);
+            const isArrayUniform = name === 'u_params' || name === 'u_integrated_values';
+            const loc = isArrayUniform
+                ? this.shaderManager.getUniformLocation(program, `${name}[0]`)
+                : this.shaderManager.getUniformLocation(program, name);
 
             if (!loc) return;
 
             if (typeof value === 'number') {
-                gl.uniform1f(loc, value);
+                this.gl.uniform1f(loc, value);
                 return;
             }
 
@@ -126,12 +126,12 @@ export class EffectPipeline {
 
             if (!data) return;
 
-            if (name === 'u_params') {
-                gl.uniform1fv(loc, data);
+            if (isArrayUniform) {
+                this.gl.uniform1fv(loc, data);
             } else if (data.length === 2) {
-                gl.uniform2fv(loc, data);
+                this.gl.uniform2fv(loc, data);
             } else {
-                gl.uniform1fv(loc, data);
+                this.gl.uniform1fv(loc, data);
             }
         });
 
