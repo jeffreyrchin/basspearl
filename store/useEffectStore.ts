@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { EffectConfig } from '../types';
-import { INITIAL_REACTIVE_EFFECTS } from '../constants';
+import { EffectConfig, GlitchEffectType } from '../types';
+import { INITIAL_REACTIVE_EFFECTS, createEffectInstance } from '../constants';
 import { analytics } from '@/services/analytics';
 
 interface EffectState {
@@ -13,6 +13,8 @@ interface EffectState {
 
     moveEffect: (index: number, direction: 'up' | 'down') => void;
     toggleEffect: (index: number) => void;
+    addEffect: (type: GlitchEffectType) => void;
+    removeEffect: (index: number) => void;
     updateParams: (index: number, params: EffectConfig['params']) => void;
     updateFrequencyBand: (index: number, band: EffectConfig['frequencyBand']) => void;
 }
@@ -54,7 +56,7 @@ export const useEffectStore = create<EffectState>((set) => ({
             const next = [...others, item];
             return {
                 effects: next,
-                selectedEffectIndex: next.length - 1 // Update selected index to its new position at the end
+                selectedEffectIndex: next.length - 1
             };
         } else {
             const next = state.effects.map((e, i) =>
@@ -62,6 +64,20 @@ export const useEffectStore = create<EffectState>((set) => ({
             );
             return { effects: next };
         }
+    }),
+
+    addEffect: (type) => set((state) => {
+        analytics.effect.toggled(type, true);
+        const newEffect = createEffectInstance(type);
+        const next = [...state.effects, newEffect];
+        return { effects: next, selectedEffectIndex: next.length - 1 };
+    }),
+
+    removeEffect: (index) => set((state) => {
+        analytics.effect.toggled(state.effects[index].type, false);
+        const next = state.effects.filter((_, i) => i !== index);
+        const newSelected = Math.min(state.selectedEffectIndex, next.length - 1);
+        return { effects: next, selectedEffectIndex: Math.max(0, newSelected) };
     }),
 
     updateParams: (index, params) => set((state) => ({

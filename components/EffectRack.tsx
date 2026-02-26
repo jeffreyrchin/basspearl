@@ -15,7 +15,7 @@ const EffectRack: React.FC<EffectRackProps> = ({
     const {
         effects,
         moveEffect,
-        toggleEffect,
+        removeEffect,
         setSelectedEffectIndex
     } = useEffectStore();
 
@@ -96,11 +96,11 @@ const EffectRack: React.FC<EffectRackProps> = ({
                             <span className="material-symbols-outlined text-xl">tune</span>
                         </button>
                         <button
-                            onClick={() => toggleEffect(effect.originalIndex)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-primary bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-none hover:transition-all hover:duration-200"
-                            title="Deactivate"
+                            onClick={() => removeEffect(effect.originalIndex)}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-none hover:transition-all hover:duration-200"
+                            title="Remove effect"
                         >
-                            <span className="material-symbols-outlined text-xl">power_settings_new</span>
+                            <span className="material-symbols-outlined text-xl">close</span>
                         </button>
                     </div>
                 </div>

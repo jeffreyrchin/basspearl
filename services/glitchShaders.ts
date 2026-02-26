@@ -688,10 +688,17 @@ precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[6]; // [width, height, x-freq, y-freq, density, roundness]
 uniform vec2 u_resolution;
+uniform float u_seed;
 in vec2 v_texCoord;
 out vec4 outColor;
 
-float hash(vec2 p) { return clamp(fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453), 0.0, 1.0); }
+float hash(vec2 p, float seed) {
+    uvec3 v = uvec3(uvec2(ivec2(p)), uint(seed * 12345.0));
+    uint h = (v.x * 1597334677u) ^ (v.y * 3812015801u) ^ v.z;
+    h = h * (h ^ (h >> 16u));
+    h = h * (h ^ (h >> 16u));
+    return float(h) * (1.0 / 4294967296.0);
+}
 
 void main() {
     // 1. Map sliders to frequency and parameters.
@@ -717,8 +724,8 @@ void main() {
     vec2 p = fract(cellCoord) - 0.5; // Center coord [-0.5, 0.5]
 
     // 5. Generate Random Noise Mask.
-    float threshold = hash(cell); // full [0.0, 1.0] range for fair distribution
-    float brightness = hash(cell + 0.1) * 0.99 + 0.01; // restrict brightness to [0.01, 1.0] to prevent black voids
+    float threshold = hash(cell, u_seed); // full [0.0, 1.0] range for fair distribution
+    float brightness = hash(cell + 0.1, u_seed) * 0.99 + 0.01; // restrict brightness to [0.01, 1.0] to prevent black voids
     float lit = step(1.0 - density, threshold) * step(0.001, density);
     
     // 6. Rounded Box SDF
@@ -936,16 +943,17 @@ uniform float u_seed;
 in vec2 v_texCoord;
 out vec4 outColor;
 
-// 32-bit integer hash (Adapted for float seed input)
-float hash(uvec2 v, float seed) {
-    uint s = uint(seed * 2246822519.0);
-    uint h = (v.x * 1597334677u) ^ (v.y * 3812015801u) ^ s;
-    h ^= h >> 16u; h *= 0x45d9f3bu; h ^= h >> 16u;
+// Robust Integer Hash for stability across large coordinate ranges and seeds
+float hash(vec2 p, float seed) {
+    uvec3 v = uvec3(uvec2(ivec2(p)), uint(seed * 12345.0));
+    uint h = (v.x * 1597334677u) ^ (v.y * 3812015801u) ^ v.z;
+    h = h * (h ^ (h >> 16u));
+    h = h * (h ^ (h >> 16u));
     return float(h) * (1.0 / 4294967296.0);
 }
 
-vec2 hash2(uvec2 v, float seed) {
-    return vec2(hash(v, seed), hash(v, seed + 1.23));
+vec2 hash2(vec2 col, float seed) {
+    return vec2(hash(col, seed), hash(col, seed + 1.23));
 }
 
 void main() {
@@ -965,10 +973,10 @@ void main() {
             ivec2 off = ivec2(x, y);
             uvec2 cell = uvec2(ivec2(currentCell) + off);
             
-            float dActive = step(1.0 - density, hash(cell, u_seed));
+            float dActive = step(1.0 - density, hash(vec2(cell), u_seed));
 
             // Jittered center in cell space
-            vec2 offset = hash2(cell, u_seed) - 0.5;
+            vec2 offset = hash2(vec2(cell), u_seed) - 0.5;
             vec2 p = localV - vec2(off) - offset * jitter;
 
             // Sample the incoming shape texture (centered at 0.5, 0.5)
@@ -993,6 +1001,7 @@ precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[5]; // [scale, complexity, warp, speed, blend]
 uniform float u_integrated_value;
+uniform float u_seed;
 
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -1089,7 +1098,9 @@ void main() {
     float speed = u_params[3] * 0.1;
     float blend = u_params[4] * 0.01;
 
-    vec2 uv = v_texCoord * scale;
+    // Use seed to offset noise coordinates
+    vec2 seedOffset = vec2(fract(u_seed * 0.123), fract(u_seed * 0.456)) * 10.0;
+    vec2 uv = v_texCoord * scale + seedOffset;
     float t = u_integrated_value * speed;
 
     // ---- Domain warp (2 noise calls) ----
@@ -1143,15 +1154,16 @@ precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[8]; // [cell width, cell height, x-freq, y-freq, density, jitter, speed, blend]
 uniform float u_integrated_value;
+uniform float u_seed;
 uniform vec2 u_resolution;
 
 in vec2 v_texCoord;
 out vec4 outColor;
 
 // Robust Integer Hash for performance and stability across large coordinate ranges
-float hash(vec2 p) {
-    uvec2 v = uvec2(ivec2(p));
-    uint h = (v.x * 1597334677u) ^ (v.y * 3812015801u);
+float hash(vec2 p, float seed) {
+    uvec3 v = uvec3(uvec2(ivec2(p)), uint(seed * 12345.0));
+    uint h = (v.x * 1597334677u) ^ (v.y * 3812015801u) ^ v.z;
     h = h * (h ^ (h >> 16u));
     h = h * (h ^ (h >> 16u));
     return float(h) * (1.0 / 4294967296.0);
@@ -1190,9 +1202,9 @@ void main() {
             vec2 cell = gv + neighbor;
 
             // Probability check: should a point exist in this cell?
-            if (hash(cell) > probDensity && probDensity < 0.99) continue;
+            if (hash(cell, u_seed) > probDensity && probDensity < 0.99) continue;
             
-            vec2 seed = vec2(hash(cell), hash(cell + vec2(1.0, 7.0)));
+            vec2 seed = vec2(hash(cell, u_seed), hash(cell + vec2(1.0, 7.0), u_seed));
 
             // Morphic Jitter: centers wiggle over time
             vec2 wiggle = 0.5 + 0.5 * vec2(

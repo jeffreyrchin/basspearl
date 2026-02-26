@@ -138,7 +138,7 @@ export const mapReactivityToEffects = (
                     value: (param.reactive && !shouldSkipModulation) ? param.value * energyValue : param.value
                 };
             }),
-            seed: (effect.seed ?? 0) + frameCount
+            seed: effect.seed ?? 0
         };
     });
 };

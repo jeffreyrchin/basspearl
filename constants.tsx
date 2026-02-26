@@ -102,6 +102,19 @@ export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
   { type: 'WHITE_HOLE', values: [50, 50, 50, 50], reactive: false, frequencyBand: 'SUB' },
 ]);
 
+export const createEffectInstance = (type: GlitchEffectType): EffectConfig => {
+  const template = INITIAL_REACTIVE_EFFECTS.find(e => e.type === type);
+  if (template) {
+    return { ...template, active: true, seed: Math.floor(Math.random() * 10000) };
+  }
+  return {
+    type,
+    params: EFFECT_METADATA[type].paramNames.map(p => ({ param: p.name, value: 50, reactive: false })),
+    active: true,
+    frequencyBand: 'BASS',
+  };
+};
+
 export const FEEDBACK_FORM_URL = 'https://forms.gle/CBVXwJv9s3ZvXyWr8';
 
 export interface Preset {
