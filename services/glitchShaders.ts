@@ -4,6 +4,17 @@ export interface ShaderDefinition {
     velocityParamIndex?: number;
 }
 
+export const GLSL_HASH = `
+// Robust Integer Hash for stability across large coordinate ranges and seeds
+float hash(vec2 p, float seed) {
+    uvec3 v = uvec3(uvec2(ivec2(p)), uint(seed * 12345.0));
+    uint h = (v.x * 1597334677u) ^ (v.y * 3812015801u) ^ v.z;
+    h = h * (h ^ (h >> 16u));
+    h = h * (h ^ (h >> 16u));
+    return float(h) * (1.0 / 4294967296.0);
+}
+`;
+
 export const CHANNEL_SHIFT_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
@@ -498,75 +509,67 @@ void main() {
 
 export const STARFIELD_SHADER = `#version 300 es
 precision highp float;
+
 uniform sampler2D u_image;
 uniform float u_params[2]; // [density, speed]
 uniform float u_integrated_value;
 uniform vec2 u_resolution;
+uniform float u_seed;
+
 in vec2 v_texCoord;
 out vec4 outColor;
 
-float rand(vec2 co) {
-    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
+${GLSL_HASH}
 
 void main() {
-    // Normalize parameters to 0..1
     float density = u_params[0] / 100.0;
-    float speedScale = u_params[1] / 100.0; 
-    
-    // 'travel' represents our total displacement through the starfield.
-    // It is driven by u_integrated_value, which is either:
-    // 1. Time-integrated (Manual mode) for constant speed.
-    // 2. Audio-integrated (Sync mode) for reactive acceleration.
+    float speedScale = u_params[1] / 100.0;
 
-    // Use a single "Aesthetic Multiplier" to get the speed you want
-    // 4.0 means: at Speed 100, 4 laps per second.
-    float travel = u_integrated_value * speedScale * 4.0;
-    
-    // Normalize UVs to center (0,0) and handle aspect ratio to prevent stretching.
+    float travel = u_integrated_value * speedScale * 4.0 + u_seed * 0.1;
+
     vec2 uv = (v_texCoord - 0.5) * u_resolution / u_resolution.y;
+
     vec3 color = vec3(0.0);
-    
-    // Render 3 parallax layers of stars at different depth offsets.
-    for(float i=0.0; i<3.0; i++) {
-        // z represents the fractional depth of the layer (0.0=Far/Center, 1.0=Near/Edges).
-        // Using fract() creates a continuous loop as we travel forward.
-        float z = fract(travel + i * 0.333); 
-        
-        // Stabilize the singular point at (0,0,0) with a softening offset.
-        // This allows stars to appear very close to the center without math errors.
-        float depth = z + 0.04; 
-        
+
+    for (float i = 0.0; i < 6.0; i++) {
+        float offset = i / 6.0;
+        float z = fract(travel + offset);
+        float depth = z + 0.05;
+
         vec2 layerUV = uv / depth;
 
-        // Layer 0: 12.0 + (0 * 5.0) = 12.0 columns/rows
-        // Layer 1: 12.0 + (1 * 5.0) = 17.0 columns/rows
-        // Layer 2: 12.0 + (2 * 5.0) = 22.0 columns/rows
-        float numGridCells = 12.0 + (i * 5.0);
-        vec2 gridID = floor(layerUV * numGridCells);
-        vec2 gridUV = fract(layerUV * numGridCells) - 0.5;
+        float gridCount = 12.0 + i * 3.0;
+        vec2 cell = layerUV * gridCount;
+        vec2 gridID = floor(cell);
+        vec2 gridUV = fract(cell) - 0.5;
 
-        float lap = floor(travel + i * 0.333); 
-        float r = rand(gridID + i * 111.0 + lap);
-        
-        // Probability check for star existence based on density.
-        if (r > (1.0 - (density * 0.25))) {
-             float d = length(gridUV);
-             
-             // Smoothly bloom stars in at the center (z -> 0) and fade at the edges (z -> 1).
-             float fade = smoothstep(0.0, 0.3, z) * smoothstep(1.0, 0.8, z);
-             
-             // Stable Exponential Glow: 
-             // We use a lower "sharpness" (25 instead of 100) to avoid sub-pixel flickering.
-             float star = exp(-d * 25.0) * 1.5; // Base glow/soft halo
-             star += exp(-d * 50.0) * 1.5; // Hotspot/core
-             
-             color += vec3(star) * fade * r;
-        }
+        float r = hash(gridID + vec2(i * 37.0), u_seed + floor(travel + offset));
+
+        // Branchless density mask
+        float mask = step(1.0 - density * 0.3, r);
+
+        // Squared distance (no sqrt)
+        float d = dot(gridUV, gridUV);
+
+        // Size variation
+        float size = mix(40.0, 120.0, r);
+
+        // Cheap falloff
+        float star = 1.0 / (1.0 + d * size);
+
+        // Parabolic depth fade
+        float fade = z * (1.0 - z) * 4.0;
+
+        float intensity = star * fade * mask;
+
+        color += vec3(intensity);
     }
-    
+
     vec4 src = texture(u_image, v_texCoord);
-    float starAlpha = clamp(length(color) * 2.0, 0.0, 1.0);
+
+    // Cheaper brightness (no length)
+    float starAlpha = clamp(dot(color, vec3(0.333)) * 2.2, 0.0, 1.0);
+
     outColor = vec4(src.rgb + color, clamp(src.a + starAlpha, 0.0, 1.0));
 }
 `;
@@ -646,13 +649,7 @@ uniform float u_seed;
 in vec2 v_texCoord;
 out vec4 outColor;
 
-float hash(vec2 p, float seed) {
-    uvec3 v = uvec3(uvec2(ivec2(p)), uint(seed * 12345.0));
-    uint h = (v.x * 1597334677u) ^ (v.y * 3812015801u) ^ v.z;
-    h = h * (h ^ (h >> 16u));
-    h = h * (h ^ (h >> 16u));
-    return float(h) * (1.0 / 4294967296.0);
-}
+${GLSL_HASH}
 
 void main() {
     // 1. Map sliders to frequency and parameters.
@@ -897,14 +894,7 @@ uniform float u_seed;
 in vec2 v_texCoord;
 out vec4 outColor;
 
-// Robust Integer Hash for stability across large coordinate ranges and seeds
-float hash(vec2 p, float seed) {
-    uvec3 v = uvec3(uvec2(ivec2(p)), uint(seed * 12345.0));
-    uint h = (v.x * 1597334677u) ^ (v.y * 3812015801u) ^ v.z;
-    h = h * (h ^ (h >> 16u));
-    h = h * (h ^ (h >> 16u));
-    return float(h) * (1.0 / 4294967296.0);
-}
+${GLSL_HASH}
 
 vec2 hash2(vec2 col, float seed) {
     return vec2(hash(col, seed), hash(col, seed + 1.23));
@@ -1114,14 +1104,7 @@ uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
 
-// Robust Integer Hash for performance and stability across large coordinate ranges
-float hash(vec2 p, float seed) {
-    uvec3 v = uvec3(uvec2(ivec2(p)), uint(seed * 12345.0));
-    uint h = (v.x * 1597334677u) ^ (v.y * 3812015801u) ^ v.z;
-    h = h * (h ^ (h >> 16u));
-    h = h * (h ^ (h >> 16u));
-    return float(h) * (1.0 / 4294967296.0);
-}
+${GLSL_HASH}
 
 void main() {
     // 1. Map parameters

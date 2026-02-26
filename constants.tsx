@@ -83,7 +83,7 @@ export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
   { type: 'DEEP_FRY', values: [15, 88], reactive: true, frequencyBand: 'SUB' },
   { type: 'ZOOM_PAN', values: [63, 0], reactive: true, frequencyBand: 'SUB' },
   { type: 'SCREEN_SHAKE', values: [50, 50], reactive: false, frequencyBand: 'BASS' },
-  { type: 'STARFIELD', values: [80, 53], active: true, reactive: true, frequencyBand: 'BASS' },
+  { type: 'STARFIELD', values: [40, 53], active: true, reactive: true, frequencyBand: 'BASS' },
   { type: 'RETRO_GRID', values: [30, 60], reactive: true, frequencyBand: 'SUB' },
   { type: 'TUNNEL_WARP', values: [50, 50, 0], reactive: true, frequencyBand: 'SUB' },
   { type: 'GRAIN', values: [100, 100, 50, 50, 100, 0], reactive: false, frequencyBand: 'TREBLE' },
@@ -130,7 +130,7 @@ export const PRESETS: Preset[] = [
     image: '/presets/sunset.jpeg',
     audio: '/presets/sampler testing 11_20_21.mp3',
     effects: buildEffects([
-      { type: 'STARFIELD', values: [50, 100], active: true, reactive: true, frequencyBand: 'SUB' },
+      { type: 'STARFIELD', values: [15, 100], active: true, reactive: true, frequencyBand: 'SUB' },
       { type: 'CHANNEL_SHIFT', values: [18, 0], active: true, reactive: true, frequencyBand: 'SUB' },
       { type: 'ZOOM_PAN', values: [50, 0], active: true, reactive: true, frequencyBand: 'SUB' },
     ])
