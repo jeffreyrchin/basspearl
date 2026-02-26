@@ -637,7 +637,7 @@ void main() {
 export const GRAIN_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[6]; // [width, height, x-freq, y-freq, density, roundness]
+uniform float u_params[7]; // [width, height, x-freq, y-freq, density, roundness, blend]
 uniform vec2 u_resolution;
 uniform float u_seed;
 in vec2 v_texCoord;
@@ -653,6 +653,7 @@ void main() {
     float yFreq = u_params[3] / 100.0;
     float density = u_params[4] / 100.0;
     float roundness = u_params[5] / 100.0;
+    float blend = u_params[6] / 100.0;
 
     // 2. Exponential frequency: freq=1 at 1% (one centered line), doubling from there.
     vec2 freq = vec2(
@@ -685,11 +686,15 @@ void main() {
     float shapeMask = step(dist, 0.0);
     lit *= shapeMask * step(0.001, xScale) * step(0.001, yScale); // multiply by 0 when width/height is at 0% to make pixels disappear.
 
-    // 8. Output Final Color.
+    // 8. Output final color with blend support.
     vec3 color = vec3(brightness);
+    
+    // Calculate final lit color mixed with background for blend support
+    vec3 mixedColor = mix(src.rgb, color, lit * blend);
+    
     outColor = vec4(
-        mix(src.rgb, color, lit),
-        max(src.a, lit)
+        mixedColor,
+        max(src.a, lit * blend)
     );
 }
 `;
@@ -697,7 +702,7 @@ void main() {
 export const SHAPE_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[5]; // [side count, pointiness, roundness, size, blend]
+uniform float u_params[6]; // [side count, pointiness, roundness, size, feather, blend]
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -717,7 +722,8 @@ void main() {
     float roundFactor = u_params[2] / 100.0;
     float pointiness = (u_params[1] / 100.0) * (1.0 - roundFactor) * 0.99;
     float size = u_params[3] / 100.0;
-    float blend = u_params[4] / 100.0;
+    float feather = max(u_params[4] / 100.0, 0.001);
+    float blend = u_params[5] / 100.0;
 
     vec2 uv = (v_texCoord - 0.5) * u_resolution / min(u_resolution.x, u_resolution.y);
     
@@ -727,13 +733,20 @@ void main() {
     float rounding = roundFactor * 0.5 * size;
 
     float d = sdStar(uv, pointiness, aps, inr, edge) - rounding;
-    float shape = step(d, 0.0);
+    
+    // Use smoothstep for professional distance-based feathering
+    float shape = smoothstep(feather, 0.0, d);
     
     vec4 background = texture(u_image, v_texCoord);
     
-    // If blend is 0, we output pure white-on-black (Mask mode)
-    // If blend is 1, we output pure white-on-background (Overlay mode)
-    outColor = mix(vec4(vec3(shape), 1.0), vec4(mix(background.rgb, vec3(1.0), shape), 1.0), blend);
+    // Smoothly blend the shape onto the background (standard additive/overlay feel)
+    // 100% Blend = Solid White Shape, 0% Blend = Original Background
+    vec3 mixedColor = mix(background.rgb, vec3(1.0), shape * blend);
+    
+    outColor = vec4(
+        mixedColor,
+        max(background.a, shape * blend)
+    );
 }
 `;
 
@@ -1287,7 +1300,7 @@ in vec2 v_texCoord;
 out vec4 outColor;
 
 void main() {
-    // Use independent clots for each direction
+    // Use independent clocks for each direction
     float left = (u_params[0] / 100.0) * u_integrated_values[0];
     float right = (u_params[1] / 100.0) * u_integrated_values[1];
     float up = (u_params[2] / 100.0) * u_integrated_values[2];
