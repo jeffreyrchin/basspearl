@@ -106,56 +106,59 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                             className="absolute h-full cursor-grab active:cursor-grabbing hover:bg-white/[0.05] transition-colors"
                             style={{ left: `${left}%`, width: `${width}%`, backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
                         />
-
-                        {/* Hit Area & Visual Handle: Left (Min) */}
-                        <div
-                            role="slider"
-                            aria-label="Minimum Range"
-                            aria-valuemin={0}
-                            aria-valuemax={100}
-                            aria-valuenow={min}
-                            tabIndex={0}
-                            onMouseDown={(e) => handleMouseDown(e, 'left')}
-                            onTouchStart={(e) => handleTouchStart(e, 'left')}
-                            onKeyDown={(e) => {
-                                if (e.key === 'ArrowLeft') onChange({ min: Math.max(0, min - (e.shiftKey ? 10 : 1)) });
-                                if (e.key === 'ArrowRight') onChange({ min: Math.min(100, min + (e.shiftKey ? 10 : 1)) });
-                            }}
-                            className="absolute w-6 h-full cursor-ew-resize z-20 group/handle outline-none"
-                            style={{ left: `${min}%`, transform: 'translateX(-50%)' }}
-                        >
-                            <div className="absolute left-1/2 -translate-x-1/2 w-1 h-full bg-white transition-all group-hover/handle:scale-x-150 group-focus/handle:scale-x-150 group-hover/handle:bg-primary group-focus/handle:bg-primary" />
-                        </div>
-
-                        {/* Hit Area & Visual Handle: Right (Max) */}
-                        <div
-                            role="slider"
-                            aria-label="Maximum Range"
-                            aria-valuemin={0}
-                            aria-valuemax={100}
-                            aria-valuenow={value}
-                            tabIndex={0}
-                            onMouseDown={(e) => handleMouseDown(e, 'right')}
-                            onTouchStart={(e) => handleTouchStart(e, 'right')}
-                            onKeyDown={(e) => {
-                                if (e.key === 'ArrowLeft') onChange({ value: Math.max(0, value - (e.shiftKey ? 10 : 1)) });
-                                if (e.key === 'ArrowRight') onChange({ value: Math.min(100, value + (e.shiftKey ? 10 : 1)) });
-                            }}
-                            className="absolute w-6 h-full cursor-ew-resize z-20 group/handle outline-none"
-                            style={{ left: `${value}%`, transform: 'translateX(-50%)' }}
-                        >
-                            <div className="absolute left-1/2 -translate-x-1/2 w-1 h-full bg-white transition-all group-hover/handle:scale-x-150 group-focus/handle:scale-x-150 group-hover/handle:bg-primary group-focus/handle:bg-primary" />
-                        </div>
-
-                        {/* The Needle */}
-                        <div
-                            className="absolute inset-y-0 w-0.5 pointer-events-none z-10"
-                            style={{
-                                left: `calc(${min}% + (${value - min}% * var(${cssVarMap[frequencyBand] || '--audio-bass'}, 0)))`,
-                                backgroundColor: '#fb00ff'
-                            }}
-                        />
                     </div>
+
+                    {/* Hit Area & Visual Handle: Left (Min) */}
+                    <div
+                        role="slider"
+                        aria-label="Minimum Range"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={min}
+                        tabIndex={0}
+                        onMouseDown={(e) => handleMouseDown(e, 'left')}
+                        onTouchStart={(e) => handleTouchStart(e, 'left')}
+                        onKeyDown={(e) => {
+                            if (e.key === 'ArrowLeft') onChange({ min: Math.max(0, min - (e.shiftKey ? 10 : 1)) });
+                            if (e.key === 'ArrowRight') onChange({ min: Math.min(100, min + (e.shiftKey ? 10 : 1)) });
+                        }}
+                        className="absolute w-6 h-5 cursor-ew-resize z-20 group/handle outline-none top-1/2"
+                        style={{ left: `${min}%`, transform: 'translate(-50%, -50%)' }}
+                    >
+                        <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-1 bg-white transition-all group-hover/handle:scale-x-150 group-focus/handle:scale-x-150 group-hover/handle:bg-primary group-focus/handle:bg-primary shadow-sm" />
+                    </div>
+
+                    {/* Hit Area & Visual Handle: Right (Max) */}
+                    <div
+                        role="slider"
+                        aria-label="Maximum Range"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={value}
+                        tabIndex={0}
+                        onMouseDown={(e) => handleMouseDown(e, 'right')}
+                        onTouchStart={(e) => handleTouchStart(e, 'right')}
+                        onKeyDown={(e) => {
+                            if (e.key === 'ArrowLeft') onChange({ value: Math.max(0, value - (e.shiftKey ? 10 : 1)) });
+                            if (e.key === 'ArrowRight') onChange({ value: Math.min(100, value + (e.shiftKey ? 10 : 1)) });
+                        }}
+                        className="absolute w-6 h-5 cursor-ew-resize z-20 group/handle outline-none top-1/2"
+                        style={{ left: `${value}%`, transform: 'translate(-50%, -50%)' }}
+                    >
+                        <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-1 bg-white transition-all group-hover/handle:scale-x-150 group-focus/handle:scale-x-150 group-hover/handle:bg-primary group-focus/handle:bg-primary shadow-sm" />
+                    </div>
+
+                    {/* The Needle */}
+                    <div
+                        className="absolute h-5 pointer-events-none z-10 top-1/2 -translate-y-1/2"
+                        style={{
+                            left: `calc(${min}% + (${value - min}% * var(${cssVarMap[frequencyBand] || '--audio-bass'}, 0)))`,
+                            width: '2px',
+                            backgroundColor: '#fb00ff',
+                            boxShadow: '0 0 8px rgba(251, 0, 255, 0.5)'
+                        }}
+                    />
+
 
                     {/* Combined Floating Labels - Positioned Relative to the h-12 container */}
                     <div className="absolute pointer-events-none w-full -inset-x-0 -top-4 -bottom-4">
