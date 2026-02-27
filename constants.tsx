@@ -1,5 +1,5 @@
 
-import { GlitchEffectType, EffectConfig, EffectCategory } from './types';
+import { GlitchEffectType, EffectConfig, EffectCategory, FrequencyBand } from './types';
 
 export const EFFECT_METADATA: Record<GlitchEffectType, {
   label: string;
@@ -43,7 +43,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
 const buildParams = (
   type: GlitchEffectType,
   values: number[],
-  reactive: boolean
+  reactive: boolean,
+  band: FrequencyBand = 'BASS'
 ) => {
   const meta = EFFECT_METADATA[type];
 
@@ -51,6 +52,7 @@ const buildParams = (
     param: p.name,
     value: values[i] ?? 0,
     reactive,
+    frequencyBand: band,
   }));
 };
 
@@ -60,15 +62,14 @@ const buildEffects = (
     values: number[];
     active?: boolean;
     reactive?: boolean;
-    frequencyBand?: EffectConfig['frequencyBand'];
+    frequencyBand?: FrequencyBand;
   }[]
 ): EffectConfig[] =>
   config.map((e, index) => ({
     type: e.type,
-    params: buildParams(e.type, e.values, !!e.reactive),
+    params: buildParams(e.type, e.values, !!e.reactive, e.frequencyBand || 'BASS'),
     active: !!e.active,
     seed: index, // index used as seed
-    ...(e.frequencyBand ? { frequencyBand: e.frequencyBand } : {}),
   }));
 
 export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
@@ -107,13 +108,22 @@ export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = buildEffects([
 export const createEffectInstance = (type: GlitchEffectType): EffectConfig => {
   const template = INITIAL_REACTIVE_EFFECTS.find(e => e.type === type);
   if (template) {
-    return { ...template, active: true, seed: Math.floor(Math.random() * 10000) };
+    return {
+      ...template,
+      active: true,
+      seed: Math.floor(Math.random() * 10000),
+      params: template.params.map(p => ({ ...p })) // Deep copy params
+    };
   }
   return {
     type,
-    params: EFFECT_METADATA[type].paramNames.map(p => ({ param: p.name, value: 50, reactive: false })),
+    params: EFFECT_METADATA[type].paramNames.map(p => ({
+      param: p.name,
+      value: 50,
+      reactive: false,
+      frequencyBand: 'BASS'
+    })),
     active: true,
-    frequencyBand: 'BASS',
   };
 };
 

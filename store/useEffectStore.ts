@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { EffectConfig, GlitchEffectType } from '../types';
+import { EffectConfig, GlitchEffectType, FrequencyBand } from '../types';
 import { INITIAL_REACTIVE_EFFECTS, createEffectInstance } from '../constants';
 import { analytics } from '@/services/analytics';
 
@@ -15,8 +15,7 @@ interface EffectState {
     toggleEffect: (index: number) => void;
     addEffect: (type: GlitchEffectType) => void;
     removeEffect: (index: number) => void;
-    updateParams: (index: number, params: EffectConfig['params']) => void;
-    updateFrequencyBand: (index: number, band: EffectConfig['frequencyBand']) => void;
+    updateParameter: (effectIndex: number, paramIndex: number, update: Partial<EffectConfig['params'][0]>) => void;
 }
 
 export const useEffectStore = create<EffectState>((set) => ({
@@ -80,11 +79,12 @@ export const useEffectStore = create<EffectState>((set) => ({
         return { effects: next, selectedEffectIndex: Math.max(0, newSelected) };
     }),
 
-    updateParams: (index, params) => set((state) => ({
-        effects: state.effects.map((e, i) => i === index ? { ...e, params } : e)
-    })),
-
-    updateFrequencyBand: (index, frequencyBand) => set((state) => ({
-        effects: state.effects.map((e, i) => i === index ? { ...e, frequencyBand } : e)
+    updateParameter: (effectIndex, paramIndex, update) => set((state) => ({
+        effects: state.effects.map((e, i) => {
+            if (i !== effectIndex) return e;
+            const newParams = [...e.params];
+            newParams[paramIndex] = { ...newParams[paramIndex], ...update };
+            return { ...e, params: newParams };
+        })
     })),
 }));

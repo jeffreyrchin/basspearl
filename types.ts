@@ -32,10 +32,11 @@ export type GlitchEffectType =
   | 'PAN'
   | 'SCROLL';
 
+export type FrequencyBand = 'SUB' | 'BASS' | 'MID' | 'TREBLE';
+
 export interface EffectConfig {
   type: GlitchEffectType;
-  params: { param: string, value: number, reactive: boolean }[];
+  params: { param: string, value: number, reactive: boolean, frequencyBand: FrequencyBand }[];
   active: boolean;
   seed?: number;
-  frequencyBand?: 'SUB' | 'BASS' | 'MID' | 'TREBLE';
 }

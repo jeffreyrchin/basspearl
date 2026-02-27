@@ -163,7 +163,7 @@ export class GlitchEngine {
     integratedReactivity?: { sub: number, bass: number, mid: number, treble: number },
     currentTime?: number
   ) {
-    const { type, params, seed, frequencyBand } = effect;
+    const { type, params, seed } = effect;
     const meta = SHADER_REGISTRY[type];
     if (!meta) return;
 
@@ -177,10 +177,10 @@ export class GlitchEngine {
       const isVelocityParam = meta.velocityParamIndices?.includes(i);
 
       if (isVelocityParam && p.reactive && integratedReactivity) {
-        if (frequencyBand === 'SUB') u_integrated_values[i] = integratedReactivity.sub;
-        else if (frequencyBand === 'MID') u_integrated_values[i] = integratedReactivity.mid;
-        else if (frequencyBand === 'TREBLE') u_integrated_values[i] = integratedReactivity.treble;
-        else u_integrated_values[i] = integratedReactivity.bass; // Default to BASS
+        if (p.frequencyBand === 'SUB') u_integrated_values[i] = integratedReactivity.sub;
+        else if (p.frequencyBand === 'MID') u_integrated_values[i] = integratedReactivity.mid;
+        else if (p.frequencyBand === 'TREBLE') u_integrated_values[i] = integratedReactivity.treble;
+        else u_integrated_values[i] = integratedReactivity.bass;
       } else {
         u_integrated_values[i] = currentTime || 0;
       }

@@ -118,25 +118,28 @@ export const mapReactivityToEffects = (
 ) => {
     const { sub, bass, mid, treble } = smoothed;
     return currentEffects.map(effect => {
-        let energyValue = bass; // Default to bass if not specified
-        if (effect.frequencyBand === 'SUB') energyValue = sub;
-        else if (effect.frequencyBand === 'BASS') energyValue = bass;
-        else if (effect.frequencyBand === 'MID') energyValue = mid;
-        else if (effect.frequencyBand === 'TREBLE') energyValue = treble;
-
         return {
             ...effect,
             params: effect.params.map((param, index) => {
+                // Determine which band this specific parameter is listening to
+                let energyValue = bass;
+                if (param.frequencyBand === 'SUB') energyValue = sub;
+                else if (param.frequencyBand === 'BASS') energyValue = bass;
+                else if (param.frequencyBand === 'MID') energyValue = mid;
+                else if (param.frequencyBand === 'TREBLE') energyValue = treble;
+
                 // Velocity/Speed parameters that control integrated motion should not be
                 // modulated by instantaneous reactivity, as this causes teleporting.
-                // The integration itself provides the smooth reactivity.
                 const meta = SHADER_REGISTRY[effect.type];
                 const shouldSkipModulation = meta?.velocityParamIndices?.includes(index);
 
-                return {
-                    ...param,
-                    value: (param.reactive && !shouldSkipModulation) ? param.value * energyValue : param.value
-                };
+                if (param.reactive && !shouldSkipModulation) {
+                    return {
+                        ...param,
+                        value: param.value * energyValue
+                    };
+                }
+                return param;
             }),
             seed: effect.seed ?? 0
         };

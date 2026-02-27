@@ -10,8 +10,7 @@ const EffectParams: React.FC<EffectParamsProps> = ({ }) => {
         effects,
         selectedEffectIndex,
         toggleEffect,
-        updateParams,
-        updateFrequencyBand
+        updateParameter
     } = useEffectStore();
 
     const effect = effects[selectedEffectIndex];
@@ -40,59 +39,54 @@ const EffectParams: React.FC<EffectParamsProps> = ({ }) => {
             </div>
 
             <div className="space-y-4">
-                {EFFECT_METADATA[effect.type]?.paramNames?.map((paramName, paramIdx) => (
-                    <div key={paramIdx} className="space-y-6 bg-white/[0.03] p-5 rounded-2xl border border-white/5">
-                        <div className="flex justify-between items-end">
-                            <div className="space-y-2">
-                                <label className="text-[9px] font-bold uppercase tracking-widest text-white/60">
-                                    {effect.params[paramIdx].reactive ? `Max ${paramName.name}` : paramName.name}
-                                </label>
-                                <div className="flex items-center gap-2 bg-black/40 p-1 rounded-xl border border-white/5 w-fit">
-                                    <button
-                                        onClick={() => {
-                                            const newParams = [...effect.params];
-                                            newParams[paramIdx] = { ...newParams[paramIdx], reactive: false };
-                                            updateParams(selectedEffectIndex, newParams);
-                                        }}
-                                        className={`px-3 py-2 rounded-lg text-[8px] font-bold uppercase tracking-widest transition-all ${!effect.params[paramIdx].reactive ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white'}`}
-                                    >
-                                        Manual
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            const newParams = [...effect.params];
-                                            newParams[paramIdx] = { ...newParams[paramIdx], reactive: true };
-                                            updateParams(selectedEffectIndex, newParams);
-                                        }}
-                                        className={`px-3 py-2 rounded-lg text-[8px] font-bold uppercase tracking-widest transition-all ${effect.params[paramIdx].reactive ? 'bg-primary/10 text-primary border border-primary/40 shadow-[inset_0_0_12px_rgba(59,130,246,0.1)]' : 'text-white/60 hover:text-white border border-transparent'}`}
-                                    >
-                                        Sync
-                                    </button>
+                {EFFECT_METADATA[effect.type]?.paramNames?.map((paramName, paramIdx) => {
+                    const param = effect.params[paramIdx];
+                    return (
+                        <div key={paramIdx} className="space-y-6 bg-white/[0.03] p-5 rounded-2xl border border-white/5">
+                            <div className="flex flex-col space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <label className="text-[9px] font-bold uppercase tracking-widest text-white/60">
+                                        {param.reactive ? `${paramName.name} (Reactive)` : paramName.name}
+                                    </label>
+                                    <span className="font-mono text-[10px] font-bold text-white/60 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">{Math.round(param.value)}%</span>
+                                </div>
+
+                                <EffectSlider
+                                    value={param.value}
+                                    onChange={(val) => {
+                                        updateParameter(selectedEffectIndex, paramIdx, { value: val });
+                                    }}
+                                    onCommit={() => { }}
+                                />
+                                <div className="flex items-center gap-3">
+                                    <span className="text-[9px] font-bold uppercase tracking-widest text-white/60">Sync</span>
+                                    <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 w-full">
+                                        {(['OFF', 'SUB', 'BASS', 'MID', 'TREBLE'] as const).map((band) => {
+                                            const isActive = band === 'OFF' ? !param.reactive : (param.reactive && param.frequencyBand === band);
+                                            return (
+                                                <button
+                                                    key={band}
+                                                    onClick={() => {
+                                                        if (band === 'OFF') {
+                                                            updateParameter(selectedEffectIndex, paramIdx, { reactive: false });
+                                                        } else {
+                                                            updateParameter(selectedEffectIndex, paramIdx, { reactive: true, frequencyBand: band });
+                                                        }
+                                                    }}
+                                                    className={`py-2 rounded-lg text-[7.5px] font-bold uppercase tracking-widest transition-all border ${isActive
+                                                        ? 'bg-primary/20 text-primary border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.1)]'
+                                                        : 'text-white/40 border-transparent hover:text-white/60'}`}
+                                                >
+                                                    {band}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             </div>
-                            <span className="font-mono text-xs font-bold text-white px-2 py-1">{Math.round(effect.params[paramIdx].value)}%</span>
                         </div>
-                        <EffectSlider
-                            value={effect.params[paramIdx].value}
-                            onChange={(val) => {
-                                const newParams = [...effect.params];
-                                newParams[paramIdx] = { ...newParams[paramIdx], value: val };
-                                updateParams(selectedEffectIndex, newParams);
-                            }}
-                            onCommit={() => { }}
-                        />
-                    </div>
-                ))}
-
-                {/* Frequency Bands */}
-                <div className="space-y-4 bg-white/[0.03] p-5 rounded-2xl border border-white/5">
-                    <label className="text-[9px] font-bold text-white/60 uppercase tracking-widest block">Frequency</label>
-                    <div className="grid grid-cols-4 gap-1.5 bg-black/40 p-1.5 rounded-[22px] border border-white/5">
-                        {['SUB', 'BASS', 'MID', 'TREBLE'].map(band => (
-                            <button key={band} onClick={() => updateFrequencyBand(selectedEffectIndex, band as any)} className={`py-3 rounded-xl text-[9px] font-bold uppercase transition-all border ${effect.frequencyBand === band ? 'bg-primary/10 text-primary border-primary/40 shadow-[inset_0_0_12px_rgba(59,130,246,0.1)]' : 'text-white/60 hover:text-white border-transparent'}`}>{band}</button>
-                        ))}
-                    </div>
-                </div>
+                    );
+                })}
             </div>
         </div>
     );
