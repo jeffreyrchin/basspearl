@@ -1,6 +1,6 @@
 import React from 'react';
 import { EFFECT_METADATA } from '../constants';
-import { EffectSlider } from './EffectSlider';
+import { AdaptiveSlider } from './AdaptiveSlider';
 import { useEffectStore } from '@/store/useEffectStore';
 
 interface EffectParamsProps { }
@@ -42,24 +42,35 @@ const EffectParams: React.FC<EffectParamsProps> = ({ }) => {
                 {EFFECT_METADATA[effect.type]?.paramNames?.map((paramName, paramIdx) => {
                     const param = effect.params[paramIdx];
                     return (
-                        <div key={paramIdx} className="space-y-6 bg-white/[0.03] p-5 rounded-2xl border border-white/5">
-                            <div className="flex flex-col space-y-4">
-                                <div className="flex justify-between items-center">
+                        <div key={paramIdx} className="space-y-5 bg-white/[0.03] p-5 rounded-2xl border border-white/5 transition-colors hover:border-white/10">
+                            <div className="flex flex-col space-y-3">
+                                <div className="flex justify-between items-center px-0.5">
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-white/60">
-                                        {param.reactive ? `${paramName.name} (Reactive)` : paramName.name}
+                                        {param.reactive ? paramName.name + ' (Dynamic)' : paramName.name}
                                     </label>
-                                    <span className="font-mono text-[10px] font-bold text-white/60 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">{Math.round(param.value)}%</span>
+                                    <div className="flex items-center">
+                                        {param.reactive ? (
+                                            <span className="font-mono text-[10px] font-bold text-primary/80 bg-primary/5 px-2 py-0.5 rounded-md border border-primary/20">
+                                                {Math.round(param.min)} — {Math.round(param.value)}%
+                                            </span>
+                                        ) : (
+                                            <span className="font-mono text-[10px] font-bold text-white/60 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
+                                                {Math.round(param.value)}%
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
 
-                                <EffectSlider
+                                <AdaptiveSlider
                                     value={param.value}
-                                    onChange={(val) => {
-                                        updateParameter(selectedEffectIndex, paramIdx, { value: val });
-                                    }}
-                                    onCommit={() => { }}
+                                    min={param.min}
+                                    reactive={param.reactive}
+                                    frequencyBand={param.frequencyBand}
+                                    onChange={(update) => updateParameter(selectedEffectIndex, paramIdx, update)}
                                 />
-                                <div className="flex items-center gap-3">
-                                    <span className="text-[9px] font-bold uppercase tracking-widest text-white/60">Sync</span>
+
+                                <div className="flex items-center gap-3 pt-1">
+                                    <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 select-none">Listen</span>
                                     <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 w-full">
                                         {(['OFF', 'SUB', 'BASS', 'MID', 'TREBLE'] as const).map((band) => {
                                             const isActive = band === 'OFF' ? !param.reactive : (param.reactive && param.frequencyBand === band);
@@ -73,9 +84,9 @@ const EffectParams: React.FC<EffectParamsProps> = ({ }) => {
                                                             updateParameter(selectedEffectIndex, paramIdx, { reactive: true, frequencyBand: band });
                                                         }
                                                     }}
-                                                    className={`py-2 rounded-lg text-[7.5px] font-bold uppercase tracking-widest transition-all border ${isActive
+                                                    className={`py-1.5 rounded-lg text-[7.5px] font-bold uppercase tracking-widest transition-all border ${isActive
                                                         ? 'bg-primary/20 text-primary border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.1)]'
-                                                        : 'text-white/40 border-transparent hover:text-white/60'}`}
+                                                        : 'text-white/60 border-transparent hover:text-white'}`}
                                                 >
                                                     {band}
                                                 </button>

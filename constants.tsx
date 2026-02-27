@@ -51,6 +51,7 @@ const buildParams = (
   return meta.paramNames.map((p, i) => ({
     param: p.name,
     value: values[i] ?? 0,
+    min: 0,
     reactive,
     frequencyBand: band,
   }));
@@ -120,6 +121,7 @@ export const createEffectInstance = (type: GlitchEffectType): EffectConfig => {
     params: EFFECT_METADATA[type].paramNames.map(p => ({
       param: p.name,
       value: 50,
+      min: 0,
       reactive: false,
       frequencyBand: 'BASS'
     })),

@@ -155,6 +155,12 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 treble: map.treble[frame]
             };
             reactiveEffects = mapReactivityToEffects(smoothed, effectsRef.current, currentFrame);
+
+            // Broadcast to CSS for UI elements (AdaptiveSlider)
+            document.documentElement.style.setProperty('--audio-sub', smoothed.sub.toString());
+            document.documentElement.style.setProperty('--audio-bass', smoothed.bass.toString());
+            document.documentElement.style.setProperty('--audio-mid', smoothed.mid.toString());
+            document.documentElement.style.setProperty('--audio-treble', smoothed.treble.toString());
         }
 
         // 2. Get Integrated Reactivity for time-based/motion effects (Starfield)
