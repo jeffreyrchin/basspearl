@@ -625,12 +625,19 @@ void main() {
     
     // Tunnel projection
     // x = angle, y = depth + motion
+    float angleUV = a / 6.28318 + 0.5;
+    float finalX = angleUV + (1.0/max(r, 0.001)) * twist * 0.1;
+    float depth  = (1.0/max(r, 0.001)) * scale + time;
+    
+    // Universal Mirror Trick (Ping-ponging)
+    // Ensures coordinates are ALWAYS captured in 0..1 range with no seams
+    // Use x2 multiplier to create two mirrored halves around the circle
     vec2 warpedUV = vec2(
-        a / 6.28318 + 0.5 + (1.0/max(r, 0.01)) * twist * 0.1, 
-        1.0/max(r, 0.01) * scale + time
+        abs(mod(finalX * 2.0, 2.0) - 1.0),
+        abs(mod(depth, 2.0) - 1.0)
     );
     
-    outColor = texture(u_image, fract(warpedUV));
+    outColor = texture(u_image, warpedUV);
 }
 `;
 
