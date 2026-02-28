@@ -5,14 +5,15 @@ import { analytics } from '@/services/analytics';
 
 interface EffectState {
     effects: EffectConfig[];
-    selectedEffectIndex: number;
+    selectedEffectId: string | null;
 
     // Actions
     setEffects: (effects: EffectConfig[]) => void;
-    setSelectedEffectIndex: (index: number) => void;
+    setSelectedEffectId: (id: string | null) => void;
 
     moveEffect: (index: number, direction: 'up' | 'down') => void;
-    toggleEffect: (index: number) => void;
+    toggleMute: (index: number) => void;
+    toggleSolo: (index: number) => void;
     addEffect: (type: GlitchEffectType) => void;
     removeEffect: (index: number) => void;
     updateParameter: (effectIndex: number, paramIndex: number, update: Partial<EffectConfig['params'][0]>) => void;
@@ -20,63 +21,48 @@ interface EffectState {
 
 export const useEffectStore = create<EffectState>((set) => ({
     effects: INITIAL_REACTIVE_EFFECTS,
-    selectedEffectIndex: 0,
+    selectedEffectId: INITIAL_REACTIVE_EFFECTS[0]?.id || null,
 
     setEffects: (effects) => set({ effects }),
 
-    setSelectedEffectIndex: (selectedEffectIndex) => set({ selectedEffectIndex }),
+    setSelectedEffectId: (selectedEffectId) => set({ selectedEffectId }),
 
     moveEffect: (index, direction) => set((state) => {
         const next = [...state.effects];
-        const activeIndices = next.map((e, i) => e.active ? i : -1).filter(i => i !== -1);
-        const currentActivePos = activeIndices.indexOf(index);
-        let newSelectedIndex = state.selectedEffectIndex;
 
-        if (direction === 'up' && currentActivePos > 0) {
-            const targetIndex = activeIndices[currentActivePos - 1];
-            [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
-            newSelectedIndex = targetIndex;
-        } else if (direction === 'down' && currentActivePos < activeIndices.length - 1) {
-            const targetIndex = activeIndices[currentActivePos + 1];
-            [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
-            newSelectedIndex = targetIndex;
+        if (direction === 'up' && index > 0) {
+            [next[index], next[index - 1]] = [next[index - 1], next[index]];
+        } else if (direction === 'down' && index < next.length - 1) {
+            [next[index], next[index + 1]] = [next[index + 1], next[index]];
         }
 
-        return { effects: next, selectedEffectIndex: newSelectedIndex };
+        return { effects: next };
     }),
 
-    toggleEffect: (index) => set((state) => {
-        const isTurningOn = !state.effects[index].active;
-        analytics.effect.toggled(state.effects[index].type, isTurningOn);
+    toggleMute: (index) => set((state) => {
+        const next = [...state.effects];
+        next[index] = { ...next[index], muted: !next[index].muted };
+        return { effects: next };
+    }),
 
-        if (isTurningOn) {
-            const item = { ...state.effects[index], active: true };
-            const others = state.effects.filter((_, i) => i !== index);
-            const next = [...others, item];
-            return {
-                effects: next,
-                selectedEffectIndex: next.length - 1
-            };
-        } else {
-            const next = state.effects.map((e, i) =>
-                i === index ? { ...e, active: false } : e
-            );
-            return { effects: next };
-        }
+    toggleSolo: (index) => set((state) => {
+        const next = [...state.effects];
+        next[index] = { ...next[index], soloed: !next[index].soloed };
+        return { effects: next };
     }),
 
     addEffect: (type) => set((state) => {
-        analytics.effect.toggled(type, true);
+        analytics.effect.added(type);
         const newEffect = createEffectInstance(type);
         const next = [...state.effects, newEffect];
-        return { effects: next, selectedEffectIndex: next.length - 1 };
+        return { effects: next, selectedEffectId: newEffect.id };
     }),
 
     removeEffect: (index) => set((state) => {
-        analytics.effect.toggled(state.effects[index].type, false);
-        const next = state.effects.filter((_, i) => i !== index);
-        const newSelected = Math.min(state.selectedEffectIndex, next.length - 1);
-        return { effects: next, selectedEffectIndex: Math.max(0, newSelected) };
+        analytics.effect.removed(state.effects[index].type);
+        return {
+            effects: state.effects.filter((_, i) => i !== index)
+        };
     }),
 
     updateParameter: (effectIndex, paramIndex, update) => set((state) => ({

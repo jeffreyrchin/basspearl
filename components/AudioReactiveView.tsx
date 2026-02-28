@@ -4,7 +4,7 @@ import { glitchEngine } from '../services/glitchEngine';
 import SidebarNavigation from './SidebarNavigation';
 import Navbar from './Navbar';
 import { Footer } from './Footer';
-import { Preset, INITIAL_REACTIVE_EFFECTS, PRESETS } from '@/constants';
+import { Preset, PRESETS } from '@/constants';
 import { mapReactivityToEffects } from '@/services/calculateReactiveEffects';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 import { exportVideo } from '@/services/exportService';
@@ -70,20 +70,18 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             // 2. Load Audio
             await loadAudioFromUrl(preset.audio, preset.label);
 
-            // 3. Load Effects (Merge preset effects into the full rack)
-            const fullRack = INITIAL_REACTIVE_EFFECTS.map(templateEffect => {
-                const presetEffect = preset.effects.find(e => e.type === templateEffect.type);
-                if (presetEffect) {
-                    return { ...presetEffect, active: presetEffect.active ?? true };
-                }
-                return { ...templateEffect, active: false };
-            });
+            // 3. Load Effects (Replace current rack with preset effects)
+            const presetEffects = preset.effects.map(e => ({
+                ...e,
+                muted: e.muted ?? false,
+                soloed: e.soloed ?? false
+            }));
 
-            setEffects(fullRack);
+            setEffects(presetEffects);
 
             // Render initial frame
             if (canvasRef.current) {
-                glitchEngine.renderToCanvas(canvasRef.current, imageUrl, fullRack, { maxSize: 1920 });
+                glitchEngine.renderToCanvas(canvasRef.current, imageUrl, presetEffects, { maxSize: 1920 });
             }
             analytics.preset.succeeded(preset.id);
         } catch (err: any) {

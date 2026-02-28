@@ -3,7 +3,8 @@
 
 export type AnalyticsEvent =
     | 'playback_toggled'
-    | 'effect_toggled'
+    | 'effect_added'
+    | 'effect_removed'
     | 'image_upload_started'
     | 'image_upload_succeeded'
     | 'image_upload_failed'
@@ -92,8 +93,8 @@ export const analytics = {
     },
     export: {
         started: () => trackEvent('export_started'),
-        succeeded: (effects: any) => trackEvent('export_succeeded', {
-            active_effects: effects.filter(e => e.active).map(e => e.type).join(', ')
+        succeeded: (effects: any[]) => trackEvent('export_succeeded', {
+            processing_effects: effects.filter(e => !e.muted).map(e => e.type).join(', ')
         }),
         failed: (err: any) => trackEvent('export_failed', {
             error_name: err?.name || 'Error',
@@ -104,7 +105,8 @@ export const analytics = {
         toggled: (isPlaying: boolean) => trackEvent('playback_toggled', { isPlaying }),
     },
     effect: {
-        toggled: (type: string, on: boolean) => trackEvent('effect_toggled', { effect_type: type, on }),
+        added: (type: string) => trackEvent('effect_added', { effect_type: type }),
+        removed: (type: string) => trackEvent('effect_removed', { effect_type: type }),
     },
     auth: {
         view: (authMode: string) => trackEvent('auth_view', { mode: authMode }),

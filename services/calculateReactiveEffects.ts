@@ -133,7 +133,7 @@ export const mapReactivityToEffects = (
                 const meta = SHADER_REGISTRY[effect.type];
                 const shouldSkipModulation = meta?.velocityParamIndices?.includes(index);
 
-                if (param.reactive && !shouldSkipModulation) {
+                if (param.frequencyBand !== 'OFF' && !shouldSkipModulation) {
                     // Linear interpolation based on energy: min + (max - min) * energy
                     // This allows for inverted ranges (e.g., 100 to 0)
                     const range = param.value - param.min;

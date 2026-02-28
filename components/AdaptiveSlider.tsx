@@ -4,7 +4,6 @@ import { FrequencyBand } from '../types';
 interface AdaptiveSliderProps {
     value: number;
     min: number;
-    reactive: boolean;
     frequencyBand: FrequencyBand;
     onChange: (update: { value?: number, min?: number }) => void;
     className?: string;
@@ -13,7 +12,6 @@ interface AdaptiveSliderProps {
 export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     value,
     min,
-    reactive,
     frequencyBand,
     onChange,
     className = ''
@@ -88,12 +86,13 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
         };
     }, [dragMode, onChange]);
 
+    const isReactive = frequencyBand !== 'OFF';
     const left = Math.min(min, value);
     const width = Math.abs(value - min);
 
     return (
         <div className={`relative h-12 flex items-center ${className}`}>
-            {reactive ? (
+            {isReactive ? (
                 <div className="relative w-full">
                     <div
                         ref={trackRef}
@@ -152,7 +151,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                     <div
                         className="absolute h-5 pointer-events-none z-10 top-1/2 -translate-y-1/2"
                         style={{
-                            left: `calc(${min}% + (${value - min}% * var(${cssVarMap[frequencyBand] || '--audio-bass'}, 0)))`,
+                            left: `calc(${min}% + (${value - min}% * var(${cssVarMap[frequencyBand as keyof typeof cssVarMap] || '--audio-bass'}, 0)))`,
                             width: '2px',
                             backgroundColor: '#fb00ff',
                             boxShadow: '0 0 8px rgba(251, 0, 255, 0.5)'

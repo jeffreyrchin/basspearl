@@ -122,9 +122,13 @@ export class GlitchEngine {
         this.pipeline.setInputTexture(this.inputTexture!);
         this.pipeline.resetStack();
 
-        // Apply active effects sequentially
-        effects.filter(e => e.active).forEach(effect => {
-          this.applyEffect(effect, UNIT, width, height, integratedReactivity, currentTime);
+        // Apply effects sequentially according to the Solo/Mute logic
+        const anySoloed = effects.some(e => e.soloed);
+        effects.forEach(effect => {
+          const isActive = anySoloed ? effect.soloed : !effect.muted;
+          if (isActive) {
+            this.applyEffect(effect, UNIT, width, height, integratedReactivity, currentTime);
+          }
         });
 
         this.pipeline.renderToScreen(false);
@@ -176,7 +180,7 @@ export class GlitchEngine {
     params.forEach((p, i) => {
       const isVelocityParam = meta.velocityParamIndices?.includes(i);
 
-      if (isVelocityParam && p.reactive && integratedReactivity) {
+      if (isVelocityParam && p.frequencyBand !== 'OFF' && integratedReactivity) {
         if (p.frequencyBand === 'SUB') u_integrated_values[i] = integratedReactivity.sub;
         else if (p.frequencyBand === 'MID') u_integrated_values[i] = integratedReactivity.mid;
         else if (p.frequencyBand === 'TREBLE') u_integrated_values[i] = integratedReactivity.treble;

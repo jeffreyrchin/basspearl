@@ -3,13 +3,13 @@ import { GlitchEffectType, EffectCategory } from '../types';
 import { EFFECT_METADATA } from '../constants';
 import { useEffectStore } from '../store/useEffectStore';
 
-interface EffectLibraryProps {
+interface SidebarLibraryProps {
     onSelectEffect: () => void;
 }
 
 const CATEGORIES: EffectCategory[] = ['All', 'Additive', 'Color', 'Glitch', 'Motion', 'Mask'];
 
-const EffectLibrary: React.FC<EffectLibraryProps> = ({ onSelectEffect }) => {
+const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
     const { addEffect } = useEffectStore();
     const [selectedCategory, setSelectedCategory] = useState<EffectCategory>('All');
 
@@ -57,15 +57,15 @@ const EffectLibrary: React.FC<EffectLibraryProps> = ({ onSelectEffect }) => {
                                 </span>
                             </div>
 
-                            {/* Add to rack corner button */}
+                            {/* Add to pipeline corner button */}
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     handleAdd(type);
                                 }}
                                 className="absolute top-2 right-2 w-8 h-8 rounded-sm flex items-center justify-center transition-all duration-300 z-10 border text-white/60 hover:text-white hover:bg-white/10 hover:border-white/30 border-transparent"
-                                title="Add to rack"
-                                aria-label="Add effect to rack"
+                                title="Add effect to pipeline"
+                                aria-label="Add effect to pipeline"
                             >
                                 <span className="text-xl material-symbols-outlined">add</span>
                             </button>
@@ -77,4 +77,4 @@ const EffectLibrary: React.FC<EffectLibraryProps> = ({ onSelectEffect }) => {
     );
 };
 
-export default EffectLibrary;
+export default SidebarLibrary;
