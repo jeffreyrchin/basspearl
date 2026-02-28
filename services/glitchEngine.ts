@@ -122,14 +122,35 @@ export class GlitchEngine {
         this.pipeline.setInputTexture(this.inputTexture!);
         this.pipeline.resetStack();
 
-        // Apply effects sequentially according to the Solo/Mute logic
+        // Apply effects sequentially according to the Solo/Mute and Group (Melder) logic
         const anySoloed = effects.some(e => e.soloed);
+        let inSubStack = false;
+
         effects.forEach(effect => {
           const isActive = anySoloed ? effect.soloed : !effect.muted;
+
+          // If this is the start of a melded group, enter the sub-stack
+          if (effect.melded && !inSubStack) {
+            this.pipeline.enterSubStack();
+            inSubStack = true;
+          }
+
           if (isActive) {
             this.applyEffect(effect, UNIT, width, height, integratedReactivity, currentTime);
           }
+
+          // If this is the end of a melded group (or end of array), merge back to main stack
+          // A group ends if the CURRENT effect is not melded, but we were in a group
+          if (inSubStack && !effect.melded) {
+            this.pipeline.mergeSubStack();
+            inSubStack = false;
+          }
         });
+
+        // Safety: If the last effect was somehow marked melded, close it here
+        if (inSubStack) {
+          this.pipeline.mergeSubStack();
+        }
 
         this.pipeline.renderToScreen(false);
         resolve();

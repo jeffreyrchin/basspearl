@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { EffectConfig, GlitchEffectType, FrequencyBand } from '../types';
+import { EffectConfig, GlitchEffectType } from '../types';
 import { INITIAL_REACTIVE_EFFECTS, createEffectInstance } from '../constants';
 import { analytics } from '@/services/analytics';
 
@@ -19,13 +19,28 @@ interface EffectState {
     redo: () => void;
     commitHistory: () => void;
 
+    // Move logic identifies groups (consecutive melded effects) and moves them together
     moveEffect: (index: number, direction: 'up' | 'down') => void;
     toggleMute: (index: number) => void;
     toggleSolo: (index: number) => void;
+    toggleMeld: (index: number) => void;
     addEffect: (type: GlitchEffectType) => void;
     removeEffect: (index: number) => void;
     updateParameter: (effectIndex: number, paramIndex: number, update: Partial<EffectConfig['params'][0]>) => void;
 }
+
+// Find the boundaries of a group containing an effect index
+const getGroupRange = (effects: EffectConfig[], index: number) => {
+    let start = index;
+    while (start > 0 && effects[start - 1].melded) {
+        start--;
+    }
+    let end = index;
+    while (end < effects.length - 1 && effects[end].melded) {
+        end++;
+    }
+    return { start, end };
+};
 
 export const useEffectStore = create<EffectState>((set, get) => ({
     effects: INITIAL_REACTIVE_EFFECTS,
@@ -74,13 +89,36 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     moveEffect: (index, direction) => {
         get().commitHistory();
         set((state) => {
-            const next = [...state.effects];
-            if (direction === 'up' && index > 0) {
-                [next[index], next[index - 1]] = [next[index - 1], next[index]];
-            } else if (direction === 'down' && index < next.length - 1) {
-                [next[index], next[index + 1]] = [next[index + 1], next[index]];
+            const effects = [...state.effects];
+            const { start, end } = getGroupRange(effects, index);
+            const group = effects.slice(start, end + 1);
+
+            if (direction === 'up' && start > 0) {
+                // Find group above us
+                const prevRange = getGroupRange(effects, start - 1);
+                const prevGroup = effects.slice(prevRange.start, prevRange.end + 1);
+
+                const next = [
+                    ...effects.slice(0, prevRange.start),
+                    ...group,
+                    ...prevGroup,
+                    ...effects.slice(end + 1)
+                ];
+                return { effects: next };
+            } else if (direction === 'down' && end < effects.length - 1) {
+                // Find group below us
+                const nextRange = getGroupRange(effects, end + 1);
+                const nextGroup = effects.slice(nextRange.start, nextRange.end + 1);
+
+                const next = [
+                    ...effects.slice(0, start),
+                    ...nextGroup,
+                    ...group,
+                    ...effects.slice(nextRange.end + 1)
+                ];
+                return { effects: next };
             }
-            return { effects: next };
+            return state;
         });
     },
 
@@ -102,6 +140,19 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         });
     },
 
+    toggleMeld: (index) => {
+        // Only meld if not the last effect
+        const { effects } = get();
+        if (index >= effects.length - 1) return;
+
+        get().commitHistory();
+        set((state) => {
+            const next = [...state.effects];
+            next[index] = { ...next[index], melded: !next[index].melded };
+            return { effects: next };
+        });
+    },
+
     addEffect: (type) => {
         get().commitHistory();
         analytics.effect.added(type);
@@ -116,7 +167,16 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         get().commitHistory();
         set((state) => {
             analytics.effect.removed(state.effects[index].type);
-            return { effects: state.effects.filter((_, i) => i !== index) };
+            const next = [...state.effects];
+            next.splice(index, 1);
+
+            // If the item BEFORE the removed one was melded, it was melded TO the removed item.
+            // We should break that bond now that the target is gone.
+            if (index > 0 && state.effects[index - 1].melded) {
+                next[index - 1] = { ...next[index - 1], melded: false };
+            }
+
+            return { effects: next };
         });
     },
 

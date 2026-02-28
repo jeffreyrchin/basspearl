@@ -40,5 +40,6 @@ export interface EffectConfig {
   params: { param: string, value: number, min: number, frequencyBand: FrequencyBand }[];
   muted?: boolean;
   soloed?: boolean;
+  melded?: boolean;
   seed?: number;
 }

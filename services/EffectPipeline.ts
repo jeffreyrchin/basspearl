@@ -9,9 +9,16 @@ export class EffectPipeline {
     private vao: WebGLVertexArrayObject | null = null;
     private quadBuffer: WebGLBuffer | null = null;
 
+    // Main stack for the "Background" or "Baseline" image
     private pingPongTextures: [WebGLTexture, WebGLTexture] = [null as any, null as any];
     private pingPongFBs: [WebGLFramebuffer, WebGLFramebuffer] = [null as any, null as any];
     private currentFBIndex = 0;
+
+    // Sub-stack for "Melded" groups (isolated layers)
+    private subTextures: [WebGLTexture, WebGLTexture] = [null as any, null as any];
+    private subFBs: [WebGLFramebuffer, WebGLFramebuffer] = [null as any, null as any];
+    private currentSubFBIndex = 0;
+    private inSubStack = false;
 
     private sourceTexture: WebGLTexture | null = null;
 
@@ -55,19 +62,27 @@ export class EffectPipeline {
     public resize(width: number, height: number) {
         this.cleanupTextures();
 
+        // Main Stack
         this.pingPongTextures[0] = this.textureManager.createTexture(width, height);
         this.pingPongTextures[1] = this.textureManager.createTexture(width, height);
         this.pingPongFBs[0] = this.textureManager.createFramebuffer(this.pingPongTextures[0]);
         this.pingPongFBs[1] = this.textureManager.createFramebuffer(this.pingPongTextures[1]);
 
+        // Sub Stack
+        this.subTextures[0] = this.textureManager.createTexture(width, height);
+        this.subTextures[1] = this.textureManager.createTexture(width, height);
+        this.subFBs[0] = this.textureManager.createFramebuffer(this.subTextures[0]);
+        this.subFBs[1] = this.textureManager.createFramebuffer(this.subTextures[1]);
+
         this.currentFBIndex = 0;
+        this.currentSubFBIndex = 0;
     }
 
     private cleanupTextures() {
-        this.textureManager.destroyTexture(this.pingPongTextures[0]);
-        this.textureManager.destroyTexture(this.pingPongTextures[1]);
-        this.textureManager.destroyFramebuffer(this.pingPongFBs[0]);
-        this.textureManager.destroyFramebuffer(this.pingPongFBs[1]);
+        this.pingPongTextures.forEach(t => this.textureManager.destroyTexture(t));
+        this.pingPongFBs.forEach(fb => this.textureManager.destroyFramebuffer(fb));
+        this.subTextures.forEach(t => this.textureManager.destroyTexture(t));
+        this.subFBs.forEach(fb => this.textureManager.destroyFramebuffer(fb));
     }
 
     /**
@@ -79,7 +94,8 @@ export class EffectPipeline {
         destFB: WebGLFramebuffer | null,
         inputs: { name: string, texture: WebGLTexture }[],
         uniforms: Record<string, any> = {},
-        flipY: boolean = false
+        flipY: boolean = false,
+        clear: boolean = false
     ) {
         const gl = this.gl;
         const program = this.shaderManager.getProgram(programName);
@@ -88,6 +104,11 @@ export class EffectPipeline {
         gl.useProgram(program);
         gl.bindVertexArray(this.vao);
         gl.bindFramebuffer(gl.FRAMEBUFFER, destFB);
+
+        if (clear) {
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+        }
 
         // Standard Flip Uniform
         const flipLoc = this.shaderManager.getUniformLocation(program, 'u_flipY');
@@ -140,23 +161,56 @@ export class EffectPipeline {
 
     public resetStack() {
         if (!this.sourceTexture) return;
-        this.draw('pass-through', this.pingPongFBs[0], [{ name: 'u_image', texture: this.sourceTexture }]);
+        this.draw('pass-through', this.pingPongFBs[0], [{ name: 'u_image', texture: this.sourceTexture }], {}, false, true);
         this.currentFBIndex = 0;
     }
 
+    public enterSubStack() {
+        this.inSubStack = true;
+        this.currentSubFBIndex = 0;
+        // Start sub-stack with a clear transparent texture
+        const gl = this.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.subFBs[0]);
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+
     public applyPass(programName: string, uniforms: Record<string, any>) {
-        const input = this.pingPongTextures[this.currentFBIndex];
-        const outputFB = this.pingPongFBs[1 - this.currentFBIndex];
-        this.draw(programName, outputFB, [{ name: 'u_image', texture: input }], uniforms);
+        if (this.inSubStack) {
+            const input = this.subTextures[this.currentSubFBIndex];
+            const outputFB = this.subFBs[1 - this.currentSubFBIndex];
+            this.draw(programName, outputFB, [{ name: 'u_image', texture: input }], uniforms, false);
+            this.currentSubFBIndex = 1 - this.currentSubFBIndex;
+        } else {
+            const input = this.pingPongTextures[this.currentFBIndex];
+            const outputFB = this.pingPongFBs[1 - this.currentFBIndex];
+            this.draw(programName, outputFB, [{ name: 'u_image', texture: input }], uniforms, false);
+            this.currentFBIndex = 1 - this.currentFBIndex;
+        }
+    }
+
+    public mergeSubStack() {
+        this.inSubStack = false;
+        const subResult = this.subTextures[this.currentSubFBIndex];
+        const mainInput = this.pingPongTextures[this.currentFBIndex];
+        const mainOutputFB = this.pingPongFBs[1 - this.currentFBIndex];
+
+        // Complex Blend: Draw the subResult OVER the mainInput onto mainOutputFB
+        const gl = this.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, mainOutputFB);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); // Premultiplied-safe blend (prevents darkening)
+
+        // 1. Draw Background
+        this.draw('pass-through', mainOutputFB, [{ name: 'u_image', texture: mainInput }], {}, false, false);
+        // 2. Draw Foreground (Melded Group)
+        this.draw('pass-through', mainOutputFB, [{ name: 'u_image', texture: subResult }], {}, false, false);
+
+        gl.disable(gl.BLEND);
+
         this.currentFBIndex = 1 - this.currentFBIndex;
-    }
-
-    public getVAO(): WebGLVertexArrayObject | null {
-        return this.vao;
-    }
-
-    public getResultTexture(): WebGLTexture {
-        return this.pingPongTextures[this.currentFBIndex];
     }
 
     public renderToScreen(flipY: boolean = true) {
