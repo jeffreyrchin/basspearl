@@ -12,7 +12,49 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     onClose,
 }) => {
     const [view, setView] = useState<'pipeline' | 'effects' | 'params'>('pipeline');
-    const { effects } = useEffectStore();
+    const {
+        effects,
+        undo,
+        redo,
+        past,
+        future
+    } = useEffectStore();
+
+    // Keyboard shortcuts
+    React.useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const isMod = e.metaKey || e.ctrlKey;
+            if (isMod && e.key === 'z') {
+                if (e.shiftKey) redo();
+                else undo();
+                e.preventDefault();
+            } else if (isMod && e.key === 'y') {
+                redo();
+                e.preventDefault();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [undo, redo]);
+
+    const HistoryControls = (
+        <div className="flex items-center gap-1">
+            <button
+                onClick={undo}
+                disabled={past.length === 0}
+                className={`w-7 h-7 rounded-md flex items-center justify-center transition-all ${past.length > 0 ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-white/10 cursor-not-allowed'}`}
+                title="Undo (Cmd+Z)">
+                <span className="material-symbols-outlined text-[18px]">undo</span>
+            </button>
+            <button
+                onClick={redo}
+                disabled={future.length === 0}
+                className={`w-7 h-7 rounded-md flex items-center justify-center transition-all ${future.length > 0 ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-white/10 cursor-not-allowed'}`}
+                title="Redo (Cmd+Shift+Z)">
+                <span className="material-symbols-outlined text-[18px]">redo</span>
+            </button>
+        </div>
+    );
 
     if (view === 'params') {
         return (
@@ -28,14 +70,18 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                         </button>
                         <span className="text-[10px] font-bold text-white uppercase tracking-[0.3em]">Parameters</span>
                     </div>
-                    {onClose && (
-                        <button
-                            onClick={onClose}
-                            className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/5"
-                            aria-label="Close sidebar">
-                            <span className="material-symbols-outlined text-[20px]">close</span>
-                        </button>
-                    )}
+
+                    <div className="flex items-center gap-2">
+                        {HistoryControls}
+                        {onClose && (
+                            <button
+                                onClick={onClose}
+                                className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/5"
+                                aria-label="Close sidebar">
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
@@ -52,14 +98,18 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 <div className="flex items-center gap-3">
                     <span className="text-[10px] font-bold text-white uppercase tracking-[0.4em]">Controls</span>
                 </div>
-                {onClose && (
-                    <button
-                        onClick={onClose}
-                        className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/5"
-                        aria-label="Close sidebar">
-                        <span className="material-symbols-outlined text-[20px]">close</span>
-                    </button>
-                )}
+
+                <div className="flex items-center gap-2">
+                    {HistoryControls}
+                    {onClose && (
+                        <button
+                            onClick={onClose}
+                            className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/5"
+                            aria-label="Close sidebar">
+                            <span className="material-symbols-outlined text-[20px]">close</span>
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Tab Bar */}

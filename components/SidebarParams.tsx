@@ -11,7 +11,8 @@ const SidebarParams: React.FC<SidebarParamsProps> = ({ }) => {
         selectedEffectId,
         toggleMute,
         toggleSolo,
-        updateParameter
+        updateParameter,
+        commitHistory,
     } = useEffectStore();
 
     const effectIndex = effects.findIndex(e => e.id === selectedEffectId);
@@ -76,6 +77,7 @@ const SidebarParams: React.FC<SidebarParamsProps> = ({ }) => {
                                     value={param.value}
                                     min={param.min}
                                     frequencyBand={param.frequencyBand}
+                                    onPointerDown={() => commitHistory()}
                                     onChange={(update) => updateParameter(effectIndex, paramIdx, update)}
                                 />
 
@@ -87,7 +89,7 @@ const SidebarParams: React.FC<SidebarParamsProps> = ({ }) => {
                                             return (
                                                 <button
                                                     key={band}
-                                                    onClick={() => updateParameter(effectIndex, paramIdx, { frequencyBand: band })}
+                                                    onClick={() => { commitHistory(); updateParameter(effectIndex, paramIdx, { frequencyBand: band }); }}
                                                     className={`py-1.5 rounded-lg text-[7.5px] font-bold uppercase tracking-widest transition-all border ${isActive
                                                         ? 'bg-primary/20 text-primary border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.1)]'
                                                         : 'text-white/60 border-transparent hover:text-white'}`}

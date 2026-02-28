@@ -6,6 +6,7 @@ interface AdaptiveSliderProps {
     min: number;
     frequencyBand: FrequencyBand;
     onChange: (update: { value?: number, min?: number }) => void;
+    onPointerDown?: () => void;
     className?: string;
 }
 
@@ -14,6 +15,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     min,
     frequencyBand,
     onChange,
+    onPointerDown,
     className = ''
 }) => {
     const trackRef = useRef<HTMLDivElement>(null);
@@ -91,7 +93,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     const width = Math.abs(value - min);
 
     return (
-        <div className={`relative h-12 flex items-center ${className}`}>
+        <div className={`relative h-12 flex items-center ${className}`} onPointerDown={onPointerDown}>
             {isReactive ? (
                 <div className="relative w-full">
                     <div
