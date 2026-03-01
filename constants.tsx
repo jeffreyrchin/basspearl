@@ -44,15 +44,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
       { name: 'Posterize', defaultValue: 65, defaultBand: 'OFF' },
     ],
   },
-  SCAN_LINES: {
-    label: 'Scan Lines',
-    icon: 'reorder',
-    category: 'Additive',
-    params: [
-      { name: 'Opacity', defaultValue: 37, defaultBand: 'OFF' },
-      { name: 'Line Spacing', defaultValue: 3, defaultBand: 'OFF' },
-    ],
-  },
   BIT_CRUSH: {
     label: 'Bit Crush',
     icon: 'developer_board',
@@ -108,13 +99,30 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
       { name: 'Inversion', defaultValue: 100, defaultBand: 'OFF' },
     ],
   },
-  ZOOM_PAN: {
-    label: 'Zoom Pulse',
-    icon: 'zoom_in',
+  SCALE: {
+    label: 'Scale',
+    icon: 'aspect_ratio',
     category: 'Motion',
     params: [
-      { name: 'Scale', defaultValue: 30, defaultBand: 'OFF' },
-      { name: 'Pan', defaultValue: 0, defaultBand: 'OFF' },
+      { name: 'Width', defaultValue: 60, defaultBand: 'OFF' },
+      { name: 'Height', defaultValue: 60, defaultBand: 'OFF' },
+    ],
+  },
+  ROTATE: {
+    label: 'Rotate',
+    icon: 'rotate_right',
+    category: 'Motion',
+    params: [
+      { name: 'Rotation', defaultValue: 3, defaultBand: 'OFF' },
+      { name: 'Speed', defaultValue: 3, defaultBand: 'OFF' },
+    ],
+  },
+  SKEW: {
+    label: 'Skew',
+    icon: 'format_italic',
+    category: 'Motion',
+    params: [
+      { name: 'Skew', defaultValue: 44, defaultBand: 'OFF' },
     ],
   },
   SCREEN_SHAKE: {
@@ -179,18 +187,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
       { name: 'Size', defaultValue: 20, defaultBand: 'OFF' },
       { name: 'Feather', defaultValue: 0, defaultBand: 'OFF' },
       { name: 'Blend', defaultValue: 100, defaultBand: 'OFF' },
-    ],
-  },
-  TRANSFORM: {
-    label: 'Transform',
-    icon: 'transform',
-    category: 'Motion',
-    params: [
-      { name: 'Width', defaultValue: 50, defaultBand: 'OFF' },
-      { name: 'Height', defaultValue: 50, defaultBand: 'OFF' },
-      { name: 'Rotation', defaultValue: 3, defaultBand: 'OFF' },
-      { name: 'Rotation Speed', defaultValue: 3, defaultBand: 'OFF' },
-      { name: 'Skew', defaultValue: 44, defaultBand: 'OFF' },
     ],
   },
   TILE: {
@@ -390,10 +386,10 @@ export const PRESETS: Preset[] = [
       },
       {
         id: 'sunset-zoom',
-        type: 'ZOOM_PAN',
+        type: 'SCALE',
         params: [
-          { param: 'Scale', value: 50, min: 0, frequencyBand: 'SUB' },
-          { param: 'Pan', value: 0, min: 0, frequencyBand: 'SUB' },
+          { param: 'Width', value: 75, min: 50, frequencyBand: 'SUB' },
+          { param: 'Height', value: 75, min: 50, frequencyBand: 'SUB' },
         ],
         muted: false,
         soloed: false,
@@ -453,10 +449,10 @@ export const PRESETS: Preset[] = [
       },
       {
         id: 'underwater-zoom',
-        type: 'ZOOM_PAN',
+        type: 'SCALE',
         params: [
-          { param: 'Scale', value: 100, min: 0, frequencyBand: 'SUB' },
-          { param: 'Pan', value: 0, min: 0, frequencyBand: 'SUB' },
+          { param: 'Width', value: 100, min: 50, frequencyBand: 'SUB' },
+          { param: 'Height', value: 100, min: 50, frequencyBand: 'SUB' },
         ],
         muted: false,
         soloed: false,

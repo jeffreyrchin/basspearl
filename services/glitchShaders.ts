@@ -71,32 +71,6 @@ void main() {
 }
 `;
 
-export const SCAN_LINES_SHADER = `#version 300 es
-precision highp float;
-uniform sampler2D u_image;
-uniform float u_params[2]; // [opacity, line spacing]
-uniform float u_unit;
-uniform vec2 u_resolution;
-in vec2 v_texCoord;
-out vec4 outColor;
-
-void main() {
-    float opacity = u_params[0] / 100.0;
-    float spacing = max(2.0, floor(2.0 + (u_params[1] * 0.1 * u_unit)));
-    
-    vec4 color = texture(u_image, v_texCoord);
-    
-    float y = v_texCoord.y * u_resolution.y;
-    if (mod(floor(y), spacing) == 0.0) {
-        color.r *= (1.0 - opacity);
-        color.g *= (1.0 - (opacity * 0.8));
-        color.b *= (1.0 - (opacity * 0.9));
-    }
-    
-    outColor = color;
-}
-`;
-
 export const DEEP_FRY_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
@@ -436,27 +410,73 @@ void main() {
 }
 `;
 
-export const ZOOM_PAN_SHADER = `#version 300 es
+export const SCALE_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[2]; // [zoom/scale, pan]
+uniform float u_params[2]; // [width, height]
 in vec2 v_texCoord;
 out vec4 outColor;
 
 void main() {
-    float zoom = 1.0 + (u_params[0] / 100.0) * 0.5;
-    vec2 center = vec2(0.5, 0.5);
-    
-    // Slight offset based on threshold (pan)
-    vec2 offset = vec2(u_params[1] / 1000.0, sin(u_params[0] * 0.1) * 0.01);
-    
-    vec2 coord = (v_texCoord - center - offset) / zoom + center + offset;
-    
-    if (coord.x >= 0.0 && coord.x <= 1.0 && coord.y >= 0.0 && coord.y <= 1.0) {
-        outColor = texture(u_image, coord);
-    } else {
-        outColor = vec4(0.0);
-    }
+    float scaleX = max(0.01, 2.0 * u_params[0] / 100.0);
+    float scaleY = max(0.01, 2.0 * u_params[1] / 100.0);
+
+    vec2 uv = (v_texCoord - 0.5);
+    uv.x /= scaleX;
+    uv.y /= scaleY;
+    uv += 0.5;
+
+    float inBounds = step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0);
+    outColor = texture(u_image, uv) * inBounds;
+}
+`;
+
+export const ROTATE_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[2]; // [rotation, speed]
+uniform float u_integrated_values[8];
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    float baseRot = u_params[0] / 100.0 * 6.28318530718;
+    float speed = u_params[1] / 100.0 * 10.0;
+    float rotation = baseRot + (u_integrated_values[1] * speed);
+
+    vec2 uv = v_texCoord - 0.5;
+    float aspect = u_resolution.x / u_resolution.y;
+    uv.x *= aspect;
+
+    float cosAngle = cos(rotation);
+    float sinAngle = sin(rotation);
+    mat2 rot = mat2(cosAngle, -sinAngle, sinAngle, cosAngle);
+    uv = rot * uv;
+
+    uv.x /= aspect;
+    uv += 0.5;
+
+    float inBounds = step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0);
+    outColor = texture(u_image, uv) * inBounds;
+}
+`;
+
+export const SKEW_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[1]; // [skew]
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    float skew = 2.0 * (u_params[0] - 50.0) / 50.0;
+    vec2 uv = v_texCoord - 0.5;
+    uv.x -= skew * uv.y;
+    uv += 0.5;
+
+    float inBounds = step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0);
+    outColor = texture(u_image, uv) * inBounds;
 }
 `;
 
@@ -476,30 +496,30 @@ float rand(vec2 co) {
 void main() {
     // Param 0: Amplitude of displacement
     // Param 1: Speed/Frequency of shake
-    
+
     // Speed scales the frequency of the noise (Hz).
     // Range 0-100 maps to 0-20 Hz smooth frequency.
     float updateFreq = u_params[1] * 0.2;
-    
+
     // "Travel" through noise space.
     float t = u_integrated_values[1] * updateFreq;
-    
+
     // Smooth Value Noise Interpolation
     float i = floor(t);
     float f = fract(t);
     // Cubic smoothing (smoothstep) for better flow
     float u = f * f * (3.0 - 2.0 * f);
-    
+
     // Jitter X
     float r1 = rand(vec2(i, 12.345));
     float r2 = rand(vec2(i + 1.0, 12.345));
     float smoothX = mix(r1, r2, u);
-    
+
     // Jitter Y
     float r3 = rand(vec2(i, 67.890));
     float r4 = rand(vec2(i + 1.0, 67.890));
     float smoothY = mix(r3, r4, u);
-    
+
     // Amplitude scales the displacement
     float amount = (u_params[0] / 100.0) * 0.05;
     
@@ -507,7 +527,7 @@ void main() {
     float jitterY = (smoothY - 0.5) * amount;
     
     vec2 coord = v_texCoord + vec2(jitterX, jitterY);
-    
+
     if (coord.x >= 0.0 && coord.x <= 1.0 && coord.y >= 0.0 && coord.y <= 1.0) {
         outColor = texture(u_image, coord);
     } else {
@@ -575,10 +595,10 @@ void main() {
     }
 
     vec4 src = texture(u_image, v_texCoord);
-    
+
     // Final Star Alpha (luminance-based)
     float starAlpha = clamp(max(color.r, max(color.g, color.b)), 0.0, 1.0);
-    
+
     // Balanced Additive: 1:1 Light/Background compensation to prevent halos
     vec3 result = src.rgb * (1.0 - starAlpha) + color; 
     float finalAlpha = starAlpha + src.a * (1.0 - starAlpha);
@@ -601,18 +621,18 @@ void main() {
     float time = u_integrated_values[1] * speed * 10.0;
 
     vec2 uv = (v_texCoord - 0.5) * u_resolution / u_resolution.y;
-    
+
     // Perspective: Split into floor and ceiling
     float horizon = 0.0;
     float depth = 1.0 / (abs(uv.y - horizon) + 0.01);
-    
+
     // Grid coordinates
     vec2 gridUV = vec2(uv.x * depth, depth + time);
-    
+
     // Line calculation
     vec2 grid = abs(fract(gridUV - 0.5) - 0.5);
     float lines = smoothstep(thickness, 0.0, grid.x) + smoothstep(thickness * 2.0, 0.0, grid.y);
-    
+
     // Fade out at the horizon and edges
     float fade = smoothstep(12.0, 3.0, depth) * smoothstep(0.0, 0.1, abs(uv.y));
     
@@ -620,7 +640,7 @@ void main() {
     
     vec4 src = texture(u_image, v_texCoord);
     float gridAlpha = clamp(lines * fade, 0.0, 1.0);
-    
+
     // Balanced Additive: Compensate background for gridColor
     vec3 result = src.rgb * (1.0 - gridAlpha) + gridColor;
     float finalAlpha = gridAlpha + src.a * (1.0 - gridAlpha);
@@ -645,13 +665,13 @@ void main() {
     vec2 uv = (v_texCoord - 0.5) * u_resolution / u_resolution.y;
     float r = length(uv);
     float a = atan(uv.y, uv.x);
-    
+
     // Tunnel projection
     // x = angle, y = depth + motion
     float angleUV = a / 6.28318 + 0.5;
     float finalX = angleUV + (1.0/max(r, 0.001)) * twist * 0.1;
     float depth  = (1.0/max(r, 0.001)) * scale + time;
-    
+
     // Universal Mirror Trick (Ping-ponging)
     // Ensures coordinates are ALWAYS captured in 0..1 range with no seams
     // Use x2 multiplier to create two mirrored halves around the circle
@@ -659,7 +679,7 @@ void main() {
         abs(mod(finalX * 2.0, 2.0) - 1.0),
         abs(mod(depth, 2.0) - 1.0)
     );
-    
+
     outColor = texture(u_image, warpedUV);
 }
 `;
@@ -703,7 +723,7 @@ void main() {
     float threshold = hash(cell, u_seed); // full [0.0, 1.0] range for fair distribution
     float brightness = hash(cell + 0.1, u_seed) * 0.99 + 0.01; // restrict brightness to [0.01, 1.0] to prevent black voids
     float lit = step(1.0 - density, threshold) * step(0.001, density);
-    
+
     // 6. Rounded Box SDF
     // Size maps directly to the Width/Height sliders (0.5 is full half-width)
     vec2 size = vec2(xScale, yScale) * 0.5;
@@ -711,7 +731,7 @@ void main() {
     
     vec2 q = abs(p) - size + r;
     float dist = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
-    
+
     // 7. Sharp mask
     float shapeMask = step(dist, 0.0);
     lit *= shapeMask * step(0.001, xScale) * step(0.001, yScale); // multiply by 0 when width/height is at 0% to make pixels disappear.
@@ -758,12 +778,12 @@ void main() {
     float rounding = roundFactor * 0.5 * size;
 
     float d = sdStar(uv, pointiness, aps, inr, edge) - rounding;
-    
+
     // Use smoothstep for professional distance-based feathering
     float shape = smoothstep(feather, 0.0, d);
     
     vec4 background = texture(u_image, v_texCoord);
-    
+
     // Smoothly blend the shape onto the background (standard additive/overlay feel)
     // 100% Blend = Solid White Shape, 0% Blend = Original Background
     float effectAlpha = shape * blend;
@@ -773,76 +793,7 @@ void main() {
 }
 `;
 
-export const TRANSFORM_SHADER = `#version 300 es
-precision highp float;
 
-uniform sampler2D u_image;
-uniform float u_params[5]; // [scaleX, scaleY, rotation, rotation speed, skew]
-uniform vec2 u_resolution;
-uniform float u_integrated_values[8];
-in vec2 v_texCoord;
-out vec4 outColor;
-
-void main() {
-    // -----------------------
-    // 1. Extract parameters
-    // -----------------------
-    float scaleX   = max(0.01, 2.0 * u_params[0] / 100.0);
-    float scaleY   = max(0.01, 2.0 * u_params[1] / 100.0);
-    float baseRot  = u_params[2] / 100.0 * 6.28318530718;
-    float speed    = u_params[3] / 100.0 * 10.0;
-    float rotation = baseRot + (u_integrated_values[3] * speed);
-    float skew     = 2.0 * (u_params[4] - 50.0) / 50.0;
-
-    // -----------------------
-    // 2. Map UV to [-0.5,0.5]
-    // -----------------------
-    vec2 uv = v_texCoord - 0.5;
-
-    // -----------------------
-    // 3. Aspect correction
-    // -----------------------
-    float aspect = u_resolution.x / u_resolution.y;
-    uv.x *= aspect;
-
-    // -----------------------
-    // 4. Rotation
-    // -----------------------
-    float c = cos(rotation);
-    float s = sin(rotation);
-    mat2 rot = mat2(c, -s, s, c); // standard rotation
-    uv = rot * uv;
-
-    // -----------------------
-    // 5. Undo aspect correction
-    // -----------------------
-    uv.x /= aspect;
-
-    // -----------------------
-    // 6. Scale and skew combined
-    // -----------------------
-    // Order: skew first, then scale
-    mat2 transform = mat2(1.0/scaleX, -skew/scaleX,
-                          0.0, 1.0/scaleY);
-    uv = transform * uv;
-
-    // -----------------------
-    // 7. Return to [0,1] UV space
-    // -----------------------
-    uv += 0.5;
-
-    // -----------------------
-    // 8. Branch-free bounds check
-    // -----------------------
-    float inBounds = step(0.0, uv.x) * step(uv.x, 1.0) *
-                     step(0.0, uv.y) * step(uv.y, 1.0);
-
-    // -----------------------
-    // 9. Sample texture
-    // -----------------------
-    outColor = texture(u_image, uv) * inBounds;
-}
-`;
 
 export const BLACK_HOLE_SHADER = `#version 300 es
 precision highp float;
@@ -1144,11 +1095,11 @@ void main() {
 
     // Identify the shapes based on brightness
     float mask = smoothstep(threshold - feather, threshold + feather, luma);
-    
+
     // Replace the bright pixels with our target gray value (premultiplied by alpha)
     vec3 targetGray = vec3(targetValue) * src.a;
     vec3 finalRGB = mix(src.rgb, targetGray, mask * blend);
-    
+
     outColor = vec4(finalRGB, src.a);
 }
 `;
@@ -1384,7 +1335,6 @@ export interface ShaderDefinition {
 export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     CHANNEL_SHIFT: { name: 'CHANNEL_SHIFT', fragmentSource: CHANNEL_SHIFT_SHADER },
     BIT_CRUSH: { name: 'BIT_CRUSH', fragmentSource: BIT_CRUSH_SHADER },
-    SCAN_LINES: { name: 'SCAN_LINES', fragmentSource: SCAN_LINES_SHADER },
     DEEP_FRY: { name: 'DEEP_FRY', fragmentSource: DEEP_FRY_SHADER },
     WAVE_DISTORTION: { name: 'WAVE_DISTORTION', fragmentSource: WAVE_DISTORTION_SHADER, velocityParamIndices: [2] },
     HUE_ROTATION: { name: 'HUE_ROTATION', fragmentSource: HUE_ROTATION_SHADER, velocityParamIndices: [1] },
@@ -1393,14 +1343,15 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     DATA_CORRUPTION: { name: 'DATA_CORRUPTION', fragmentSource: DATA_CORRUPTION_SHADER },
     COLOR_BLEED: { name: 'COLOR_BLEED', fragmentSource: COLOR_BLEED_SHADER },
     COMPRESSION_HELL: { name: 'COMPRESSION_HELL', fragmentSource: COMPRESSION_HELL_SHADER },
-    ZOOM_PAN: { name: 'ZOOM_PAN', fragmentSource: ZOOM_PAN_SHADER },
     SCREEN_SHAKE: { name: 'SCREEN_SHAKE', fragmentSource: SCREEN_SHAKE_SHADER, velocityParamIndices: [1] },
     STARFIELD: { name: 'STARFIELD', fragmentSource: STARFIELD_SHADER, velocityParamIndices: [1] },
     RETRO_GRID: { name: 'RETRO_GRID', fragmentSource: RETRO_GRID_SHADER, velocityParamIndices: [1] },
     TUNNEL_WARP: { name: 'TUNNEL_WARP', fragmentSource: TUNNEL_WARP_SHADER, velocityParamIndices: [1] },
     GRAIN: { name: 'GRAIN', fragmentSource: GRAIN_SHADER },
     SHAPE: { name: 'SHAPE', fragmentSource: SHAPE_SHADER },
-    TRANSFORM: { name: 'TRANSFORM', fragmentSource: TRANSFORM_SHADER, velocityParamIndices: [3] },
+    SCALE: { name: 'SCALE', fragmentSource: SCALE_SHADER },
+    ROTATE: { name: 'ROTATE', fragmentSource: ROTATE_SHADER, velocityParamIndices: [1] },
+    SKEW: { name: 'SKEW', fragmentSource: SKEW_SHADER },
     TILE: { name: 'TILE', fragmentSource: TILE_SHADER },
     ORGANIC_NOISE: { name: 'ORGANIC_NOISE', fragmentSource: ORGANIC_NOISE_SHADER, velocityParamIndices: [3] },
     CELLULAR_NOISE: { name: 'CELLULAR_NOISE', fragmentSource: CELLULAR_NOISE_SHADER, velocityParamIndices: [6] },
