@@ -241,6 +241,17 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
       { name: 'Invert', defaultValue: 0, defaultBand: 'OFF' },
     ],
   },
+  LUMINANCE_MAP: {
+    label: 'Luminance Map',
+    icon: 'exposure_plus_1',
+    category: 'Mask',
+    params: [
+      { name: 'Threshold', defaultValue: 50, defaultBand: 'OFF' },
+      { name: 'Feather', defaultValue: 10, defaultBand: 'OFF' },
+      { name: 'Replacement Tone', defaultValue: 0, defaultBand: 'OFF' },
+      { name: 'Blend', defaultValue: 100, defaultBand: 'OFF' },
+    ],
+  },
   EDGE_MASK: {
     label: 'Edge Mask',
     icon: 'filter_tilt_shift',

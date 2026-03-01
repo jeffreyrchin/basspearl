@@ -30,7 +30,8 @@ export type GlitchEffectType =
   | 'BLACK_HOLE'
   | 'WHITE_HOLE'
   | 'PAN'
-  | 'SCROLL';
+  | 'SCROLL'
+  | 'LUMINANCE_MAP';
 
 export type FrequencyBand = 'OFF' | 'SUB' | 'BASS' | 'MID' | 'TREBLE';
 

@@ -37,10 +37,13 @@ void main() {
     float shiftY = u_params[1] * 0.1 * u_unit * pixelSize.y;
     
     vec4 color = sampleTexture(u_image, v_texCoord);
-    float r = sampleTexture(u_image, v_texCoord - vec2(shiftX, shiftY)).r;
-    float b = sampleTexture(u_image, v_texCoord + vec2(shiftX, shiftY)).b;
+    vec4 sampR = sampleTexture(u_image, v_texCoord - vec2(shiftX, shiftY));
+    vec4 sampB = sampleTexture(u_image, v_texCoord + vec2(shiftX, shiftY));
     
-    outColor = vec4(r, color.g, b, color.a);
+    // Composite alpha ensures ghosts stay visible and solid when melded
+    float finalAlpha = max(color.a, max(sampR.a, sampB.a));
+    
+    outColor = vec4(sampR.r, color.g, sampB.b, finalAlpha);
 }
 `;
 
@@ -62,11 +65,9 @@ void main() {
     
     vec4 color = texture(u_image, gridCoord);
     
-    if (qFactor > 1.0) {
-        color.rgb = floor(color.rgb * 255.0 / qFactor) * qFactor / 255.0;
-    }
-    
-    outColor = color;
+    // Branchless quantization
+    vec3 quant = floor(color.rgb * 255.0 / qFactor) * qFactor / 255.0;
+    outColor = vec4(quant, color.a);
 }
 `;
 
@@ -218,8 +219,12 @@ out vec4 outColor;
 void main() {
     vec4 color = texture(u_image, v_texCoord);
     float opacity = u_params[0] / 100.0;
-    vec3 inverted = 1.0 - color.rgb;
-    outColor = vec4(mix(color.rgb, inverted, opacity), color.a);
+    
+    // Invert relative to alpha (prevents transparent pixels turning white)
+    vec3 inverted = color.a - color.rgb;
+    vec3 mixed = mix(color.rgb, inverted, opacity);
+    
+    outColor = vec4(mixed, color.a);
 }
 `;
 
@@ -382,15 +387,23 @@ void main() {
     float ghostShift = (u_params[1] * 0.1 * u_unit) * pixelSize.x;
     
     vec4 color = sampleTexture(u_image, v_texCoord);
-    float r = sampleTexture(u_image, v_texCoord - vec2(bleedAmount, 0.0)).r;
-    float b = sampleTexture(u_image, v_texCoord + vec2(bleedAmount, 0.0)).b;
+    vec4 sampR = sampleTexture(u_image, v_texCoord - vec2(bleedAmount, 0.0));
+    vec4 sampB = sampleTexture(u_image, v_texCoord + vec2(bleedAmount, 0.0));
+    
+    // Calculate ghost colors
+    float r = sampR.r;
+    float b = sampB.b;
     float g = color.g;
     
+    float finalAlpha = max(color.a, max(sampR.a, sampB.a));
+    
     if (ghostShift > 0.0) {
-        g = (g + sampleTexture(u_image, v_texCoord - vec2(ghostShift, 0.0)).g) / 1.5;
+        vec4 sampG = sampleTexture(u_image, v_texCoord - vec2(ghostShift, 0.0));
+        g = (g + sampG.g) / 1.5;
+        finalAlpha = max(finalAlpha, sampG.a);
     }
     
-    outColor = vec4((color.r + r)/2.0, g, (color.b + b)/2.0, color.a);
+    outColor = vec4((color.r + r)/2.0, g, (color.b + b)/2.0, finalAlpha);
 }
 `;
 
@@ -417,7 +430,9 @@ void main() {
     float freq = (1.0 / u_unit) * (1.0 + factor * 0.5);
     float ringing = cos(v_texCoord.x * v_texCoord.y * 1000.0 * freq) * (factor * 4.0 / 255.0);
     
-    outColor = vec4(clamp(color.rgb + ringing, 0.0, 1.0), color.a);
+    // Scale ringing by alpha and clamp to color.a to keep math premultiplied-safe
+    vec3 finalRGB = clamp(color.rgb + (ringing * color.a), 0.0, color.a);
+    outColor = vec4(finalRGB, color.a);
 }
 `;
 
@@ -440,7 +455,7 @@ void main() {
     if (coord.x >= 0.0 && coord.x <= 1.0 && coord.y >= 0.0 && coord.y <= 1.0) {
         outColor = texture(u_image, coord);
     } else {
-        outColor = vec4(0.0, 0.0, 0.0, 1.0);
+        outColor = vec4(0.0);
     }
 }
 `;
@@ -496,7 +511,7 @@ void main() {
     if (coord.x >= 0.0 && coord.x <= 1.0 && coord.y >= 0.0 && coord.y <= 1.0) {
         outColor = texture(u_image, coord);
     } else {
-        outColor = vec4(0.0, 0.0, 0.0, 1.0);
+        outColor = vec4(0.0);
     }
 }
 `;
@@ -560,11 +575,14 @@ void main() {
     }
 
     vec4 src = texture(u_image, v_texCoord);
-
-    // Cheaper brightness (no length)
-    float starAlpha = clamp(dot(color, vec3(0.333)) * 2.2, 0.0, 1.0);
-
-    outColor = vec4(src.rgb + color, clamp(src.a + starAlpha, 0.0, 1.0));
+    
+    // Final Star Alpha (luminance-based)
+    float starAlpha = clamp(max(color.r, max(color.g, color.b)), 0.0, 1.0);
+    
+    // Balanced Additive: 1:1 Light/Background compensation to prevent halos
+    vec3 result = src.rgb * (1.0 - starAlpha) + color; 
+    float finalAlpha = starAlpha + src.a * (1.0 - starAlpha);
+    outColor = vec4(result, finalAlpha);
 }
 `;
 
@@ -601,7 +619,12 @@ void main() {
     vec3 gridColor = vec3(1.0, 0.0, 1.0) * lines * fade;
     
     vec4 src = texture(u_image, v_texCoord);
-    outColor = vec4(src.rgb + gridColor, clamp(src.a + (lines * fade), 0.0, 1.0));
+    float gridAlpha = clamp(lines * fade, 0.0, 1.0);
+    
+    // Balanced Additive: Compensate background for gridColor
+    vec3 result = src.rgb * (1.0 - gridAlpha) + gridColor;
+    float finalAlpha = gridAlpha + src.a * (1.0 - gridAlpha);
+    outColor = vec4(result, finalAlpha);
 }
 `;
 
@@ -694,15 +717,10 @@ void main() {
     lit *= shapeMask * step(0.001, xScale) * step(0.001, yScale); // multiply by 0 when width/height is at 0% to make pixels disappear.
 
     // 8. Output final color with blend support.
-    vec3 color = vec3(brightness);
-    
-    // Calculate final lit color mixed with background for blend support
-    vec3 mixedColor = mix(src.rgb, color, lit * blend);
-    
-    outColor = vec4(
-        mixedColor,
-        max(src.a, lit * blend)
-    );
+    float alpha = lit * blend;
+    vec3 finalRGB = vec3(brightness) * alpha + src.rgb * (1.0 - alpha);
+    float finalAlpha = alpha + src.a * (1.0 - alpha);
+    outColor = vec4(finalRGB, finalAlpha);
 }
 `;
 
@@ -748,12 +766,10 @@ void main() {
     
     // Smoothly blend the shape onto the background (standard additive/overlay feel)
     // 100% Blend = Solid White Shape, 0% Blend = Original Background
-    vec3 mixedColor = mix(background.rgb, vec3(1.0), shape * blend);
-    
-    outColor = vec4(
-        mixedColor,
-        max(background.a, shape * blend)
-    );
+    float effectAlpha = shape * blend;
+    vec3 blended = mix(background.rgb, vec3(1.0), effectAlpha);
+    float finalAlpha = effectAlpha + background.a * (1.0 - effectAlpha);
+    outColor = vec4(blended, finalAlpha);
 }
 `;
 
@@ -1077,9 +1093,12 @@ void main() {
 
     vec4 src = texture(u_image, v_texCoord);
 
-    // Composite: mix current image with noise based on blend
-    // We max the alpha so that the noise can "draw over" previous transparency (like cellular noise)
-    outColor = vec4(mix(src.rgb, vec3(noiseVal), blend), max(src.a, blend));
+    // Correct Composition: Premultiplied mix
+    float alpha = blend;
+    vec3 rgb = vec3(noiseVal) * alpha;
+    vec3 finalRGB = rgb + src.rgb * (1.0 - alpha);
+    float finalAlpha = alpha + src.a * (1.0 - alpha);
+    outColor = vec4(finalRGB, finalAlpha);
 }
 `;
 
@@ -1103,6 +1122,34 @@ void main() {
     mask = mix(mask, 1.0 - mask, invert);
 
     outColor = vec4(src.rgb * mask, src.a * mask);
+}
+`;
+
+export const LUMINANCE_MAP_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[4]; // [threshold, feather, target, blend]
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    float threshold = (100.0 - u_params[0]) / 100.0;
+    float feather = max(u_params[1] / 100.0, 0.001);
+    float targetValue = u_params[2] / 100.0;
+    float blend = u_params[3] / 100.0;
+
+    vec4 src = texture(u_image, v_texCoord);
+    float luma = dot(src.rgb, vec3(0.299, 0.587, 0.114));
+
+    // Identify the shapes based on brightness
+    float mask = smoothstep(threshold - feather, threshold + feather, luma);
+    
+    // Replace the bright pixels with our target gray value (premultiplied by alpha)
+    vec3 targetGray = vec3(targetValue) * src.a;
+    vec3 finalRGB = mix(src.rgb, targetGray, mask * blend);
+    
+    outColor = vec4(finalRGB, src.a);
 }
 `;
 
@@ -1178,7 +1225,13 @@ void main() {
     float intensity = smoothstep(1.0, 0.0, f1);
 
     vec4 src = texture(u_image, v_texCoord);
-    outColor = mix(src, vec4(vec3(intensity), 1.0), blend * step(0.001, probDensity));
+    float alpha = blend * step(0.001, probDensity);
+
+    // Correct Composition: Premultiplied mix
+    vec3 rgb = vec3(intensity) * alpha;
+    vec3 finalRGB = rgb + src.rgb * (1.0 - alpha);
+    float finalAlpha = alpha + src.a * (1.0 - alpha);
+    outColor = vec4(finalRGB, finalAlpha);
 }
 `;
 
@@ -1279,8 +1332,10 @@ void main() {
 
     float mask = max(grid.x, grid.y);
 
-    // 5. Output Final Color.
-    outColor = vec4(src.rgb + mask, clamp(src.a + mask * 0.8, 0.0, 1.0));
+    // 5. Output Final Color (Balanced Additive)
+    vec3 result = src.rgb * (1.0 - mask) + vec3(mask);
+    float finalAlpha = mask + src.a * (1.0 - mask);
+    outColor = vec4(result, finalAlpha);
 }
 `;
 
@@ -1315,7 +1370,7 @@ void main() {
     
     vec2 scroll = vec2(right - left, up - down) * 2.0;
     vec2 coord = fract(v_texCoord - scroll);
-    
+
     outColor = texture(u_image, coord);
 }
 `;
@@ -1357,4 +1412,5 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     SPECTRAL_MAP: { name: 'SPECTRAL_MAP', fragmentSource: SPECTRAL_MAP_SHADER, velocityParamIndices: [2] },
     PAN: { name: 'PAN', fragmentSource: PAN_SHADER },
     SCROLL: { name: 'SCROLL', fragmentSource: SCROLL_SHADER, velocityParamIndices: [0, 1, 2, 3] },
+    LUMINANCE_MAP: { name: 'LUMINANCE_MAP', fragmentSource: LUMINANCE_MAP_SHADER },
 };
