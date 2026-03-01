@@ -31,17 +31,18 @@ const SidebarParams: React.FC<SidebarParamsProps> = ({ }) => {
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
             <div className="flex items-center justify-between border-b border-white/5 pb-6">
                 <h3 className="text-primary text-[11px] font-bold uppercase tracking-[0.3em]">{EFFECT_METADATA[effect.type]?.label}</h3>
-                <div className="flex items-center gap-1.5">
+                <div className="flex h-10 md:h-8 items-center border border-white/10 rounded-md bg-white/5 overflow-hidden">
                     <button
                         onClick={() => toggleSolo(effectIndex)}
-                        className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-mono transition-all border ${isSoloed ? 'bg-white text-black border-white' : 'text-white/60 border-white/10 hover:border-white/20'}`}
+                        className={`w-8 h-full flex items-center justify-center text-[10px] font-mono transition-none ${isSoloed ? 'bg-white/70 text-black hover:bg-white/80' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}
                         aria-label="Solo Effect"
                     >
                         S
                     </button>
+                    <div className="w-[1px] h-full bg-white/10 flex-shrink-0" />
                     <button
                         onClick={() => toggleMute(effectIndex)}
-                        className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-mono transition-all border ${isMuted ? 'bg-cyan-900 text-white border-cyan-700' : 'text-white/60 border-white/10 hover:border-white/20'}`}
+                        className={`w-8 h-full flex items-center justify-center text-[10px] font-mono transition-none ${isMuted ? 'bg-cyan-900 text-white hover:bg-cyan-800' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}
                         aria-label="Mute Effect"
                     >
                         M
