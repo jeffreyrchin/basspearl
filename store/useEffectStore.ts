@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { EffectConfig, GlitchEffectType } from '../types';
 import { INITIAL_REACTIVE_EFFECTS, createEffectInstance } from '../constants';
+import { reorderEffectGroups } from '@/services/pipelineUtils';
 import { analytics } from '@/services/analytics';
 
 interface EffectState {
@@ -15,12 +16,14 @@ interface EffectState {
     setEffects: (effects: EffectConfig[]) => void;
     setSelectedEffectId: (id: string | null) => void;
 
+    isDraggingAny: boolean;
+    setIsDraggingAny: (isDraggingAny: boolean) => void;
+
     undo: () => void;
     redo: () => void;
     commitHistory: () => void;
 
-    // Move logic identifies groups (consecutive melded effects) and moves them together
-    moveEffect: (index: number, direction: 'up' | 'down') => void;
+    reorderEffects: (sourceIndex: number, destinationIndex: number, effectsSnapshot?: EffectConfig[]) => void;
     toggleMute: (index: number) => void;
     toggleSolo: (index: number) => void;
     toggleMeld: (index: number) => void;
@@ -29,20 +32,9 @@ interface EffectState {
     updateParameter: (effectIndex: number, paramIndex: number, update: Partial<EffectConfig['params'][0]>) => void;
 }
 
-// Find the boundaries of a group containing an effect index
-const getGroupRange = (effects: EffectConfig[], index: number) => {
-    let start = index;
-    while (start > 0 && effects[start - 1].melded) {
-        start--;
-    }
-    let end = index;
-    while (end < effects.length - 1 && effects[end].melded) {
-        end++;
-    }
-    return { start, end };
-};
 
 export const useEffectStore = create<EffectState>((set, get) => ({
+    isDraggingAny: false,
     effects: INITIAL_REACTIVE_EFFECTS,
     selectedEffectId: INITIAL_REACTIVE_EFFECTS[0]?.id || null,
     past: [],
@@ -51,6 +43,8 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     setEffects: (effects) => set({ effects }),
 
     setSelectedEffectId: (selectedEffectId) => set({ selectedEffectId }),
+
+    setIsDraggingAny: (isDraggingAny) => set({ isDraggingAny }),
 
     // Push current effects onto the past stack. Call this BEFORE making changes.
     commitHistory: () => {
@@ -86,40 +80,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         });
     },
 
-    moveEffect: (index, direction) => {
-        get().commitHistory();
-        set((state) => {
-            const effects = [...state.effects];
-            const { start, end } = getGroupRange(effects, index);
-            const group = effects.slice(start, end + 1);
-
-            if (direction === 'up' && start > 0) {
-                // Find group above us
-                const prevRange = getGroupRange(effects, start - 1);
-                const prevGroup = effects.slice(prevRange.start, prevRange.end + 1);
-
-                const next = [
-                    ...effects.slice(0, prevRange.start),
-                    ...group,
-                    ...prevGroup,
-                    ...effects.slice(end + 1)
-                ];
-                return { effects: next };
-            } else if (direction === 'down' && end < effects.length - 1) {
-                // Find group below us
-                const nextRange = getGroupRange(effects, end + 1);
-                const nextGroup = effects.slice(nextRange.start, nextRange.end + 1);
-
-                const next = [
-                    ...effects.slice(0, start),
-                    ...nextGroup,
-                    ...group,
-                    ...effects.slice(nextRange.end + 1)
-                ];
-                return { effects: next };
-            }
-            return state;
-        });
+    reorderEffects: (sourceIndex, destinationIndex, effectsSnapshot) => {
+        const effects = reorderEffectGroups(effectsSnapshot || get().effects, sourceIndex, destinationIndex);
+        set({ effects });
     },
 
     toggleMute: (index) => {

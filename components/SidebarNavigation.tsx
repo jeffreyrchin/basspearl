@@ -12,13 +12,11 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     onClose,
 }) => {
     const [view, setView] = useState<'pipeline' | 'effects' | 'params'>('pipeline');
-    const {
-        effects,
-        undo,
-        redo,
-        past,
-        future
-    } = useEffectStore();
+    const effects = useEffectStore(s => s.effects);
+    const undo = useEffectStore(s => s.undo);
+    const redo = useEffectStore(s => s.redo);
+    const past = useEffectStore(s => s.past);
+    const future = useEffectStore(s => s.future);
 
     // Keyboard shortcuts
     React.useEffect(() => {
@@ -77,7 +75,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                             <button
                                 onClick={onClose}
                                 className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/5"
-                                aria-label="Close sidebar">
+                                title="Close sidebar">
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         )}
@@ -105,7 +103,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                         <button
                             onClick={onClose}
                             className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/5"
-                            aria-label="Close sidebar">
+                            title="Close sidebar">
                             <span className="material-symbols-outlined text-[20px]">close</span>
                         </button>
                     )}

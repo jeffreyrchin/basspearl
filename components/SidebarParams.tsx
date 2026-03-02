@@ -6,14 +6,12 @@ import { useEffectStore } from '@/store/useEffectStore';
 interface SidebarParamsProps { }
 
 const SidebarParams: React.FC<SidebarParamsProps> = ({ }) => {
-    const {
-        effects,
-        selectedEffectId,
-        toggleMute,
-        toggleSolo,
-        updateParameter,
-        commitHistory,
-    } = useEffectStore();
+    const effects = useEffectStore(s => s.effects);
+    const selectedEffectId = useEffectStore(s => s.selectedEffectId);
+    const toggleMute = useEffectStore(s => s.toggleMute);
+    const toggleSolo = useEffectStore(s => s.toggleSolo);
+    const updateParameter = useEffectStore(s => s.updateParameter);
+    const commitHistory = useEffectStore(s => s.commitHistory);
 
     const effectIndex = effects.findIndex(e => e.id === selectedEffectId);
     const effect = effects[effectIndex];

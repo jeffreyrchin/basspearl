@@ -10,7 +10,7 @@ interface SidebarLibraryProps {
 const CATEGORIES: EffectCategory[] = ['All', 'Additive', 'Color', 'Glitch', 'Motion', 'Mask'];
 
 const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
-    const { addEffect } = useEffectStore();
+    const addEffect = useEffectStore(s => s.addEffect);
     const [selectedCategory, setSelectedCategory] = useState<EffectCategory>('All');
 
     const filteredEffects = (Object.entries(EFFECT_METADATA) as [GlitchEffectType, typeof EFFECT_METADATA[GlitchEffectType]][])

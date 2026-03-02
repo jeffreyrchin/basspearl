@@ -38,7 +38,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const [exportProgress, setExportProgress] = useState(0);
 
     const [imageFile, setImageFile] = useState<File | null>(null);
-    const { effects, setEffects } = useEffectStore();
+    const effects = useEffectStore(s => s.effects);
+    const setEffects = useEffectStore(s => s.setEffects);
     const [sidebarVisible, setSidebarVisible] = useState(false); // Default to hidden
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
