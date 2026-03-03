@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { GlitchEffectType, EffectCategory } from '../types';
 import { EFFECT_METADATA } from '../constants';
 import { useEffectStore } from '../store/useEffectStore';
+import EffectPreview from './EffectPreview';
 
 interface SidebarLibraryProps {
     onSelectEffect: () => void;
@@ -13,9 +14,11 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
     const addEffect = useEffectStore(s => s.addEffect);
     const [selectedCategory, setSelectedCategory] = useState<EffectCategory>('All');
 
-    const filteredEffects = (Object.entries(EFFECT_METADATA) as [GlitchEffectType, typeof EFFECT_METADATA[GlitchEffectType]][])
-        .filter(([, meta]) => selectedCategory === 'All' || meta.category === selectedCategory)
-        .sort(([, a], [, b]) => a.label.localeCompare(b.label));
+    const filteredEffects = React.useMemo(() => {
+        return (Object.entries(EFFECT_METADATA) as [GlitchEffectType, typeof EFFECT_METADATA[GlitchEffectType]][])
+            .filter(([, meta]) => selectedCategory === 'All' || meta.category === selectedCategory)
+            .sort(([, a], [, b]) => a.label.localeCompare(b.label));
+    }, [selectedCategory]);
 
     const handleAdd = (type: GlitchEffectType) => {
         addEffect(type);
@@ -23,7 +26,8 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
     };
 
     return (
-        <>
+        <div className="flex flex-col h-full bg-[#050B14]">
+            {/* Header / Category Filters */}
             <div className="sticky top-0 z-20 px-6 py-4 bg-[#050B14]/80 backdrop-blur-md border-b border-white/5 flex flex-col gap-4">
                 <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
                     {CATEGORIES.map(category => (
@@ -41,39 +45,38 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
                 </div>
             </div>
 
-            <div className="p-3">
-                <div className="grid grid-cols-3 gap-3">
+            {/* Gallery Grid */}
+            <div className="p-3 flex-1 overflow-y-auto no-scrollbar">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {filteredEffects.map(([type, meta]) => (
-                        <div
+                        <button
                             key={type}
-                            className="w-full aspect-square relative group rounded-sm border transition-all duration-300 overflow-hidden bg-white/[0.01] border-white/5 hover:border-white/10 hover:bg-white/[0.03]"
+                            className="w-full aspect-square relative group rounded-md border transition-all duration-500 overflow-hidden bg-white/[0.01] border-white/5 hover:border-white/20 hover:bg-white/[0.03] cursor-pointer shadow-lg"
+                            onClick={() => handleAdd(type)}
+                            aria-label="Add Effect"
                         >
-                            {/* Main card area */}
-                            <div
-                                className="absolute inset-0 flex flex-col items-center justify-center z-0 w-full h-full pointer-events-none"
-                            >
-                                <span className="text-[12px] uppercase tracking-wider px-1 text-center leading-tight w-full text-white">
+                            {/* Card Background / Live Preview */}
+                            <EffectPreview type={type} />
+
+                            {/* Gradient overlay for text legibility */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+                            {/* Label */}
+                            <div className="absolute inset-x-0 bottom-0 p-2 z-10 pointer-events-none">
+                                <span className="text-[9px] text-left font-bold uppercase tracking-[0.15em] text-white/90 group-hover:text-white transition-colors block leading-tight">
                                     {meta.label}
                                 </span>
                             </div>
 
-                            {/* Add to pipeline corner button */}
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleAdd(type);
-                                }}
-                                className="absolute top-2 right-2 w-8 h-8 rounded-sm flex items-center justify-center transition-all duration-300 z-10 border text-white/60 hover:text-white hover:bg-white/10 hover:border-white/30 border-transparent"
-                                title="Add effect to pipeline"
-                                aria-label="Add effect to pipeline"
-                            >
-                                <span className="text-xl material-symbols-outlined">add</span>
-                            </button>
-                        </div>
+                            {/* Quick add indicator */}
+                            <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-y-[-4px] group-hover:translate-y-0 pointer-events-none">
+                                <span className="text-sm material-symbols-outlined text-white">add</span>
+                            </div>
+                        </button>
                     ))}
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 

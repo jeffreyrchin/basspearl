@@ -65,6 +65,9 @@ export class GlitchEngine {
     }
   }
 
+  // Static cache shared across all instances (main engine + thumbnail engine)
+  private static imageCache: Map<string, HTMLImageElement> = new Map();
+
   private async processInternal(
     imageSrc: string,
     effects: EffectConfig[],
@@ -163,15 +166,28 @@ export class GlitchEngine {
         return;
       }
 
+      // Check currently loaded image first
       if (this.currentImageSrc === imageSrc && this.currentImage) {
         processCachedImage(this.currentImage);
         return;
       }
 
+      // Check static album (global shared cache)
+      // Improves performance for loading sidebar previews
+      const cached = GlitchEngine.imageCache.get(imageSrc);
+      if (cached) {
+        // We DON'T update this.currentImageSrc yet, 
+        // as processCachedImage needs it to detect the change!
+        this.currentImage = cached;
+        processCachedImage(cached);
+        return;
+      }
+
+      // New Image Request: Load and Albumize it
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
-        this.currentImageSrc = imageSrc;
+        GlitchEngine.imageCache.set(imageSrc, img); // Store in album for next time
         this.currentImage = img;
         processCachedImage(img);
       };
@@ -224,4 +240,4 @@ export class GlitchEngine {
   }
 }
 
-export const glitchEngine = new GlitchEngine();
+export const mainGlitchEngine = new GlitchEngine();

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { EffectConfig } from '../types';
-import { glitchEngine } from '../services/glitchEngine';
+import { mainGlitchEngine } from '../services/glitchEngine';
 import SidebarNavigation from './SidebarNavigation';
 import Navbar from './Navbar';
 import { Footer } from './Footer';
@@ -41,6 +41,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const effects = useEffectStore(s => s.effects);
     const setEffects = useEffectStore(s => s.setEffects);
     const [sidebarVisible, setSidebarVisible] = useState(false); // Default to hidden
+    const [isSidebarSliding, setIsSidebarSliding] = useState(false);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const requestRef = useRef<number>();
@@ -82,7 +83,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
             // Render initial frame
             if (canvasRef.current) {
-                glitchEngine.renderToCanvas(canvasRef.current, imageUrl, presetEffects, { maxSize: 1920 });
+                mainGlitchEngine.renderToCanvas(canvasRef.current, imageUrl, presetEffects, { maxSize: 1920 });
             }
             analytics.preset.succeeded(preset.id);
         } catch (err: any) {
@@ -118,7 +119,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 .then(() => {
                     // Success!
                     if (canvasRef.current) {
-                        glitchEngine.renderToCanvas(
+                        mainGlitchEngine.renderToCanvas(
                             canvasRef.current,
                             imageBlob,
                             effects,
@@ -175,7 +176,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             };
         }
 
-        await glitchEngine.renderToCanvas(
+        await mainGlitchEngine.renderToCanvas(
             canvasRef.current,
             imageFileRef.current,
             reactiveEffects,
@@ -249,6 +250,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             setIsExporting(false);
         }
     };
+
+    useEffect(() => {
+        setIsSidebarSliding(true);
+    }, [sidebarVisible]);
 
     return (
         <div className="h-screen bg-[#050B14] text-white flex flex-col overflow-hidden font-display leading-relaxed">
@@ -449,7 +454,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 </main>
 
                 {/* Sidebar: Effects Rack & Parameters */}
-                <aside className={`fixed inset-y-0 right-0 z-[60] lg:relative w-full sm:w-[400px] border-l border-white/5 bg-[#050B14] flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] lg:shadow-none ${sidebarVisible ? 'translate-x-0' : 'translate-x-full lg:hidden'}`}>
+                <aside
+                    onTransitionEnd={() => setIsSidebarSliding(false)}
+                    className={`fixed inset-y-0 right-0 z-[60] lg:relative w-full sm:w-[400px] border-l border-white/5 bg-[#050B14] flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] lg:shadow-none will-change-transform ${sidebarVisible ? 'translate-x-0' : 'translate-x-full lg:hidden'} ${isSidebarSliding ? 'sidebar-sliding' : ''}`}>
                     {/* Inner wrapper */}
                     <div className="flex-1 flex flex-col min-h-0 relative">
                         <SidebarNavigation
@@ -466,7 +473,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 )}
             </div>
             <Footer />
-        </div>
+        </div >
     );
 };
 
