@@ -16,9 +16,9 @@ const SidebarParams: React.FC<SidebarParamsProps> = ({ }) => {
     const effectIndex = effects.findIndex(e => e.id === selectedEffectId);
     const effect = effects[effectIndex];
     if (!effect) return (
-        <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4 pt-12">
-            <span className="material-symbols-outlined text-white/5 text-5xl">tune</span>
-            <p className="text-[10px] font-bold text-white/15 uppercase tracking-[0.2em] leading-relaxed">Select a processor module<br />to begin calibration</p>
+        <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
+            <span className="material-symbols-outlined text-white/60 text-5xl">tune</span>
+            <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] leading-relaxed">No effect selected</p>
         </div>
     );
 

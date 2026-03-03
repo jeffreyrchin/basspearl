@@ -11,7 +11,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   PIXEL_SORT: {
     label: 'Pixel Sort',
     icon: 'sort',
-    category: 'Glitch',
+    category: 'Distort',
     params: [
       { name: 'Streak Length', defaultValue: 20, defaultBand: 'OFF', previewValue: 100, previewBand: 'SUB' },
       { name: 'Trigger Level', defaultValue: 50, defaultBand: 'OFF', previewValue: 35 },
@@ -29,14 +29,14 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   DATA_CORRUPTION: {
     label: 'Datamosh',
     icon: 'grid_4x4',
-    category: 'Glitch',
+    category: 'Distort',
     params: [
       { name: 'Mosh Length', defaultValue: 20, defaultBand: 'OFF', previewValue: 5 },
       { name: 'Mosh Density', defaultValue: 100, defaultBand: 'OFF', previewValue: 30, previewBand: 'SUB' },
     ],
   },
   DEEP_FRY: {
-    label: 'Deep Fry',
+    label: 'Incinerate',
     icon: 'local_fire_department',
     category: 'Color',
     params: [
@@ -45,9 +45,9 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
     ],
   },
   BIT_CRUSH: {
-    label: 'Bit Crush',
+    label: 'Crush',
     icon: 'developer_board',
-    category: 'Glitch',
+    category: 'Distort',
     params: [
       { name: 'Quantize', defaultValue: 0, defaultBand: 'OFF' },
       { name: 'Resample', defaultValue: 20, defaultBand: 'OFF', previewValue: 50, previewBand: 'SUB' },
@@ -56,7 +56,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   WAVE_DISTORTION: {
     label: 'Wave Distortion',
     icon: 'waves',
-    category: 'Motion',
+    category: 'Distort',
     params: [
       { name: 'Amplitude', defaultValue: 33, defaultBand: 'OFF' },
       { name: 'Frequency', defaultValue: 5, defaultBand: 'OFF' },
@@ -73,9 +73,9 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
     ],
   },
   COMPRESSION_HELL: {
-    label: 'Compression Hell',
+    label: 'Artifact',
     icon: 'compress',
-    category: 'Glitch',
+    category: 'Distort',
     params: [
       { name: 'Block Size', defaultValue: 4, defaultBand: 'OFF', previewValue: 100, previewBand: 'SUB' },
       { name: 'Artifacting', defaultValue: 80, defaultBand: 'OFF', previewValue: 100, previewBand: 'SUB' },
@@ -102,7 +102,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   SCALE: {
     label: 'Scale',
     icon: 'aspect_ratio',
-    category: 'Motion',
+    category: 'Spatial',
     params: [
       { name: 'Width', defaultValue: 60, defaultBand: 'OFF', previewValue: 100, previewBand: 'SUB' },
       { name: 'Height', defaultValue: 60, defaultBand: 'OFF', previewValue: 100, previewBand: 'SUB' },
@@ -111,7 +111,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   ROTATE: {
     label: 'Rotate',
     icon: 'rotate_right',
-    category: 'Motion',
+    category: 'Spatial',
     params: [
       { name: 'Rotation', defaultValue: 3, defaultBand: 'OFF' },
       { name: 'Speed', defaultValue: 3, defaultBand: 'OFF', previewValue: 30 },
@@ -120,7 +120,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   SKEW: {
     label: 'Skew',
     icon: 'format_italic',
-    category: 'Motion',
+    category: 'Distort',
     params: [
       { name: 'Skew', defaultValue: 44, defaultBand: 'OFF', previewValue: 70, previewBand: 'SUB' },
     ],
@@ -128,7 +128,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   SCREEN_SHAKE: {
     label: 'Shake',
     icon: 'vibration',
-    category: 'Motion',
+    category: 'Spatial',
     params: [
       { name: 'Displacement', defaultValue: 70, defaultBand: 'OFF' },
       { name: 'Speed', defaultValue: 20, defaultBand: 'OFF' },
@@ -137,7 +137,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   STARFIELD: {
     label: 'Starfield',
     icon: 'auto_awesome',
-    category: 'Additive',
+    category: 'Pattern',
     params: [
       { name: 'Density', defaultValue: 15, defaultBand: 'OFF' },
       { name: 'Speed', defaultValue: 5, defaultBand: 'OFF' },
@@ -146,7 +146,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   RETRO_GRID: {
     label: 'Retro Grid',
     icon: 'grid_on',
-    category: 'Additive',
+    category: 'Pattern',
     params: [
       { name: 'Thickness', defaultValue: 100, defaultBand: 'OFF' },
       { name: 'Speed', defaultValue: 10, defaultBand: 'OFF' },
@@ -155,7 +155,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   TUNNEL_WARP: {
     label: 'Tunnel Warp',
     icon: 'hub',
-    category: 'Motion',
+    category: 'Distort',
     params: [
       { name: 'Scale', defaultValue: 20, defaultBand: 'OFF' },
       { name: 'Speed', defaultValue: 10, defaultBand: 'OFF' },
@@ -165,7 +165,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   GRAIN: {
     label: 'Grain',
     icon: 'blur_on',
-    category: 'Additive',
+    category: 'Pattern',
     params: [
       { name: 'Width', defaultValue: 100, defaultBand: 'OFF' },
       { name: 'Height', defaultValue: 100, defaultBand: 'OFF' },
@@ -179,7 +179,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   SHAPE: {
     label: 'Shape',
     icon: 'category',
-    category: 'Additive',
+    category: 'Pattern',
     params: [
       { name: 'Side Count', defaultValue: 4, defaultBand: 'OFF', previewValue: 4 },
       { name: 'Pointiness', defaultValue: 0, defaultBand: 'OFF' },
@@ -192,7 +192,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   TILE: {
     label: 'Tile',
     icon: 'apps',
-    category: 'Motion',
+    category: 'Pattern',
     params: [
       { name: 'X-Freq', defaultValue: 15, defaultBand: 'OFF' },
       { name: 'Y-Freq', defaultValue: 15, defaultBand: 'OFF' },
@@ -201,9 +201,9 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
     ],
   },
   ORGANIC_NOISE: {
-    label: 'Organic Noise',
+    label: 'Plasma',
     icon: 'cloud',
-    category: 'Additive',
+    category: 'Pattern',
     params: [
       { name: 'Scale', defaultValue: 50, defaultBand: 'OFF', previewValue: 20 },
       { name: 'Complexity', defaultValue: 50, defaultBand: 'OFF' },
@@ -215,7 +215,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   CELLULAR_NOISE: {
     label: 'Cellular Noise',
     icon: 'texture',
-    category: 'Additive',
+    category: 'Pattern',
     params: [
       { name: 'Cell Width', defaultValue: 80, defaultBand: 'OFF' },
       { name: 'Cell Height', defaultValue: 80, defaultBand: 'OFF' },
@@ -230,7 +230,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   LUMINANCE_MASK: {
     label: 'Luminance Mask',
     icon: 'exposure',
-    category: 'Mask',
+    category: 'Color',
     params: [
       { name: 'Threshold', defaultValue: 50, defaultBand: 'OFF', previewValue: 80, previewMin: 70, previewBand: 'SUB' },
       { name: 'Feather', defaultValue: 15, defaultBand: 'OFF', previewValue: 0 },
@@ -240,7 +240,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   LUMINANCE_MAP: {
     label: 'Luminance Map',
     icon: 'exposure_plus_1',
-    category: 'Mask',
+    category: 'Color',
     params: [
       { name: 'Threshold', defaultValue: 50, defaultBand: 'OFF', previewValue: 30, previewMin: 20, previewBand: 'SUB' },
       { name: 'Feather', defaultValue: 10, defaultBand: 'OFF' },
@@ -251,7 +251,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   EDGE_MASK: {
     label: 'Edge Mask',
     icon: 'filter_tilt_shift',
-    category: 'Mask',
+    category: 'Color',
     params: [
       { name: 'Sensitivity', defaultValue: 20, defaultBand: 'OFF', previewValue: 20, previewBand: 'SUB' },
       { name: 'Thickness', defaultValue: 20, defaultBand: 'OFF', previewValue: 20, previewBand: 'SUB' },
@@ -261,7 +261,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   GRID: {
     label: 'Grid',
     icon: 'grid_3x3',
-    category: 'Additive',
+    category: 'Pattern',
     params: [
       { name: 'Horizontal', defaultValue: 30, defaultBand: 'OFF' },
       { name: 'Vertical', defaultValue: 30, defaultBand: 'OFF' },
@@ -270,7 +270,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
     ],
   },
   SPECTRAL_MAP: {
-    label: 'Spectral Map',
+    label: 'Spectral',
     icon: 'colors',
     category: 'Color',
     params: [
@@ -283,7 +283,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   BLACK_HOLE: {
     label: 'Black Hole',
     icon: 'blur_circular',
-    category: 'Motion',
+    category: 'Distort',
     params: [
       { name: 'Intensity', defaultValue: 30, defaultBand: 'OFF', previewValue: 100, previewBand: 'SUB' },
       { name: 'Radius', defaultValue: 30, defaultBand: 'OFF', previewValue: 50 },
@@ -294,7 +294,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   WHITE_HOLE: {
     label: 'White Hole',
     icon: 'brightness_7',
-    category: 'Motion',
+    category: 'Distort',
     params: [
       { name: 'Intensity', defaultValue: 30, defaultBand: 'OFF', previewValue: 50, previewBand: 'SUB' },
       { name: 'Radius', defaultValue: 30, defaultBand: 'OFF', previewBand: 'SUB' },
@@ -305,7 +305,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   PAN: {
     label: 'Pan',
     icon: 'open_with',
-    category: 'Motion',
+    category: 'Spatial',
     params: [
       { name: 'Pan X', defaultValue: 10, defaultBand: 'OFF', previewValue: 100, previewBand: 'SUB' },
       { name: 'Pan Y', defaultValue: 10, defaultBand: 'OFF', previewValue: 100, previewBand: 'SUB' },
@@ -314,7 +314,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   SCROLL: {
     label: 'Scroll',
     icon: 'sync_alt',
-    category: 'Motion',
+    category: 'Spatial',
     params: [
       { name: 'Left Speed', defaultValue: 100, defaultBand: 'SUB' },
       { name: 'Right Speed', defaultValue: 0, defaultBand: 'OFF' },

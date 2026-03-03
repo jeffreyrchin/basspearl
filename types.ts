@@ -1,4 +1,4 @@
-export type EffectCategory = 'All' | 'Additive' | 'Color' | 'Glitch' | 'Motion' | 'Mask';
+export type EffectCategory = 'All' | 'Pattern' | 'Color' | 'Spatial' | 'Distort';
 
 export type GlitchEffectType =
   | 'PIXEL_SORT'

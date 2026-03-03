@@ -8,7 +8,7 @@ interface SidebarLibraryProps {
     onSelectEffect: () => void;
 }
 
-const CATEGORIES: EffectCategory[] = ['All', 'Additive', 'Color', 'Glitch', 'Motion', 'Mask'];
+const CATEGORIES: EffectCategory[] = ['All', 'Pattern', 'Color', 'Spatial', 'Distort'];
 
 const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
     const addEffect = useEffectStore(s => s.addEffect);
