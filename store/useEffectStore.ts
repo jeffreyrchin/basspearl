@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { EffectConfig, GlitchEffectType } from '../types';
 import { INITIAL_REACTIVE_EFFECTS, createEffectInstance } from '../constants';
-import { reorderEffectGroups } from '@/services/pipelineUtils';
 import { analytics } from '@/services/analytics';
 
 interface EffectState {
@@ -23,7 +22,6 @@ interface EffectState {
     redo: () => void;
     commitHistory: () => void;
 
-    reorderEffects: (sourceIndex: number, destinationIndex: number, effectsSnapshot?: EffectConfig[]) => void;
     toggleMute: (index: number) => void;
     toggleSolo: (index: number) => void;
     toggleMeld: (index: number) => void;
@@ -78,11 +76,6 @@ export const useEffectStore = create<EffectState>((set, get) => ({
             past: [...past, JSON.parse(JSON.stringify(effects))],
             future: rest,
         });
-    },
-
-    reorderEffects: (sourceIndex, destinationIndex, effectsSnapshot) => {
-        const effects = reorderEffectGroups(effectsSnapshot || get().effects, sourceIndex, destinationIndex);
-        set({ effects });
     },
 
     toggleMute: (index) => {
