@@ -179,12 +179,12 @@ export class EffectPipeline {
         if (this.inSubStack) {
             const input = this.subTextures[this.currentSubFBIndex];
             const outputFB = this.subFBs[1 - this.currentSubFBIndex];
-            this.draw(programName, outputFB, [{ name: 'u_image', texture: input }], uniforms, false);
+            this.draw(programName, outputFB, [{ name: 'u_image', texture: input }], uniforms, false, true);
             this.currentSubFBIndex = 1 - this.currentSubFBIndex;
         } else {
             const input = this.pingPongTextures[this.currentFBIndex];
             const outputFB = this.pingPongFBs[1 - this.currentFBIndex];
-            this.draw(programName, outputFB, [{ name: 'u_image', texture: input }], uniforms, false);
+            this.draw(programName, outputFB, [{ name: 'u_image', texture: input }], uniforms, false, true);
             this.currentFBIndex = 1 - this.currentFBIndex;
         }
     }
@@ -204,7 +204,7 @@ export class EffectPipeline {
         gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); // Premultiplied-safe blend (prevents darkening)
 
         // 1. Draw Background
-        this.draw('pass-through', mainOutputFB, [{ name: 'u_image', texture: mainInput }], {}, false, false);
+        this.draw('pass-through', mainOutputFB, [{ name: 'u_image', texture: mainInput }], {}, false, true);
         // 2. Draw Foreground (Melded Group)
         this.draw('pass-through', mainOutputFB, [{ name: 'u_image', texture: subResult }], {}, false, false);
 
@@ -215,7 +215,7 @@ export class EffectPipeline {
 
     public renderToScreen(flipY: boolean = true) {
         const currentResult = this.pingPongTextures[this.currentFBIndex];
-        this.draw('pass-through', null, [{ name: 'u_image', texture: currentResult }], {}, flipY);
+        this.draw('pass-through', null, [{ name: 'u_image', texture: currentResult }], {}, flipY, true);
     }
 
     public setInputTexture(texture: WebGLTexture) {

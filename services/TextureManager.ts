@@ -21,10 +21,9 @@ export class TextureManager {
         if (data) {
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, data);
         } else {
-            // Fill with opaque black (0,0,0,255) as default for imageless mode
-            const black = new Uint8Array(width * height * 4).fill(0);
-            for (let i = 3; i < black.length; i += 4) black[i] = 255;
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, black);
+            // Default to transparent (0,0,0,0) so layers can be melded
+            const transparent = new Uint8Array(width * height * 4).fill(0);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, transparent);
         }
 
         return texture;

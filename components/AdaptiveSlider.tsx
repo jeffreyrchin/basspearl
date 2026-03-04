@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { FrequencyBand } from '../types';
+import { SHARED_AUDIO_STATE, BAND_INDEX } from '../services/audioState';
 
 interface AdaptiveSliderProps {
     value: number;
@@ -19,17 +20,48 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     className = ''
 }) => {
     const trackRef = useRef<HTMLDivElement>(null);
+    const needleRef = useRef<HTMLDivElement>(null);
     const [dragMode, setDragMode] = useState<'none' | 'left' | 'right' | 'middle'>('none');
     const startXRef = useRef(0);
     const startMinRef = useRef(0);
     const startMaxRef = useRef(0);
 
-    const cssVarMap = {
-        'SUB': '--audio-sub',
-        'BASS': '--audio-bass',
-        'MID': '--audio-mid',
-        'TREBLE': '--audio-treble'
-    };
+    // Keep range in refs for zero-render needle updates
+    const currentMinRef = useRef(min);
+    const currentMaxRef = useRef(value);
+
+    useEffect(() => {
+        currentMinRef.current = min;
+        currentMaxRef.current = value;
+    }, [min, value]);
+
+    // Zero-Allocation / Zero-Recalc Needle Polling Loop
+    useEffect(() => {
+        const bandIndex = BAND_INDEX[frequencyBand];
+        if (bandIndex === -1) return;
+
+        let frameId: number;
+        const tick = () => {
+            if (!needleRef.current) return;
+
+            // 1. Pull directly from shared bucket
+            const audioVal = SHARED_AUDIO_STATE[bandIndex];
+
+            // 2. Compute position using refs (no React state involved)
+            const minBound = currentMinRef.current;
+            const maxBound = currentMaxRef.current;
+            const range = maxBound - minBound;
+            const offset = minBound + (range * audioVal);
+
+            // 3. Directly update DOM style (safest way to move needles in Safari)
+            needleRef.current.style.left = `${offset}%`;
+
+            frameId = requestAnimationFrame(tick);
+        };
+
+        frameId = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(frameId);
+    }, [frequencyBand]);
 
     const handleStart = (clientX: number, mode: 'left' | 'right' | 'middle') => {
         setDragMode(mode);
@@ -89,8 +121,8 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     }, [dragMode, onChange]);
 
     const isReactive = frequencyBand !== 'OFF';
-    const left = Math.min(min, value);
-    const width = Math.abs(value - min);
+    const containerLeft = Math.min(min, value);
+    const containerWidth = Math.abs(value - min);
 
     return (
         <div className={`relative h-12 flex items-center ${className}`} onPointerDown={onPointerDown}>
@@ -105,7 +137,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                             onMouseDown={(e) => handleMouseDown(e, 'middle')}
                             onTouchStart={(e) => handleTouchStart(e, 'middle')}
                             className="absolute h-full cursor-grab active:cursor-grabbing hover:bg-white/[0.05] transition-colors"
-                            style={{ left: `${left}%`, width: `${width}%`, backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                            style={{ left: `${containerLeft}%`, width: `${containerWidth}%`, backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
                         />
                     </div>
 
@@ -149,19 +181,19 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                         <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-1 bg-white transition-all group-hover/handle:scale-x-150 group-focus/handle:scale-x-150 group-hover/handle:bg-primary group-focus/handle:bg-primary shadow-sm" />
                     </div>
 
-                    {/* The Needle */}
+                    {/* The Needle - Direct DOM Update */}
                     <div
+                        ref={needleRef}
                         className="absolute h-5 pointer-events-none z-10 top-1/2 -translate-y-1/2"
                         style={{
-                            left: `calc(${min}% + (${value - min}% * var(${cssVarMap[frequencyBand as keyof typeof cssVarMap] || '--audio-bass'}, 0)))`,
+                            left: `${min}%`, // Initial position
                             width: '2px',
                             backgroundColor: '#fb00ff',
                             boxShadow: '0 0 8px rgba(251, 0, 255, 0.5)'
                         }}
                     />
 
-
-                    {/* Combined Floating Labels - Positioned Relative to the h-12 container */}
+                    {/* Combined Floating Labels */}
                     <div className="absolute pointer-events-none w-full -inset-x-0 -top-4 -bottom-4">
                         <div className="absolute" style={{ left: `${min}%`, bottom: -3, transform: 'translateX(-50%)' }}>
                             <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 whitespace-nowrap">

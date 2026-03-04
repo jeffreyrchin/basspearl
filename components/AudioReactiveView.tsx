@@ -5,11 +5,11 @@ import SidebarNavigation from './SidebarNavigation';
 import Navbar from './Navbar';
 import { Footer } from './Footer';
 import { Preset, PRESETS } from '@/constants';
-import { mapReactivityToEffects } from '@/services/calculateReactiveEffects';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 import { exportVideo } from '@/services/exportService';
 import { analytics } from '@/services/analytics';
 import { useEffectStore } from '../store/useEffectStore';
+import { SHARED_AUDIO_STATE } from '../services/audioState';
 
 interface AudioReactiveViewProps {
 }
@@ -141,30 +141,29 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const renderFrame = async (time: number) => {
         if (!canvasRef.current) return;
         const currentFrame = Math.floor(time * 60);
-        let reactiveEffects = effectsRef.current;
+
+        let smoothed: { sub: number, bass: number, mid: number, treble: number } | undefined;
         let frameIntegrated: { sub: number, bass: number, mid: number, treble: number } | undefined;
 
         // 1. Get Instantaneous Reactivity for standard effects
         if (reactivityMapRef.current) {
             const map = reactivityMapRef.current;
             const frame = Math.min(map.bass.length - 1, currentFrame); // Ensures frame <= last valid FFT frame index
-            const smoothed = {
+            smoothed = {
                 sub: map.sub[frame],
                 bass: map.bass[frame],
                 mid: map.mid[frame],
                 treble: map.treble[frame]
             };
-            reactiveEffects = mapReactivityToEffects(smoothed, effectsRef.current, currentFrame);
 
-            // Broadcast to CSS for UI elements (AdaptiveSlider)
-            document.documentElement.style.setProperty('--audio-sub', smoothed.sub.toString());
-            document.documentElement.style.setProperty('--audio-bass', smoothed.bass.toString());
-            document.documentElement.style.setProperty('--audio-mid', smoothed.mid.toString());
-            document.documentElement.style.setProperty('--audio-treble', smoothed.treble.toString());
+            // Update global "state bucket" (Shared Float32Array)
+            SHARED_AUDIO_STATE[0] = smoothed.sub;
+            SHARED_AUDIO_STATE[1] = smoothed.bass;
+            SHARED_AUDIO_STATE[2] = smoothed.mid;
+            SHARED_AUDIO_STATE[3] = smoothed.treble;
         }
 
         // 2. Get Integrated Reactivity for time-based/motion effects (Starfield)
-        // This ensures 100% deterministic motion that supports seeking
         if (integratedReactivityMapRef.current) {
             const iMap = integratedReactivityMapRef.current;
             const frame = Math.min(iMap.bass.length - 1, currentFrame);
@@ -179,9 +178,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         await mainGlitchEngine.renderToCanvas(
             canvasRef.current,
             imageFileRef.current,
-            reactiveEffects,
+            effectsRef.current,
             {
                 maxSize: 1920,
+                reactivity: smoothed,
                 integratedReactivity: frameIntegrated,
                 currentTime: time
             }
@@ -413,7 +413,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             min={0}
                             max={duration || 0}
                             step={0.1}
-                            value={currentTime}
+                            defaultValue={currentTime}
                             onChange={(e) => handleSeek(e, () => {
                                 if (!requestRef.current) {
                                     requestRef.current = requestAnimationFrame(animate);
@@ -473,7 +473,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 )}
             </div>
             <Footer />
-        </div >
+        </div>
     );
 };
 

@@ -7,7 +7,6 @@ import {
     getFirstEncodableAudioCodec
 } from 'mediabunny';
 import { GlitchEngine } from './glitchEngine';
-import { mapReactivityToEffects } from './calculateReactiveEffects';
 import { EffectConfig } from '../types';
 
 export interface ExportOptions {
@@ -152,12 +151,10 @@ export const exportVideo = async (options: ExportOptions) => {
             };
         }
 
-        // Calculate reactive effects for this frame
-        const reactiveEffects = mapReactivityToEffects(frameData, effects, i);
-
         // Render glitch to our hidden canvas
-        await exportEngine.renderToCanvas(renderCanvas, imageSrc, reactiveEffects, {
+        await exportEngine.renderToCanvas(renderCanvas, imageSrc, effects, {
             maxSize,
+            reactivity: frameData,
             integratedReactivity: frameIntegrated,
             currentTime: time,
             imagelessWidth: outWidth,

@@ -1,6 +1,5 @@
 import { GlitchEngine } from './glitchEngine';
 import { EffectConfig } from '../types';
-import { mapReactivityToEffects } from './calculateReactiveEffects';
 
 // The single engine we share for all thumbnails
 let engine: GlitchEngine | null = null;
@@ -28,7 +27,7 @@ export const renderThumbnail = (
             imageSrc = "./black.png";
         }
 
-        // Generate Synthetic Reactivity
+        // Generate Synthetic Reactivity for thumbnail animation
         const beat = Math.pow(Math.abs(Math.sin(currentTime * 2)), 0.5);
         const syntheticSmoothed = {
             sub: beat,
@@ -37,16 +36,11 @@ export const renderThumbnail = (
             treble: beat
         };
 
-        // Apply "Fake Beat" to the effect stack
-        const reactiveEffects = mapReactivityToEffects(
-            syntheticSmoothed,
-            effects,
-            Math.floor(currentTime * 60)
-        );
-
-        await eng.renderToCanvas(targetCanvas, imageSrc, reactiveEffects, {
+        // Render directly using the zero-allocation reactivity path
+        await eng.renderToCanvas(targetCanvas, imageSrc, effects, {
             maxSize: 256,
             currentTime,
+            reactivity: syntheticSmoothed,
             imagelessWidth: 256,
             imagelessHeight: 256
         });

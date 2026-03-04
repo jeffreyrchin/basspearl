@@ -1,6 +1,3 @@
-import { EffectConfig } from "@/types";
-import { SHADER_REGISTRY } from "./glitchShaders";
-
 export interface ReactivityState {
     baselines: Record<string, number | null>;
     smoothed: { sub: number; bass: number; mid: number; treble: number };
@@ -45,16 +42,6 @@ export const calculateNextState = (
 
         return Math.sqrt(sum / Math.max(0.001, totalWeight));
     };
-
-    // const bandRMS = (startBin: number, endBin: number) => {
-    //     let sum = 0;
-    //     const len = Math.max(1, endBin - startBin);
-    //     for (let i = startBin; i < endBin; i++) {
-    //         const v = bins[i];
-    //         sum += v * v;
-    //     }
-    //     return Math.sqrt(sum / len);
-    // };
 
     // 2. Extract frequency bands
     const subBins: [number, number] = [freqToBin(20), freqToBin(100)];
@@ -106,45 +93,4 @@ export const calculateNextState = (
         smoothed: { sub: pSub, bass: pBass, mid: pMid, treble: pTreble },
         prevBins: bins
     };
-};
-
-/**
- * Maps smoothed reactivity values to effect configurations.
- */
-export const mapReactivityToEffects = (
-    smoothed: { sub: number; bass: number; mid: number; treble: number },
-    currentEffects: EffectConfig[],
-    frameCount: number
-) => {
-    const { sub, bass, mid, treble } = smoothed;
-    return currentEffects.map(effect => {
-        return {
-            ...effect,
-            params: effect.params.map((param, index) => {
-                // Determine which band this specific parameter is listening to
-                let energyValue = bass;
-                if (param.frequencyBand === 'SUB') energyValue = sub;
-                else if (param.frequencyBand === 'BASS') energyValue = bass;
-                else if (param.frequencyBand === 'MID') energyValue = mid;
-                else if (param.frequencyBand === 'TREBLE') energyValue = treble;
-
-                // Velocity/Speed parameters that control integrated motion should not be
-                // modulated by instantaneous reactivity, as this causes teleporting.
-                const meta = SHADER_REGISTRY[effect.type];
-                const shouldSkipModulation = meta?.velocityParamIndices?.includes(index);
-
-                if (param.frequencyBand !== 'OFF' && !shouldSkipModulation) {
-                    // Linear interpolation based on energy: min + (max - min) * energy
-                    // This allows for inverted ranges (e.g., 100 to 0)
-                    const range = param.value - param.min;
-                    return {
-                        ...param,
-                        value: param.min + (range * energyValue)
-                    };
-                }
-                return param;
-            }),
-            seed: effect.seed ?? 0
-        };
-    });
 };
