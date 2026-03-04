@@ -1,4 +1,4 @@
-export type EffectCategory = 'All' | 'Pattern' | 'Color' | 'Spatial' | 'Distort';
+export type EffectCategory = 'All' | 'Pattern' | 'Color' | 'Spatial' | 'Distort' | 'Macro';
 
 export type GlitchEffectType =
   | 'PIXEL_SORT'
@@ -43,4 +43,39 @@ export interface EffectConfig {
   soloed?: boolean;
   melded?: boolean;
   seed?: number;
+}
+
+export interface EffectParamMetadata {
+  name: string;
+  defaultValue: number;
+  defaultMin?: number;
+  defaultBand: FrequencyBand;
+  previewValue?: number;
+  previewMin?: number;
+  previewBand?: FrequencyBand;
+}
+
+export interface EffectMetadata {
+  label: string;
+  icon: string;
+  category: EffectCategory;
+  params: EffectParamMetadata[];
+}
+
+export type MacroType = 'FOG_VORTEX';
+
+export interface MacroEffectOverrideItem {
+  type: GlitchEffectType;
+  params?: {
+    param: string;
+    value?: number;
+    min?: number;
+    frequencyBand?: FrequencyBand;
+  }[];
+}
+
+export interface MacroMetadata {
+  id: MacroType;
+  label: string;
+  effects: MacroEffectOverrideItem[];
 }

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { EffectConfig, GlitchEffectType } from '../types';
-import { INITIAL_REACTIVE_EFFECTS, createEffectInstance } from '../constants';
+import { EffectConfig, GlitchEffectType, MacroType } from '../types';
+import { INITIAL_REACTIVE_EFFECTS, createEffectInstance, createMacroInstance } from '../constants';
 import { analytics } from '@/services/analytics';
 
 interface EffectState {
@@ -26,6 +26,7 @@ interface EffectState {
     toggleSolo: (index: number) => void;
     toggleMeld: (index: number) => void;
     addEffect: (type: GlitchEffectType) => void;
+    addMacro: (macroType: MacroType) => void;
     removeEffect: (index: number) => void;
     updateParameter: (effectIndex: number, paramIndex: number, update: Partial<EffectConfig['params'][0]>) => void;
 }
@@ -116,6 +117,18 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         set((state) => ({
             effects: [...state.effects, newEffect],
             selectedEffectId: newEffect.id,
+        }));
+    },
+
+    addMacro: (macroType) => {
+        get().commitHistory();
+        analytics.effect.added(`MACRO_${macroType}` as any);
+        const newEffects = createMacroInstance(macroType);
+        if (newEffects.length === 0) return;
+
+        set((state) => ({
+            effects: [...state.effects, ...newEffects],
+            selectedEffectId: newEffects[newEffects.length - 1].id,
         }));
     },
 

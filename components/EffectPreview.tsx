@@ -1,26 +1,35 @@
 import React, { useRef, useEffect, useCallback } from 'react';
-import { GlitchEffectType } from '../types';
+import { GlitchEffectType, MacroType } from '../types';
 import { renderThumbnail } from '../services/thumbnailService';
+import { createMacroInstance, createEffectInstance } from '../constants';
 
 interface EffectPreviewProps {
-    type: GlitchEffectType;
+    type?: GlitchEffectType;
+    macroType?: MacroType;
 }
 
-const EffectPreview: React.FC<EffectPreviewProps> = ({ type }) => {
+const EffectPreview: React.FC<EffectPreviewProps> = ({ type, macroType }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const hoveredRef = useRef(false);
     const rafRef = useRef<number>();
     const startTimeRef = useRef<number>(0);
     const isRenderingRef = useRef(false);
 
+    // Only compute the static "Blueprint" once, not in the loop
+    const blueprint = React.useMemo(() => {
+        return macroType
+            ? createMacroInstance(macroType, true)
+            : [createEffectInstance(type, true)];
+    }, [type, macroType]);
+
     const scheduleRender = useCallback((time: number) => {
-        if (!canvasRef.current) return;
+        if (!canvasRef.current || blueprint.length === 0) return;
 
         // Prevent queueing a new render while one is already in-flight
         if (isRenderingRef.current) return;
         isRenderingRef.current = true;
 
-        renderThumbnail(canvasRef.current, type, time).finally(() => {
+        renderThumbnail(canvasRef.current, blueprint, time).finally(() => {
             isRenderingRef.current = false;
 
             // If still hovered, queue next frame
@@ -30,7 +39,7 @@ const EffectPreview: React.FC<EffectPreviewProps> = ({ type }) => {
                 });
             }
         });
-    }, [type]);
+    }, [blueprint]);
 
     // Render a static poster frame once the canvas is mounted
     useEffect(() => {

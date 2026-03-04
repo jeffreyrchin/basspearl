@@ -1,13 +1,8 @@
-import { GlitchEffectType, EffectConfig, EffectCategory, FrequencyBand } from './types';
+import { EffectConfig, GlitchEffectType, MacroMetadata, MacroType, EffectMetadata } from './types';
 
 export const FEEDBACK_FORM_URL = 'https://forms.gle/CBVXwJv9s3ZvXyWr8';
 
-export const EFFECT_METADATA: Record<GlitchEffectType, {
-  label: string;
-  icon: string;
-  category: EffectCategory;
-  params: { name: string; defaultValue: number; defaultMin?: number; defaultBand: FrequencyBand; previewValue?: number; previewMin?: number; previewBand?: FrequencyBand }[];
-}> = {
+export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
   PIXEL_SORT: {
     label: 'Pixel Sort',
     icon: 'sort',
@@ -324,25 +319,88 @@ export const EFFECT_METADATA: Record<GlitchEffectType, {
   },
 };
 
-export const createEffectInstance = (type: GlitchEffectType): EffectConfig => {
+export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
+  FOG_VORTEX: {
+    id: 'FOG_VORTEX',
+    label: 'Fog Vortex',
+    effects: [
+      {
+        type: 'ORGANIC_NOISE',
+        params: [
+          { param: 'Scale', value: 4, frequencyBand: 'OFF' },
+          { param: 'Complexity', value: 97, frequencyBand: 'OFF' },
+          { param: 'Warp', value: 3, frequencyBand: 'OFF' },
+          { param: 'Speed', value: 100, frequencyBand: 'SUB' },
+          { param: 'Blend', value: 100, frequencyBand: 'OFF' },
+        ]
+      },
+      {
+        type: 'LUMINANCE_MASK',
+        params: [
+          { param: 'Threshold', value: 60, frequencyBand: 'OFF' },
+          { param: 'Feather', value: 10, frequencyBand: 'OFF' },
+          { param: 'Invert', value: 0, frequencyBand: 'OFF' },
+        ]
+      },
+      {
+        type: 'TUNNEL_WARP',
+        params: [
+          { param: 'Scale', value: 20, frequencyBand: 'OFF' },
+          { param: 'Speed', value: 100, frequencyBand: 'SUB' },
+          { param: 'Twist', value: 10, frequencyBand: 'OFF' },
+        ]
+      }
+    ]
+  }
+};
+
+export const createEffectInstance = (type: GlitchEffectType, isPreview?: boolean): EffectConfig => {
   const metadata = EFFECT_METADATA[type];
   if (!metadata) {
     throw new Error(`Effect type ${type} not found`);
   }
+
+  let seed = isPreview ? 1 : Math.floor(Math.random() * 10000);
 
   return {
     id: crypto.randomUUID(),
     type,
     params: metadata.params.map(p => ({
       param: p.name,
-      value: p.defaultValue,
-      min: 0,
-      frequencyBand: p.defaultBand,
+      value: isPreview && p.previewValue !== undefined ? p.previewValue : p.defaultValue,
+      min: isPreview && p.previewMin !== undefined ? p.previewMin : (p.defaultMin ?? 0),
+      frequencyBand: isPreview && p.previewBand !== undefined ? p.previewBand : p.defaultBand,
     })),
     muted: false,
     soloed: false,
-    seed: Math.floor(Math.random() * 10000),
+    seed,
   };
+};
+
+export const createMacroInstance = (macroType: MacroType, isPreview?: boolean): EffectConfig[] => {
+  const macro = MACRO_METADATA[macroType];
+  if (!macro) return [];
+
+  return macro.effects.map((effect, index) => {
+    // We create a base instance from metadata to get all required params
+    const instance = createEffectInstance(effect.type, isPreview);
+
+    // Apply specific overrides from the macro definition
+    if (effect.params) {
+      effect.params.forEach(override => {
+        const pIdx = instance.params.findIndex(p => p.param === override.param);
+        if (pIdx !== -1) {
+          if (override.value !== undefined) instance.params[pIdx].value = override.value;
+          if (override.min !== undefined) instance.params[pIdx].min = override.min;
+          if (override.frequencyBand !== undefined) instance.params[pIdx].frequencyBand = override.frequencyBand;
+        }
+      });
+    }
+
+    // Automatically meld all but the last one to keep them grouped
+    instance.melded = index < macro.effects.length - 1;
+    return instance;
+  });
 };
 
 export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = [createEffectInstance('STARFIELD')];
