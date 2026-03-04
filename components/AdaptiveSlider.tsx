@@ -95,7 +95,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                 const newMin = startMinRef.current + shift;
                 const newMax = startMaxRef.current + shift;
 
-                if (newMin >= 0 && newMax <= 100) {
+                if (newMin >= 0 && newMin <= 100 && newMax >= 0 && newMax <= 100) {
                     onChange({ min: newMin, value: newMax });
                 }
             }
