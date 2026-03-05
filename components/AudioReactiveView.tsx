@@ -280,7 +280,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 {/* Main Content Area */}
                 <main className={`flex-1 flex flex-col min-h-0 min-w-0 bg-[#050B14] transition-all duration-500 ease-in-out ${sidebarVisible ? 'lg:mr-0' : ''}`}>
                     {/* Source Header: Preset loading and local asset uploading */}
-                    <div className="h-14 border-b border-white/5 bg-black/20 flex items-center justify-between lg:justify-center px-6 gap-4 shrink-0 overflow-x-auto no-scrollbar">
+                    <div className="h-14 border-b border-white/5 bg-white/5 flex items-center justify-between lg:justify-center px-6 gap-4 shrink-0 overflow-x-auto no-scrollbar">
                         {/* Presets Group */}
                         <div className="flex items-center gap-2 border-r border-white/10 pr-4 mr-2 shrink-0">
                             {PRESETS.map(preset => (
@@ -308,19 +308,14 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                 onClick={(e) => { (e.target as HTMLInputElement).value = ''; }} // Clear input so onChange always fires
                                 onChange={handleImageUpload}
                                 className="sr-only"
-                                aria-label="Image file input" />
+                                title="Choose image file" />
                             <button
                                 type="button"
                                 onClick={() => imageInputRef.current?.click()}
                                 className={`h-9 px-4 rounded-xl border transition-all duration-300 flex items-center gap-3 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#00F0FF] text-white ${imageFile ? "border-[#00F0FF]/30 bg-[#00F0FF]/5" : "border-white/5 bg-white/[0.03] hover:border-white/20"}`}
-                                aria-label="Choose image button">
+                                title="Choose image file">
                                 <span className={`material-symbols-outlined text-base ${imageFile ? "text-[#00F0FF]" : "text-white"}`}>image</span>
-                                <span className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
-                                    <span>
-                                        <span className="hidden sm:inline">Choose </span>Image
-                                    </span>
-                                    {imageFile && <span className="w-1.5 h-1.5 rounded-full bg-[#00F0FF] shadow-[0_0_8px_rgba(0,240,255,0.8)]" />}
-                                </span>
+                                {imageFile && <span className="w-1.5 h-1.5 rounded-full bg-[#00F0FF] shadow-[0_0_8px_rgba(0,240,255,0.8)]" />}
                             </button>
 
                             {/* Choose Audio */}
@@ -332,19 +327,14 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                 onClick={(e) => { (e.target as HTMLInputElement).value = ''; }} // Clear input so onChange always fires
                                 onChange={handleAudioUpload}
                                 className="sr-only"
-                                aria-label="Audio file input" />
+                                title="Choose audio file" />
                             <button
                                 type="button"
                                 onClick={() => audioInputRef.current?.click()}
                                 className={`h-9 px-4 rounded-xl border transition-all duration-300 flex items-center gap-3 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#3B82F6] text-white ${audioFile ? 'border-[#3B82F6]/30 bg-[#3B82F6]/5' : 'border-white/5 bg-white/[0.03] hover:border-white/20'}`}
-                                aria-label="Choose audio button">
+                                title="Choose audio file">
                                 <span className={`material-symbols-outlined text-base ${audioFile ? "text-[#3B82F6]" : "text-white"}`}>graphic_eq</span>
-                                <span className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
-                                    <span>
-                                        <span className="hidden sm:inline">Choose </span>Audio
-                                    </span>
-                                    {audioFile && <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] shadow-[0_0_8px_rgba(59,130,246,0.8)]" />}
-                                </span>
+                                {audioFile && <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] shadow-[0_0_8px_rgba(59,130,246,0.8)]" />}
                             </button>
                         </div>
 
@@ -398,7 +388,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     </div>
 
                     {/* Playback Bar */}
-                    <div className="h-14 bg-black/20 border-t border-white/5 flex items-center px-3 sm:px-6 gap-2 sm:gap-4 shrink-0 overflow-hidden">
+                    <div className="h-14 bg-white/5 border-t border-white/5 flex items-center px-3 sm:px-6 gap-2 sm:gap-4 shrink-0 overflow-hidden">
                         {/* Play/Pause */}
                         <button
                             onClick={() => {
@@ -411,9 +401,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                 })
                             }}
                             disabled={!audioFile || isProcessing}
+                            title={isPlaying ? "Pause audio" : "Play audio"}
                             aria-label={isPlaying ? "Pause audio" : "Play audio"}
-                            className={`w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-xl flex items-center justify-center transition-all border ${isPlaying ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)] text-primary' : (isProcessing ? 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white')}`}>
-                            <span className="material-symbols-outlined text-[18px] sm:text-[20px] fill">{isPlaying ? 'pause' : 'play_arrow'}</span>
+                            className={`h-9 px-4 shrink-0 rounded-xl flex items-center justify-center transition-all border ${isPlaying ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)] text-primary' : (isProcessing ? 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed' : 'bg-white/5 border-white/10 text-white hover:bg-white/10')}`}>
+                            <span className="material-symbols-outlined text-base">{isPlaying ? 'pause' : 'play_arrow'}</span>
                         </button>
 
                         {/* Current Time */}
@@ -443,6 +434,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                 })
                             }}
                             disabled={!audioFile || isProcessing}
+                            title="Seek audio"
                             aria-label="Seek audio"
                             className={`flex-1 h-[3px] min-w-0 rounded-full appearance-none bg-white/10 accent-white focus:outline-none transition-all ${isProcessing ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`} />
 
@@ -452,24 +444,23 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         </span>
 
                         {/* Export Button */}
-                        <div className="flex items-center gap-1 sm:gap-2 pl-2 sm:pl-4 border-l border-white/10 ml-1 sm:ml-2">
+                        <div className="flex items-center pl-2 sm:pl-4 border-l border-white/10 ml-1 sm:ml-2">
                             <button
                                 onClick={handleExport}
                                 disabled={!audioFile || isExporting || isProcessing}
-                                className={`h-9 px-3 sm:px-4 rounded-xl flex items-center gap-2 transition-all border ${isExporting || isProcessing ? 'bg-white/5 border-white/5 text-white/40 cursor-wait' : 'bg-[#FB00FF]/10 border-[#FB00FF]/20 text-[#FB00FF] hover:bg-[#FB00FF]/20 hover:border-[#FB00FF]/40 shadow-[0_0_15px_rgba(251,0,251,0.1)]'}`}
+                                className={`h-9 px-3 sm:px-4 rounded-xl flex items-center transition-all border ${isExporting || isProcessing ? 'bg-white/5 border-white/5 text-white/40 cursor-wait' : 'bg-[#FB00FF]/10 border-[#FB00FF]/20 text-[#FB00FF] hover:bg-[#FB00FF]/20 hover:border-[#FB00FF]/40 shadow-[0_0_15px_rgba(251,0,251,0.1)]'}`}
+                                title="Export video"
                                 aria-label="Export video">
                                 <span className={`material-symbols-outlined text-[18px] ${isExporting ? 'animate-spin' : ''}`}>
                                     {isExporting ? 'autorenew' : 'download'}
                                 </span>
                                 <span className="text-[9px] font-bold uppercase tracking-widest leading-none">
-                                    {isExporting ? (
+                                    {isExporting &&
                                         <>
-                                            <span className="hidden md:inline">Exporting </span>
-                                            {`${Math.round(exportProgress * 100)}%`}
+                                            <span className="pl-2 hidden md:inline">Exporting </span>
+                                            <span className="md:pl-0 pl-1">{`${Math.round(exportProgress * 100)}%`}</span>
                                         </>
-                                    ) : (
-                                        <span>Export<span className="hidden sm:inline"> Video</span></span>
-                                    )}
+                                    }
                                 </span>
                             </button>
                         </div>

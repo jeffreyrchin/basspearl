@@ -32,7 +32,7 @@ const SidebarParams: React.FC<SidebarParamsProps> = ({ }) => {
                 <div className="flex h-10 md:h-8 items-center border border-white/10 rounded-md bg-white/5 overflow-hidden">
                     <button
                         onClick={() => toggleSolo(effectIndex)}
-                        className={`w-8 h-full flex items-center justify-center text-[10px] font-mono transition-none ${isSoloed ? 'bg-white/70 text-black hover:bg-white/80' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}
+                        className={`w-8 h-full flex items-center justify-center text-[10px] font-mono transition-none ${isSoloed ? 'bg-white text-black' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}
                         aria-label="Solo Effect"
                     >
                         S

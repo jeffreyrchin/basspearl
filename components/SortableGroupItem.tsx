@@ -80,26 +80,35 @@ const SortableGroupItem = ({
 
                                 {!isOverlay && (
                                     <div className="flex h-full">
-                                        <button onClick={() => toggleSolo(effect.actualIndex)} className={`w-8 h-full font-mono text-[10px] ${effect.soloed ? 'bg-white text-black' : 'text-white/60 transition-colors hover:bg-white/10 hover:text-white'}`} title="Solo">S</button>
-                                        <button onClick={() => toggleMute(effect.actualIndex)} className={`w-8 h-full font-mono text-[10px] ${effect.muted ? 'bg-cyan-900 text-white' : 'text-white/60 transition-colors hover:bg-white/10 hover:text-white'}`} title="Mute">M</button>
-                                        <button onClick={handleSelect} className="w-8 h-full flex items-center justify-center text-white/60 transition-colors hover:bg-white/10 hover:text-white" title="Parameters">
-                                            <span className="material-symbols-outlined text-[16px]">tune</span>
-                                        </button>
-                                        <button onClick={() => removeEffect(effect.actualIndex)} className="w-8 h-full flex items-center justify-center rounded-r-md text-white/60 transition-colors hover:text-red-400 hover:bg-red-400/20" title="Remove">
+                                        <button onClick={() => toggleSolo(effect.actualIndex)} className={`w-10 md:w-8 h-full font-mono text-[12px] ${effect.soloed ? 'bg-white text-black' : 'text-white/60 transition-colors hover:bg-white/10 hover:text-white'}`} title="Solo">S</button>
+                                        <button onClick={() => toggleMute(effect.actualIndex)} className={`w-10 md:w-8 h-full font-mono text-[12px] ${effect.muted ? 'bg-cyan-900 text-white' : 'text-white/60 transition-colors hover:bg-white/10 hover:text-white'}`} title="Mute">M</button>
+                                        <button onClick={() => removeEffect(effect.actualIndex)} className="w-10 md:w-8 h-full flex items-center justify-center rounded-r-md text-white/60 transition-colors hover:text-red-400 hover:bg-red-400/20" title="Remove">
                                             <span className="material-symbols-outlined text-[18px]">close</span>
                                         </button>
                                     </div>
                                 )}
                             </div>
 
+                            {/* Meld Button */}
                             {showMeld && (
-                                <div className="relative h-0 flex items-center justify-center z-20">
+                                <div className={`relative h-0 flex items-center justify-center z-20 group/meld ${effect.melded ? 'translate-y-0' : 'translate-y-[5px]'}`}>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); toggleMeld(effect.actualIndex); }}
-                                        className={`absolute pointer-events-auto w-10 h-10 md:h-6 rounded-full border backdrop-blur-md flex items-center justify-center transition-all ${effect.melded ? 'bg-white/10 border-white/10 text-white' : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border-white/10 translate-y-[4px]'}`}
+                                        className="w-full h-4 flex items-center px-4"
                                         title={effect.melded ? 'Ungroup Effects' : 'Group Effects'}
                                     >
-                                        <span className="material-symbols-outlined" style={{ fontSize: '18px', fontVariationSettings: "'wght' 500" }}>link</span>
+                                        {/* Left Line Segment */}
+                                        <div className={`flex-1 h-[1px] transition-all duration-300 ${effect.melded ? 'bg-gradient-to-r from-transparent via-white/10 to-white/20' : 'bg-gradient-to-r from-transparent via-white/5 to-white/10 group-hover/meld:via-white/10 group-hover/meld:to-white/20'}`} />
+
+                                        {/* The Join Node */}
+                                        <div className={`flex shrink-0 items-center justify-center mx-2 transition-all duration-300 scale-110 group-hover/meld:scale-120 md:scale-90 md:group-hover/meld:scale-100 ${effect.melded ? 'text-white' : 'text-white/60 group-hover/meld:text-white'}`}>
+                                            <span className="material-symbols-outlined shrink-0" style={{ fontSize: '30px', fontVariationSettings: 'wght 300' }}>
+                                                {effect.melded ? 'commit' : 'stat_0'}
+                                            </span>
+                                        </div>
+
+                                        {/* Right Line Segment */}
+                                        <div className={`flex-1 h-[1px] transition-all duration-300 ${effect.melded ? 'bg-gradient-to-l from-transparent via-white/10 to-white/20' : 'bg-gradient-to-l from-transparent via-white/5 to-white/10 group-hover/meld:via-white/10 group-hover/meld:to-white/20'}`} />
                                     </button>
                                 </div>
                             )}

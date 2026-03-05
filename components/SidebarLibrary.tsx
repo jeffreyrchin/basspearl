@@ -68,9 +68,9 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-[#050B14]">
+        <div className="flex flex-col h-full">
             {/* Header / Category Filters */}
-            <div className="sticky top-0 z-20 px-6 py-4 bg-[#050B14]/80 backdrop-blur-md border-b border-white/5 flex flex-col gap-4">
+            <div className="sticky top-0 z-20 px-6 py-4 backdrop-blur-md border-b border-white/5 flex flex-col gap-4">
                 <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
                     {CATEGORIES.map(category => (
                         <button
