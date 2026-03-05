@@ -20,10 +20,10 @@ export const renderThumbnail = (
     const task = queue.then(async () => {
         const eng = getEngine();
 
-        // Use black background for generators, girlvibe for filters
+        // Use black background for generators and macros
         const firstType = effects[0]?.type;
         let imageSrc = "./girlvibe_square.jpeg";
-        if (firstType === 'STARFIELD' || firstType === 'RETRO_GRID' || firstType === 'ORGANIC_NOISE') {
+        if (firstType === 'STARFIELD' || firstType === 'RETRO_GRID' || effects.length > 1) {
             imageSrc = "./black.png";
         }
 

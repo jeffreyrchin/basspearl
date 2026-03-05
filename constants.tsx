@@ -351,6 +351,32 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         ]
       }
     ]
+  },
+  RAINBOW_DOT: {
+    id: 'RAINBOW_DOT',
+    label: 'Rainbow Dot',
+    effects: [
+      {
+        type: 'SHAPE',
+        params: [
+          { param: 'Side Count', value: 100, frequencyBand: 'OFF' },
+          { param: 'Pointiness', value: 0, frequencyBand: 'OFF' },
+          { param: 'Roundness', value: 0, frequencyBand: 'OFF' },
+          { param: 'Size', value: 40, frequencyBand: 'SUB' },
+          { param: 'Feather', value: 15, frequencyBand: 'OFF' },
+          { param: 'Blend', value: 100, frequencyBand: 'OFF' },
+        ]
+      },
+      {
+        type: 'SPECTRAL_MAP',
+        params: [
+          { param: 'Resolution', value: 0, frequencyBand: 'OFF' },
+          { param: 'Phase Offset', value: 0, frequencyBand: 'OFF' },
+          { param: 'Speed', value: 100, frequencyBand: 'SUB' },
+          { param: 'Strength', value: 100, frequencyBand: 'OFF' },
+        ]
+      }
+    ]
   }
 };
 
@@ -403,7 +429,10 @@ export const createMacroInstance = (macroType: MacroType, isPreview?: boolean): 
   });
 };
 
-export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = [createEffectInstance('STARFIELD')];
+export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = [
+  createEffectInstance('STARFIELD'),
+  ...createMacroInstance('RAINBOW_DOT')
+];
 
 export interface Preset {
   id: string;
