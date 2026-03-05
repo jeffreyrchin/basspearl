@@ -311,10 +311,12 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     icon: 'sync_alt',
     category: 'Spatial',
     params: [
-      { name: 'Left Speed', defaultValue: 100, defaultBand: 'SUB' },
+      { name: 'Left Speed', defaultValue: 100, defaultBand: 'OFF' },
       { name: 'Right Speed', defaultValue: 0, defaultBand: 'OFF' },
       { name: 'Up Speed', defaultValue: 0, defaultBand: 'OFF' },
       { name: 'Down Speed', defaultValue: 0, defaultBand: 'OFF' },
+      { name: 'Ghost X', defaultValue: 100, defaultBand: 'OFF' },
+      { name: 'Ghost Y', defaultValue: 0, defaultBand: 'OFF' },
     ],
   },
 };

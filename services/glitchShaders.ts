@@ -1307,7 +1307,7 @@ void main() {
 export const SCROLL_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[4]; // [Left, Right, Up, Down]
+uniform float u_params[6]; // [Left, Right, Up, Down, Ghost X, Ghost Y]
 uniform float u_integrated_values[8];
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -1318,11 +1318,28 @@ void main() {
     float right = (u_params[1] / 100.0) * u_integrated_values[1];
     float up = (u_params[2] / 100.0) * u_integrated_values[2];
     float down = (u_params[3] / 100.0) * u_integrated_values[3];
+
+    float ghostX = 1.0 - (u_params[4] / 100.0);
+    float ghostY = 1.0 - (u_params[5] / 100.0);
     
     vec2 scroll = vec2(right - left, up - down) * 2.0;
-    vec2 coord = fract(v_texCoord - scroll);
 
-    outColor = texture(u_image, coord);
+    // Primary and secondary coordinates offset by half the screen
+    vec2 coord1 = fract(v_texCoord - scroll); // Original image
+    vec2 coord2 = fract(v_texCoord - scroll + 0.5); // Ghost image
+    
+    // Determine blend weights based on distance to the seam (0.0 or 1.0)
+    float wx = (ghostX < 1.0) ? smoothstep(ghostX, 1.0, abs(coord1.x - 0.5) * 2.0) : 0.0;
+    float wy = (ghostY < 1.0) ? smoothstep(ghostY, 1.0, abs(coord1.y - 0.5) * 2.0) : 0.0;
+
+    // Sample 4 points to handle simultaneous X and Y wrapping
+    vec4 c1 = texture(u_image, coord1); // Original
+    vec4 c2 = texture(u_image, vec2(coord2.x, coord1.y)); // Left/right ghosts
+    vec4 c3 = texture(u_image, vec2(coord1.x, coord2.y)); // Top/bottom ghosts
+    vec4 c4 = texture(u_image, coord2); // Diagonal ghosts
+
+    // Bilinearly blend the 4 samples based on our seam weights
+    outColor = mix(mix(c1, c2, wx), mix(c3, c4, wx), wy);
 }
 `;
 
