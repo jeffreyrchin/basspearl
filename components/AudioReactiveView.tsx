@@ -51,11 +51,24 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const imageFileRef = useRef<string | null>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
     const audioInputRef = useRef<HTMLInputElement>(null);
+    const isDraggingScrubberRef = useRef(false);
+    const frameCounterRef = useRef(0);
 
     // Sync ref with store state (Direct update during render)
     useEffect(() => {
         effectsRef.current = effects;
     }, [effects]);
+
+    // Fix for scrubber not releasing on pointer up/cancel
+    useEffect(() => {
+        const handleUp = () => { isDraggingScrubberRef.current = false; };
+        window.addEventListener('pointerup', handleUp);
+        window.addEventListener('pointercancel', handleUp);
+        return () => {
+            window.removeEventListener('pointerup', handleUp);
+            window.removeEventListener('pointercancel', handleUp);
+        }
+    }, []);
 
     const loadPreset = async (preset: Preset) => {
         setIsProcessing(true);
@@ -208,7 +221,12 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         }
 
         const elapsed = Math.min(getElapsedSeconds(), duration);
-        updateScrubberUI(elapsed);
+        // Only throttle if not dragging scrubber
+        if (frameCounterRef.current % 4 === 0 && !isDraggingScrubberRef.current) {
+            updateScrubberUI(elapsed);
+        }
+        frameCounterRef.current++;
+
         await renderFrame(elapsed);
 
         requestRef.current = requestAnimationFrame(animate); // Keep animation loop going even if no image or canvas
@@ -414,11 +432,16 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             max={duration || 0}
                             step={0.1}
                             defaultValue={currentTime}
-                            onChange={(e) => handleSeek(e, () => {
-                                if (!requestRef.current) {
-                                    requestRef.current = requestAnimationFrame(animate);
-                                }
-                            })}
+                            onPointerDown={() => isDraggingScrubberRef.current = true}
+                            onChange={(e) => {
+                                const val = parseFloat(e.target.value);
+                                updateScrubberUI(val);
+                                handleSeek(e, () => {
+                                    if (!requestRef.current) {
+                                        requestRef.current = requestAnimationFrame(animate);
+                                    }
+                                })
+                            }}
                             disabled={!audioFile || isProcessing}
                             aria-label="Seek audio"
                             className={`flex-1 h-[3px] min-w-0 rounded-full appearance-none bg-white/10 accent-white focus:outline-none transition-all ${isProcessing ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`} />
