@@ -379,6 +379,54 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         ]
       }
     ]
+  },
+  RUBBER_BAND: {
+    id: 'RUBBER_BAND',
+    label: 'Rubber Band',
+    effects: [
+      {
+        type: 'SHAPE',
+        params: [
+          { param: 'Side Count', value: 100, frequencyBand: 'OFF' },
+          { param: 'Pointiness', value: 0, frequencyBand: 'OFF' },
+          { param: 'Roundness', value: 0, frequencyBand: 'OFF' },
+          { param: 'Size', value: 80, min: 20, frequencyBand: 'SUB' },
+          { param: 'Feather', value: 0, frequencyBand: 'OFF' },
+          { param: 'Blend', value: 100, frequencyBand: 'OFF' },
+        ]
+      },
+      {
+        type: 'WAVE_DISTORTION',
+        params: [
+          { param: 'Amplitude', value: 33, frequencyBand: 'SUB' },
+          { param: 'Frequency', value: 0, frequencyBand: 'OFF' },
+          { param: 'Speed', value: 38, frequencyBand: 'OFF' },
+        ]
+      },
+      {
+        type: 'ROTATE',
+        params: [
+          { param: 'Rotation', value: 25, frequencyBand: 'OFF' },
+          { param: 'Speed', value: 0, frequencyBand: 'OFF' },
+        ]
+      },
+      {
+        type: 'WAVE_DISTORTION',
+        params: [
+          { param: 'Amplitude', value: 33, frequencyBand: 'SUB' },
+          { param: 'Frequency', value: 0, frequencyBand: 'OFF' },
+          { param: 'Speed', value: 38, frequencyBand: 'OFF' },
+        ]
+      },
+      {
+        type: 'EDGE_MASK',
+        params: [
+          { param: 'Sensitivity', value: 13, frequencyBand: 'OFF' },
+          { param: 'Thickness', value: 50, frequencyBand: 'OFF' },
+          { param: 'Invert', value: 0, frequencyBand: 'OFF' },
+        ]
+      }
+    ]
   }
 };
 

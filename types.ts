@@ -62,7 +62,7 @@ export interface EffectMetadata {
   params: EffectParamMetadata[];
 }
 
-export type MacroType = 'FOG_VORTEX' | 'RAINBOW_DOT';
+export type MacroType = 'FOG_VORTEX' | 'RAINBOW_DOT' | 'RUBBER_BAND';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;
