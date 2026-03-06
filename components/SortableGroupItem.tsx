@@ -95,7 +95,7 @@ const SortableGroupItem = ({
                                     <button
                                         onClick={(e) => { e.stopPropagation(); toggleMeld(effect.actualIndex); }}
                                         className="w-full h-4 flex items-center px-4"
-                                        title={effect.melded ? 'Ungroup Effects' : 'Group Effects'}
+                                        title={effect.melded ? 'Unmeld' : 'Meld'}
                                     >
                                         {/* Left Line Segment */}
                                         <div className={`flex-1 h-[1px] transition-all duration-300 ${effect.melded ? 'bg-gradient-to-r from-transparent via-white/10 to-white/20' : 'bg-gradient-to-r from-transparent via-white/5 to-white/10 group-hover/meld:via-white/10 group-hover/meld:to-white/20'}`} />
@@ -103,7 +103,7 @@ const SortableGroupItem = ({
                                         {/* The Join Node */}
                                         <div className={`flex shrink-0 items-center justify-center mx-2 transition-all duration-300 scale-110 group-hover/meld:scale-120 md:scale-90 md:group-hover/meld:scale-100 ${effect.melded ? 'text-white' : 'text-white/60 group-hover/meld:text-white'}`}>
                                             <span className="material-symbols-outlined shrink-0" style={{ fontSize: '30px', fontVariationSettings: 'wght 300' }}>
-                                                {effect.melded ? 'commit' : 'stat_0'}
+                                                {effect.melded ? 'commit' : 'arrow_drop_up'}
                                             </span>
                                         </div>
 

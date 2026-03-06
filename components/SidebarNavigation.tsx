@@ -94,7 +94,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             {/* Header Bar */}
             <div className="h-14 border-b border-white/5 flex items-center justify-between px-6 shrink-0 relative">
                 <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-bold text-white uppercase tracking-[0.4em]">Controls</span>
+                    <span className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">Controls</span>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -115,7 +115,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 <button
                     onClick={() => setView('pipeline')}
                     className={`flex-1 py-3 px-2 rounded-t-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border-b-2 ${view === 'pipeline' ? 'bg-white/5 text-primary border-primary' : 'text-white/60 border-transparent hover:text-white'}`}>
-                    <span>Pipeline</span>
+                    <span>Pipe</span>
                     {effects.length > 0 && (
                         <span className="bg-primary/20 text-primary rounded-full text-[10px] font-bold w-[18px] h-[18px] grid place-items-center leading-none border border-primary/30 tracking-normal">
                             {effects.length}
