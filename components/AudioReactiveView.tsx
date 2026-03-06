@@ -360,10 +360,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             </button>
                         )}
 
-                        <div className="relative w-full h-full overflow-hidden bg-black/40 shadow-2xl flex items-center justify-center">
-                            <canvas ref={canvasRef} className="max-w-full max-h-full object-contain" />
+                        <div className="relative w-full h-full overflow-hidden bg-white/5 shadow-2xl flex items-center justify-center">
+                            <canvas ref={canvasRef} className="max-w-full max-h-full border-l border-r border-white/5 object-contain" />
                             {isProcessing && (
-                                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-4 animate-in fade-in duration-300 z-10 backdrop-blur-sm">
+                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 animate-in fade-in duration-300 z-10 backdrop-blur-sm">
                                     <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
                                     <div className="flex flex-col items-center gap-1">
                                         <h3 className="text-xs font-bold tracking-widest text-white uppercase">Analyzing Audio</h3>
