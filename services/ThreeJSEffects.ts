@@ -30,6 +30,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
 
         const material = new THREE.ShaderMaterial({
             glslVersion: THREE.GLSL3,
+            transparent: true,
             uniforms: {
                 u_image: { value: null },
                 u_scale: { value: 1.0 },
@@ -46,7 +47,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 uniform float u_is_max_res;
                 uniform float u_res;
                 out vec2 vUv;
-                flat out vec3 vColorFlat;
+                flat out vec4 vColorFlat;
 
                 void main() {
                     // Block size defines the 'Visual Resolution' snapped in world units
@@ -72,7 +73,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                     vec3 leftPos = pos - vec3(blockSize, 0.0, 0.0);
                     vec2 leftUv = vec2(leftPos.x / 300.0 + 0.5, 1.0 - ((leftPos.z / 20.0) * (u_scale / 50.0) + u_uv_offset));
                     float hL = texture(u_image, leftUv).r;
-                    vColorFlat = (hL > tex.r) ? texture(u_image, leftUv).rgb : tex.rgb;
+                    vColorFlat = (hL > tex.r) ? texture(u_image, leftUv) : tex;
                     
                     pos.y += h;
                     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
@@ -83,16 +84,16 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 uniform sampler2D u_image;
                 uniform float u_is_max_res;
                 in vec2 vUv;
-                flat in vec3 vColorFlat;
+                flat in vec4 vColorFlat;
                 out vec4 outColor;
 
                 void main() {
                     // Voxel: Solid color per triangle face using the vertex peak color
                     // Full-res: Smooth per-pixel sampling
-                    vec3 smoothColor = texture(u_image, vUv).rgb;
-                    vec3 finalColor = mix(vColorFlat, smoothColor, u_is_max_res);
-                    
-                    outColor = vec4(finalColor, 1.0);
+                    vec4 smoothColor = texture(u_image, vUv);
+                    vec4 finalColor = mix(vColorFlat, smoothColor, u_is_max_res);
+
+                    outColor = finalColor;
                 }
             `,
             side: THREE.DoubleSide
@@ -103,6 +104,11 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
 
         const meshA = new THREE.Mesh(geometry, matA);
         const meshB = new THREE.Mesh(geometry, matB);
+
+        // Draw both terrain segments after the sky is drawn (fixes terrain being depth masked by the sky)
+        meshA.renderOrder = 1;
+        meshB.renderOrder = 1;
+
         meshA.frustumCulled = false;
         meshB.frustumCulled = false;
         scene.add(meshA);
