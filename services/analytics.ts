@@ -61,11 +61,10 @@ export const analytics = {
             file_size: file.size,
             file_type: file.type
         }),
-        succeeded: (file: File, duration: number, fromCache = false) => trackEvent('audio_upload_succeeded', {
+        succeeded: (file: File, duration: number) => trackEvent('audio_upload_succeeded', {
             file_size: file.size,
             file_type: file.type,
-            duration,
-            from_cache: fromCache
+            duration
         }),
         failed: (file: File, err: any) => trackEvent('audio_upload_failed', {
             file_size: file.size,

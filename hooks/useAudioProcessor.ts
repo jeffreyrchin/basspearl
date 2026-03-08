@@ -3,13 +3,6 @@ import { calculateNextState, ReactivityState } from '@/services/calculateReactiv
 import { computeIntegratedReactivity, IntegratedReactivityMap } from '@/services/SpeedManager';
 import { analytics } from '@/services/analytics';
 
-const analysisCache = new Map<string, {
-    buffer: AudioBuffer;
-    map: any;
-    integrated: any;
-    duration: number;
-}>();
-
 export const useAudioProcessor = () => {
     const [audioFile, setAudioFile] = useState<File | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -164,18 +157,6 @@ export const useAudioProcessor = () => {
     };
 
     /**
-     * Helper to apply cached results to the current state
-     */
-    const applyCachedAudio = useCallback((cached: any, file: File) => {
-        stopPlayback(true);
-        audioBufferRef.current = cached.buffer;
-        reactivityMapRef.current = cached.map;
-        integratedReactivityMapRef.current = cached.integrated;
-        setDuration(cached.duration);
-        setAudioFile(file);
-    }, [stopPlayback]);
-
-    /**
      * Completely resets the audio context and internal reactivity maps
      */
     const resetAudioEngine = useCallback(() => {
@@ -189,23 +170,15 @@ export const useAudioProcessor = () => {
     }, []);
 
     /**
-     * Processor: Centralizes analysis, state updates, and caching.
+     * Processor: Centralizes analysis and state updates.
      */
-    const processAndStoreAudio = useCallback(async (buffer: AudioBuffer, cacheKey: string, file: File) => {
+    const processAudio = useCallback(async (buffer: AudioBuffer, file: File) => {
         // Reset state for new data
         audioBufferRef.current = buffer;
         setDuration(buffer.duration);
 
         // Compute FFT Reactivity
-        const map = await precomputeReactivity(buffer);
-
-        // Store in memory cache
-        analysisCache.set(cacheKey, {
-            buffer,
-            map,
-            integrated: integratedReactivityMapRef.current,
-            duration: buffer.duration
-        });
+        await precomputeReactivity(buffer);
 
         setAudioFile(file);
     }, [precomputeReactivity]);
@@ -220,14 +193,6 @@ export const useAudioProcessor = () => {
             stopPlayback(true);
             const file = e.target.files[0];
             analytics.audio.started(file);
-            const cacheKey = `file:${file.name}:${file.size}`;
-
-            // 1. Cache Check
-            if (analysisCache.has(cacheKey)) {
-                applyCachedAudio(analysisCache.get(cacheKey)!, file);
-                analytics.audio.succeeded(file, analysisCache.get(cacheKey)!.duration, true);
-                return;
-            }
 
             // 2. Clear context & Reset
             resetAudioEngine();
@@ -240,7 +205,7 @@ export const useAudioProcessor = () => {
                 const arrayBuffer = await file.arrayBuffer();
                 const audioBuffer = await getAudioContext().decodeAudioData(arrayBuffer);
 
-                await processAndStoreAudio(audioBuffer, cacheKey, file);
+                await processAudio(audioBuffer, file);
                 analytics.audio.succeeded(file, audioBuffer.duration);
             } catch (err: any) {
                 analytics.audio.failed(file, err);
@@ -253,14 +218,6 @@ export const useAudioProcessor = () => {
 
     const loadAudioFromUrl = async (url: string, label: string) => {
         stopPlayback(true);
-        const cacheKey = `url:${url}`;
-        const virtualFile = new File([], label, { type: 'audio/mpeg' });
-
-        // 1. Cache Check
-        if (analysisCache.has(cacheKey)) {
-            applyCachedAudio(analysisCache.get(cacheKey)!, virtualFile);
-            return;
-        }
 
         // 2. Clear context & Reset
         resetAudioEngine();
@@ -270,7 +227,7 @@ export const useAudioProcessor = () => {
             const arrayBuffer = await response.arrayBuffer();
             const audioBuffer = await getAudioContext().decodeAudioData(arrayBuffer);
 
-            await processAndStoreAudio(audioBuffer, cacheKey, new File([arrayBuffer], label, { type: 'audio/mpeg' }));
+            await processAudio(audioBuffer, new File([arrayBuffer], label, { type: 'audio/mpeg' }));
         } catch (err) {
             console.error('Error loading audio from URL:', err);
             throw err; // Re-throw so the caller can handle its own state/analytics
