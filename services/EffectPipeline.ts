@@ -1,10 +1,12 @@
 import { TextureManager } from './TextureManager';
 import { ShaderManager } from './ShaderManager';
+import { ThreeJSRenderer } from './ThreeJSRenderer';
 
 export class EffectPipeline {
     private gl: WebGL2RenderingContext;
     private textureManager: TextureManager;
     private shaderManager: ShaderManager;
+    private threeRenderer: ThreeJSRenderer;
 
     private vao: WebGLVertexArrayObject | null = null;
     private quadBuffer: WebGLBuffer | null = null;
@@ -26,6 +28,7 @@ export class EffectPipeline {
         this.gl = gl;
         this.textureManager = textureManager;
         this.shaderManager = shaderManager;
+        this.threeRenderer = new ThreeJSRenderer(gl);
         this.initQuad();
     }
 
@@ -175,17 +178,52 @@ export class EffectPipeline {
         gl.clear(gl.COLOR_BUFFER_BIT);
     }
 
-    public applyPass(programName: string, uniforms: Record<string, any>) {
+    public applyPass(programName: string, uniforms: Record<string, any>, is3D?: boolean) {
         if (this.inSubStack) {
             const input = this.subTextures[this.currentSubFBIndex];
             const outputFB = this.subFBs[1 - this.currentSubFBIndex];
-            this.draw(programName, outputFB, [{ name: 'u_image', texture: input }], uniforms, false, true);
+
+            if (is3D) {
+                this.renderThreeJS(programName, input, outputFB, uniforms);
+            } else {
+                this.draw(programName, outputFB, [{ name: 'u_image', texture: input }], uniforms, false, true);
+            }
             this.currentSubFBIndex = 1 - this.currentSubFBIndex;
         } else {
             const input = this.pingPongTextures[this.currentFBIndex];
             const outputFB = this.pingPongFBs[1 - this.currentFBIndex];
-            this.draw(programName, outputFB, [{ name: 'u_image', texture: input }], uniforms, false, true);
+
+            if (is3D) {
+                this.renderThreeJS(programName, input, outputFB, uniforms);
+            } else {
+                this.draw(programName, outputFB, [{ name: 'u_image', texture: input }], uniforms, false, true);
+            }
             this.currentFBIndex = 1 - this.currentFBIndex;
+        }
+    }
+
+    private renderThreeJS(type: string, inputTexture: WebGLTexture, destFB: WebGLFramebuffer, uniforms: Record<string, any>) {
+        const gl = this.gl;
+
+        // 1. Get the 3D Render result as a Raw WebGLTexture handle
+        const threeResultTexture = this.threeRenderer.render({
+            type,
+            width: gl.canvas.width,
+            height: gl.canvas.height,
+            image: inputTexture,
+            params: uniforms.u_params,
+            integratedValues: uniforms.u_integrated_values,
+            time: uniforms.u_time
+        });
+
+        // 2. Use the 2D Engine's robust pipeline to "blit" this result into the destination
+        if (threeResultTexture) {
+            // Draw into destination FBO - no flipY needed here as Three already handled perspective
+            this.draw('pass-through', destFB, [{ name: 'u_image', texture: threeResultTexture }], {}, false, true);
+        } else {
+            console.error('EffectPipeline: ThreeJS Render failed to return a texture handle');
+            // FALLBACK: If 3D fails, draw the input so we don't vanish
+            this.draw('pass-through', destFB, [{ name: 'u_image', texture: inputTexture }], {}, false, true);
         }
     }
 

@@ -319,6 +319,17 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       { name: 'Ghost Y', defaultValue: 0, defaultBand: 'OFF' },
     ],
   },
+  TERRAIN: {
+    label: 'Terrain',
+    icon: 'terrain',
+    category: 'Spatial',
+    params: [
+      { name: 'Scale', defaultValue: 3, defaultBand: 'OFF' },
+      { name: 'Depth', defaultValue: 40, defaultBand: 'OFF', previewValue: 60, previewBand: 'SUB' },
+      { name: 'Speed', defaultValue: 50, defaultBand: 'OFF' },
+      { name: 'Resolution', defaultValue: 100, defaultBand: 'OFF' },
+    ],
+  },
 };
 
 export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {

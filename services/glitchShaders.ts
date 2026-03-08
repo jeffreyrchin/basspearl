@@ -1198,7 +1198,7 @@ out vec4 outColor;
 
 void main() {
     // Map parameters
-    float sensitivity = u_params[0] / 100.0;       // 0 = weak, 1 = strong
+    float sensitivity = max(u_params[0] / 100.0, 0.01);       // 0 = weak, 1 = strong
     float thickness = mix(1.0, 15.0, u_params[1] / 100.0);
     float invert = u_params[2] / 100.0;
 
@@ -1347,6 +1347,7 @@ export interface ShaderDefinition {
     name: string;
     fragmentSource: string;
     velocityParamIndices?: number[]; // Indices of parameters that control speed/velocity
+    is3D?: boolean;
 }
 
 export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
@@ -1381,4 +1382,5 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     PAN: { name: 'PAN', fragmentSource: PAN_SHADER },
     SCROLL: { name: 'SCROLL', fragmentSource: SCROLL_SHADER, velocityParamIndices: [0, 1, 2, 3] },
     LUMINANCE_MAP: { name: 'LUMINANCE_MAP', fragmentSource: LUMINANCE_MAP_SHADER },
+    TERRAIN: { name: 'TERRAIN', fragmentSource: '', velocityParamIndices: [2], is3D: true },
 };

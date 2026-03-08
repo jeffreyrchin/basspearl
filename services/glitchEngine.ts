@@ -51,7 +51,10 @@ export class GlitchEngine {
 
     // Automatically initialize all registered shaders
     Object.entries(SHADER_REGISTRY).forEach(([name, shader]) => {
-      this.shaderManager.createProgram(name, BASE_VERTEX_SHADER, shader.fragmentSource);
+      // 3D-only shaders (like ThreeJS) do not need to be compiled as 2D programs
+      if (!shader.is3D) {
+        this.shaderManager.createProgram(name, BASE_VERTEX_SHADER, shader.fragmentSource);
+      }
     });
   }
 
@@ -284,7 +287,7 @@ export class GlitchEngine {
       u_time: currentTime
     };
 
-    this.pipeline.applyPass(type, uniforms);
+    this.pipeline.applyPass(type, uniforms, !!meta.is3D);
   }
 }
 
