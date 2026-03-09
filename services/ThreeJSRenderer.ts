@@ -121,6 +121,9 @@ export class ThreeJSRenderer {
         gl.bindTexture(gl.TEXTURE_2D, image);
         const prevWrapS = gl.getTexParameter(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S);
         const prevWrapT = gl.getTexParameter(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T);
+        const prevMinFilter = gl.getTexParameter(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER);
+        const prevMagFilter = gl.getTexParameter(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER);
+
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
 
@@ -163,7 +166,7 @@ export class ThreeJSRenderer {
 
         gl.flush();
 
-        // 6. Restore context to 2D-pipeline-safe state
+        // 6. Restore context to 2D-pipeline-safe state (IMPORTANT)
         this.renderer.setRenderTarget(null);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.bindVertexArray(currentVao);
@@ -183,6 +186,13 @@ export class ThreeJSRenderer {
         gl.bindTexture(gl.TEXTURE_2D, image);
         if (prevWrapS) gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, prevWrapS as number);
         if (prevWrapT) gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, prevWrapT as number);
+
+        // Three.js sets these to linear for mipmapping, but we need to reset them for our 2D shaders!
+        if (prevMinFilter) gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, prevMinFilter as number);
+        if (prevMagFilter) gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, prevMagFilter as number);
+
+        // UNBIND the texture so it isn't "hot" on this unit for the next pass
+        gl.bindTexture(gl.TEXTURE_2D, null);
 
         this.renderer.state.reset();
 
