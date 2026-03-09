@@ -66,7 +66,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                             title="Back to Controls">
                             <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                         </button>
-                        <span className="text-[10px] font-bold text-white uppercase tracking-[0.3em]">Parameters</span>
+                        <span className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">Parameters</span>
                     </div>
 
                     <div className="flex items-center gap-2">

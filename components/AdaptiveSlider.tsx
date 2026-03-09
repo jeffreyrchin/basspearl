@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback, memo } from 'react';
 import { FrequencyBand } from '../types';
 import { SHARED_AUDIO_STATE, BAND_INDEX } from '../services/audioState';
 
@@ -11,6 +11,12 @@ interface AdaptiveSliderProps {
     className?: string;
 }
 
+type Mode = 'none' | 'left' | 'right' | 'middle';
+
+/**
+ * AdaptiveSlider: Optimized for performance and stability.
+ * Uses persistent refs and memoized components to prevent memory leaks and redundant work.
+ */
 export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     value,
     min,
@@ -19,23 +25,45 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     onPointerDown,
     className = ''
 }) => {
+    // --- Refs for Performance & Animation ---
     const trackRef = useRef<HTMLDivElement>(null);
     const needleRef = useRef<HTMLDivElement>(null);
-    const [dragMode, setDragMode] = useState<'none' | 'left' | 'right' | 'middle'>('none');
-    const startXRef = useRef(0);
-    const startMinRef = useRef(0);
-    const startMaxRef = useRef(0);
+    const onChangeRef = useRef(onChange);
 
     // Keep range in refs for zero-render needle updates
     const currentMinRef = useRef(min);
     const currentMaxRef = useRef(value);
 
+    // --- Drag Tracking Refs ---
+    const startXRef = useRef(0);
+    const startMinRef = useRef(min);
+    const startMaxRef = useRef(value);
+    const startTrackWidthRef = useRef(0);
+
+    const [dragMode, setDragMode] = useState<Mode>('none');
+    const isReactive = frequencyBand !== 'OFF';
+
+    // Synchronize props to refs to avoid re-binding listeners
+    useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
     useEffect(() => {
         currentMinRef.current = min;
         currentMaxRef.current = value;
     }, [min, value]);
 
-    // Zero-Allocation / Zero-Recalc Needle Polling Loop
+    // Memoized Drag Initialization
+    const handleDragStart = useCallback((clientX: number, mode: Mode) => {
+        if (mode === 'none' || !trackRef.current) return;
+
+        const rect = trackRef.current.getBoundingClientRect();
+        startTrackWidthRef.current = rect.width - 20; // 10px padding on each side
+        startXRef.current = clientX;
+        startMinRef.current = currentMinRef.current;
+        startMaxRef.current = currentMaxRef.current;
+
+        setDragMode(mode);
+    }, []);
+
+    // --- 1. Needle Polling Loop (Zero-Render Animation) ---
     useEffect(() => {
         const bandIndex = BAND_INDEX[frequencyBand];
         if (bandIndex === -1) return;
@@ -44,18 +72,15 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
         const tick = () => {
             if (!needleRef.current) return;
 
-            // 1. Pull directly from shared bucket
+            // Pull directly from shared bucket
             const audioVal = SHARED_AUDIO_STATE[bandIndex];
 
-            // 2. Compute position using refs (no React state involved)
-            const minBound = currentMinRef.current;
-            const maxBound = currentMaxRef.current;
-            const range = maxBound - minBound;
-            const offset = minBound + (range * audioVal);
+            // Compute position using refs (no React state involved)
+            const range = currentMaxRef.current - currentMinRef.current;
+            const val = currentMinRef.current + (range * audioVal);
 
-            // 3. Directly update DOM style (safest way to move needles in Safari)
-            needleRef.current.style.left = `${offset}%`;
-
+            // Fixed decimal precision for style strings (Safari optimization)
+            needleRef.current.style.left = `${val.toFixed(2)}%`;
             frameId = requestAnimationFrame(tick);
         };
 
@@ -63,160 +88,136 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
         return () => cancelAnimationFrame(frameId);
     }, [frequencyBand]);
 
-    const handleStart = (clientX: number, mode: 'left' | 'right' | 'middle') => {
-        setDragMode(mode);
-        startXRef.current = clientX;
-        startMinRef.current = min;
-        startMaxRef.current = value;
-    };
-
-    const handleMouseDown = (e: React.MouseEvent, mode: 'left' | 'right' | 'middle') => {
-        e.preventDefault();
-        handleStart(e.clientX, mode);
-    };
-
-    const handleTouchStart = (e: React.TouchEvent, mode: 'left' | 'right' | 'middle') => {
-        handleStart(e.touches[0].clientX, mode);
-    };
-
+    // --- 3. Optimized Global Drag Listener ---
     useEffect(() => {
-        const handleMove = (clientX: number) => {
-            if (dragMode === 'none' || !trackRef.current) return;
+        if (dragMode === 'none' || !isReactive) return;
 
-            const rect = trackRef.current.getBoundingClientRect();
-            const deltaPercent = ((clientX - startXRef.current) / rect.width) * 100;
+        const handleMove = (e: MouseEvent | TouchEvent) => {
+            const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+            const deltaPercent = ((clientX - startXRef.current) / startTrackWidthRef.current) * 100;
 
             if (dragMode === 'left') {
-                onChange({ min: Math.max(0, Math.min(100, Math.round(startMinRef.current + deltaPercent))) });
+                const newMin = Math.max(0, Math.min(100, Math.round(startMinRef.current + deltaPercent)));
+                if (newMin !== currentMinRef.current) onChangeRef.current({ min: newMin });
             } else if (dragMode === 'right') {
-                onChange({ value: Math.max(0, Math.min(100, Math.round(startMaxRef.current + deltaPercent))) });
+                const newMax = Math.max(0, Math.min(100, Math.round(startMaxRef.current + deltaPercent)));
+                if (newMax !== currentMaxRef.current) onChangeRef.current({ value: newMax });
             } else if (dragMode === 'middle') {
                 const shift = Math.round(deltaPercent);
                 const newMin = startMinRef.current + shift;
                 const newMax = startMaxRef.current + shift;
 
                 if (newMin >= 0 && newMin <= 100 && newMax >= 0 && newMax <= 100) {
-                    onChange({ min: newMin, value: newMax });
+                    if (newMin !== currentMinRef.current || newMax !== currentMaxRef.current) {
+                        onChangeRef.current({ min: newMin, value: newMax });
+                    }
                 }
             }
         };
 
-        const onMouseMove = (e: MouseEvent) => handleMove(e.clientX);
-        const onTouchMove = (e: TouchEvent) => handleMove(e.touches[0].clientX);
-        const onEnd = () => setDragMode('none');
+        const handleEnd = () => setDragMode('none');
 
-        if (dragMode !== 'none') {
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mouseup', onEnd);
-            window.addEventListener('touchmove', onTouchMove, { passive: false });
-            window.addEventListener('touchend', onEnd);
-        }
+        window.addEventListener('pointermove', handleMove, { passive: true });
+        window.addEventListener('pointerup', handleEnd);
 
         return () => {
-            window.removeEventListener('mousemove', onMouseMove);
-            window.removeEventListener('mouseup', onEnd);
-            window.removeEventListener('touchmove', onTouchMove);
-            window.removeEventListener('touchend', onEnd);
+            window.removeEventListener('pointermove', handleMove);
+            window.removeEventListener('pointerup', handleEnd);
         };
-    }, [dragMode, onChange]);
+    }, [dragMode, isReactive]);
 
-    const isReactive = frequencyBand !== 'OFF';
-    const containerLeft = Math.min(min, value);
-    const containerWidth = Math.abs(value - min);
-
-    return (
-        <div className={`relative h-12 flex items-center ${className}`} onPointerDown={onPointerDown}>
-            {isReactive ? (
-                <div className="relative w-full">
-                    <div
-                        ref={trackRef}
-                        className="relative w-full h-5 bg-black/40 border border-white/5 overflow-hidden select-none"
-                    >
-                        {/* Range Bar Area */}
+    if (isReactive) {
+        return (
+            <div className={`relative h-12 flex items-center ${className}`} onPointerDown={onPointerDown}>
+                {/* Reactive Slider */}
+                <div key="reactive" className="relative w-full" ref={trackRef}>
+                    {/* Visual Track (Padded to match thumb centers) */}
+                    <div className="absolute inset-x-2.5 h-6 bg-black/40 border border-white/5 overflow-hidden rounded-sm top-1/2 -translate-y-1/2 touch-none">
                         <div
-                            onMouseDown={(e) => handleMouseDown(e, 'middle')}
-                            onTouchStart={(e) => handleTouchStart(e, 'middle')}
+                            onPointerDown={(e) => { e.preventDefault(); handleDragStart(e.clientX, 'middle'); }}
                             className="absolute h-full cursor-grab active:cursor-grabbing hover:bg-white/[0.05] transition-colors"
-                            style={{ left: `${containerLeft}%`, width: `${containerWidth}%`, backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                            style={{
+                                left: `${Math.min(min, value)}%`,
+                                width: `${Math.abs(value - min)}%`,
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                            }}
                         />
                     </div>
 
-                    {/* Hit Area & Visual Handle: Left (Min) */}
-                    <div
-                        role="slider"
-                        aria-label="Minimum Range"
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        aria-valuenow={min}
-                        tabIndex={0}
-                        onMouseDown={(e) => handleMouseDown(e, 'left')}
-                        onTouchStart={(e) => handleTouchStart(e, 'left')}
-                        onKeyDown={(e) => {
-                            if (e.key === 'ArrowLeft') onChange({ min: Math.max(0, min - (e.shiftKey ? 10 : 1)) });
-                            if (e.key === 'ArrowRight') onChange({ min: Math.min(100, min + (e.shiftKey ? 10 : 1)) });
-                        }}
-                        className="absolute w-6 h-5 cursor-ew-resize z-20 group/handle outline-none top-1/2"
-                        style={{ left: `${min}%`, transform: 'translate(-50%, -50%)' }}
-                    >
-                        <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-1 bg-white transition-all group-hover/handle:scale-x-150 group-focus/handle:scale-x-150 group-hover/handle:bg-primary group-focus/handle:bg-primary shadow-sm" />
-                    </div>
+                    {/* Interactive Elements Layer */}
+                    <div className="absolute inset-x-2.5 inset-y-0 pointer-events-none">
+                        <SliderHandle label="Min" value={min} mode="left" onStart={handleDragStart} onKeyUpdate={d => onChangeRef.current({ min: Math.max(0, Math.min(100, min + d)) })} />
+                        <SliderHandle label="Max" value={value} mode="right" onStart={handleDragStart} onKeyUpdate={d => onChangeRef.current({ value: Math.max(0, Math.min(100, value + d)) })} />
 
-                    {/* Hit Area & Visual Handle: Right (Max) */}
-                    <div
-                        role="slider"
-                        aria-label="Maximum Range"
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        aria-valuenow={value}
-                        tabIndex={0}
-                        onMouseDown={(e) => handleMouseDown(e, 'right')}
-                        onTouchStart={(e) => handleTouchStart(e, 'right')}
-                        onKeyDown={(e) => {
-                            if (e.key === 'ArrowLeft') onChange({ value: Math.max(0, value - (e.shiftKey ? 10 : 1)) });
-                            if (e.key === 'ArrowRight') onChange({ value: Math.min(100, value + (e.shiftKey ? 10 : 1)) });
-                        }}
-                        className="absolute w-6 h-5 cursor-ew-resize z-20 group/handle outline-none top-1/2"
-                        style={{ left: `${value}%`, transform: 'translate(-50%, -50%)' }}
-                    >
-                        <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-1 bg-white transition-all group-hover/handle:scale-x-150 group-focus/handle:scale-x-150 group-hover/handle:bg-primary group-focus/handle:bg-primary shadow-sm" />
-                    </div>
-
-                    {/* The Needle - Direct DOM Update */}
-                    <div
-                        ref={needleRef}
-                        className="absolute h-5 pointer-events-none z-10 top-1/2 -translate-y-1/2"
-                        style={{
-                            left: `${min}%`, // Initial position
-                            width: '2px',
-                            backgroundColor: '#fb00ff',
-                            boxShadow: '0 0 8px rgba(251, 0, 255, 0.5)'
-                        }}
-                    />
-
-                    {/* Combined Floating Labels */}
-                    <div className="absolute pointer-events-none w-full -inset-x-0 -top-4 -bottom-4">
-                        <div className="absolute" style={{ left: `${min}%`, bottom: -3, transform: 'translateX(-50%)' }}>
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 whitespace-nowrap">
-                                Min
-                            </span>
-                        </div>
-                        <div className="absolute" style={{ left: `${value}%`, bottom: -3, transform: 'translateX(-50%)' }}>
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 whitespace-nowrap">
-                                Max
-                            </span>
-                        </div>
+                        <div ref={needleRef} className="absolute h-6 pointer-events-none z-10 top-1/2 -translate-y-1/2"
+                            style={{ left: `${min}%`, width: '2px', backgroundColor: '#fb00ff', boxShadow: '0 0 8px rgba(251, 0, 255, 0.5)' }}
+                        />
                     </div>
                 </div>
-            ) : (
+            </div>
+        );
+    }
+
+    return (
+        <div className={`relative h-12 flex items-center ${className}`} onPointerDown={onPointerDown}>
+            {/* Manual/Static Slider */}
+            <div key="static" className="relative flex-1 group/static">
                 <input
                     type="range"
                     min={0}
                     max={100}
                     value={value}
-                    onChange={(e) => onChange({ value: parseInt(e.target.value) })}
-                    className="flex-1 h-6 bg-transparent appearance-none cursor-pointer custom-slider"
+                    onChange={(e) => {
+                        const nextVal = parseInt(e.target.value);
+                        if (nextVal !== value) onChange({ value: nextVal });
+                    }}
+                    className="w-full h-10 bg-transparent appearance-none cursor-pointer custom-slider relative z-10 touch-none"
                 />
-            )}
+                <div className="absolute inset-x-2.5 inset-y-0 pointer-events-none">
+                    <div key="manual-label" className="absolute" style={{ left: `${value}%`, top: 28, transform: 'translateX(-50%)' }}>
+                        <span className="text-white/60 font-mono text-[10px] font-black select-none">{Math.round(value)}%</span>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
+
+const SliderHandle = memo<{
+    label: string,
+    value: number,
+    mode: Mode,
+    onStart: (cx: number, m: Mode) => void,
+    onKeyUpdate: (d: number) => void
+}>(({ label, value, mode, onStart, onKeyUpdate }) => (
+    <div
+        role="slider"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={value}
+        tabIndex={0}
+        onPointerDown={(e) => {
+            // Crucial: prevent scrolling on mobile while dragging
+            if (e.pointerType === 'touch') e.preventDefault();
+            onStart(e.clientX, mode);
+        }}
+        onKeyDown={(e) => {
+            if (e.key === 'ArrowLeft') onKeyUpdate(e.shiftKey ? -10 : -1);
+            if (e.key === 'ArrowRight') onKeyUpdate(e.shiftKey ? 10 : 1);
+        }}
+        className="absolute w-6 h-6 cursor-ew-resize z-20 top-1/2 group/handle outline-none focus-visible:ring-1 focus-visible:ring-primary/60 rounded-sm pointer-events-auto touch-none"
+        style={{ left: `${value}%`, transform: 'translate(-50%, -50%)' }}
+    >
+        {/* Bar */}
+        <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-2 bg-white/60 group-hover/handle:bg-primary transition-colors" />
+
+        {/* Percentage */}
+        <div key={`${mode}-label`} className={`absolute left-1/2 top-5 -translate-x-1/2`}>
+            <span className="text-white/60 font-mono text-[10px] font-black select-none">
+                {Math.round(value)}%
+            </span>
+        </div>
+    </div>
+));
+SliderHandle.displayName = 'SliderHandle';
