@@ -128,7 +128,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
 
     if (isReactive) {
         return (
-            <div className={`relative h-12 flex items-center ${className}`} onPointerDown={onPointerDown}>
+            <div className={`relative h-10 flex items-center ${className}`} onPointerDown={onPointerDown}>
                 {/* Reactive Slider */}
                 <div key="reactive" className="relative w-full" ref={trackRef}>
                     {/* Visual Track (Padded to match thumb centers) */}
@@ -159,7 +159,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     }
 
     return (
-        <div className={`relative h-12 flex items-center ${className}`} onPointerDown={onPointerDown}>
+        <div className={`relative h-10 flex items-center ${className}`} onPointerDown={onPointerDown}>
             {/* Manual/Static Slider */}
             <div key="static" className="relative flex-1 group/static">
                 <input
@@ -210,7 +210,7 @@ const SliderHandle = memo<{
         style={{ left: `${value}%`, transform: 'translate(-50%, -50%)' }}
     >
         {/* Bar */}
-        <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-2 bg-white/60 group-hover/handle:bg-primary transition-colors" />
+        <div className={`absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-2 bg-white ${mode === 'left' ? 'rounded-l' : 'rounded-r'} group-hover/handle:bg-primary transition-colors`} />
 
         {/* Percentage */}
         <div key={`${mode}-label`} className={`absolute left-1/2 top-5 -translate-x-1/2`}>

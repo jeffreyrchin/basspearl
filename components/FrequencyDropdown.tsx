@@ -1,0 +1,133 @@
+import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { FrequencyBand } from '../types';
+
+interface FrequencyDropdownProps {
+    value: FrequencyBand;
+    onChange: (band: FrequencyBand) => void;
+    ariaLabel?: string;
+}
+
+const BANDS: FrequencyBand[] = ['OFF', 'SUB', 'BASS', 'MID', 'TREBLE'];
+
+export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onChange, ariaLabel }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({ opacity: 0 });
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    // Escape sidebar clipping by using Portals + Fixed positioning
+    useLayoutEffect(() => {
+        if (isOpen && dropdownRef.current) {
+            const updateStyles = () => {
+                const rect = dropdownRef.current!.getBoundingClientRect();
+                const spaceBelow = window.innerHeight - rect.bottom - 12;
+                const spaceAbove = rect.top - 12;
+                const flip = spaceBelow < 180 && spaceAbove > spaceBelow;
+
+                setMenuStyle({
+                    position: 'fixed',
+                    left: `${Math.round(rect.right - 110)}px`, // Anchor to right edge
+                    width: '110px',
+                    maxHeight: `${Math.round(Math.max(flip ? spaceAbove : spaceBelow, 120))}px`,
+                    zIndex: 99999,
+                    top: flip ? 'auto' : `${Math.round(rect.bottom + 4)}px`,
+                    bottom: flip ? `${Math.round(window.innerHeight - rect.top + 4)}px` : 'auto',
+                    opacity: 1
+                });
+            };
+
+            updateStyles();
+            window.addEventListener('resize', updateStyles);
+            window.addEventListener('scroll', updateStyles, true);
+            return () => {
+                window.removeEventListener('resize', updateStyles);
+                window.removeEventListener('scroll', updateStyles, true);
+            };
+        }
+    }, [isOpen]);
+
+    // Close on click-away
+    useEffect(() => {
+        if (!isOpen) return;
+        const handle = (e: PointerEvent) => {
+            const target = e.target as Node;
+            if (dropdownRef.current?.contains(target) || menuRef.current?.contains(target)) return;
+            setIsOpen(false);
+        };
+        document.addEventListener('pointerdown', handle);
+        return () => document.removeEventListener('pointerdown', handle);
+    }, [isOpen]);
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            setIsOpen(false);
+            dropdownRef.current?.querySelector('button')?.focus();
+            return;
+        }
+        if (!isOpen) return;
+
+        const items = Array.from(menuRef.current?.querySelectorAll('button') || []) as HTMLButtonElement[];
+        if (items.length === 0) return;
+
+        const index = items.indexOf(document.activeElement as HTMLButtonElement);
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            items[(index + 1) % items.length].focus();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            items[(index - 1 + items.length) % items.length].focus();
+        }
+    };
+
+    // Auto-focus active item when opening
+    useEffect(() => {
+        if (isOpen) {
+            setTimeout(() => {
+                const active = menuRef.current?.querySelector('[aria-selected="true"]') as HTMLButtonElement;
+                (active || menuRef.current?.querySelector('button'))?.focus();
+            }, 0);
+        }
+    }, [isOpen]);
+
+    const Menu = (
+        <div
+            ref={menuRef}
+            role="listbox"
+            style={menuStyle}
+            className="bg-black border border-white/10 rounded-xl shadow-2xl overflow-y-auto custom-scrollbar"
+        >
+            <div className="p-1.5 space-y-0.5">
+                {BANDS.map((band) => (
+                    <button
+                        key={band}
+                        role="option"
+                        aria-selected={value === band}
+                        onClick={() => { onChange(band); setIsOpen(false); }}
+                        className={`w-full flex items-center px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors outline-none
+                            ${value === band ? 'bg-primary/20 text-primary' : 'text-white/60 hover:bg-white/5 focus:bg-white/20 hover:text-white'}`}
+                    >
+                        {band === 'OFF' ? 'Manual' : band}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="relative" ref={dropdownRef} onKeyDown={handleKeyDown}>
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                aria-haspopup="listbox"
+                aria-expanded={isOpen}
+                aria-label={ariaLabel}
+                className={`flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-[0.1em] active:scale-95
+                    ${value !== 'OFF' ? 'bg-primary/10 text-primary border-primary/30' : 'bg-black/40 text-white/60 border-white/5 hover:border-white/20'}`}
+            >
+                <span>{value === 'OFF' ? 'Manual' : value}</span>
+                <span className={`material-symbols-outlined text-[18px] ${isOpen ? 'rotate-180' : ''}`}>expand_more</span>
+            </button>
+            {isOpen && createPortal(Menu, document.body)}
+        </div>
+    );
+};
