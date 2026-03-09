@@ -239,7 +239,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     params: [
       { name: 'Threshold', defaultValue: 50, defaultBand: 'OFF', previewValue: 30, previewMin: 20, previewBand: 'SUB' },
       { name: 'Feather', defaultValue: 10, defaultBand: 'OFF' },
-      { name: 'Replacement Tone', defaultValue: 0, defaultBand: 'OFF', previewValue: 100 },
+      { name: 'Tone', defaultValue: 0, defaultBand: 'OFF', previewValue: 100 },
       { name: 'Blend', defaultValue: 100, defaultBand: 'OFF' },
     ],
   },
