@@ -63,7 +63,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                         <button
                             onClick={() => setView('pipeline')}
                             className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 hover:bg-white/10 transition-all border border-white/5"
-                            title="Back to library">
+                            title="Back to Controls">
                             <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                         </button>
                         <span className="text-[10px] font-bold text-white uppercase tracking-[0.3em]">Parameters</span>
@@ -75,7 +75,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                             <button
                                 onClick={onClose}
                                 className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/5"
-                                title="Close sidebar">
+                                title="Close Sidebar">
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         )}
@@ -103,7 +103,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                         <button
                             onClick={onClose}
                             className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/5"
-                            title="Close sidebar">
+                            title="Close Sidebar">
                             <span className="material-symbols-outlined text-[20px]">close</span>
                         </button>
                     )}

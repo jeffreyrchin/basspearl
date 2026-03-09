@@ -32,18 +32,18 @@ const SidebarParams: React.FC<SidebarParamsProps> = ({ }) => {
                 <div className="flex h-10 md:h-8 items-center border border-white/10 rounded-md bg-white/5 overflow-hidden">
                     <button
                         onClick={() => toggleSolo(effectIndex)}
-                        className={`w-8 h-full flex items-center justify-center text-[10px] font-mono transition-none ${isSoloed ? 'bg-white text-black' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}
-                        aria-label="Solo Effect"
+                        className={`w-8 h-full flex items-center justify-center transition-colors ${isSoloed ? 'bg-white text-black' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}
+                        title="Toggle Solo"
                     >
-                        S
+                        <span className="material-symbols-outlined text-[18px]">egg</span>
                     </button>
                     <div className="w-[1px] h-full bg-white/10 flex-shrink-0" />
                     <button
                         onClick={() => toggleMute(effectIndex)}
-                        className={`w-8 h-full flex items-center justify-center text-[10px] font-mono transition-none ${isMuted ? 'bg-cyan-900 text-white hover:bg-cyan-800' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}
-                        aria-label="Mute Effect"
+                        className={`w-8 h-full flex items-center justify-center transition-colors ${isMuted ? 'bg-cyan-900 text-white hover:bg-cyan-800' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}
+                        title="Toggle Visibility"
                     >
-                        M
+                        <span className="material-symbols-outlined text-[18px]">{isMuted ? 'visibility_off' : 'visibility'}</span>
                     </button>
                 </div>
             </div>

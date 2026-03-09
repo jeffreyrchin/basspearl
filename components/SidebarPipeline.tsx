@@ -45,7 +45,7 @@ const SidebarPipeline = ({ onSelectEffect, onNavigateToLibrary }: any) => {
 
                 // Restore focus to the same item in its new position
                 setTimeout(() => {
-                    const buttons = document.querySelectorAll('[title="Drag to reorder"]');
+                    const buttons = document.querySelectorAll('[title="Drag to Reorder"]');
                     (buttons[newIndex] as HTMLElement)?.focus();
                 }, 0);
             }

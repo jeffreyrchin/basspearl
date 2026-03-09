@@ -51,7 +51,7 @@ const SortableGroupItem = ({
                 {...(isOverlay ? {} : { ...attributes, ...listeners })}
                 onKeyDown={isOverlay ? undefined : (e) => onGripKeyDown(e, groupIndex)}
                 className="group w-8 flex-shrink-0 flex flex-col items-center justify-center hover:bg-white/10 focus-visible:bg-primary/20 focus-visible:border-primary/50 outline-none rounded-l-md touch-none transition-colors cursor-grab active:cursor-grabbing"
-                title="Drag to reorder"
+                title="Drag to Reorder"
             >
                 <span className="material-symbols-outlined text-white/60 group-hover:text-white transition-colors text-[18px]">drag_indicator</span>
             </button>
@@ -80,8 +80,12 @@ const SortableGroupItem = ({
 
                                 {!isOverlay && (
                                     <div className="flex h-full">
-                                        <button onClick={() => toggleSolo(effect.actualIndex)} className={`w-10 md:w-8 h-full font-mono text-[12px] ${effect.soloed ? 'bg-white text-black' : 'text-white/60 transition-colors hover:bg-white/10 hover:text-white'}`} title="Solo">S</button>
-                                        <button onClick={() => toggleMute(effect.actualIndex)} className={`w-10 md:w-8 h-full font-mono text-[12px] ${effect.muted ? 'bg-cyan-900 text-white' : 'text-white/60 transition-colors hover:bg-white/10 hover:text-white'}`} title="Mute">M</button>
+                                        <button onClick={() => toggleSolo(effect.actualIndex)} className={`w-10 md:w-8 h-full flex items-center justify-center transition-colors ${effect.soloed ? 'bg-white text-black' : 'text-white/60 hover:bg-white/10 hover:text-white'}`} title="Toggle Solo">
+                                            <span className="material-symbols-outlined text-[18px]">egg</span>
+                                        </button>
+                                        <button onClick={() => toggleMute(effect.actualIndex)} className={`w-10 md:w-8 h-full flex items-center justify-center transition-colors ${effect.muted ? 'bg-cyan-900 text-white' : 'text-white/60 hover:bg-white/10 hover:text-white'}`} title="Toggle Visibility">
+                                            <span className="material-symbols-outlined text-[18px]">{effect.muted ? 'visibility_off' : 'visibility'}</span>
+                                        </button>
                                         <button onClick={() => removeEffect(effect.actualIndex)} className="w-10 md:w-8 h-full flex items-center justify-center rounded-r-md text-white/60 transition-colors hover:text-red-400 hover:bg-red-400/20" title="Remove">
                                             <span className="material-symbols-outlined text-[18px]">close</span>
                                         </button>
