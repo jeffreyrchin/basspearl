@@ -355,7 +355,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     </div>
 
                     {/* Viewport */}
-                    <div className="flex-1 flex items-center justify-center min-h-0 relative group" aria-label="Viewport">
+                    <div className="flex-1 flex items-center justify-center min-h-0 relative group">
                         {/* Mobile Floating Toggle */}
                         {!sidebarVisible && (
                             <button
