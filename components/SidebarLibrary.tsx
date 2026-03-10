@@ -120,7 +120,7 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
                             key={category}
                             onClick={() => setSelectedCategory(category)}
                             className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all whitespace-nowrap border ${selectedCategory === category
-                                ? 'bg-primary/10 text-primary border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.1)]'
+                                ? 'bg-white/10 text-white border-white/40'
                                 : 'text-white/60 hover:text-white/80 border-transparent hover:bg-white/5'
                                 }`}
                         >

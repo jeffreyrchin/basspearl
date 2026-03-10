@@ -121,8 +121,8 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
                 aria-haspopup="listbox"
                 aria-expanded={isOpen}
                 aria-label={ariaLabel}
-                className={`flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-[0.1em] active:scale-95
-                    ${value !== 'OFF' ? 'bg-primary/10 text-primary border-primary/30' : 'bg-black/40 text-white/60 border-white/5 hover:border-white/20'}`}
+                className={`flex items-center gap-1.5 pl-3 pr-1 rounded-lg border text-[10px] font-bold uppercase tracking-[0.1em] active:scale-95 hover:text-white transition-colors
+                    ${value !== 'OFF' ? 'bg-primary/10 text-primary border-primary/30' : 'bg-white/5 text-white/60 border-white/10'}`}
             >
                 <span>{value === 'OFF' ? 'Manual' : value}</span>
                 <span className={`material-symbols-outlined text-[18px] ${isOpen ? 'rotate-180' : ''}`}>expand_more</span>

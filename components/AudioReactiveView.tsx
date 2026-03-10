@@ -347,7 +347,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         {/* Sidebar Toggle (Desktop only in header) */}
                         <button
                             onClick={() => setSidebarVisible(!sidebarVisible)}
-                            className={`hidden lg:flex h-9 w-9 items-center justify-center rounded-xl border transition-all ml-4 ${sidebarVisible ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
+                            className={`hidden lg:flex h-9 w-9 items-center justify-center rounded-xl border transition-all ml-4 text-white ${sidebarVisible ? 'bg-white/20 border-white/30' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
                             title={sidebarVisible ? "Hide Sidebar" : "Open Sidebar"}
                             aria-label={sidebarVisible ? "Hide Sidebar" : "Open Sidebar"}>
                             <span className="material-symbols-outlined text-base">tune</span>
@@ -367,7 +367,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         )}
 
                         <div
-                            className="relative w-full h-full overflow-hidden bg-white/5 shadow-2xl flex items-center justify-center"
+                            className="relative w-full h-full overflow-hidden bg-white/5 flex items-center justify-center"
                             style={{ transform: 'translateZ(0)' }}
                         >
                             <canvas ref={canvasRef} className="max-w-full max-h-full border-l border-r border-white/5 object-contain" />

@@ -8,7 +8,6 @@ interface AdaptiveSliderProps {
     frequencyBand: FrequencyBand;
     onChange: (update: { value?: number, min?: number }) => void;
     onPointerDown?: () => void;
-    className?: string;
 }
 
 type Mode = 'none' | 'left' | 'right' | 'middle';
@@ -22,8 +21,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     min,
     frequencyBand,
     onChange,
-    onPointerDown,
-    className = ''
+    onPointerDown
 }) => {
     // --- Refs for Performance & Animation ---
     const trackRef = useRef<HTMLDivElement>(null);
@@ -128,7 +126,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
 
     if (isReactive) {
         return (
-            <div className={`relative h-10 flex items-center ${className}`} onPointerDown={onPointerDown}>
+            <div className={`relative h-10 flex items-center py-6 pb-7`} onPointerDown={onPointerDown}>
                 {/* Reactive Slider */}
                 <div key="reactive" className="relative w-full" ref={trackRef}>
                     {/* Visual Track (Padded to match thumb centers) */}
@@ -159,7 +157,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     }
 
     return (
-        <div className={`relative h-10 flex items-center ${className}`} onPointerDown={onPointerDown}>
+        <div className={`relative h-10 flex items-center`} onPointerDown={onPointerDown}>
             {/* Manual/Static Slider */}
             <div key="static" className="relative flex-1 group/static">
                 <input
@@ -175,7 +173,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                 />
                 <div className="absolute inset-x-2.5 inset-y-0 pointer-events-none">
                     <div key="manual-label" className="absolute" style={{ left: `${value}%`, top: 28, transform: 'translateX(-50%)' }}>
-                        <span className="text-white/60 font-mono text-[10px] font-black select-none">{Math.round(value)}%</span>
+                        <span className="text-white/60 font-mono font-bold text-[10px] select-none">{Math.round(value)}%</span>
                     </div>
                 </div>
             </div>
@@ -210,11 +208,11 @@ const SliderHandle = memo<{
         style={{ left: `${value}%`, transform: 'translate(-50%, -50%)' }}
     >
         {/* Bar */}
-        <div className={`absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-2 bg-white ${mode === 'left' ? 'rounded-l' : 'rounded-r'} group-hover/handle:bg-primary transition-colors`} />
+        <div className={`absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-2 bg-[silver] ${mode === 'left' ? 'rounded-l' : 'rounded-r'} group-hover/handle:scale-110 transition-all`} />
 
         {/* Percentage */}
         <div key={`${mode}-label`} className={`absolute left-1/2 top-5 -translate-x-1/2`}>
-            <span className="text-white/60 font-mono text-[10px] font-black select-none">
+            <span className="text-white/60 font-mono font-bold text-[10px] select-none">
                 {Math.round(value)}%
             </span>
         </div>
