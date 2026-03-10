@@ -248,8 +248,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     icon: 'filter_tilt_shift',
     category: 'Color',
     params: [
-      { name: 'Sensitivity', defaultValue: 20, defaultBand: 'OFF', previewValue: 20, previewBand: 'SUB' },
-      { name: 'Thickness', defaultValue: 20, defaultBand: 'OFF', previewValue: 20, previewBand: 'SUB' },
+      { name: 'Sensitivity', defaultValue: 5, defaultBand: 'OFF' },
+      { name: 'Thickness', defaultValue: 20, defaultBand: 'OFF', previewBand: 'SUB' },
       { name: 'Invert', defaultValue: 0, defaultBand: 'OFF' },
     ],
   },
