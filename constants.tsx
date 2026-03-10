@@ -325,9 +325,13 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     category: 'Spatial',
     params: [
       { name: 'Scale', defaultValue: 3, defaultBand: 'OFF' },
-      { name: 'Depth', defaultValue: 40, defaultBand: 'OFF', previewValue: 60, previewBand: 'SUB' },
+      { name: 'Extrusion', defaultValue: 25, defaultBand: 'OFF', previewBand: 'SUB' },
       { name: 'Speed', defaultValue: 50, defaultBand: 'OFF' },
       { name: 'Resolution', defaultValue: 100, defaultBand: 'OFF' },
+      { name: 'Rotate X', defaultValue: 0, defaultBand: 'OFF' },
+      { name: 'Rotate Y', defaultValue: 0, defaultBand: 'OFF' },
+      { name: 'Rotate Z', defaultValue: 0, defaultBand: 'OFF' },
+      { name: 'Elevation', defaultValue: 50, defaultBand: 'OFF' },
     ],
   },
 };
@@ -448,7 +452,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           { param: 'Width', value: 69, frequencyBand: 'OFF' },
           { param: 'Height', value: 66, frequencyBand: 'OFF' },
-          { param: 'X-Freq', value: 55, frequencyBand: 'OFF' },
+          { param: 'X-Freq', value: 50, frequencyBand: 'OFF' },
           { param: 'Y-Freq', value: 46, frequencyBand: 'OFF' },
           { param: 'Density', value: 100, frequencyBand: 'OFF' },
           { param: 'Roundness', value: 0, frequencyBand: 'OFF' },
@@ -459,9 +463,13 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'TERRAIN',
         params: [
           { param: 'Scale', value: 3, frequencyBand: 'OFF' },
-          { param: 'Depth', value: 80, min: 0, frequencyBand: 'SUB' },
+          { param: 'Extrusion', value: 67, min: 35, frequencyBand: 'SUB' },
           { param: 'Speed', value: 50, frequencyBand: 'OFF' },
           { param: 'Resolution', value: 99, frequencyBand: 'OFF' },
+          { param: 'Rotate X', value: 0, frequencyBand: 'OFF' },
+          { param: 'Rotate Y', value: 0, frequencyBand: 'OFF' },
+          { param: 'Rotate Z', value: 0, frequencyBand: 'OFF' },
+          { param: 'Elevation', value: 36, frequencyBand: 'OFF' },
         ]
       },
       {
@@ -689,9 +697,13 @@ export const PRESETS: Preset[] = [
         type: 'TERRAIN',
         params: [
           { param: 'Scale', value: 3, min: 0, frequencyBand: 'OFF' },
-          { param: 'Depth', value: 24, min: 0, frequencyBand: 'OFF' },
+          { param: 'Extrusion', value: 0, min: 0, frequencyBand: 'OFF' },
           { param: 'Speed', value: 50, min: 0, frequencyBand: 'OFF' },
           { param: 'Resolution', value: 100, min: 0, frequencyBand: 'OFF' },
+          { param: 'Rotate X', value: 0, min: 0, frequencyBand: 'OFF' },
+          { param: 'Rotate Y', value: 0, min: 0, frequencyBand: 'OFF' },
+          { param: 'Rotate Z', value: 0, min: 0, frequencyBand: 'OFF' },
+          { param: 'Elevation', value: 50, min: 0, frequencyBand: 'OFF' },
         ],
         muted: false,
         soloed: false,
@@ -734,9 +746,13 @@ export const PRESETS: Preset[] = [
         type: 'TERRAIN',
         params: [
           { param: 'Scale', value: 3, min: 0, frequencyBand: 'OFF' },
-          { param: 'Depth', value: 100, min: 37, frequencyBand: 'MID' },
+          { param: 'Extrusion', value: 100, min: 31, frequencyBand: 'MID' },
           { param: 'Speed', value: 100, min: 0, frequencyBand: 'SUB' },
           { param: 'Resolution', value: 99, min: 0, frequencyBand: 'OFF' },
+          { param: 'Rotate X', value: 0, min: 0, frequencyBand: 'OFF' },
+          { param: 'Rotate Y', value: 0, min: 0, frequencyBand: 'OFF' },
+          { param: 'Rotate Z', value: 0, min: 0, frequencyBand: 'OFF' },
+          { param: 'Elevation', value: 40, min: 0, frequencyBand: 'OFF' },
         ],
         muted: false,
         soloed: false,

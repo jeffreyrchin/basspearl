@@ -34,7 +34,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
             uniforms: {
                 u_image: { value: null },
                 u_scale: { value: 1.0 },
-                u_depth: { value: 0.0 },
+                u_extrusion: { value: 0.0 },
                 u_uv_offset: { value: 0.0 },
                 u_is_max_res: { value: 0.0 },
                 u_res: { value: 1.0 },
@@ -42,7 +42,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
             vertexShader: `
                 uniform sampler2D u_image;
                 uniform float u_scale;
-                uniform float u_depth;
+                uniform float u_extrusion;
                 uniform float u_uv_offset;
                 uniform float u_is_max_res;
                 uniform float u_res;
@@ -65,7 +65,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                     vUv = vec2(pos.x / 300.0 + 0.5, 1.0 - ((pos.z / 20.0) * (u_scale / 50.0) + u_uv_offset));
                     
                     vec4 tex = texture(u_image, vUv);
-                    float h = tex.r * (u_depth / 2.0);
+                    float h = tex.r * (u_extrusion / 1.0);
                     
                     // Step 4: Right-side face color fix
                     // We sample the neighbor to the left to ensure right-facing mountain 
@@ -111,8 +111,13 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
 
         meshA.frustumCulled = false;
         meshB.frustumCulled = false;
-        scene.add(meshA);
-        scene.add(meshB);
+
+        // Wrap both meshes in a group so we can rotate the whole terrain as a unit
+        const terrainGroup = new THREE.Group();
+        terrainGroup.add(meshA);
+        terrainGroup.add(meshB);
+        scene.add(terrainGroup);
+
         const meshes = [meshA, meshB];
 
         // STABILIZER: Phantom mesh to keep engine initialized
@@ -131,12 +136,21 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
 
                 if (p && p.length >= 4) {
                     const scale = p[0];
-                    const depth = p[1];
+                    const extrusion = p[1];
                     const speed = (p[2] / 100.0 * 10.0);
                     // Map 0-100 slider to 4-512 resolution range 
                     // Lower sliders use Voxels; 100 triggers full-res cinematic mode
                     const resolution = Math.max(1, p[3]);
                     const isMaxRes = resolution >= 100.0 ? 1.0 : 0.0;
+
+                    // Rotation angles (0–100 slider maps to 0–2π radians = full 360°)
+                    const toRad = (v: number) => (v / 100.0) * Math.PI * 2.0;
+                    terrainGroup.rotation.x = toRad(p[4] ?? 0);
+                    terrainGroup.rotation.y = toRad(p[5] ?? 0);
+                    terrainGroup.rotation.z = toRad(p[6] ?? 0);
+
+                    // Elevation: Map 0-100 to -100 to +100 world units. 50 = default (0)
+                    terrainGroup.position.y = ((p[7] ?? 50) - 50) * 2.0;
 
                     // The 'Grid' we snap to in the shader
                     // RESOLUTION CEILING: 512 max identifies smaller squares
@@ -166,7 +180,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                         mat.uniforms.u_image.value = texture;
                         mat.uniforms.u_is_max_res.value = isMaxRes;
                         mat.uniforms.u_scale.value = scale;
-                        mat.uniforms.u_depth.value = depth;
+                        mat.uniforms.u_extrusion.value = extrusion;
                         mat.uniforms.u_res.value = virtualRes;
 
                         // Leap-frog: each mesh moves by worldTravelZ
