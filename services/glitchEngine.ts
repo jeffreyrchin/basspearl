@@ -250,12 +250,18 @@ export class GlitchEngine {
 
         if (p.frequencyBand !== 'OFF') {
           if (isVelocityParam) {
-            // MOTION REACTIVITY: Map to integrated (accumulated) values
+            // MOTION REACTIVITY: Hybrid Clock logic
             if (integratedReactivity) {
-              if (p.frequencyBand === 'SUB') this.uIntegratedBuffer[i] = integratedReactivity.sub;
-              else if (p.frequencyBand === 'MID') this.uIntegratedBuffer[i] = integratedReactivity.mid;
-              else if (p.frequencyBand === 'TREBLE') this.uIntegratedBuffer[i] = integratedReactivity.treble;
-              else this.uIntegratedBuffer[i] = integratedReactivity.bass;
+              let audioClock = integratedReactivity.bass;
+              if (p.frequencyBand === 'SUB') audioClock = integratedReactivity.sub;
+              else if (p.frequencyBand === 'MID') audioClock = integratedReactivity.mid;
+              else if (p.frequencyBand === 'TREBLE') audioClock = integratedReactivity.treble;
+
+              const range = p.value - p.min;
+              const steadyTime = (currentTime || 0);
+
+              this.uIntegratedBuffer[i] = (p.min * steadyTime) + (range * audioClock);
+              finalValue = 1.0;
             }
           } else {
             // INSTANTANEOUS REACTIVITY: Map to smoothed amplitude values

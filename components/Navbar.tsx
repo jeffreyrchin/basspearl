@@ -15,7 +15,7 @@ const Navbar = () => {
                 {/* Left: Logo */}
                 <Link to="/" className="flex items-center gap-2 group">
                     <h1 className="text-xl font-bold tracking-normal uppercase">
-                        Glitchbrain<span className="lowercase">.io</span>
+                        muxels
                     </h1>
                 </Link>
 

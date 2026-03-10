@@ -438,6 +438,41 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         ]
       }
     ]
+  },
+  METRO: {
+    id: 'METRO',
+    label: 'Metro',
+    effects: [
+      {
+        type: 'GRAIN',
+        params: [
+          { param: 'Width', value: 69, frequencyBand: 'OFF' },
+          { param: 'Height', value: 66, frequencyBand: 'OFF' },
+          { param: 'X-Freq', value: 55, frequencyBand: 'OFF' },
+          { param: 'Y-Freq', value: 46, frequencyBand: 'OFF' },
+          { param: 'Density', value: 100, frequencyBand: 'OFF' },
+          { param: 'Roundness', value: 0, frequencyBand: 'OFF' },
+          { param: 'Blend', value: 100, frequencyBand: 'OFF' },
+        ]
+      },
+      {
+        type: 'TERRAIN',
+        params: [
+          { param: 'Scale', value: 3, frequencyBand: 'OFF' },
+          { param: 'Depth', value: 80, min: 0, frequencyBand: 'SUB' },
+          { param: 'Speed', value: 50, frequencyBand: 'OFF' },
+          { param: 'Resolution', value: 99, frequencyBand: 'OFF' },
+        ]
+      },
+      {
+        type: 'EDGE_MASK',
+        params: [
+          { param: 'Sensitivity', value: 0, frequencyBand: 'OFF' },
+          { param: 'Thickness', value: 2, frequencyBand: 'OFF' },
+          { param: 'Invert', value: 0, frequencyBand: 'OFF' },
+        ]
+      }
+    ]
   }
 };
 
@@ -490,15 +525,12 @@ export const createMacroInstance = (macroType: MacroType, isPreview?: boolean): 
   });
 };
 
-export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = [
-  createEffectInstance('STARFIELD'),
-  ...createMacroInstance('RAINBOW_DOT')
-];
+export const INITIAL_REACTIVE_EFFECTS: EffectConfig[] = [];
 
 export interface Preset {
   id: string;
   label: string;
-  image: string;
+  image?: string;
   audio: string;
   effects: EffectConfig[];
 }
@@ -605,6 +637,139 @@ export const PRESETS: Preset[] = [
         muted: false,
         soloed: false,
         seed: 4,
+      },
+    ],
+  },
+  {
+    id: 'city',
+    label: '🏙️',
+    audio: '/presets/Repentance.mp3',
+    effects: [
+      {
+        id: 'city-starfield',
+        type: 'STARFIELD',
+        params: [
+          { param: 'Density', value: 40, min: 0, frequencyBand: 'OFF' },
+          { param: 'Speed', value: 0, min: 0, frequencyBand: 'OFF' },
+        ],
+        muted: false,
+        soloed: false,
+        melded: true,
+        seed: 0,
+      },
+      {
+        id: 'city-tunnel-warp',
+        type: 'TUNNEL_WARP',
+        params: [
+          { param: 'Scale', value: 30, min: 0, frequencyBand: 'OFF' },
+          { param: 'Speed', value: 51, min: 0, frequencyBand: 'SUB' },
+          { param: 'Twist', value: 23, min: 0, frequencyBand: 'OFF' },
+        ],
+        muted: false,
+        soloed: false,
+        melded: false,
+        seed: 1,
+      },
+      {
+        id: 'city-grid',
+        type: 'GRID',
+        params: [
+          { param: 'Horizontal', value: 38, min: 0, frequencyBand: 'OFF' },
+          { param: 'Vertical', value: 30, min: 0, frequencyBand: 'OFF' },
+          { param: 'Thickness', value: 100, min: 0, frequencyBand: 'OFF' },
+          { param: 'Feather', value: 0, min: 0, frequencyBand: 'OFF' },
+        ],
+        muted: false,
+        soloed: false,
+        melded: true,
+        seed: 1,
+      },
+      {
+        id: 'city-terrain',
+        type: 'TERRAIN',
+        params: [
+          { param: 'Scale', value: 3, min: 0, frequencyBand: 'OFF' },
+          { param: 'Depth', value: 24, min: 0, frequencyBand: 'OFF' },
+          { param: 'Speed', value: 50, min: 0, frequencyBand: 'OFF' },
+          { param: 'Resolution', value: 100, min: 0, frequencyBand: 'OFF' },
+        ],
+        muted: false,
+        soloed: false,
+        melded: true,
+        seed: 2,
+      },
+      {
+        id: 'city-luminance-map',
+        type: 'LUMINANCE_MAP',
+        params: [
+          { param: 'Threshold', value: 100, min: 0, frequencyBand: 'OFF' },
+          { param: 'Feather', value: 10, min: 0, frequencyBand: 'OFF' },
+          { param: 'Tone', value: 0, min: 0, frequencyBand: 'OFF' },
+          { param: 'Blend', value: 100, min: 0, frequencyBand: 'OFF' },
+        ],
+        muted: false,
+        soloed: false,
+        melded: false,
+        seed: 3,
+      },
+      {
+        id: 'city-grain',
+        type: 'GRAIN',
+        params: [
+          { param: 'Width', value: 69, min: 0, frequencyBand: 'OFF' },
+          { param: 'Height', value: 66, min: 0, frequencyBand: 'OFF' },
+          { param: 'X-Freq', value: 50, min: 0, frequencyBand: 'OFF' },
+          { param: 'Y-Freq', value: 46, min: 0, frequencyBand: 'OFF' },
+          { param: 'Density', value: 100, min: 0, frequencyBand: 'OFF' },
+          { param: 'Roundness', value: 0, min: 0, frequencyBand: 'OFF' },
+          { param: 'Blend', value: 100, min: 0, frequencyBand: 'OFF' },
+        ],
+        muted: false,
+        soloed: false,
+        melded: true,
+        seed: 4,
+      },
+      {
+        id: 'city-terrain-2',
+        type: 'TERRAIN',
+        params: [
+          { param: 'Scale', value: 3, min: 0, frequencyBand: 'OFF' },
+          { param: 'Depth', value: 100, min: 37, frequencyBand: 'MID' },
+          { param: 'Speed', value: 100, min: 0, frequencyBand: 'SUB' },
+          { param: 'Resolution', value: 99, min: 0, frequencyBand: 'OFF' },
+        ],
+        muted: false,
+        soloed: false,
+        melded: true,
+        seed: 5,
+      },
+      {
+        id: 'city-edge-mask',
+        type: 'EDGE_MASK',
+        params: [
+          { param: 'Sensitivity', value: 0, min: 0, frequencyBand: 'OFF' },
+          { param: 'Thickness', value: 3, min: 0, frequencyBand: 'OFF' },
+          { param: 'Invert', value: 0, min: 0, frequencyBand: 'OFF' },
+        ],
+        muted: false,
+        soloed: false,
+        melded: true,
+        seed: 6,
+      },
+      {
+        id: 'city-spectral',
+        type: 'SPECTRAL_MAP',
+        params: [
+          { param: 'Resolution', value: 13, min: 0, frequencyBand: 'OFF' },
+          { param: 'Phase Offset', value: 78, min: 0, frequencyBand: 'OFF' },
+          { param: 'Speed', value: 0, min: 0, frequencyBand: 'OFF' },
+          { param: 'Strength', value: 36, min: 0, frequencyBand: 'OFF' },
+
+        ],
+        muted: false,
+        soloed: false,
+        melded: false,
+        seed: 7,
       },
     ],
   },

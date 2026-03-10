@@ -67,7 +67,7 @@ const AboutContent: React.FC = () => {
                             <div>
                                 <h3 className="text-base font-bold uppercase tracking-wider text-white mb-1">Export your video</h3>
                                 <p className="text-white/60 text-sm leading-relaxed">
-                                    Click the Export Video button below the viewport to download your creation as an MP4 video, ready for social media or live performance.
+                                    Click the Export button below the viewport to download your creation as an MP4 video, ready for social media or live performance.
                                 </p>
                             </div>
                         </div>

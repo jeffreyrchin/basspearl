@@ -74,12 +74,16 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         setIsProcessing(true);
         analytics.preset.started(preset.id);
         try {
-            // 1. Load Image
-            const response = await fetch(preset.image);
-            const blob = await response.blob();
-            const file = new File([blob], preset.label, { type: 'image/jpeg' });
-            setImageFile(file);
-            const imageUrl = URL.createObjectURL(blob);
+            let imageUrl: string | null = null;
+            if (preset.image) {
+                // 1. Load Image
+                const response = await fetch(preset.image);
+                const blob = await response.blob();
+                const file = new File([blob], preset.label, { type: 'image/jpeg' });
+                setImageFile(file);
+                imageUrl = URL.createObjectURL(blob);
+            }
+
             imageFileRef.current = imageUrl;
 
             // 2. Load Audio
@@ -153,20 +157,25 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
     const renderFrame = async (time: number) => {
         if (!canvasRef.current) return;
-        const currentFrame = Math.floor(time * 60);
+        const fractionalFrame = time * 60;
+        const frameIndex = Math.floor(fractionalFrame);
+        const nextFrameIndex = Math.min(frameIndex + 1, (reactivityMapRef.current?.bass.length || 1) - 1);
+        const t = fractionalFrame - frameIndex; // Interpolation factor (0.0 to 1.0)
 
         let smoothed: { sub: number, bass: number, mid: number, treble: number } | undefined;
         let frameIntegrated: { sub: number, bass: number, mid: number, treble: number } | undefined;
 
-        // 1. Get Instantaneous Reactivity for standard effects
+        // 1. Get Instantaneous Reactivity for standard effects (with Linear Interpolation)
         if (reactivityMapRef.current) {
             const map = reactivityMapRef.current;
-            const frame = Math.min(map.bass.length - 1, currentFrame); // Ensures frame <= last valid FFT frame index
+            const f = Math.min(map.bass.length - 1, frameIndex); // Ensures frame <= last valid FFT frame index
+            const nf = Math.min(map.bass.length - 1, nextFrameIndex);
+
             smoothed = {
-                sub: map.sub[frame],
-                bass: map.bass[frame],
-                mid: map.mid[frame],
-                treble: map.treble[frame]
+                sub: map.sub[f] + (map.sub[nf] - map.sub[f]) * t,
+                bass: map.bass[f] + (map.bass[nf] - map.bass[f]) * t,
+                mid: map.mid[f] + (map.mid[nf] - map.mid[f]) * t,
+                treble: map.treble[f] + (map.treble[nf] - map.treble[f]) * t
             };
 
             // Update global "state bucket" (Shared Float32Array)
@@ -176,15 +185,17 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             SHARED_AUDIO_STATE[3] = smoothed.treble;
         }
 
-        // 2. Get Integrated Reactivity for time-based/motion effects (Starfield)
+        // 2. Get Integrated Reactivity for motion effects (with Linear Interpolation)
         if (integratedReactivityMapRef.current) {
             const iMap = integratedReactivityMapRef.current;
-            const frame = Math.min(iMap.bass.length - 1, currentFrame);
+            const f = Math.min(iMap.bass.length - 1, frameIndex);
+            const nf = Math.min(iMap.bass.length - 1, nextFrameIndex);
+
             frameIntegrated = {
-                sub: iMap.sub[frame],
-                bass: iMap.bass[frame],
-                mid: iMap.mid[frame],
-                treble: iMap.treble[frame]
+                sub: iMap.sub[f] + (iMap.sub[nf] - iMap.sub[f]) * t,
+                bass: iMap.bass[f] + (iMap.bass[nf] - iMap.bass[f]) * t,
+                mid: iMap.mid[f] + (iMap.mid[nf] - iMap.mid[f]) * t,
+                treble: iMap.treble[f] + (iMap.treble[nf] - iMap.treble[f]) * t
             };
         }
 
@@ -368,19 +379,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                     <div className="flex flex-col items-center gap-1">
                                         <h3 className="text-xs font-bold tracking-widest text-white uppercase">Analyzing Audio</h3>
                                         <p className="text-[9px] text-white/40 uppercase tracking-[0.2em]">Synchronizing frequencies</p>
-                                    </div>
-                                </div>
-                            )}
-                            {!imageFile && !audioFile && !isProcessing && (
-                                <div className="absolute bottom-8 left-8 z-10 flex flex-col items-start gap-4 p-6 text-left max-w-xs bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 animate-in slide-in-from-bottom-4 fade-in duration-700">
-                                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/60 border border-white/10">
-                                        <span className="material-symbols-outlined text-2xl">auto_awesome</span>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <h2 className="text-sm font-bold tracking-tight text-white uppercase tracking-[0.2em]">Ready to Animate</h2>
-                                        <p className="text-[9px] text-white/60 uppercase tracking-widest leading-relaxed">
-                                            Choose audio or select one of the presets above to begin animating.
-                                        </p>
                                     </div>
                                 </div>
                             )}

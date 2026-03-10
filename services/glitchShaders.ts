@@ -1192,6 +1192,7 @@ precision highp float;
 uniform sampler2D u_image;    // Input: normalized grayscale or RGB
 uniform float u_params[3];    // [sensitivity, thickness, invert]
 uniform vec2 u_resolution;
+uniform float u_unit;
 
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -1199,11 +1200,11 @@ out vec4 outColor;
 void main() {
     // Map parameters
     float sensitivity = max(u_params[0] / 100.0, 0.01);       // 0 = weak, 1 = strong
-    float thickness = mix(1.0, 15.0, u_params[1] / 100.0);
+    float thickness = mix(0.05, 3.0, u_params[1] / 100.0);
     float invert = u_params[2] / 100.0;
 
-    // Compute texel size based on thickness
-    vec2 texel = thickness / u_resolution;
+    // Scale thickness by u_unit so edges are visually identical across all resolutions
+    vec2 texel = (thickness * u_unit) / u_resolution;
     vec3 luma = vec3(0.299, 0.587, 0.114);
 
     // Sample 8-neighbor luminance

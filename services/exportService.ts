@@ -185,7 +185,7 @@ export const exportVideo = async (options: ExportOptions) => {
 
         const link = document.createElement('a');
         link.href = downloadUrl;
-        link.download = `glitchbrain_${Date.now()}.mp4`;
+        link.download = `muxels_${Date.now()}.mp4`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
