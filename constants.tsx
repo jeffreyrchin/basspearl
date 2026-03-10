@@ -463,7 +463,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'TERRAIN',
         params: [
           { param: 'Scale', value: 3, frequencyBand: 'OFF' },
-          { param: 'Extrusion', value: 67, min: 35, frequencyBand: 'SUB' },
+          { param: 'Extrusion', value: 67, frequencyBand: 'OFF' },
           { param: 'Speed', value: 50, frequencyBand: 'OFF' },
           { param: 'Resolution', value: 99, frequencyBand: 'OFF' },
           { param: 'Rotate X', value: 0, frequencyBand: 'OFF' },

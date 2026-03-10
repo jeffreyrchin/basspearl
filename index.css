@@ -168,10 +168,3 @@ html {
   transform: scale(1.1);
   box-shadow: 0 0 15px rgba(251, 0, 255, 0.8);
 }
-
-/* Optimization: Hide canvases during mobile transitions to prevent compositor lockup */
-@media (max-width: 1024px) {
-  .sidebar-sliding canvas {
-    visibility: hidden;
-  }
-}

@@ -41,7 +41,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const effects = useEffectStore(s => s.effects);
     const setEffects = useEffectStore(s => s.setEffects);
     const [sidebarVisible, setSidebarVisible] = useState(false); // Default to hidden
-    const [isSidebarSliding, setIsSidebarSliding] = useState(false);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const requestRef = useRef<number>();
@@ -280,16 +279,12 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         }
     };
 
-    useEffect(() => {
-        setIsSidebarSliding(true);
-    }, [sidebarVisible]);
-
     return (
-        <div className="h-screen bg-[#050B14] text-white flex flex-col overflow-hidden font-display leading-relaxed">
+        <div className="h-screen text-white flex flex-col overflow-hidden font-display leading-relaxed">
             <Navbar />
             <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
                 {/* Main Content Area */}
-                <main className={`flex-1 flex flex-col min-h-0 min-w-0 bg-[#050B14] transition-all duration-500 ease-in-out ${sidebarVisible ? 'lg:mr-0' : ''}`}>
+                <main className={`flex-1 flex flex-col min-h-0 min-w-0 transition-all duration-500 ease-in-out ${sidebarVisible ? 'lg:mr-0' : ''}`}>
                     {/* Source Header: Preset loading and local asset uploading */}
                     <div className="h-14 border-b border-white/5 bg-white/5 flex items-center justify-between lg:justify-center px-6 gap-4 shrink-0 overflow-x-auto no-scrollbar">
                         {/* Presets Group */}
@@ -371,7 +366,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             </button>
                         )}
 
-                        <div className="relative w-full h-full overflow-hidden bg-white/5 shadow-2xl flex items-center justify-center">
+                        <div
+                            className="relative w-full h-full overflow-hidden bg-white/5 shadow-2xl flex items-center justify-center"
+                            style={{ transform: 'translateZ(0)' }}
+                        >
                             <canvas ref={canvasRef} className="max-w-full max-h-full border-l border-r border-white/5 object-contain" />
                             {isProcessing && (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 animate-in fade-in duration-300 z-10 backdrop-blur-sm">
@@ -467,8 +465,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
                 {/* Sidebar: Effects Rack & Parameters */}
                 <aside
-                    onTransitionEnd={() => setIsSidebarSliding(false)}
-                    className={`fixed inset-y-0 right-0 z-[60] lg:relative w-full sm:w-[400px] border-l border-white/5 bg-[#050B14] flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] lg:shadow-none will-change-transform ${sidebarVisible ? 'translate-x-0' : 'translate-x-full lg:hidden'} ${isSidebarSliding ? 'sidebar-sliding' : ''}`}>
+                    className={`fixed inset-y-0 right-0 z-[60] lg:relative w-full sm:w-[400px] border-l border-white/5 bg-[#050B14] flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] lg:shadow-none will-change-transform ${sidebarVisible ? 'translate-x-0' : 'translate-x-full lg:hidden'}`}>
                     {/* Inner wrapper */}
                     <div className="flex-1 flex flex-col min-h-0 relative">
                         <SidebarNavigation
