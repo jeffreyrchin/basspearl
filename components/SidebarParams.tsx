@@ -62,9 +62,9 @@ const SidebarParams: React.FC<SidebarParamsProps> = ({ }) => {
                 {EFFECT_METADATA[effect.type]?.params?.map((paramMeta, paramIdx) => {
                     const param = effect.params[paramIdx];
                     return (
-                        <div key={paramIdx} className="py-2 flex flex-col group/item">
-                            <div className="flex justify-between items-center py-1">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-white/60">
+                        <div key={paramIdx} className="py-3 flex flex-col">
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-white/80">
                                     {paramMeta.name}
                                 </label>
 

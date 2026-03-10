@@ -126,7 +126,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
 
     if (isReactive) {
         return (
-            <div className={`relative h-10 flex items-center py-6 pb-7`} onPointerDown={onPointerDown}>
+            <div className={`relative h-10 flex items-center mb-3`} onPointerDown={onPointerDown}>
                 {/* Reactive Slider */}
                 <div key="reactive" className="relative w-full" ref={trackRef}>
                     {/* Visual Track (Padded to match thumb centers) */}
@@ -157,7 +157,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     }
 
     return (
-        <div className={`relative h-10 flex items-center`} onPointerDown={onPointerDown}>
+        <div className={`relative h-10 flex items-center mb-1`} onPointerDown={onPointerDown}>
             {/* Manual/Static Slider */}
             <div key="static" className="relative flex-1 group/static">
                 <input
@@ -173,7 +173,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                 />
                 <div className="absolute inset-x-2.5 inset-y-0 pointer-events-none">
                     <div key="manual-label" className="absolute" style={{ left: `${value}%`, top: 28, transform: 'translateX(-50%)' }}>
-                        <span className="text-white/60 font-mono font-bold text-[10px] select-none">{Math.round(value)}%</span>
+                        <span className="text-white/60 font-mono font-medium text-[10px] select-none">{Math.round(value)}%</span>
                     </div>
                 </div>
             </div>
@@ -212,7 +212,7 @@ const SliderHandle = memo<{
 
         {/* Percentage */}
         <div key={`${mode}-label`} className={`absolute left-1/2 top-5 -translate-x-1/2`}>
-            <span className="text-white/60 font-mono font-bold text-[10px] select-none">
+            <span className="text-white/60 font-mono font-medium text-[10px] select-none">
                 {Math.round(value)}%
             </span>
         </div>
