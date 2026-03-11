@@ -72,6 +72,9 @@ export interface MacroEffectOverrideItem {
     value?: number;
     min?: number;
     frequencyBand?: FrequencyBand;
+    previewValue?: number;
+    previewMin?: number;
+    previewBand?: FrequencyBand;
   }[];
 }
 

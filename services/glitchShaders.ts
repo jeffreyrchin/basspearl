@@ -1126,14 +1126,14 @@ void main() {
     float cellHeight = u_params[1] / 100.0 * 2.0;
     float probDensity = u_params[4] / 100.0;
     float jitter = u_params[5] / 100.0;
-    float speed = u_params[6] / 100.0 * 5.0;
+    float speed = u_params[6] / 100.0 * 15.0;
     float blend = u_params[7] / 100.0;
 
     // 2. Exponential frequency (consistent with Noise shader)
     vec2 freq = vec2(
-    round(exp2(xFreq * log2(u_resolution.x))),
-    round(exp2(yFreq * log2(u_resolution.y)))
-);
+        round(exp2(xFreq * log2(u_resolution.x))),
+        round(exp2(yFreq * log2(u_resolution.y)))
+    );
 
     float t = u_integrated_values[6] * speed * 0.5;
     vec2 cellCoord = v_texCoord * freq;

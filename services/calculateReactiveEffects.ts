@@ -45,14 +45,14 @@ export const calculateNextState = (
 
     // 2. Extract frequency bands
     const subBins: [number, number] = [freqToBin(20), freqToBin(100)];
-    const bassBins: [number, number] = [freqToBin(100), freqToBin(300)];
-    const midBins: [number, number] = [freqToBin(300), freqToBin(1500)];
-    const trebleBins: [number, number] = [freqToBin(1500), freqToBin(8000)];
+    const bassBins: [number, number] = [freqToBin(100), freqToBin(250)];
+    const midBins: [number, number] = [freqToBin(250), freqToBin(1000)];
+    const trebleBins: [number, number] = [freqToBin(1000), freqToBin(8000)];
 
     const rawSub = bandRMS(subBins[0], subBins[1]);
     const rawBass = bandRMS(bassBins[0], bassBins[1]);
-    const rawMid = bandRMS(midBins[0], midBins[1]);
-    const rawTreble = bandRMS(trebleBins[0], trebleBins[1]);
+    const rawMid = bandRMS(midBins[0], midBins[1]) * 1.2;
+    const rawTreble = bandRMS(trebleBins[0], trebleBins[1]) * 1.4;
 
     // 3. Transient detection & smoothing
     const transientBoost = { sub: 10.0, bass: 10.0, mid: 10.0, treble: 10.0 };
