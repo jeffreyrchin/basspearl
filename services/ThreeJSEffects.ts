@@ -18,14 +18,14 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
 
         /**
          * HYBRID VOXEL ARCHITECTURE:
-         * We use a fixed high-resolution mesh (512+ segments) and handle 'Voxels' purely in the 
+         * We use a fixed high-resolution mesh (256+ segments) and handle 'Voxels' purely in the 
          * vertex shader. This eliminates CPU bottlenecks and geometry recreation jank when 
          * dragging the resolution slider. To maintain perfectly square blocks across the 
          * entire landscape, we scale the segment count to match the plane's aspect ratio.
          */
-        const meshResX = 512;
-        const meshResY = Math.floor(meshResX * (1000.0 / 300.0));
-        let geometry = new THREE.PlaneGeometry(300, 1000, meshResX, meshResY);
+        const meshResX = 256;
+        const meshResY = Math.floor(meshResX * (500.0 / 300.0));
+        let geometry = new THREE.PlaneGeometry(300, 500, meshResX, meshResY);
         geometry.rotateX(-Math.PI / 2);
 
         const material = new THREE.ShaderMaterial({
@@ -48,10 +48,11 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 uniform float u_res;
                 out vec2 vUv;
                 flat out vec4 vColorFlat;
+                out float vFogDepth;
 
                 void main() {
                     // Block size defines the 'Visual Resolution' snapped in world units
-                    float blockSize = 300.0 / clamp(u_res, 1.0, 512.0);
+                    float blockSize = 300.0 / clamp(u_res, 1.0, 256.0);
                     
                     // Step 1: Snap physical vertex positions to the virtual voxel grid
                     vec3 snappedPos = position;
@@ -76,7 +77,9 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                     vColorFlat = (hL > tex.r) ? texture(u_image, leftUv) : tex;
                     
                     pos.y += h;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                    gl_Position = projectionMatrix * mvPosition;
+                    vFogDepth = -mvPosition.z;
                 }
             `,
             fragmentShader: `
@@ -85,6 +88,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 uniform float u_is_max_res;
                 in vec2 vUv;
                 flat in vec4 vColorFlat;
+                in float vFogDepth;
                 out vec4 outColor;
 
                 void main() {
@@ -93,10 +97,12 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                     vec4 smoothColor = texture(u_image, vUv);
                     vec4 finalColor = mix(vColorFlat, smoothColor, u_is_max_res);
 
-                    outColor = finalColor;
+                    // Depth-based fog: invisible at ~50, transparent at ~450
+                    float fogFactor = smoothstep(50.0, 450.0, vFogDepth);
+                    outColor = mix(finalColor, vec4(0.0, 0.0, 0.0, 0.0), fogFactor);
                 }
             `,
-            side: THREE.DoubleSide
+            side: THREE.FrontSide
         });
 
         const matA = material;
@@ -138,7 +144,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                     const scale = p[0];
                     const extrusion = p[1];
                     const speed = (p[2] / 100.0 * 10.0);
-                    // Map 0-100 slider to 4-512 resolution range 
+                    // Map 0-100 slider to 4-256 resolution range 
                     // Lower sliders use Voxels; 100 triggers full-res cinematic mode
                     const resolution = Math.max(1, p[3]);
                     const isMaxRes = resolution >= 100.0 ? 1.0 : 0.0;
@@ -153,11 +159,11 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                     terrainGroup.position.y = ((p[7] ?? 50) - 50) * 2.0;
 
                     // The 'Grid' we snap to in the shader
-                    // RESOLUTION CEILING: 512 max identifies smaller squares
-                    const virtualRes = Math.max(2, Math.floor(4 + resolution * 5.08));
+                    // RESOLUTION CEILING: 256 max identifies smaller squares
+                    const virtualRes = Math.max(2, Math.floor(4 + resolution * 2.54));
 
                     // Physical length for tiling calculation
-                    const segmentLen = 1000.0;
+                    const segmentLen = 500.0;
                     const wrapDistInShader = 20.0; // Shader tiles every 20 units
                     const scaleFactor = (scale / 50.0 || 1.0);
                     const unitsPerSegment = (segmentLen / wrapDistInShader) * scaleFactor;

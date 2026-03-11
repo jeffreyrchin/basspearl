@@ -115,8 +115,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         analytics.effect.added(type);
         const newEffect = createEffectInstance(type);
         set((state) => ({
-            effects: [...state.effects, newEffect],
-            selectedEffectId: newEffect.id,
+            effects: [...state.effects, newEffect]
         }));
     },
 
@@ -127,8 +126,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         if (newEffects.length === 0) return;
 
         set((state) => ({
-            effects: [...state.effects, ...newEffects],
-            selectedEffectId: newEffects[newEffects.length - 1].id,
+            effects: [...state.effects, ...newEffects]
         }));
     },
 
