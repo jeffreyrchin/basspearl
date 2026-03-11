@@ -3,6 +3,7 @@ import { useEffectStore } from '../store/useEffectStore';
 import SidebarLibrary from './SidebarLibrary';
 import SidebarPipeline from './SidebarPipeline';
 import SidebarParams from './SidebarParams';
+import { EFFECT_METADATA } from '@/constants';
 
 export type SidebarView = 'pipeline' | 'effects' | 'params';
 
@@ -22,6 +23,9 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     const redo = useEffectStore(s => s.redo);
     const past = useEffectStore(s => s.past);
     const future = useEffectStore(s => s.future);
+
+    const selectedEffectId = useEffectStore(s => s.selectedEffectId);
+    const effectIndex = effects.findIndex(e => e.id === selectedEffectId);
 
     // Keyboard shortcuts
     React.useEffect(() => {
@@ -60,6 +64,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     );
 
     if (view === 'params') {
+        const selectedEffect = effects[effectIndex];
         return (
             <div className="flex-1 flex flex-col min-h-0 pt-20 lg:pt-0 border-l border-white/5 animate-in fade-in slide-in-from-right-4 duration-300 bg-white/5">
                 {/* Header Bar */}
@@ -71,7 +76,9 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                             title="Back to Controls">
                             <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                         </button>
-                        <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">Parameters</span>
+                        <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">
+                            {EFFECT_METADATA[selectedEffect.type]?.label}
+                        </span>
                     </div>
 
                     <div className="flex items-center gap-2">
