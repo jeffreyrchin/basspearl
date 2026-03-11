@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { EffectConfig } from '../types';
 import { mainGlitchEngine } from '../services/glitchEngine';
-import SidebarNavigation from './SidebarNavigation';
+import SidebarNavigation, { SidebarView } from './SidebarNavigation';
+import PlaybackBar from './PlaybackBar';
 import Navbar from './Navbar';
+import MainToolbar from './MainToolbar';
 import { Footer } from './Footer';
-import { Preset, PRESETS } from '@/constants';
+import { Preset } from '@/constants';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 import { exportVideo } from '@/services/exportService';
 import { analytics } from '@/services/analytics';
@@ -41,6 +43,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const effects = useEffectStore(s => s.effects);
     const setEffects = useEffectStore(s => s.setEffects);
     const [sidebarVisible, setSidebarVisible] = useState(false); // Default to hidden
+    const [sidebarView, setSidebarView] = useState<SidebarView>('pipeline');
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const requestRef = useRef<number>();
@@ -285,74 +288,20 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
                 {/* Main Content Area */}
                 <main className={`flex-1 flex flex-col min-h-0 min-w-0 transition-all duration-500 ease-in-out ${sidebarVisible ? 'lg:mr-0' : ''}`}>
-                    {/* Source Header: Preset loading and local asset uploading */}
-                    <div className="h-14 border-b border-white/5 bg-white/5 flex items-center justify-between lg:justify-center px-6 gap-4 shrink-0 overflow-x-auto no-scrollbar">
-                        {/* Presets Group */}
-                        <div className="flex items-center gap-2 border-r border-white/10 pr-4 mr-2 shrink-0">
-                            {PRESETS.map(preset => (
-                                <button
-                                    key={preset.id}
-                                    onClick={() => loadPreset(preset)}
-                                    disabled={isProcessing}
-                                    title={`Load ${preset.label} Preset`}
-                                    aria-label={`Load ${preset.label} Preset`}
-                                    className="h-8 px-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-[9px] font-bold uppercase tracking-widest disabled:opacity-30"
-                                >
-                                    {preset.label.split(' ')[0]}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Local Assets Group */}
-                        <div className="flex items-center gap-3 shrink-0">
-                            {/* Choose Image */}
-                            <input
-                                ref={imageInputRef}
-                                id="image-file-input"
-                                type="file"
-                                accept="image/*, .jpg, .jpeg, .png, .webp, .heic"
-                                onClick={(e) => { (e.target as HTMLInputElement).value = ''; }} // Clear input so onChange always fires
-                                onChange={handleImageUpload}
-                                className="sr-only"
-                                title="Choose Image" />
-                            <button
-                                type="button"
-                                onClick={() => imageInputRef.current?.click()}
-                                className={`h-9 px-4 rounded-xl border transition-all duration-300 flex items-center gap-3 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#00F0FF] text-white ${imageFile ? "border-[#00F0FF]/30 bg-[#00F0FF]/5" : "border-white/5 bg-white/[0.03] hover:border-white/20"}`}
-                                title="Choose Image">
-                                <span className={`material-symbols-outlined text-base ${imageFile ? "text-[#00F0FF]" : "text-white"}`}>image</span>
-                                {imageFile && <span className="w-1.5 h-1.5 rounded-full bg-[#00F0FF] shadow-[0_0_8px_rgba(0,240,255,0.8)]" />}
-                            </button>
-
-                            {/* Choose Audio */}
-                            <input
-                                ref={audioInputRef}
-                                id="audio-file-input"
-                                type="file"
-                                accept="audio/*, .mp3, .wav, .m4a, .aac, .ogg"
-                                onClick={(e) => { (e.target as HTMLInputElement).value = ''; }} // Clear input so onChange always fires
-                                onChange={handleAudioUpload}
-                                className="sr-only"
-                                title="Choose Audio" />
-                            <button
-                                type="button"
-                                onClick={() => audioInputRef.current?.click()}
-                                className={`h-9 px-4 rounded-xl border transition-all duration-300 flex items-center gap-3 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#3B82F6] text-white ${audioFile ? 'border-[#3B82F6]/30 bg-[#3B82F6]/5' : 'border-white/5 bg-white/[0.03] hover:border-white/20'}`}
-                                title="Choose Audio">
-                                <span className={`material-symbols-outlined text-base ${audioFile ? "text-[#3B82F6]" : "text-white"}`}>graphic_eq</span>
-                                {audioFile && <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] shadow-[0_0_8px_rgba(59,130,246,0.8)]" />}
-                            </button>
-                        </div>
-
-                        {/* Sidebar Toggle (Desktop only in header) */}
-                        <button
-                            onClick={() => setSidebarVisible(!sidebarVisible)}
-                            className={`hidden lg:flex h-9 w-9 items-center justify-center rounded-xl border transition-all ml-4 text-white ${sidebarVisible ? 'bg-white/20 border-white/30' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
-                            title={sidebarVisible ? "Hide Sidebar" : "Open Sidebar"}
-                            aria-label={sidebarVisible ? "Hide Sidebar" : "Open Sidebar"}>
-                            <span className="material-symbols-outlined text-base">tune</span>
-                        </button>
-                    </div>
+                    <MainToolbar
+                        isProcessing={isProcessing}
+                        loadPreset={loadPreset}
+                        imageInputRef={imageInputRef}
+                        audioInputRef={audioInputRef}
+                        imageFile={imageFile}
+                        audioFile={audioFile}
+                        handleImageUpload={handleImageUpload}
+                        handleAudioUpload={handleAudioUpload}
+                        sidebarVisible={sidebarVisible}
+                        setSidebarVisible={setSidebarVisible}
+                        sidebarView={sidebarView}
+                        setSidebarView={setSidebarView}
+                    />
 
                     {/* Viewport */}
                     <div className="flex-1 flex items-center justify-center min-h-0 relative group">
@@ -383,64 +332,40 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         </div>
                     </div>
 
-                    {/* Playback Bar */}
-                    <div className="h-14 bg-white/5 border-t border-white/5 flex items-center px-3 sm:px-6 gap-2 sm:gap-4 shrink-0 overflow-hidden">
-                        {/* Play/Pause */}
-                        <button
-                            onClick={() => {
+                    {/* Bottom Bar: Playback & Export */}
+                    <div className="h-14 bg-white/5 border-t border-white/5 flex items-center pr-3 sm:pr-6 shrink-0 w-full">
+                        <PlaybackBar
+                            isPlaying={isPlaying}
+                            audioFile={audioFile}
+                            isProcessing={isProcessing}
+                            formatTime={formatTime}
+                            currentTime={currentTime}
+                            duration={duration}
+                            currentTimeLabelRef={currentTimeLabelRef}
+                            scrubberRef={scrubberRef}
+                            isDraggingScrubberRef={isDraggingScrubberRef}
+                            onPlayPause={() => {
                                 analytics.playback.toggled(!isPlaying);
                                 togglePlay(() => {
                                     // Start animation loop if not already running
                                     if (!requestRef.current) {
                                         requestRef.current = requestAnimationFrame(animate);
                                     }
-                                })
+                                });
                             }}
-                            disabled={!audioFile || isProcessing}
-                            title={isPlaying ? "Pause" : "Play"}
-                            aria-label={isPlaying ? "Pause" : "Play"}
-                            className={`h-9 px-4 shrink-0 rounded-xl flex items-center justify-center transition-all border ${isPlaying ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)] text-primary' : (isProcessing ? 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed' : 'bg-white/5 border-white/10 text-white hover:bg-white/10')}`}>
-                            <span className="material-symbols-outlined text-base">{isPlaying ? 'pause' : 'play_arrow'}</span>
-                        </button>
-
-                        {/* Current Time */}
-                        <span
-                            ref={currentTimeLabelRef}
-                            className="text-[9px] sm:text-[10px] font-mono text-white/60 shrink-0 w-7 sm:w-8"
-                            aria-label="Current playback time">
-                            {formatTime(currentTime)}
-                        </span>
-
-                        {/* Scrubber */}
-                        <input
-                            ref={scrubberRef}
-                            type="range"
-                            min={0}
-                            max={duration || 0}
-                            step={0.1}
-                            defaultValue={currentTime}
-                            onPointerDown={() => isDraggingScrubberRef.current = true}
-                            onChange={(e) => {
+                            onScrubberChange={(e) => {
                                 const val = parseFloat(e.target.value);
                                 updateScrubberUI(val);
                                 handleSeek(e, () => {
                                     if (!requestRef.current) {
                                         requestRef.current = requestAnimationFrame(animate);
                                     }
-                                })
+                                });
                             }}
-                            disabled={!audioFile || isProcessing}
-                            title="Seek"
-                            aria-label="Seek"
-                            className={`flex-1 h-[3px] min-w-0 rounded-full appearance-none bg-white/10 accent-white focus:outline-none transition-all ${isProcessing ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`} />
-
-                        {/* Duration */}
-                        <span className="text-[9px] sm:text-[10px] font-mono text-white/60 shrink-0 w-7 sm:w-8" aria-label="Total duration">
-                            {formatTime(duration)}
-                        </span>
+                        />
 
                         {/* Export Button */}
-                        <div className="flex items-center pl-2 sm:pl-4 border-l border-white/10 ml-1 sm:ml-2">
+                        <div className="flex items-center pl-2 sm:pl-4 border-l border-white/10 ml-1 sm:ml-2 shrink-0">
                             <button
                                 onClick={handleExport}
                                 disabled={!audioFile || isExporting || isProcessing}
@@ -469,6 +394,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     {/* Inner wrapper */}
                     <div className="flex-1 flex flex-col min-h-0 relative">
                         <SidebarNavigation
+                            view={sidebarView}
+                            onViewChange={setSidebarView}
                             onClose={() => setSidebarVisible(false)} />
                     </div>
                 </aside>
