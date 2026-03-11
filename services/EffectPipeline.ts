@@ -259,4 +259,20 @@ export class EffectPipeline {
     public setInputTexture(texture: WebGLTexture) {
         this.sourceTexture = texture;
     }
+
+    public dispose() {
+        this.cleanupTextures();
+
+        if (this.vao) {
+            this.gl.deleteVertexArray(this.vao);
+            this.vao = null;
+        }
+        if (this.quadBuffer) {
+            this.gl.deleteBuffer(this.quadBuffer);
+            this.quadBuffer = null;
+        }
+        if (this.threeRenderer) {
+            this.threeRenderer.dispose();
+        }
+    }
 }

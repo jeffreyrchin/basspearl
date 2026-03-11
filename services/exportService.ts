@@ -129,68 +129,73 @@ export const exportVideo = async (options: ExportOptions) => {
     console.log(`Starting export: ${totalFrames} frames at ${fps}fps`);
 
     // 8. Generation Loop (Deterministic offline rendering)
-    for (let i = 0; i < totalFrames; i++) {
-        const time = i / fps;
+    try {
+        for (let i = 0; i < totalFrames; i++) {
+            const time = i / fps;
 
-        // Grab precomputed audio data for this frame index
-        const frameData = {
-            sub: reactivityMap.sub[i] ?? 0,
-            bass: reactivityMap.bass[i] ?? 0,
-            mid: reactivityMap.mid[i] ?? 0,
-            treble: reactivityMap.treble[i] ?? 0
-        };
-
-        // Grab integrated data for this frame index (Starfield/Motion)
-        let frameIntegrated = undefined;
-        if (integratedReactivity) {
-            frameIntegrated = {
-                sub: integratedReactivity.sub[i] ?? 0,
-                bass: integratedReactivity.bass[i] ?? 0,
-                mid: integratedReactivity.mid[i] ?? 0,
-                treble: integratedReactivity.treble[i] ?? 0
+            // Grab precomputed audio data for this frame index
+            const frameData = {
+                sub: reactivityMap.sub[i] ?? 0,
+                bass: reactivityMap.bass[i] ?? 0,
+                mid: reactivityMap.mid[i] ?? 0,
+                treble: reactivityMap.treble[i] ?? 0
             };
+
+            // Grab integrated data for this frame index (Starfield/Motion)
+            let frameIntegrated = undefined;
+            if (integratedReactivity) {
+                frameIntegrated = {
+                    sub: integratedReactivity.sub[i] ?? 0,
+                    bass: integratedReactivity.bass[i] ?? 0,
+                    mid: integratedReactivity.mid[i] ?? 0,
+                    treble: integratedReactivity.treble[i] ?? 0
+                };
+            }
+
+            // Render glitch to our hidden canvas
+            await exportEngine.renderToCanvas(renderCanvas, imageSrc, effects, {
+                maxSize,
+                reactivity: frameData,
+                integratedReactivity: frameIntegrated,
+                currentTime: time,
+                imagelessWidth: outWidth,
+                imagelessHeight: outHeight
+            });
+
+            // Inject the current state of the canvas into the video pipeline
+            // Mediabunny takes timestamps in seconds
+            await videoSource.add(time, 1 / fps);
+
+            // Yield to the main thread every 10 frames to avoid hanging
+            if (i % 10 === 0) {
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+
+            if (onProgress) {
+                onProgress((i + 1) / totalFrames);
+            }
         }
 
-        // Render glitch to our hidden canvas
-        await exportEngine.renderToCanvas(renderCanvas, imageSrc, effects, {
-            maxSize,
-            reactivity: frameData,
-            integratedReactivity: frameIntegrated,
-            currentTime: time,
-            imagelessWidth: outWidth,
-            imagelessHeight: outHeight
-        });
+        // 9. Finalize and Download
+        console.log("Finalizing video file...");
+        await output.finalize();
 
-        // Inject the current state of the canvas into the video pipeline
-        // Mediabunny takes timestamps in seconds
-        await videoSource.add(time, 1 / fps);
+        if (target.buffer) {
+            const blob = new Blob([target.buffer], { type: 'video/mp4' });
+            const downloadUrl = URL.createObjectURL(blob);
 
-        // Yield to the main thread every 10 frames to avoid hanging
-        if (i % 10 === 0) {
-            await new Promise(resolve => setTimeout(resolve, 0));
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = `muxels_${Date.now()}.mp4`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            URL.revokeObjectURL(downloadUrl);
+            console.log("Export complete!");
         }
-
-        if (onProgress) {
-            onProgress((i + 1) / totalFrames);
-        }
-    }
-
-    // 9. Finalize and Download
-    console.log("Finalizing video file...");
-    await output.finalize();
-
-    if (target.buffer) {
-        const blob = new Blob([target.buffer], { type: 'video/mp4' });
-        const downloadUrl = URL.createObjectURL(blob);
-
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = `muxels_${Date.now()}.mp4`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        URL.revokeObjectURL(downloadUrl);
-        console.log("Export complete!");
+    } finally {
+        // MUST DISPOSE to prevent WebGL Context Leaks (Max context count limit)
+        exportEngine.dispose();
     }
 };

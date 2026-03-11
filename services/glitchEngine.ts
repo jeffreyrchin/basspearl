@@ -295,6 +295,26 @@ export class GlitchEngine {
 
     this.pipeline.applyPass(type, uniforms, !!meta.is3D);
   }
+
+  public dispose() {
+    // 1. Dispose pipeline (and 3D renderer inside it)
+    if (this.pipeline) {
+      this.pipeline.dispose();
+    }
+
+    // 2. Lose WebGL context to free up browser resources
+    if (this.gl) {
+      const ext = this.gl.getExtension('WEBGL_lose_context');
+      if (ext) {
+        ext.loseContext();
+      }
+    }
+
+    // 3. Nullify references
+    this.canvas.width = 1;
+    this.canvas.height = 1;
+    this.gl = null as any;
+  }
 }
 
 export const mainGlitchEngine = new GlitchEngine();
