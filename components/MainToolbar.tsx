@@ -101,7 +101,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             setSidebarVisible(true);
                         }
                     }}
-                    className={`h-9 w-12 items-center justify-center rounded-xl border transition-all text-white flex ${sidebarVisible && sidebarView === 'pipeline' ? 'bg-white/20 border-white/30' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+                    className={`h-9 w-12 items-center justify-center rounded-xl border transition-colors text-white flex ${sidebarVisible && sidebarView === 'pipeline' ? 'bg-white/10 border-white/30' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
                     title={sidebarVisible && sidebarView === 'pipeline' ? "Close Pipeline" : "Open Pipeline"}>
                     <span className="material-symbols-outlined text-base">tune</span>
                 </button>
@@ -114,9 +114,9 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             setSidebarVisible(true);
                         }
                     }}
-                    className={`h-9 w-12 items-center justify-center rounded-xl border transition-all text-white flex ${sidebarVisible && sidebarView === 'effects' ? 'bg-white/20 border-white/30' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+                    className={`h-9 w-12 items-center justify-center rounded-xl border transition-colors text-white flex ${sidebarVisible && sidebarView === 'effects' ? 'bg-white/10 border-white/30' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
                     title={sidebarVisible && sidebarView === 'effects' ? "Close Effects" : "Browse Effects"}>
-                    <span className="material-symbols-outlined text-base">adjust</span>
+                    <span className="material-symbols-outlined text-base">add_circle</span>
                 </button>
             </div>
         </div>

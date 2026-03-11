@@ -66,13 +66,13 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     if (view === 'params') {
         const selectedEffect = effects[effectIndex];
         return (
-            <div className="flex-1 flex flex-col min-h-0 pt-20 lg:pt-0 border-l border-white/5 animate-in fade-in slide-in-from-right-4 duration-300 bg-white/5">
+            <div key="view-params" className="flex-1 flex flex-col min-h-0 pt-20 lg:pt-0 border-l border-white/5 animate-in fade-in slide-in-from-right-4 duration-300 bg-white/5">
                 {/* Header Bar */}
                 <div className="h-14 border-b border-white/5 flex items-center justify-between px-6 shrink-0">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => onViewChange('pipeline')}
-                            className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 hover:bg-white/10 transition-all border border-white/5"
+                            className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/5 transition-colors"
                             title="Back to Controls">
                             <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                         </button>
@@ -102,13 +102,24 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     }
 
     return (
-        <div className="flex-1 flex flex-col min-h-0 pt-20 lg:pt-0 border-l border-white/5 animate-in fade-in slide-in-from-left-4 duration-300 bg-white/5">
+        <div key="view-main" className="flex-1 flex flex-col min-h-0 pt-20 lg:pt-0 border-l border-white/5 animate-in fade-in slide-in-from-left-4 duration-300 bg-white/5">
             {/* Header Bar */}
             <div className="h-14 border-b border-white/5 flex items-center justify-between px-6 shrink-0 relative">
-                <div className="flex items-center gap-3">
-                    <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">Controls</span>
+                {/* Tabs */}
+                <div className="flex h-full gap-1 -ml-2">
+                    <button
+                        onClick={() => onViewChange('pipeline')}
+                        className={`w-16 h-full flex items-center justify-center transition-colors border-b-2 ${view === 'pipeline' ? 'text-white border-white' : 'text-white/60 hover:text-white border-transparent'}`}>
+                        <span className="material-symbols-outlined text-base">tune</span>
+                    </button>
+                    <button
+                        onClick={() => onViewChange('effects')}
+                        className={`w-16 h-full flex items-center justify-center transition-colors border-b-2 ${view === 'effects' ? 'text-white border-white' : 'text-white/60 hover:text-white border-transparent'}`}>
+                        <span className="material-symbols-outlined text-base">add_circle</span>
+                    </button>
                 </div>
 
+                {/* History controls and close button */}
                 <div className="flex items-center gap-2">
                     {HistoryControls}
                     {onClose && (
@@ -120,25 +131,6 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                         </button>
                     )}
                 </div>
-            </div>
-
-            {/* Tab Bar */}
-            <div className="flex px-4 pt-2 pb-0 gap-1 border-b border-white/5">
-                <button
-                    onClick={() => onViewChange('pipeline')}
-                    className={`flex-1 py-3 px-2 rounded-t-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border-b-2 ${view === 'pipeline' ? 'bg-white/5 text-white border-white' : 'text-white/60 border-transparent hover:text-white'}`}>
-                    <span className="material-symbols-outlined text-base">tune</span>
-                    {effects.length > 0 && (
-                        <span className="bg-white/20 text-white rounded-full text-[10px] font-bold w-[18px] h-[18px] grid place-items-center leading-none border border-white/30 tracking-normal">
-                            {effects.length}
-                        </span>
-                    )}
-                </button>
-                <button
-                    onClick={() => onViewChange('effects')}
-                    className={`flex-1 py-3 px-2 rounded-t-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all border-b-2 ${view === 'effects' ? 'bg-white/5 text-white border-white' : 'text-white/60 border-transparent hover:text-white'}`}>
-                    <span className="material-symbols-outlined text-base">adjust</span>
-                </button>
             </div>
 
             <div key="pipeline-scroll" className="flex-1 overflow-y-auto custom-scrollbar">
