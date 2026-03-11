@@ -73,7 +73,7 @@ const SortableGroupItem = ({
                             <div className={`flex items-center h-16 md:h-10 overflow-hidden ${effect.melded ? 'border-b-0' : ''}`}>
                                 <button
                                     onClick={handleSelect}
-                                    className={`flex-1 px-3 h-full transition-colors text-left truncate text-[10px] font-bold uppercase tracking-widest ${effect.isActive ? 'text-white/60 hover:text-white' : 'text-white/20'}`}
+                                    className={`flex-1 px-3 h-full transition-colors text-left truncate text-[10px] font-bold uppercase tracking-widest ${effect.isActive ? 'text-white/80 hover:text-white' : 'text-white/20'}`}
                                 >
                                     {EFFECT_METADATA[effect.type]?.label}
                                 </button>
