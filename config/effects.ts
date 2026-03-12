@@ -215,11 +215,11 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     icon: 'cloud',
     category: 'Pattern',
     params: [
-      p('Scale', { v: 50 }, { v: 20 }),
+      p('Scale', { v: 15 }),
       p('Complexity', { v: 10 }),
       p('Warp', { v: 8 }, { v: 3 }),
       p('Speed', { v: 74, b: 'BASS' }, { v: 20 }),
-      p('Blend', { v: 80 }, { v: 100 }),
+      p('Blend', { v: 100 }),
     ],
   },
   CELLULAR_NOISE: {
@@ -346,7 +346,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Rotate X', { v: 0 }),
       p('Rotate Y', { v: 0 }),
       p('Rotate Z', { v: 0 }),
-      p('Elevation', { v: 15 }),
+      p('Elevation', { v: 35 }),
+      p('Distance', { v: 50 }),
     ],
   },
 };

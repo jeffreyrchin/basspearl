@@ -63,7 +63,7 @@ export interface EffectMetadata {
   params: EffectParamMetadata[];
 }
 
-export type MacroType = 'FOG_VORTEX' | 'RAINBOW_DOT' | 'RUBBER_BAND' | 'METRO';
+export type MacroType = 'FOG_VORTEX' | 'RAINBOW_DOT' | 'RUBBER_BAND' | 'METRO' | 'LANDSCAPE';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;
@@ -76,6 +76,7 @@ export interface MacroEffectOverrideItem {
     previewMin?: number;
     previewBand?: FrequencyBand;
   }[];
+  melded: boolean;
 }
 
 export interface MacroMetadata {

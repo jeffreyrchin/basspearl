@@ -38,6 +38,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 u_uv_offset: { value: 0.0 },
                 u_is_max_res: { value: 0.0 },
                 u_res: { value: 1.0 },
+                u_mesh_z: { value: 0.0 },
             },
             vertexShader: `
                 uniform sampler2D u_image;
@@ -46,9 +47,10 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 uniform float u_uv_offset;
                 uniform float u_is_max_res;
                 uniform float u_res;
+                uniform float u_mesh_z;
                 out vec2 vUv;
                 flat out vec4 vColorFlat;
-                out float vFogDepth;
+                out vec2 vLocalPos;
 
                 void main() {
                     // Block size defines the 'Visual Resolution' snapped in world units
@@ -77,9 +79,10 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                     vColorFlat = (hL > tex.r) ? texture(u_image, leftUv) : tex;
                     
                     pos.y += h;
+                    vLocalPos = vec2(position.x, position.z + u_mesh_z);
+
                     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
                     gl_Position = projectionMatrix * mvPosition;
-                    vFogDepth = -mvPosition.z;
                 }
             `,
             fragmentShader: `
@@ -88,7 +91,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 uniform float u_is_max_res;
                 in vec2 vUv;
                 flat in vec4 vColorFlat;
-                in float vFogDepth;
+                in vec2 vLocalPos;
                 out vec4 outColor;
 
                 void main() {
@@ -97,9 +100,14 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                     vec4 smoothColor = texture(u_image, vUv);
                     vec4 finalColor = mix(vColorFlat, smoothColor, u_is_max_res);
 
-                    // Depth-based fog: invisible at ~50, transparent at ~450
-                    float fogFactor = smoothstep(50.0, 450.0, vFogDepth);
-                    outColor = mix(finalColor, vec4(0.0, 0.0, 0.0, 0.0), fogFactor);
+                    // Object-Space Edge Fog
+                    // Fades out the physical boundaries of the local terrain geometry
+                    // so it perfectly rotates along with the mesh!
+                    float zFog = smoothstep(150.0, 300.0, abs(vLocalPos.y));
+                    float xFog = smoothstep(120.0, 150.0, abs(vLocalPos.x));
+                    float edgeAlpha = 1.0 - max(zFog, xFog);
+                    
+                    outColor = finalColor * edgeAlpha;
                 }
             `,
             side: THREE.FrontSide
@@ -155,8 +163,12 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                     terrainGroup.rotation.y = toRad(p[5] ?? 0);
                     terrainGroup.rotation.z = toRad(p[6] ?? 0);
 
-                    // Elevation: Map 0-100 to -100 to +100 world units. 50 = default (0)
-                    terrainGroup.position.y = ((p[7] ?? 50) - 50) * 2.0;
+                    // Elevation: Map 0-100 to -500 to +500 world units. 50 = default (0)
+                    terrainGroup.position.y = ((p[7] ?? 50) - 50) * 10.0;
+
+                    // Distance offset
+                    const zOffset = ((p[8] ?? 50) - 50) * 10.0;
+                    terrainGroup.position.z = zOffset;
 
                     // The 'Grid' we snap to in the shader
                     // RESOLUTION CEILING: 256 max identifies smaller squares
@@ -196,6 +208,9 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
 
                         // Reposition mesh
                         m.position.z = wrappedZ - segmentLen;
+
+                        // Pass local z-offset to shader for bounds-checking
+                        mat.uniforms.u_mesh_z.value = m.position.z;
 
                         // Calculate unique UV offset per segment to maintain texture continuity.
                         // This ensures the mountains are identical every time they scroll in.

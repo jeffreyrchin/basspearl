@@ -56,8 +56,7 @@ export const createMacroInstance = (macroType: MacroType, isPreview?: boolean): 
       });
     }
 
-    // Automatically meld all but the last one to keep them grouped
-    instance.melded = index < macro.effects.length - 1;
+    instance.melded = effect.melded;
     return instance;
   });
 };
