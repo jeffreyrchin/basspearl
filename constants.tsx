@@ -56,7 +56,12 @@ export const createMacroInstance = (macroType: MacroType, isPreview?: boolean): 
       });
     }
 
-    instance.melded = effect.melded;
+    if (index === macro.effects.length - 1) {
+      instance.melded = false;
+    } else {
+      instance.melded = effect.melded;
+    }
+
     return instance;
   });
 };

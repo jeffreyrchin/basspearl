@@ -346,7 +346,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Rotate X', { v: 0 }),
       p('Rotate Y', { v: 0 }),
       p('Rotate Z', { v: 0 }),
-      p('Elevation', { v: 35 }),
+      p('Elevation', { v: 46 }, { v: 40 }),
       p('Distance', { v: 50 }),
     ],
   },

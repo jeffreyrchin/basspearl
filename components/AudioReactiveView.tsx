@@ -117,6 +117,11 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         // Render initial imageless frame on mount
         renderFrame(0);
 
+        // Auto-load a default audio track so reactivity data is ready immediately
+        loadAudioFromUrl('/presets/trip.mp3', 'Demo Track').catch(err => {
+            console.error('Failed to load demo track:', err);
+        });
+
         return () => {
             if (requestRef.current) cancelAnimationFrame(requestRef.current);
         };
