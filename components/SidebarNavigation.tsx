@@ -4,6 +4,7 @@ import SidebarLibrary from './SidebarLibrary';
 import SidebarPipeline from './SidebarPipeline';
 import SidebarParams from './SidebarParams';
 import { EFFECT_METADATA } from '@/constants';
+import { sanitizeImportedEffects } from '@/services/sanitizeImportedEffects';
 
 export type SidebarView = 'pipeline' | 'effects' | 'params';
 
@@ -25,7 +26,53 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     const future = useEffectStore(s => s.future);
 
     const selectedEffectId = useEffectStore(s => s.selectedEffectId);
+    const setEffects = useEffectStore(s => s.setEffects);
     const effectIndex = effects.findIndex(e => e.id === selectedEffectId);
+
+    const handleExport = () => {
+        const dataStr = JSON.stringify(effects, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${Date.now()}.muxels`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+    const handleImport = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.muxels';
+        input.onchange = (e: any) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const json = JSON.parse(event.target?.result as string);
+                    if (Array.isArray(json)) {
+                        const sanitized = sanitizeImportedEffects(json);
+                        if (sanitized.length > 0) {
+                            setEffects(sanitized);
+                            onViewChange('pipeline');
+                        } else {
+                            alert("No valid effects found in this .muxels file.");
+                        }
+                    } else {
+                        alert("Invalid .muxels file format");
+                    }
+                } catch (err) {
+                    console.error("Failed to parse .muxels file", err);
+                    alert("Failed to parse .muxels file.");
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    };
 
     // Keyboard shortcuts
     React.useEffect(() => {
@@ -47,6 +94,20 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     const HeaderRightControls = (
         <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
+                <button
+                    onClick={handleImport}
+                    className="w-7 h-7 rounded-md flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
+                    title="Import .muxels">
+                    <span className="material-symbols-outlined text-[18px]">file_upload</span>
+                </button>
+                <button
+                    onClick={handleExport}
+                    disabled={effects.length === 0}
+                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all ${effects.length > 0 ? 'text-white/50 hover:text-white hover:bg-white/10' : 'text-white/10 cursor-not-allowed'}`}
+                    title="Export .muxels">
+                    <span className="material-symbols-outlined text-[18px]">file_download</span>
+                </button>
+                <div className="w-[1px] h-4 bg-white/10 mx-1"></div>
                 <button
                     onClick={undo}
                     disabled={past.length === 0}
