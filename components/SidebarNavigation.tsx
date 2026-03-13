@@ -96,14 +96,14 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             <div className="flex items-center gap-1">
                 <button
                     onClick={handleImport}
-                    className="w-7 h-7 rounded-md flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
+                    className="w-7 h-7 rounded-md flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
                     title="Import .muxels">
                     <span className="material-symbols-outlined text-[18px]">file_upload</span>
                 </button>
                 <button
                     onClick={handleExport}
                     disabled={effects.length === 0}
-                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all ${effects.length > 0 ? 'text-white/50 hover:text-white hover:bg-white/10' : 'text-white/10 cursor-not-allowed'}`}
+                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all ${effects.length > 0 ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-white/20 cursor-not-allowed'}`}
                     title="Export .muxels">
                     <span className="material-symbols-outlined text-[18px]">file_download</span>
                 </button>
@@ -111,14 +111,14 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 <button
                     onClick={undo}
                     disabled={past.length === 0}
-                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all ${past.length > 0 ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-white/10 cursor-not-allowed'}`}
+                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all ${past.length > 0 ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-white/20 cursor-not-allowed'}`}
                     title="Undo (Cmd+Z)">
                     <span className="material-symbols-outlined text-[18px]">undo</span>
                 </button>
                 <button
                     onClick={redo}
                     disabled={future.length === 0}
-                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all ${future.length > 0 ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-white/10 cursor-not-allowed'}`}
+                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all ${future.length > 0 ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-white/20 cursor-not-allowed'}`}
                     title="Redo (Cmd+Shift+Z)">
                     <span className="material-symbols-outlined text-[18px]">redo</span>
                 </button>
