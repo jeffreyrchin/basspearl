@@ -6,6 +6,7 @@ import { analytics } from '@/services/analytics';
 interface EffectState {
     effects: EffectConfig[];
     selectedEffectId: string | null;
+    selectedIds: Set<string>;
 
     // History
     past: EffectConfig[][];
@@ -13,37 +14,75 @@ interface EffectState {
 
     // Actions
     setEffects: (effects: EffectConfig[]) => void;
-    setSelectedEffectId: (id: string | null) => void;
 
-    isDraggingAny: boolean;
-    setIsDraggingAny: (isDraggingAny: boolean) => void;
+    // Selection
+    toggleSelected: (id: string, multi?: boolean) => void;
+    selectRange: (id: string) => void;
+    selectAll: () => void;
+    clearSelection: () => void;
+
+    isInSelectMode: boolean;
+    setIsInSelectMode: (active: boolean) => void;
 
     undo: () => void;
     redo: () => void;
     commitHistory: () => void;
 
-    toggleMute: (index: number) => void;
-    toggleSolo: (index: number) => void;
-    toggleMeld: (index: number) => void;
+    toggleMute: (id: string) => void;
+    toggleSolo: (id: string) => void;
     addEffect: (type: GlitchEffectType) => void;
     addMacro: (macroType: MacroType) => void;
-    removeEffect: (index: number) => void;
-    updateParameter: (effectIndex: number, paramIndex: number, update: Partial<EffectConfig['params'][0]>) => void;
+    batchDuplicate: () => void;
+    batchRemove: () => void;
+    batchMeld: () => void;
+    batchUnmeld: () => void;
+    updateParameter: (effectId: string, paramIndex: number, update: Partial<EffectConfig['params'][0]>) => void;
 }
 
-
 export const useEffectStore = create<EffectState>((set, get) => ({
-    isDraggingAny: false,
+    isInSelectMode: false,
     effects: INITIAL_REACTIVE_EFFECTS,
     selectedEffectId: INITIAL_REACTIVE_EFFECTS[0]?.id || null,
+    selectedIds: new Set<string>(),
     past: [],
     future: [],
 
     setEffects: (effects) => set({ effects }),
 
-    setSelectedEffectId: (selectedEffectId) => set({ selectedEffectId }),
+    setIsInSelectMode: (isInSelectMode) => set({ isInSelectMode: isInSelectMode }),
 
-    setIsDraggingAny: (isDraggingAny) => set({ isDraggingAny }),
+    toggleSelected: (id, multi) => {
+        const { selectedIds } = get();
+        const next = new Set(multi ? selectedIds : []);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        set({ selectedIds: next, selectedEffectId: next.size === 1 ? [...next][0] : get().selectedEffectId });
+    },
+
+    selectRange: (id) => {
+        const { effects, selectedIds } = get();
+        const ids = effects.map(e => e.id);
+        const lastSelected = [...selectedIds].pop();
+        if (!lastSelected) {
+            set({ selectedIds: new Set([id]) });
+            return;
+        }
+        const from = ids.indexOf(lastSelected);
+        const to = ids.indexOf(id);
+        if (from === -1 || to === -1) return;
+        const lo = Math.min(from, to);
+        const hi = Math.max(from, to);
+        const next = new Set(selectedIds);
+        for (let i = lo; i <= hi; i++) next.add(ids[i]);
+        set({ selectedIds: next });
+    },
+
+    selectAll: () => {
+        const { effects } = get();
+        set({ selectedIds: new Set(effects.map(e => e.id)) });
+    },
+
+    clearSelection: () => set({ selectedIds: new Set<string>(), isInSelectMode: false }),
 
     // Push current effects onto the past stack. Call this BEFORE making changes.
     commitHistory: () => {
@@ -79,33 +118,24 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         });
     },
 
-    toggleMute: (index) => {
+    toggleMute: (id) => {
         get().commitHistory();
         set((state) => {
             const next = [...state.effects];
-            next[index] = { ...next[index], muted: !next[index].muted };
+            const idx = next.findIndex(e => e.id === id);
+            if (idx === -1) return {};
+            next[idx] = { ...next[idx], muted: !next[idx].muted };
             return { effects: next };
         });
     },
 
-    toggleSolo: (index) => {
+    toggleSolo: (id) => {
         get().commitHistory();
         set((state) => {
             const next = [...state.effects];
-            next[index] = { ...next[index], soloed: !next[index].soloed };
-            return { effects: next };
-        });
-    },
-
-    toggleMeld: (index) => {
-        // Only meld if not the last effect
-        const { effects } = get();
-        if (index >= effects.length - 1) return;
-
-        get().commitHistory();
-        set((state) => {
-            const next = [...state.effects];
-            next[index] = { ...next[index], melded: !next[index].melded };
+            const idx = next.findIndex(e => e.id === id);
+            if (idx === -1) return {};
+            next[idx] = { ...next[idx], soloed: !next[idx].soloed };
             return { effects: next };
         });
     },
@@ -130,29 +160,98 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         }));
     },
 
-    removeEffect: (index) => {
+    batchDuplicate: () => {
+        const { selectedIds } = get();
+        if (selectedIds.size === 0) return;
         get().commitHistory();
         set((state) => {
-            analytics.effect.removed(state.effects[index].type);
-            const next = [...state.effects];
-            next.splice(index, 1);
+            // Collect selected effects in their pipeline order
+            const selected = state.effects.filter(e => selectedIds.has(e.id));
 
-            // If the item BEFORE the removed one was melded, it was melded TO the removed item.
-            // We should break that bond now that the target is gone.
-            if (index > 0 && state.effects[index - 1].melded) {
-                next[index - 1] = { ...next[index - 1], melded: false };
+            // Clone each one, stripping melded so they paste as independent effects at the end
+            const clones: EffectConfig[] = selected.map(src => ({
+                ...JSON.parse(JSON.stringify(src)),
+                id: crypto.randomUUID(),
+                melded: false,
+            }));
+
+            const newSelectedIds = new Set(clones.map(c => c.id));
+            return {
+                effects: [...state.effects, ...clones],
+                selectedIds: newSelectedIds,
+                selectedEffectId: clones[0].id,
+            };
+        });
+    },
+
+    batchRemove: () => {
+        const { selectedIds } = get();
+        if (selectedIds.size === 0) return;
+        get().commitHistory();
+        set((state) => {
+            selectedIds.forEach(id => {
+                const e = state.effects.find(e => e.id === id);
+                if (e) analytics.effect.removed(e.type);
+            });
+            const next = state.effects.filter(e => !selectedIds.has(e.id));
+            // Unmeld any trailing effect
+            if (next.length > 0 && next[next.length - 1].melded) {
+                next[next.length - 1] = { ...next[next.length - 1], melded: false };
             }
+            return { effects: next, selectedIds: new Set<string>() };
+        });
+    },
 
+    batchMeld: () => {
+        const { effects, selectedIds } = get();
+        if (selectedIds.size < 2) return;
+        // Collect the indices of all selected effects in order
+        const indices = effects
+            .map((e, i) => selectedIds.has(e.id) ? i : -1)
+            .filter(i => i !== -1);
+        // They must be contiguous
+        const isContiguous = indices.every((v, i) => i === 0 || v === indices[i - 1] + 1);
+        if (!isContiguous) return;
+        get().commitHistory();
+        set((state) => {
+            const next = [...state.effects];
+            // Meld all selected except the last one
+            for (let i = 0; i < indices.length - 1; i++) {
+                next[indices[i]] = { ...next[indices[i]], melded: true };
+            }
+            // The last selected should NOT be melded (it terminates the group)
+            next[indices[indices.length - 1]] = { ...next[indices[indices.length - 1]], melded: false };
+            return { effects: next };
+        });
+    },
+
+    batchUnmeld: () => {
+        const { effects, selectedIds } = get();
+        if (selectedIds.size < 2) return;
+        // Collect the indices of all selected effects in order
+        const indices = effects
+            .map((e, i) => selectedIds.has(e.id) ? i : -1)
+            .filter(i => i !== -1);
+        // They must be contiguous
+        const isContiguous = indices.every((v, i) => i === 0 || v === indices[i - 1] + 1);
+        if (!isContiguous) return;
+        get().commitHistory();
+        set((state) => {
+            const next = [...state.effects];
+            // Unmeld all selected effects
+            for (let i = 0; i < indices.length; i++) {
+                next[indices[i]] = { ...next[indices[i]], melded: false };
+            }
             return { effects: next };
         });
     },
 
     // Simple, dumb setter. Callers are responsible for calling commitHistory()
     // before a batch of changes begins (e.g. on slider pointerdown).
-    updateParameter: (effectIndex, paramIndex, update) => {
+    updateParameter: (effectId, paramIndex, update) => {
         set((state) => ({
-            effects: state.effects.map((e, i) => {
-                if (i !== effectIndex) return e;
+            effects: state.effects.map((e) => {
+                if (e.id !== effectId) return e;
                 const newParams = [...e.params];
                 newParams[paramIndex] = { ...newParams[paramIndex], ...update };
                 return { ...e, params: newParams };

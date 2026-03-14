@@ -8,11 +8,21 @@ import { useEffectStore } from '../store/useEffectStore';
 import { getEffectGroups, reorderEffectGroups } from '@/services/pipelineUtils';
 import SortableGroupItem from './SortableGroupItem';
 
-const SidebarPipeline = ({ onSelectEffect, onNavigateToLibrary }: any) => {
+interface SidebarPipelineProps {
+    onNavigateToLibrary: () => void;
+}
+
+const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
     const effects = useEffectStore(s => s.effects);
     const setEffects = useEffectStore(s => s.setEffects);
     const commitHistory = useEffectStore(s => s.commitHistory);
-    const setIsDraggingAny = useEffectStore(s => s.setIsDraggingAny);
+    const selectedIds = useEffectStore(s => s.selectedIds);
+    const clearSelection = useEffectStore(s => s.clearSelection);
+    const selectAll = useEffectStore(s => s.selectAll);
+    const batchRemove = useEffectStore(s => s.batchRemove);
+    const batchDuplicate = useEffectStore(s => s.batchDuplicate);
+    const batchMeld = useEffectStore(s => s.batchMeld);
+    const batchUnmeld = useEffectStore(s => s.batchUnmeld);
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
@@ -55,8 +65,7 @@ const SidebarPipeline = ({ onSelectEffect, onNavigateToLibrary }: any) => {
     const onDragStart = useCallback((event: any) => {
         commitHistory();
         setActiveId(event.active.id);
-        setIsDraggingAny(true);
-    }, [commitHistory, setIsDraggingAny]);
+    }, [commitHistory]);
 
     const onDragEnd = useCallback((event: any) => {
         const { active, over } = event;
@@ -71,8 +80,56 @@ const SidebarPipeline = ({ onSelectEffect, onNavigateToLibrary }: any) => {
         }
 
         setActiveId(null);
-        setIsDraggingAny(false);
-    }, [effects, effectGroups, setEffects, setIsDraggingAny]);
+    }, [effects, effectGroups, setEffects]);
+
+    // Keyboard shortcuts for pipeline actions
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const isMod = e.metaKey || e.ctrlKey;
+            const key = e.key.toLowerCase();
+
+            // Select All - Ctrl/Cmd + A (always allow if sidebar is likely focused)
+            if (isMod && key === 'a') {
+                e.preventDefault();
+                selectAll();
+                return;
+            }
+
+            if (selectedIds.size === 0) return;
+
+            // Delete selected effects - Backspace or Delete
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                e.preventDefault();
+                batchRemove();
+            }
+
+            // Clear selection - Escape
+            else if (e.key === 'Escape') {
+                clearSelection();
+            }
+
+            // Duplicate selected effects - Ctrl/Cmd + D
+            else if (isMod && key === 'd') {
+                e.preventDefault();
+                batchDuplicate();
+            }
+
+            // Ungroup selected effects - Ctrl/Cmd + Shift + G
+            // We check this BEFORE the group shortcut so the Shift modifier is caught correctly
+            else if (isMod && e.shiftKey && key === 'g') {
+                e.preventDefault();
+                batchUnmeld();
+            }
+
+            // Group selected effects - Ctrl/Cmd + G
+            else if (isMod && key === 'g') {
+                e.preventDefault();
+                batchMeld();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [selectedIds, batchRemove, clearSelection, selectAll, batchDuplicate, batchMeld, batchUnmeld]);
 
     if (effects.length === 0) {
         return (
@@ -92,16 +149,17 @@ const SidebarPipeline = ({ onSelectEffect, onNavigateToLibrary }: any) => {
             onDragEnd={onDragEnd}
             modifiers={[restrictToVerticalAxis]}
         >
-            <div className="p-4 flex flex-col gap-2">
+            <div
+                className="p-4 flex flex-col gap-2 min-h-full cursor-default"
+                onClick={() => clearSelection()}
+            >
                 <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
                     {effectGroups.map((group, i) => (
                         <SortableGroupItem
                             key={group.id}
                             group={group}
                             groupIndex={i}
-                            isLastGroup={i === effectGroups.length - 1}
                             onGripKeyDown={handleGripKeyDown}
-                            onSelectEffect={onSelectEffect}
                         />
                     ))}
                 </SortableContext>
@@ -113,9 +171,7 @@ const SidebarPipeline = ({ onSelectEffect, onNavigateToLibrary }: any) => {
                         <SortableGroupItem
                             group={activeGroup}
                             groupIndex={-1}
-                            isLastGroup={false}
                             onGripKeyDown={() => { }}
-                            onSelectEffect={() => { }}
                             isOverlay
                         />
                     ) : null}

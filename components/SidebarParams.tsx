@@ -6,19 +6,18 @@ import { useEffectStore } from '@/store/useEffectStore';
 import { EffectConfig } from '@/types';
 
 interface SidebarParamsProps {
-    selectedEffect: EffectConfig;
-    selectedEffectIndex: number;
+    selectedEffect: EffectConfig | null;
 }
 
 /**
  * SidebarParams: A focused, high-performance container for effect parameter sliders.
  * Orchestrates the relationship between the global effect store and individual slider components.
  */
-const SidebarParams: React.FC<SidebarParamsProps> = ({ selectedEffect, selectedEffectIndex }) => {
+const SidebarParams: React.FC<SidebarParamsProps> = ({ selectedEffect }) => {
     const updateParameter = useEffectStore(s => s.updateParameter);
     const commitHistory = useEffectStore(s => s.commitHistory);
 
-    if (!selectedEffect || selectedEffectIndex < 0) {
+    if (!selectedEffect) {
         return <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
             <span className="material-symbols-outlined text-white/60 text-5xl">tune</span>
             <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] leading-relaxed">No effect selected</p>
@@ -43,7 +42,7 @@ const SidebarParams: React.FC<SidebarParamsProps> = ({ selectedEffect, selectedE
                                     ariaLabel={`Frequency band for ${paramMeta.name}`}
                                     onChange={(band) => {
                                         commitHistory();
-                                        updateParameter(selectedEffectIndex, paramIdx, { frequencyBand: band });
+                                        updateParameter(selectedEffect.id, paramIdx, { frequencyBand: band });
                                     }}
                                 />
                             </div>
@@ -53,7 +52,7 @@ const SidebarParams: React.FC<SidebarParamsProps> = ({ selectedEffect, selectedE
                                 min={param.min}
                                 frequencyBand={param.frequencyBand}
                                 onPointerDown={() => commitHistory()}
-                                onChange={(update) => updateParameter(selectedEffectIndex, paramIdx, update)}
+                                onChange={(update) => updateParameter(selectedEffect.id, paramIdx, update)}
                             />
                         </div>
                     );

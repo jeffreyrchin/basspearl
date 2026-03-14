@@ -3,6 +3,7 @@ import { useEffectStore } from '../store/useEffectStore';
 import SidebarLibrary from './SidebarLibrary';
 import SidebarPipeline from './SidebarPipeline';
 import SidebarParams from './SidebarParams';
+import ActionBar from './ActionBar';
 import { EFFECT_METADATA } from '@/constants';
 import { sanitizeImportedEffects } from '@/services/sanitizeImportedEffects';
 
@@ -24,10 +25,13 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     const redo = useEffectStore(s => s.redo);
     const past = useEffectStore(s => s.past);
     const future = useEffectStore(s => s.future);
+    const isInSelectMode = useEffectStore(s => s.isInSelectMode);
+    const setIsInSelectMode = useEffectStore(s => s.setIsInSelectMode);
+    const clearSelection = useEffectStore(s => s.clearSelection);
 
     const selectedEffectId = useEffectStore(s => s.selectedEffectId);
     const setEffects = useEffectStore(s => s.setEffects);
-    const effectIndex = effects.findIndex(e => e.id === selectedEffectId);
+    const selectedEffect = effects.find(e => e.id === selectedEffectId) ?? null;
 
     const handleExport = () => {
         const dataStr = JSON.stringify(effects, null, 2);
@@ -94,6 +98,18 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     const HeaderRightControls = (
         <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
+                {view === 'pipeline' && (
+                    <button
+                        onClick={() => {
+                            if (isInSelectMode) clearSelection();
+                            else setIsInSelectMode(true);
+                        }}
+                        className={`px-2 h-7 rounded-md flex items-center justify-center text-[9px] font-bold uppercase tracking-wider transition-all border ${isInSelectMode ? 'bg-white text-black border-white' : 'text-white/60 hover:text-white hover:bg-white/10 border-transparent'}`}
+                    >
+                        <span className="material-symbols-outlined text-[18px]">gesture_select</span>
+                    </button>
+                )}
+                <div className="w-[1px] h-4 bg-white/10 mx-1"></div>
                 <button
                     onClick={handleImport}
                     className="w-7 h-7 rounded-md flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
@@ -135,8 +151,6 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     );
 
     if (view === 'params') {
-        const selectedEffect = effects[effectIndex];
-
         return (
             <div key="view-params" className="flex-1 flex flex-col min-h-0 pt-20 lg:pt-0 border-l border-white/5 animate-in fade-in slide-in-from-right-4 duration-300 bg-white/5">
                 {/* Header Bar */}
@@ -156,26 +170,26 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-                    <SidebarParams selectedEffect={selectedEffect} selectedEffectIndex={effectIndex} />
+                    <SidebarParams selectedEffect={selectedEffect} />
                 </div>
             </div>
         );
     }
 
     return (
-        <div key="view-main" className="flex-1 flex flex-col min-h-0 pt-20 lg:pt-0 border-l border-white/5 animate-in fade-in slide-in-from-left-4 duration-300 bg-white/5">
+        <div key="view-main" className="flex-1 flex flex-col min-h-0 pt-20 lg:pt-0 border-l border-white/5 animate-in fade-in slide-in-from-left-4 duration-300 bg-white/5 relative">
             {/* Header Bar */}
             <div className="h-14 border-b border-white/5 flex items-center justify-between px-6 shrink-0 relative">
                 {/* Tabs */}
                 <div className="flex h-full gap-1 -ml-2">
                     <button
                         onClick={() => onViewChange('pipeline')}
-                        className={`w-16 h-full flex items-center justify-center transition-colors border-b-2 ${view === 'pipeline' ? 'text-white border-white' : 'text-white/60 hover:text-white border-transparent'}`}>
+                        className={`w-12 h-full flex items-center justify-center transition-colors border-b-2 ${view === 'pipeline' ? 'text-white border-white' : 'text-white/60 hover:text-white border-transparent'}`}>
                         <span className="material-symbols-outlined text-base">tune</span>
                     </button>
                     <button
                         onClick={() => onViewChange('effects')}
-                        className={`w-16 h-full flex items-center justify-center transition-colors border-b-2 ${view === 'effects' ? 'text-white border-white' : 'text-white/60 hover:text-white border-transparent'}`}>
+                        className={`w-12 h-full flex items-center justify-center transition-colors border-b-2 ${view === 'effects' ? 'text-white border-white' : 'text-white/60 hover:text-white border-transparent'}`}>
                         <span className="material-symbols-outlined text-base">add_circle</span>
                     </button>
                 </div>
@@ -185,7 +199,6 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             <div key="pipeline-scroll" className="flex-1 overflow-y-auto custom-scrollbar">
                 {view === 'pipeline' ? (
                     <SidebarPipeline
-                        onSelectEffect={() => onViewChange('params')}
                         onNavigateToLibrary={() => onViewChange('effects')}
                     />
                 ) : (
@@ -194,6 +207,9 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                     />
                 )}
             </div>
+
+            {/* Global Action Bar anchored to the bottom of the sidebar */}
+            <ActionBar onOpenParams={() => onViewChange('params')} />
         </div>
     );
 };

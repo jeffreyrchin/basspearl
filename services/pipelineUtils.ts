@@ -11,7 +11,6 @@ export interface EffectData {
     muted: boolean;
     soloed: boolean;
     isActive: boolean;
-    actualIndex: number; // The home index in the master flat array (for the glitch engine)
 }
 
 /**
@@ -32,7 +31,7 @@ export const getEffectGroups = (effects: EffectConfig[]): EffectGroupData[] => {
     const groups: EffectGroupData[] = [];
     let currentGroupEffects: EffectData[] = [];
 
-    effects.forEach((effect, index) => {
+    effects.forEach((effect) => {
         const effectData: EffectData = {
             id: effect.id,
             type: effect.type,
@@ -40,7 +39,6 @@ export const getEffectGroups = (effects: EffectConfig[]): EffectGroupData[] => {
             muted: effect.muted,
             soloed: effect.soloed,
             isActive: anySoloed ? effect.soloed : !effect.muted,
-            actualIndex: index
         };
 
         currentGroupEffects.push(effectData);
