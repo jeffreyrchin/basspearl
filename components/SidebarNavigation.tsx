@@ -211,8 +211,10 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 )}
             </div>
 
-            {/* Global Action Bar anchored to the bottom of the sidebar */}
-            <ActionBar onOpenParams={() => onViewChange('params')} />
+            {/* Global Action Bar anchored to the bottom of the pipeline */}
+            {view === 'pipeline' && (
+                <ActionBar onOpenParams={() => onViewChange('params')} />
+            )}
         </div>
     );
 };

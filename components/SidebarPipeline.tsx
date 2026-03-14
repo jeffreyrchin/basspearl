@@ -150,7 +150,7 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
             modifiers={[restrictToVerticalAxis]}
         >
             <div
-                className="p-4 flex flex-col gap-2 min-h-full cursor-default"
+                className="p-4 pb-24 flex flex-col gap-2 min-h-full cursor-default"
                 onClick={() => clearSelection()}
             >
                 <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
