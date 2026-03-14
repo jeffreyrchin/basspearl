@@ -82,7 +82,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         set({ selectedIds: new Set(effects.map(e => e.id)) });
     },
 
-    clearSelection: () => set({ selectedIds: new Set<string>(), isInSelectMode: false }),
+    clearSelection: () => set({ selectedIds: new Set<string>() }),
 
     // Push current effects onto the past stack. Call this BEFORE making changes.
     commitHistory: () => {

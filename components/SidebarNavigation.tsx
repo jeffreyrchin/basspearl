@@ -101,10 +101,11 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 {view === 'pipeline' && (
                     <button
                         onClick={() => {
-                            if (isInSelectMode) clearSelection();
+                            if (isInSelectMode) setIsInSelectMode(false);
                             else setIsInSelectMode(true);
                         }}
                         className={`px-2 h-7 rounded-md flex items-center justify-center text-[9px] font-bold uppercase tracking-wider transition-all border ${isInSelectMode ? 'bg-white text-black border-white' : 'text-white/60 hover:text-white hover:bg-white/10 border-transparent'}`}
+                        title="Multiselect"
                     >
                         <span className="material-symbols-outlined text-[18px]">gesture_select</span>
                     </button>
@@ -184,12 +185,14 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 <div className="flex h-full gap-1 -ml-2">
                     <button
                         onClick={() => onViewChange('pipeline')}
-                        className={`w-12 h-full flex items-center justify-center transition-colors border-b-2 ${view === 'pipeline' ? 'text-white border-white' : 'text-white/60 hover:text-white border-transparent'}`}>
+                        className={`w-12 h-full flex items-center justify-center transition-colors border-b-2 ${view === 'pipeline' ? 'text-white border-white' : 'text-white/60 hover:text-white border-transparent'}`}
+                        title="Controls">
                         <span className="material-symbols-outlined text-base">tune</span>
                     </button>
                     <button
                         onClick={() => onViewChange('effects')}
-                        className={`w-12 h-full flex items-center justify-center transition-colors border-b-2 ${view === 'effects' ? 'text-white border-white' : 'text-white/60 hover:text-white border-transparent'}`}>
+                        className={`w-12 h-full flex items-center justify-center transition-colors border-b-2 ${view === 'effects' ? 'text-white border-white' : 'text-white/60 hover:text-white border-transparent'}`}
+                        title="Add Effects">
                         <span className="material-symbols-outlined text-base">add_circle</span>
                     </button>
                 </div>

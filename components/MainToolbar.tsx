@@ -102,7 +102,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                         }
                     }}
                     className={`h-9 w-12 items-center justify-center rounded-xl border transition-colors text-white flex ${sidebarVisible && sidebarView === 'pipeline' ? 'bg-white/10 border-white/30' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
-                    title={sidebarVisible && sidebarView === 'pipeline' ? "Close Pipeline" : "Open Pipeline"}>
+                    title={sidebarVisible && sidebarView === 'pipeline' ? "Close Controls" : "Open Controls"}>
                     <span className="material-symbols-outlined text-base">tune</span>
                 </button>
                 <button
