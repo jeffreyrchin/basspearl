@@ -58,6 +58,7 @@ const SortableGroupItem = ({
                 {group.effects.map((effect: any, idx: number) => {
                     const isSelected = !isOverlay && selectedIds.has(effect.id);
 
+                    // Click Selection Handler for Effects: Click, Shift+Click (Range), and Cmd+Click (Non-Contiguous Selection and Deselection)
                     const handleClick = (e: React.MouseEvent) => {
                         if (isOverlay) return;
                         e.stopPropagation(); // Prevent bubbling to the "void" click handler
@@ -65,6 +66,33 @@ const SortableGroupItem = ({
                             selectRange(effect.id);
                         } else {
                             toggleSelected(effect.id, isInSelectMode || e.metaKey || e.ctrlKey);
+                        }
+                    };
+
+                    // Keyboard Navigation and Selection Handler for Effects: Arrow Up/Down Navigation, Space/Enter, Shift+Space/Enter (Range), and Ctrl+Space/Enter (Non-Contiguous Selection and Deselection)
+                    const handleKeyDown = (e: React.KeyboardEvent) => {
+                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault(); // Prevent page scrolling
+                            // Retrieve all cards in their current DOM order
+                            const cards = Array.from(document.querySelectorAll('[data-effect-card]')) as HTMLElement[];
+                            const currentIndex = cards.indexOf(e.currentTarget as HTMLElement);
+                            if (currentIndex === -1) return;
+
+                            const nextIndex = e.key === 'ArrowDown'
+                                ? Math.min(currentIndex + 1, cards.length - 1)
+                                : Math.max(currentIndex - 1, 0);
+
+                            cards[nextIndex]?.focus();
+                        } else if (e.key === ' ' || e.key === 'Enter') {
+                            e.preventDefault(); // Prevent browser from synthesizing a click event
+                            e.stopPropagation(); // Prevent bubbling to the "void" click handler
+                            if (isOverlay) return;
+
+                            if (e.shiftKey) {
+                                selectRange(effect.id);
+                            } else {
+                                toggleSelected(effect.id, isInSelectMode || e.metaKey || e.ctrlKey);
+                            }
                         }
                     };
 
@@ -76,25 +104,29 @@ const SortableGroupItem = ({
                             )}
 
                             <div
-                                onClick={handleClick}
-                                className={`flex items-center h-16 md:h-10 overflow-hidden cursor-pointer rounded-sm
+                                className={`flex items-center h-16 md:h-10 overflow-hidden
                                     ${isSelected ? 'bg-white/10' : 'hover:bg-white/[0.04]'}
                                 `}
                             >
-                                <span
-                                    className={`flex-1 px-3 h-full flex items-center text-left truncate text-[10px] font-bold uppercase tracking-widest select-none
+                                <button
+                                    onClick={handleClick}
+                                    onMouseDown={(e) => e.preventDefault()} // Prevent browser from synthesizing a click event (prevents focus ring from appearing on shift key down)
+                                    onKeyDown={handleKeyDown}
+                                    data-effect-card
+                                    className={`flex-1 px-3 h-full flex items-center text-left truncate text-[10px] font-bold uppercase tracking-widest outline-none focus-visible:bg-white/10 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/20 transition-colors
                                         ${effect.isActive ? 'text-white/80' : 'text-white/20'}
                                         ${isSelected ? '!text-white' : ''}
                                     `}
+                                    title={`Select ${EFFECT_METADATA[effect.type]?.label}`}
                                 >
                                     {EFFECT_METADATA[effect.type]?.label}
-                                </span>
+                                </button>
 
                                 {!isOverlay && (
                                     <div className="flex h-full items-center" onClick={(e) => e.stopPropagation()}>
                                         <button
                                             onClick={() => toggleSolo(effect.id)}
-                                            className={`w-9 h-full flex items-center justify-center transition-colors ${effect.soloed ? 'bg-white text-black' : 'text-white/30 hover:bg-white/10 hover:text-white'}`}
+                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/20 transition-colors ${effect.soloed ? 'bg-white text-black' : 'text-white/30 hover:bg-white/10 hover:text-white'}`}
                                             title="Toggle Solo"
                                         >
                                             <span className="material-symbols-outlined text-[18px]">egg</span>
@@ -102,7 +134,7 @@ const SortableGroupItem = ({
                                         <div className="w-[1px] h-8 md:h-5 bg-white/10"></div>
                                         <button
                                             onClick={() => toggleMute(effect.id)}
-                                            className={`w-9 h-full flex items-center justify-center transition-colors rounded-r-md ${effect.muted ? 'bg-cyan-900 text-white' : 'text-white/30 hover:bg-white/10 hover:text-white'}`}
+                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/20 transition-colors rounded-r-md ${effect.muted ? 'bg-cyan-900 text-white' : 'text-white/30 hover:bg-white/10 hover:text-white'}`}
                                             title="Toggle Visibility"
                                         >
                                             <span className="material-symbols-outlined text-[18px]">{effect.muted ? 'visibility_off' : 'visibility'}</span>
