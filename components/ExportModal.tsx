@@ -6,6 +6,7 @@ interface ExportModalProps {
     onExport: (options: { fps: number; resolution: number }) => void;
     isExporting: boolean;
     exportProgress: number; // 0 to 100
+    exportResult?: { fileUrl: string, fileName: string } | null;
 }
 
 const ExportModal: React.FC<ExportModalProps> = ({
@@ -13,7 +14,8 @@ const ExportModal: React.FC<ExportModalProps> = ({
     onClose,
     onExport,
     isExporting,
-    exportProgress
+    exportProgress,
+    exportResult
 }) => {
     const [fps, setFps] = useState<number>(30);
     const [resolution, setResolution] = useState<number>(1920);
@@ -65,7 +67,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
                 </div>
 
                 <div className="p-8">
-                    <div className="grid grid-cols-2 gap-8">
+                    {!isExporting && !exportResult && <div className="grid grid-cols-2 gap-8">
                         {/* Frame Rate Column */}
                         <div className="space-y-4">
                             <label className="block text-[10px] font-bold uppercase tracking-widest text-white px-1">
@@ -115,11 +117,20 @@ const ExportModal: React.FC<ExportModalProps> = ({
                                 ))}
                             </div>
                         </div>
-                    </div>
+                    </div>}
 
-                    {/* Progress Section */}
-                    {isExporting ? (
-                        <div className="mt-10 pt-8 border-t border-white/5 space-y-4">
+                    {/* Progress / Success Section */}
+                    {exportResult ? (
+                        <div className="space-y-4">
+                            <div className="flex flex-col items-center justify-center p-6 space-y-4 bg-white/5 rounded-lg border border-white/10">
+                                <div className="text-white font-medium text-sm tracking-widest uppercase">Export Complete</div>
+                                <p className="text-[10px] text-center text-white/60 leading-relaxed uppercase tracking-widest">
+                                    <a className="text-green-400 font-medium tracking-widest uppercase" href={exportResult.fileUrl} download={exportResult.fileName}>Click Here</a> if your download hasn't started.
+                                </p>
+                            </div>
+                        </div>
+                    ) : isExporting ? (
+                        <div className="space-y-4">
                             <div className="flex justify-between items-end text-[10px] font-bold uppercase tracking-widest">
                                 <span className="text-white">Exporting...</span>
                                 <span className="text-white font-mono tracking-normal">{Math.round(exportProgress)}%</span>

@@ -40,6 +40,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const [isExporting, setIsExporting] = useState(false);
     const [exportProgress, setExportProgress] = useState(0);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [exportResult, setExportResult] = useState<{ fileUrl: string, fileName: string } | null>(null);
 
     const [imageFile, setImageFile] = useState<File | null>(null);
     const effects = useEffectStore(s => s.effects);
@@ -267,12 +268,13 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const handleActualExport = async (options: { fps: number; resolution: number }) => {
         if (!reactivityMapRef.current || !audioBufferRef.current) return;
 
+        setExportResult(null);
         setIsExporting(true);
         setExportProgress(0);
 
         try {
             analytics.export.started();
-            await exportVideo({
+            const result = await exportVideo({
                 audioBuffer: audioBufferRef.current,
                 reactivityMap: reactivityMapRef.current,
                 integratedReactivity: integratedReactivityMapRef.current,
@@ -284,7 +286,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 onProgress: (p) => setExportProgress(p * 100)
             });
             analytics.export.succeeded(effects);
-            setIsExportModalOpen(false);
+            setExportResult(result);
         } catch (err: any) {
             analytics.export.failed(err);
             console.error("Export failed:", err);
@@ -424,10 +426,17 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             <Footer />
             <ExportModal
                 isOpen={isExportModalOpen}
-                onClose={() => setIsExportModalOpen(false)}
+                onClose={() => {
+                    if (exportResult) {
+                        URL.revokeObjectURL(exportResult.fileUrl);
+                        setExportResult(null);
+                    }
+                    setIsExportModalOpen(false);
+                }}
                 onExport={handleActualExport}
                 isExporting={isExporting}
                 exportProgress={exportProgress}
+                exportResult={exportResult}
             />
         </div>
     );

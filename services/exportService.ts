@@ -35,7 +35,7 @@ export interface ExportOptions {
 /**
  * Service to export the glitch art to a video file using WebCodecs via Mediabunny.
  */
-export const exportVideo = async (options: ExportOptions) => {
+export const exportVideo = async (options: ExportOptions): Promise<{ fileUrl: string, fileName: string } | null> => {
     const {
         audioBuffer,
         reactivityMap,
@@ -215,17 +215,20 @@ export const exportVideo = async (options: ExportOptions) => {
         if (target.buffer) {
             const blob = new Blob([target.buffer], { type: 'video/mp4' });
             const downloadUrl = URL.createObjectURL(blob);
+            const fileName = `muxels_${Date.now()}.mp4`;
 
             const link = document.createElement('a');
             link.href = downloadUrl;
-            link.download = `muxels_${Date.now()}.mp4`;
+            link.download = fileName;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
 
-            URL.revokeObjectURL(downloadUrl);
             console.log("Export complete!");
+            return { fileUrl: downloadUrl, fileName };
         }
+
+        return null;
     } finally {
         // MUST DISPOSE to prevent WebGL Context Leaks (Max context count limit)
         exportEngine.dispose();
