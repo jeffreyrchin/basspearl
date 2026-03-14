@@ -127,7 +127,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
 
                             <div className="h-1 bg-white/5 overflow-hidden">
                                 <div
-                                    className="h-full bg-white transition-all duration-300 ease-linear"
+                                    className="h-full bg-white"
                                     style={{ width: `${exportProgress}%` }}
                                 />
                             </div>
