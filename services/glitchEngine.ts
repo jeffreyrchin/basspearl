@@ -3,6 +3,7 @@ import { TextureManager } from './TextureManager';
 import { ShaderManager, BASE_VERTEX_SHADER, PASS_THROUGH_FRAGMENT_SHADER } from './ShaderManager';
 import { EffectPipeline } from './EffectPipeline';
 import { SHADER_REGISTRY } from './glitchShaders';
+import { MAX_PIXELS } from '../constants';
 
 export interface GlitchRenderOptions {
   maxSize?: number;
@@ -148,10 +149,21 @@ export class GlitchEngine {
       height = imagelessHeight || Math.floor(width * 9 / 16);
     }
 
-    if (maxSize && (width > maxSize || height > maxSize)) {
-      const ratio = Math.min(maxSize / width, maxSize / height);
+    if (maxSize && img) {
+      // Scale to exact longest edge target (both up and down) so selected resolution is always honored
+      const ratio = maxSize / Math.max(width, height);
       width = Math.floor(width * ratio);
       height = Math.floor(height * ratio);
+
+      // Hardware encoders typically cap out at 4K UHD area (3840x2160 = 8.3 million pixels)
+      // Scale down any resulting resolution that breaks this limit to avoid encoder crashes
+      const currentPixels = width * height;
+
+      if (currentPixels > MAX_PIXELS) {
+        const areaScale = Math.sqrt(MAX_PIXELS / currentPixels);
+        width = Math.floor(width * areaScale);
+        height = Math.floor(height * areaScale);
+      }
     }
 
     // Force even dimensions (round down) for WebCodecs H.264 (avc) support (ensures preview exactly matches export)

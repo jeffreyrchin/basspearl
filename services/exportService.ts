@@ -8,6 +8,7 @@ import {
 } from 'mediabunny';
 import { GlitchEngine } from './glitchEngine';
 import { EffectConfig } from '../types';
+import { MAX_PIXELS } from '../constants';
 
 export interface ExportOptions {
     audioBuffer: AudioBuffer | null;
@@ -65,11 +66,24 @@ export const exportVideo = async (options: ExportOptions) => {
         outHeight = img.naturalHeight;
     }
 
-    // Apply maxSize constraint (Longest Edge) for images
-    if (imageSrc && (outWidth > maxSize || outHeight > maxSize)) {
-        const ratio = Math.min(maxSize / outWidth, maxSize / outHeight);
+    // Apply maxSize as the absolute longest edge target for images
+    if (imageSrc) {
+        // Find the ratio needed to make the longest edge equal to maxSize
+        const ratio = maxSize / Math.max(outWidth, outHeight);
         outWidth = Math.floor(outWidth * ratio);
         outHeight = Math.floor(outHeight * ratio);
+
+        // Hardware H.264 encoders (avc1) typically cap out around 4K UHD area (3840x2160 = 8.3M pixels).
+        // If the resulting scale exceeds this (e.g. 3840x3840 = 14.7M pixels for a square image), 
+        // Chrome/Safari will immediately throw an encoder config error.
+        // Fix: Safely scale down any over-budget dimensions by their total pixel area.
+        const currentPixels = outWidth * outHeight;
+
+        if (currentPixels > MAX_PIXELS) {
+            const areaScale = Math.sqrt(MAX_PIXELS / currentPixels);
+            outWidth = Math.floor(outWidth * areaScale);
+            outHeight = Math.floor(outHeight * areaScale);
+        }
     }
 
     // Force even for H.264 support
@@ -126,29 +140,47 @@ export const exportVideo = async (options: ExportOptions) => {
     const exportEngine = new GlitchEngine();
     const totalFrames = Math.ceil(duration * fps);
 
-    console.log(`Starting export: ${totalFrames} frames at ${fps}fps`);
+    // Compute audio data rate dynamically from the actual map length
+    const audioDataRate = reactivityMap.bass.length / duration;
+
+    // Helper for linear interpolation between audio samples
+    const lerp = (arr: Float32Array, baseIdx: number, f: number) => {
+        const v1 = arr[baseIdx] ?? 0;
+        const v2 = arr[baseIdx + 1] ?? v1;
+        return v1 + (v2 - v1) * f;
+    };
+
+    console.log(`[Export] START: ${totalFrames} frames at ${fps}fps | audio map: ${reactivityMap.bass.length} samples at ${audioDataRate.toFixed(2)}Hz | duration: ${duration.toFixed(3)}s`);
 
     // 8. Generation Loop (Deterministic offline rendering)
     try {
         for (let i = 0; i < totalFrames; i++) {
             const time = i / fps;
 
-            // Grab precomputed audio data for this frame index
+            // The audio data was captured at 60Hz. We calculate the exact fractional index
+            // for the current export time to ensure visuals stay perfectly synced 
+            // regardless of the export FPS (no slow motion).
+            const audioDataRate = 60;
+            const audioIndex = time * audioDataRate;
+            const idx = Math.floor(audioIndex);
+            const fract = audioIndex - idx;
+
+            // Grab precomputed audio data for this frame index with linear interpolation
             const frameData = {
-                sub: reactivityMap.sub[i] ?? 0,
-                bass: reactivityMap.bass[i] ?? 0,
-                mid: reactivityMap.mid[i] ?? 0,
-                treble: reactivityMap.treble[i] ?? 0
+                sub: lerp(reactivityMap.sub, idx, fract),
+                bass: lerp(reactivityMap.bass, idx, fract),
+                mid: lerp(reactivityMap.mid, idx, fract),
+                treble: lerp(reactivityMap.treble, idx, fract)
             };
 
-            // Grab integrated data for this frame index (Starfield/Motion)
+            // Grab integrated data for this frame index (Starfield/Motion) with linear interpolation
             let frameIntegrated = undefined;
             if (integratedReactivity) {
                 frameIntegrated = {
-                    sub: integratedReactivity.sub[i] ?? 0,
-                    bass: integratedReactivity.bass[i] ?? 0,
-                    mid: integratedReactivity.mid[i] ?? 0,
-                    treble: integratedReactivity.treble[i] ?? 0
+                    sub: lerp(integratedReactivity.sub, idx, fract),
+                    bass: lerp(integratedReactivity.bass, idx, fract),
+                    mid: lerp(integratedReactivity.mid, idx, fract),
+                    treble: lerp(integratedReactivity.treble, idx, fract)
                 };
             }
 

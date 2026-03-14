@@ -1,5 +1,8 @@
 export const FEEDBACK_FORM_URL = 'https://forms.gle/CBVXwJv9s3ZvXyWr8';
+
 export const INITIAL_REACTIVE_EFFECTS: any[] = [];
+
+export const MAX_PIXELS = 3840 * 2160;
 
 // Re-export Data
 export * from './config/effects';

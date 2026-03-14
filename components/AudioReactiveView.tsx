@@ -6,6 +6,7 @@ import PlaybackBar from './PlaybackBar';
 import Navbar from './Navbar';
 import MainToolbar from './MainToolbar';
 import { Footer } from './Footer';
+import ExportModal from './ExportModal';
 import { Preset } from '@/constants';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 import { exportVideo } from '@/services/exportService';
@@ -38,6 +39,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
     const [isExporting, setIsExporting] = useState(false);
     const [exportProgress, setExportProgress] = useState(0);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
     const [imageFile, setImageFile] = useState<File | null>(null);
     const effects = useEffectStore(s => s.effects);
@@ -258,7 +260,11 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         }
     }, [effects, imageFile, currentTime, isPlaying, audioFile, duration]);
 
-    const handleExport = async () => {
+    const handleExport = () => {
+        setIsExportModalOpen(true);
+    };
+
+    const handleActualExport = async (options: { fps: number; resolution: number }) => {
         if (!reactivityMapRef.current || !audioBufferRef.current) return;
 
         setIsExporting(true);
@@ -273,17 +279,19 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 imageSrc: imageFileRef.current,
                 effects: effects,
                 duration: duration,
-                fps: 60,
-                maxSize: 1920,
-                onProgress: (p) => setExportProgress(p)
+                fps: options.fps,
+                maxSize: options.resolution,
+                onProgress: (p) => setExportProgress(p * 100)
             });
             analytics.export.succeeded(effects);
+            setIsExportModalOpen(false);
         } catch (err: any) {
             analytics.export.failed(err);
             console.error("Export failed:", err);
             alert("Export failed. See console for details.");
         } finally {
             setIsExporting(false);
+            setExportProgress(0);
         }
     };
 
@@ -414,6 +422,13 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 )}
             </div>
             <Footer />
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                onExport={handleActualExport}
+                isExporting={isExporting}
+                exportProgress={exportProgress}
+            />
         </div>
     );
 };
