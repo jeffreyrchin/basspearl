@@ -58,7 +58,7 @@ out vec4 outColor;
 
 void main() {
     float qFactor = floor(pow(u_params[0] / 10.0, 2.2)) + 1.0;
-    float rFactor = max(1.0, floor((u_params[1] * 0.1) * u_unit));
+    float rFactor = max(1.0, (u_params[1] * 0.1) * u_unit);
     
     vec2 res = u_resolution;
     vec2 gridCoord = floor(v_texCoord * res / rFactor) * rFactor / res;
@@ -394,7 +394,7 @@ in vec2 v_texCoord;
 out vec4 outColor;
 
 void main() {
-    float blockSize = max(1.0, floor((0.1 + (u_params[0] * 0.2)) * u_unit));
+    float blockSize = max(1.0, (0.1 + (u_params[0] * 0.2)) * u_unit);
     float factor = u_params[1] / 10.0;
     float q = 1.0 + factor * 4.0;
     
@@ -404,8 +404,9 @@ void main() {
     vec4 color = texture(u_image, blockCoord);
     color.rgb = floor(color.rgb * 255.0 / q) * q / 255.0;
     
-    float freq = (1.0 / u_unit) * (1.0 + factor * 0.5);
-    float ringing = cos(v_texCoord.x * v_texCoord.y * 1000.0 * freq) * (factor * 4.0 / 255.0);
+    // Ground ringing in block-relative coordinates to ensure consistency
+    vec2 blockLocal = (v_texCoord * res) / blockSize;
+    float ringing = cos(blockLocal.x * 3.14159) * cos(blockLocal.y * 3.14159) * (factor * 4.0 / 255.0);
     
     // Scale ringing by alpha and clamp to color.a to keep math premultiplied-safe
     vec3 finalRGB = clamp(color.rgb + (ringing * color.a), 0.0, color.a);
