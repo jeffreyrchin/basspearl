@@ -193,11 +193,25 @@ export const useEffectStore = create<EffectState>((set, get) => ({
                 const e = state.effects.find(e => e.id === id);
                 if (e) analytics.effect.removed(e.type);
             });
-            const next = state.effects.filter(e => !selectedIds.has(e.id));
-            // Unmeld any trailing effect
-            if (next.length > 0 && next[next.length - 1].melded) {
-                next[next.length - 1] = { ...next[next.length - 1], melded: false };
-            }
+
+            // Map and filter in one go: pass along effects we keep, but break meld links
+            // if the immediately following effect is being deleted.
+            const next = state.effects.reduce((acc: typeof state.effects, current, index) => {
+                // If this effect is selected for deletion, skip it
+                if (selectedIds.has(current.id)) return acc;
+
+                const nextEffect = state.effects[index + 1];
+                const nextIsBeingDeleted = nextEffect && selectedIds.has(nextEffect.id);
+
+                if (current.melded && nextIsBeingDeleted) {
+                    acc.push({ ...current, melded: false });
+                } else {
+                    acc.push(current);
+                }
+
+                return acc;
+            }, []);
+
             return { effects: next, selectedIds: new Set<string>() };
         });
     },
