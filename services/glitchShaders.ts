@@ -258,40 +258,38 @@ void main() {
     float threshold = (100.0 - u_params[1]) / 100.0;
     float triggerProb = u_params[0] / 100.0;
     
-    vec2 res = u_resolution;
-    vec2 pixelSize = 1.0 / res;
+    vec2 pixelSize = 1.0 / u_resolution;
     
-    // Sort approximation: if brightness > threshold, look upwards for a dark pixel to "pull" from
     vec4 color = texture(u_image, v_texCoord);
-    float brightness = (color.r + color.g + color.b) / 3.0;
+    float brightness = dot(color.rgb, vec3(0.333));
     
-    float colSeed = (rand(vec2(floor(v_texCoord.x * res.x), u_seed))) * 12345.0;
+    // Consistent column sampling (1024 bands) ensures same patterns across resolutions
+    float colID = floor(v_texCoord.x * 1024.0);
+    float colSeed = rand(vec2(colID, u_seed)) * 12345.0;
     float colRand = fract(sin(colSeed) * 10000.0);
     
+    // Early exit for performance (saves up to 300 texture lookups per pixel)
     if (colRand > triggerProb || brightness < threshold) {
         outColor = color;
         return;
     }
 
-    // Pull brightness from above
-    // Max loop 600 ensures performance. 
-    // We map 100% intensity to 600 pixels length.
-    float maxPixels = 600.0;
-    float sortLength = (u_params[0] / 100.0) * maxPixels * pixelSize.y;
+    // Proportional scan length: scans a fixed % of the screen height
+    float sortLengthUV = (u_params[0] / 100.0) * 0.4;
+    float stepUV = sortLengthUV / 300.0;
     
     vec2 pullCoord = v_texCoord;
     
-    for(float i = 0.0; i < 600.0; i++) {
-        // Stop if we exceed user intensity length
-        if (i * pixelSize.y > sortLength) break;
+    for(float i = 0.0; i < 300.0; i++) {
+        vec2 checkUV = v_texCoord - vec2(0.0, i * stepUV);
+        if(checkUV.y < 0.0) break;
         
-        vec2 checkCoord = v_texCoord - vec2(0.0, i * pixelSize.y);
-        if(checkCoord.y < 0.0) break;
+        // Snap to pixel centers locally to maintain sharpness without resolution bias
+        vec2 snappedUV = (floor(checkUV * u_resolution) + 0.5) / u_resolution;
+        float checkBrightness = dot(texture(u_image, snappedUV).rgb, vec3(0.333));
         
-        vec4 checkColor = texture(u_image, checkCoord);
-        float checkBrightness = (checkColor.r + checkColor.g + checkColor.b) / 3.0;
         if(checkBrightness < threshold) {
-            pullCoord = checkCoord;
+            pullCoord = snappedUV;
             break;
         }
     }
@@ -306,6 +304,7 @@ precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[2]; // [mosh length, mosh density]
 uniform vec2 u_resolution;
+uniform float u_unit;
 
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -314,23 +313,27 @@ void main() {
     float moshLength  = u_params[0] / 10.0;
     float moshDensity = u_params[1] / 100.0;
 
-    float blockSize = 1.0; // smaller = more fine-grained
-    vec2 pixelPos   = v_texCoord * u_resolution;
-    vec2 blockId    = floor(pixelPos / blockSize);
-    vec2 blockUV    = (blockId * blockSize) / u_resolution;
+    // Scale block size proportionally to u_unit for perfect resolution consistency.
+    // By working in UV space without pixel-snapping the size itself, we avoid "jumps" 
+    // in glitch intensity across different canvas sizes.
+    vec2 blockUVSize = (u_unit * 0.4) / u_resolution;
+    
+    // Snap current coordinate to the logical block grid center
+    vec2 blockUV = (floor(v_texCoord / blockUVSize) + 0.5) * blockUVSize;
 
     vec4 src   = texture(u_image, blockUV);
     float luma = dot(src.rgb, vec3(0.299, 0.587, 0.114));
 
-    if (luma < 1.0 - moshDensity) {
-        outColor = src;
-        return;
-    }
+    // Branchless check: 1.0 if moshed, else 0.0
+    float isMoshed = step(1.0 - moshDensity, luma);
 
-    vec2 motion = (src.rg - 0.5) * moshLength * 64.0;
-    vec2 disp   = floor(motion) * blockSize / u_resolution;
+    // Calculate displacement in terms of whole "block units"
+    // (src.rg - 0.5) captures motion vectors from the image content.
+    vec2 motion = (src.rg - 0.5) * moshLength * 20.0;
+    vec2 dispUV = floor(motion) * blockUVSize;
 
-    outColor = texture(u_image, v_texCoord - disp);
+    // Apply the displacement only where threshold is met
+    outColor = texture(u_image, v_texCoord - (dispUV * isMoshed));
 }
 `;
 
@@ -705,10 +708,11 @@ void main() {
     float roundness = u_params[5] / 100.0;
     float blend = u_params[6] / 100.0;
 
-    // 2. Exponential frequency: freq=1 at 1% (one centered line), doubling from there.
+    // 2. Exponential frequency: freq=1 at 1%, doubling from there.
+    // Fixed reference resolution (1024) ensures consistent cell density regardless of canvas size.
     vec2 freq = vec2(
-        round(exp2(xFreq * log2(u_resolution.x))),
-        round(exp2(yFreq * log2(u_resolution.y)))
+        round(exp2(xFreq * log2(1024.0))),
+        round(exp2(yFreq * log2(1024.0)))
     );
 
     // 3. Sample background image.
@@ -1129,10 +1133,10 @@ void main() {
     float speed = u_params[6] / 100.0 * 15.0;
     float blend = u_params[7] / 100.0;
 
-    // 2. Exponential frequency (consistent with Noise shader)
+    // 2. Exponential frequency (consistent across resolutions using 1024px reference)
     vec2 freq = vec2(
-        round(exp2(xFreq * log2(u_resolution.x))),
-        round(exp2(yFreq * log2(u_resolution.y)))
+        round(exp2(xFreq * log2(1024.0))),
+        round(exp2(yFreq * log2(1024.0)))
     );
 
     float t = u_integrated_values[6] * speed * 0.5;
@@ -1165,6 +1169,7 @@ void main() {
             vec2 diff = neighbor + offset - fv;
 
             // Apply cell geometry scaling (stretching/spacing)
+            // No longer resolution dependent because freq is grounded
             vec2 scaledDiff = diff * cellScaling;
             
             float dist = dot(scaledDiff, scaledDiff);
@@ -1240,6 +1245,7 @@ precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[4]; // [horizontal, vertical, thickness, feather]
 uniform vec2 u_resolution;
+uniform float u_unit;
 in vec2 v_texCoord;
 out vec4 outColor;
 
@@ -1250,11 +1256,11 @@ void main() {
     float thickness = u_params[2] / 100.0;
     float feather = u_params[3] / 100.0;
 
-    // Exponential frequency: freq=1 at 1% (one centered line), doubling from there.
-    // Multiply resolution by 0.25 to ensure gridlines are still visible at max horizontal/vertical lines
+    // Exponential frequency: freq=1 at 1%, doubling from there.
+    // Fixed reference (1024) ensures the grid look won't change as you resize the window/export.
     vec2 freq = vec2(
-        round(exp2(normX * log2(u_resolution.x * 0.25))),
-        round(exp2(normY * log2(u_resolution.y * 0.25)))
+        round(exp2(normX * log2(1024.0))),
+        round(exp2(normY * log2(1024.0)))
     );
 
     // 2. Sample background image.
@@ -1263,9 +1269,11 @@ void main() {
     // 3. Simple integer projection.
     vec2 uv = v_texCoord * freq;
 
-    // 4. Calculate Grid Mask with Anti-Aliasing & Feathering.
-    float targetPixelWidth = mix(1.0, 200.0, thickness);
-    float featherPixels = mix(0.5, 200.0, feather); // Range from 0.5px (sharp) to 200px (glow)
+    // Calculate Grid Mask with Anti-Aliasing & Feathering.
+    // Scale widths by u_unit for resolution independence. 
+    // Since pWidth (fwidth) scales inversely with resolution, the result is consistent.
+    float targetPixelWidth = mix(0.1, 20.0, thickness) * u_unit;
+    float featherPixels = mix(0.05, 5.0, feather) * u_unit; 
     
     vec2 pWidth = fwidth(uv);
     vec2 thickUV = pWidth * targetPixelWidth;
