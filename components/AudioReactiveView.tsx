@@ -34,6 +34,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         audioBufferRef,
         isProcessing,
         setIsProcessing,
+        processingProgress,
         loadAudioFromUrl
     } = useAudioProcessor();
 
@@ -340,7 +341,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                     <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
                                     <div className="flex flex-col items-center gap-1">
                                         <h3 className="text-xs font-bold tracking-widest text-white uppercase">Analyzing Audio</h3>
-                                        <p className="text-[9px] text-white/40 uppercase tracking-[0.2em]">Synchronizing frequencies</p>
+                                        <p className="text-[9px] text-white/60 uppercase tracking-[0.2em]">{processingProgress}%</p>
                                     </div>
                                 </div>
                             )}

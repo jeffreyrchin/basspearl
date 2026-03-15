@@ -9,6 +9,7 @@ export const useAudioProcessor = () => {
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [processingProgress, setProcessingProgress] = useState(0);
 
     const audioContextRef = useRef<AudioContext | null>(null);
     const audioBufferRef = useRef<AudioBuffer | null>(null);
@@ -52,6 +53,7 @@ export const useAudioProcessor = () => {
     }, []);
 
     const precomputeReactivity = async (buffer: AudioBuffer, fps = 60) => {
+        setProcessingProgress(0);
         const sampleRate = buffer.sampleRate;
         const channelData = buffer.getChannelData(0); // Analyze mono
         const totalFrames = Math.ceil(buffer.duration * fps);
@@ -147,6 +149,7 @@ export const useAudioProcessor = () => {
 
             // Yield every 200 frames to keep UI responsive
             if (frameIndex % 200 === 0) {
+                setProcessingProgress(Math.floor((frameIndex / totalFrames) * 100));
                 await new Promise(resolve => setTimeout(resolve, 0));
             }
         }
@@ -199,6 +202,7 @@ export const useAudioProcessor = () => {
 
             try {
                 setIsProcessing(true);
+                setProcessingProgress(0);
                 // Yield to ensure the spinner appears immediately
                 await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -221,6 +225,7 @@ export const useAudioProcessor = () => {
 
         // 2. Clear context & Reset
         resetAudioEngine();
+        setProcessingProgress(0);
 
         try {
             const response = await fetch(url);
@@ -320,6 +325,7 @@ export const useAudioProcessor = () => {
         audioBufferRef,
         isProcessing,
         setIsProcessing,
+        processingProgress,
         loadAudioFromUrl
     };
 };
