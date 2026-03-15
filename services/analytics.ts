@@ -18,10 +18,7 @@ export type AnalyticsEvent =
     | 'auth_google_failed'
     | 'auth_email_succeeded'
     | 'auth_email_failed'
-    | 'auth_view'
-    | 'preset_load_started'
-    | 'preset_load_succeeded'
-    | 'preset_load_failed';
+    | 'auth_view';
 
 interface EventParams {
     [key: string]: any;
@@ -47,15 +44,6 @@ export const trackEvent = (eventName: AnalyticsEvent, params: EventParams = {}) 
  */
 
 export const analytics = {
-    preset: {
-        started: (id: string) => trackEvent('preset_load_started', { preset_id: id }),
-        succeeded: (id: string) => trackEvent('preset_load_succeeded', { preset_id: id }),
-        failed: (id: string, err: any) => trackEvent('preset_load_failed', {
-            preset_id: id,
-            error_name: err?.name || 'Error',
-            error_message: err?.message || 'Unknown'
-        }),
-    },
     audio: {
         started: (file: File) => trackEvent('audio_upload_started', {
             file_size: file.size,

@@ -7,7 +7,6 @@ import Navbar from './Navbar';
 import MainToolbar from './MainToolbar';
 import { Footer } from './Footer';
 import ExportModal from './ExportModal';
-import { Preset } from '@/constants';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 import { exportVideo } from '@/services/exportService';
 import { analytics } from '@/services/analytics';
@@ -35,7 +34,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         integratedReactivityMapRef,
         audioBufferRef,
         isProcessing,
-        setIsProcessing,
         processingProgress,
         loadAudioFromUrl,
         loadAudioFromFile
@@ -80,47 +78,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             window.removeEventListener('pointercancel', handleUp);
         }
     }, []);
-
-    const loadPreset = async (preset: Preset) => {
-        setIsProcessing(true);
-        analytics.preset.started(preset.id);
-        try {
-            let imageUrl: string | null = null;
-            if (preset.image) {
-                // 1. Load Image
-                const response = await fetch(preset.image);
-                const blob = await response.blob();
-                const file = new File([blob], preset.label, { type: 'image/jpeg' });
-                setImageFile(file);
-                imageUrl = URL.createObjectURL(blob);
-            }
-
-            imageFileRef.current = imageUrl;
-
-            // 2. Load Audio
-            await loadAudioFromUrl(preset.audio, preset.label);
-
-            // 3. Load Effects (Replace current rack with preset effects)
-            const presetEffects = preset.effects.map(e => ({
-                ...e,
-                muted: e.muted ?? false,
-                soloed: e.soloed ?? false
-            }));
-
-            setEffects(presetEffects);
-
-            // Render initial frame
-            if (canvasRef.current) {
-                mainGlitchEngine.renderToCanvas(canvasRef.current, imageUrl, presetEffects, { maxSize: 1920 });
-            }
-            analytics.preset.succeeded(preset.id);
-        } catch (err: any) {
-            analytics.preset.failed(preset.id, err);
-            console.error('Error loading preset:', err);
-        } finally {
-            setIsProcessing(false);
-        }
-    };
 
     useEffect(() => {
         // Render initial imageless frame on mount
@@ -331,8 +288,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 {/* Main Content Area */}
                 <main className={`flex-1 flex flex-col min-h-0 min-w-0 transition-all duration-500 ease-in-out ${sidebarVisible ? 'lg:mr-0' : ''}`}>
                     <MainToolbar
-                        isProcessing={isProcessing}
-                        loadPreset={loadPreset}
                         imageInputRef={imageInputRef}
                         audioInputRef={audioInputRef}
                         imageFile={imageFile}

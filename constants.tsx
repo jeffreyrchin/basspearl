@@ -7,7 +7,6 @@ export const MAX_PIXELS = 3840 * 2160;
 // Re-export Data
 export * from './config/effects';
 export * from './config/macros';
-export * from './config/presets';
 
 import { GlitchEffectType, MacroType, EffectConfig } from './types';
 import { EFFECT_METADATA } from './config/effects';
