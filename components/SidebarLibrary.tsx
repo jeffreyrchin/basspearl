@@ -5,7 +5,9 @@ import { useEffectStore } from '../store/useEffectStore';
 import EffectPreview from './EffectPreview';
 import HoverCanvas from './HoverCanvas';
 
-interface SidebarLibraryProps { }
+interface SidebarLibraryProps {
+    onSelectEffect?: () => void;
+}
 
 interface LibraryCardProps {
     effectType?: GlitchEffectType;
@@ -67,7 +69,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
 
 const CATEGORIES: EffectCategory[] = ['All', 'Pattern', 'Color', 'Spatial', 'Distort', 'Macro'];
 
-const SidebarLibrary: React.FC<SidebarLibraryProps> = () => {
+const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
     const addEffect = useEffectStore(s => s.addEffect);
     const addMacro = useEffectStore(s => s.addMacro);
     const [selectedCategory, setSelectedCategory] = useState<EffectCategory>('All');
@@ -94,10 +96,12 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = () => {
 
     const handleAdd = (type: GlitchEffectType) => {
         addEffect(type);
+        if (onSelectEffect) onSelectEffect();
     };
 
     const handleAddMacro = (macroType: MacroType) => {
         addMacro(macroType);
+        if (onSelectEffect) onSelectEffect();
     };
 
     return (

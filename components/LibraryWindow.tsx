@@ -47,7 +47,7 @@ const LibraryWindow: React.FC = () => {
                         </button>
                     </div>
                     <div className="flex-1 overflow-y-auto custom-scrollbar">
-                        <SidebarLibrary />
+                        <SidebarLibrary onSelectEffect={() => setIsLibraryOpen(false)} />
                     </div>
                 </motion.div>
             </div>
