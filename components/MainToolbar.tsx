@@ -75,6 +75,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                     accept="image/*, .jpg, .jpeg, .png, .webp, .heic"
                     onChange={handleImageUpload}
                     onClick={(e) => { (e.target as HTMLInputElement).value = ''; }} // Clear input so onChange always fires
+                    title="Choose Image"
                     className="sr-only"
                 />
                 <ToolbarButton
@@ -96,6 +97,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                     accept="audio/*, .mp3, .wav, .m4a, .aac, .ogg"
                     onChange={handleAudioUpload}
                     onClick={(e) => { (e.target as HTMLInputElement).value = ''; }}
+                    title="Choose Audio"
                     className="sr-only"
                 />
                 <ToolbarButton

@@ -94,7 +94,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ isOpen, onStart, onClose })
                             <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${audioSource === 'upload' ? 'border-primary bg-primary/10' : 'border-white/30 group-hover:border-white/60'}`}>
                                 {audioSource === 'upload' && <div className="w-2 h-2 rounded-full bg-primary" />}
                             </div>
-                            <span className={audioSource === 'upload' ? 'text-white' : 'text-white/50 group-hover:text-white/80'}>Audio File</span>
+                            <span className={audioSource === 'upload' ? 'text-white' : 'text-white/60 group-hover:text-white/80'}>Audio File</span>
                             <input
                                 type="radio"
                                 name="audioSource"
