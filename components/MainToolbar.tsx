@@ -1,5 +1,5 @@
 import React from 'react';
-import { SidebarView } from './SidebarNavigation';
+import { useEffectStore } from '../store/useEffectStore';
 
 interface MainToolbarProps {
     imageInputRef: React.RefObject<HTMLInputElement>;
@@ -10,8 +10,6 @@ interface MainToolbarProps {
     handleAudioUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
     sidebarVisible: boolean;
     setSidebarVisible: (visible: boolean) => void;
-    sidebarView: SidebarView;
-    setSidebarView: (view: SidebarView) => void;
 }
 
 const ToolbarButton: React.FC<{
@@ -60,10 +58,10 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     handleImageUpload,
     handleAudioUpload,
     sidebarVisible,
-    setSidebarVisible,
-    sidebarView,
-    setSidebarView
+    setSidebarVisible
 }) => {
+    const isLibraryOpen = useEffectStore(s => s.isLibraryOpen);
+    const setIsLibraryOpen = useEffectStore(s => s.setIsLibraryOpen);
     return (
         <div className="h-14 border-b border-white/5 bg-white/5 flex items-center justify-center px-6 gap-4 shrink-0 overflow-x-auto no-scrollbar">
             {/* Local Assets Group */}
@@ -117,23 +115,21 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
             <div className="hidden lg:flex items-center ml-4 gap-2">
                 <ToolbarButton
                     onClick={() => {
-                        if (sidebarVisible && sidebarView === 'pipeline') setSidebarVisible(false);
-                        else { setSidebarView('pipeline'); setSidebarVisible(true); }
+                        setSidebarVisible(!sidebarVisible);
                     }}
-                    icon="tune"
-                    title={sidebarVisible && sidebarView === 'pipeline' ? "Close Controls" : "Open Controls"}
-                    isActive={sidebarVisible && sidebarView === 'pipeline'}
+                    icon="layers"
+                    title={sidebarVisible ? "Close Pipeline" : "Open Pipeline"}
+                    isActive={sidebarVisible}
                     activeBg="bg-white/10"
                     activeBorder="border-white/30"
                 />
                 <ToolbarButton
                     onClick={() => {
-                        if (sidebarVisible && sidebarView === 'effects') setSidebarVisible(false);
-                        else { setSidebarView('effects'); setSidebarVisible(true); }
+                        setIsLibraryOpen(!isLibraryOpen);
                     }}
                     icon="add_circle"
-                    title={sidebarVisible && sidebarView === 'effects' ? "Close Effects" : "Browse Effects"}
-                    isActive={sidebarVisible && sidebarView === 'effects'}
+                    title={isLibraryOpen ? "Close Effects" : "Add Effect"}
+                    isActive={isLibraryOpen}
                     activeBg="bg-white/10"
                     activeBorder="border-white/30"
                 />

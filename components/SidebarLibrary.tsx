@@ -5,9 +5,7 @@ import { useEffectStore } from '../store/useEffectStore';
 import EffectPreview from './EffectPreview';
 import HoverCanvas from './HoverCanvas';
 
-interface SidebarLibraryProps {
-    onSelectEffect: () => void;
-}
+interface SidebarLibraryProps { }
 
 interface LibraryCardProps {
     effectType?: GlitchEffectType;
@@ -69,7 +67,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
 
 const CATEGORIES: EffectCategory[] = ['All', 'Pattern', 'Color', 'Spatial', 'Distort', 'Macro'];
 
-const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
+const SidebarLibrary: React.FC<SidebarLibraryProps> = () => {
     const addEffect = useEffectStore(s => s.addEffect);
     const addMacro = useEffectStore(s => s.addMacro);
     const [selectedCategory, setSelectedCategory] = useState<EffectCategory>('All');
@@ -96,16 +94,14 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
 
     const handleAdd = (type: GlitchEffectType) => {
         addEffect(type);
-        onSelectEffect();
     };
 
     const handleAddMacro = (macroType: MacroType) => {
         addMacro(macroType);
-        onSelectEffect();
     };
 
     return (
-        <div className="flex flex-col h-full">
+        <div>
             {/* THE ONE SHARED HOVER CANVAS — portals into whichever card is hovered */}
             <HoverCanvas
                 targetEl={hoverTarget?.el ?? null}
@@ -113,14 +109,14 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
             />
 
             {/* Header / Category Filters */}
-            <div className="sticky top-0 z-20 px-6 py-4 border-b border-white/5 flex flex-col gap-4">
+            <div className="sticky top-0 z-50 px-6 py-4 bg-slate-900 border-b border-white/5 flex flex-col gap-4">
                 <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
                     {CATEGORIES.map(category => (
                         <button
                             key={category}
                             onClick={() => setSelectedCategory(category)}
                             className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all whitespace-nowrap border ${selectedCategory === category
-                                ? 'bg-white/10 text-white border-white/40'
+                                ? 'bg-slate-900 text-white border-white/40'
                                 : 'text-white/60 hover:text-white/80 border-transparent hover:bg-white/5'
                                 }`}
                         >
@@ -131,7 +127,7 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
             </div>
 
             {/* Gallery Grid */}
-            <div className="p-3 flex-1 overflow-y-auto no-scrollbar">
+            <div className="p-3">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {/* Render Macros first if in 'All' or 'Macro' */}
                     {(selectedCategory === 'All' || selectedCategory === 'Macro') && Object.entries(MACRO_METADATA).map(([id]) => (

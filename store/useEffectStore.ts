@@ -26,6 +26,9 @@ interface EffectState {
     isInspectorOpen: boolean;
     setIsInspectorOpen: (open: boolean) => void;
 
+    isLibraryOpen: boolean;
+    setIsLibraryOpen: (open: boolean) => void;
+
     undo: () => void;
     redo: () => void;
     commitHistory: () => void;
@@ -54,6 +57,8 @@ export const useEffectStore = create<EffectState>((set, get) => ({
 
     isInspectorOpen: false,
     setIsInspectorOpen: (isInspectorOpen) => set({ isInspectorOpen }),
+    isLibraryOpen: false,
+    setIsLibraryOpen: (isLibraryOpen) => set({ isLibraryOpen }),
 
     toggleSelected: (id, multi) => {
         const { selectedIds } = get();

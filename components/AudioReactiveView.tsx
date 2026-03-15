@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { EffectConfig } from '../types';
 import { mainGlitchEngine } from '../services/glitchEngine';
-import SidebarNavigation, { SidebarView } from './SidebarNavigation';
+import SidebarNavigation from './SidebarNavigation';
 import PlaybackBar from './PlaybackBar';
 import Navbar from './Navbar';
 import MainToolbar from './MainToolbar';
@@ -12,6 +12,7 @@ import { exportVideo } from '@/services/exportService';
 import { analytics } from '@/services/analytics';
 import LandingModal from './LandingModal';
 import InspectorWindow from './InspectorWindow';
+import LibraryWindow from './LibraryWindow';
 import { loadMuxelsFile } from '@/services/sanitizeImportedEffects';
 import { useEffectStore } from '../store/useEffectStore';
 import { SHARED_AUDIO_STATE } from '../services/audioState';
@@ -51,7 +52,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const effects = useEffectStore(s => s.effects);
     const setEffects = useEffectStore(s => s.setEffects);
     const [sidebarVisible, setSidebarVisible] = useState(false); // Default to hidden
-    const [sidebarView, setSidebarView] = useState<SidebarView>('pipeline');
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const requestRef = useRef<number>();
@@ -283,7 +283,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     };
 
     return (
-        <div className="h-screen text-white flex flex-col overflow-hidden font-display leading-relaxed">
+        <div className="h-screen text-white flex flex-col overflow-hidden font-display leading-relaxed relative">
             <Navbar />
             <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
                 {/* Main Content Area */}
@@ -297,8 +297,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         handleAudioUpload={handleAudioUpload}
                         sidebarVisible={sidebarVisible}
                         setSidebarVisible={setSidebarVisible}
-                        sidebarView={sidebarView}
-                        setSidebarView={setSidebarView}
                     />
 
                     {/* Viewport */}
@@ -384,8 +382,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     {/* Inner wrapper */}
                     <div className="flex-1 flex flex-col min-h-0 relative">
                         <SidebarNavigation
-                            view={sidebarView}
-                            onViewChange={setSidebarView}
                             onClose={() => setSidebarVisible(false)} />
                     </div>
                 </aside>
@@ -415,6 +411,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 exportResult={exportResult}
             />
             <InspectorWindow />
+            <LibraryWindow />
         </div>
     );
 };
