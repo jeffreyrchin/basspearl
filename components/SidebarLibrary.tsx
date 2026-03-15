@@ -60,7 +60,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
             </div>
 
             {/* Quick add indicator */}
-            <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-y-[-4px] group-hover:translate-y-0 pointer-events-none z-20">
+            <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-y-[-4px] group-hover:translate-y-0 pointer-events-none z-20">
                 <span className="text-sm material-symbols-outlined text-white">add</span>
             </div>
         </button>
@@ -113,7 +113,7 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
             />
 
             {/* Header / Category Filters */}
-            <div className="sticky top-0 z-20 px-6 py-4 backdrop-blur-md border-b border-white/5 flex flex-col gap-4">
+            <div className="sticky top-0 z-20 px-6 py-4 border-b border-white/5 flex flex-col gap-4">
                 <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
                     {CATEGORIES.map(category => (
                         <button

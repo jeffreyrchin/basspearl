@@ -52,7 +52,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
                 onClick={() => !isExporting && onClose()}
             />
             {/* Modal */}
-            <div className="relative w-full bg-slate-700 max-w-lg rounded-lg border border-white/10 shadow-2xl overflow-hidden animate-in fade-in duration-200">
+            <div className="relative w-full bg-slate-900/90 max-w-lg rounded-lg border border-white/10 shadow-2xl overflow-hidden animate-in fade-in duration-200">
                 {/* Header Area */}
                 <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
                     <h2 className="text-[12px] font-bold tracking-widest uppercase text-white">Export</h2>
@@ -80,7 +80,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
                                         onClick={() => setFps(option.value)}
                                         disabled={isExporting}
                                         className={`px-4 py-3 rounded border text-xs font-medium transition-all flex items-center justify-between ${fps === option.value
-                                            ? 'bg-white text-black border-white'
+                                            ? 'bg-white/20 border-white/30'
                                             : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/10'
                                             } ${isExporting ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
@@ -105,7 +105,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
                                         onClick={() => setResolution(option.value)}
                                         disabled={isExporting}
                                         className={`px-4 py-3 rounded border text-xs font-medium transition-all flex items-center justify-between ${resolution === option.value
-                                            ? 'bg-white text-black border-white'
+                                            ? 'bg-white/20 border-white/30'
                                             : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/10'
                                             } ${isExporting ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
@@ -147,7 +147,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
                         <div className="mt-10 pt-8 border-t border-white/10">
                             <button
                                 onClick={() => onExport({ fps, resolution })}
-                                className="w-full py-4 rounded border border-white/20 bg-white/10 text-white hover:bg-white hover:text-black active:scale-[0.99] font-bold text-[10px] uppercase tracking-[0.2em] transition-all"
+                                className="w-full py-4 rounded border border-white/20 bg-white/10 text-white hover:bg-white/20 active:scale-[0.99] font-bold text-[10px] uppercase tracking-[0.2em] transition-all"
                             >
                                 Export .MP4
                             </button>

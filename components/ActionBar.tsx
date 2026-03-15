@@ -1,11 +1,9 @@
 import React, { useMemo } from 'react';
 import { useEffectStore } from '../store/useEffectStore';
 
-interface ActionBarProps {
-    onOpenParams: () => void;
-}
+interface ActionBarProps { }
 
-const ActionBar: React.FC<ActionBarProps> = ({ onOpenParams }) => {
+const ActionBar: React.FC<ActionBarProps> = () => {
     const effects = useEffectStore(s => s.effects);
     const selectedIds = useEffectStore(s => s.selectedIds);
     const batchRemove = useEffectStore(s => s.batchRemove);
@@ -14,6 +12,9 @@ const ActionBar: React.FC<ActionBarProps> = ({ onOpenParams }) => {
     const batchDuplicate = useEffectStore(s => s.batchDuplicate);
 
     const selectionCount = selectedIds.size;
+    const isInspectorOpen = useEffectStore(s => s.isInspectorOpen);
+    const setIsInspectorOpen = useEffectStore(s => s.setIsInspectorOpen);
+
     // Check if selected effects are contiguous (for meld eligibility)
     const canMeld = useMemo(() => {
         if (selectionCount < 2) return false;
@@ -39,19 +40,19 @@ const ActionBar: React.FC<ActionBarProps> = ({ onOpenParams }) => {
 
     const handleOpenParams = () => {
         if (selectionCount === 1) {
-            onOpenParams();
+            setIsInspectorOpen(!isInspectorOpen);
         }
     };
 
     if (selectionCount === 0) return null;
 
     return (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-black/80 backdrop-blur-xl border border-white/15 shadow-2xl shadow-black/50 animate-in fade-in slide-in-from-bottom-2 duration-200 z-50">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-black/80 border border-white/15 shadow-2xl shadow-black/50 animate-in fade-in slide-in-from-bottom-2 duration-200 z-50">
             {/* Parameters — only for single selection */}
             <button
                 onClick={handleOpenParams}
                 disabled={selectionCount !== 1}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-white/70 enabled:hover:text-white enabled:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest enabled:hover:text-white enabled:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all ${isInspectorOpen && selectionCount === 1 ? 'text-white bg-white/10' : 'text-white/70'}`}
                 title="Edit Parameters"
             >
                 <span className="material-symbols-outlined text-[16px]">tune</span>

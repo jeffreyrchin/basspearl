@@ -11,6 +11,7 @@ import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 import { exportVideo } from '@/services/exportService';
 import { analytics } from '@/services/analytics';
 import LandingModal from './LandingModal';
+import InspectorWindow from './InspectorWindow';
 import { loadMuxelsFile } from '@/services/sanitizeImportedEffects';
 import { useEffectStore } from '../store/useEffectStore';
 import { SHARED_AUDIO_STATE } from '../services/audioState';
@@ -413,6 +414,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 exportProgress={exportProgress}
                 exportResult={exportResult}
             />
+            <InspectorWindow />
         </div>
     );
 };

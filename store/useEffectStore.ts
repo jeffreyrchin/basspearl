@@ -5,7 +5,6 @@ import { analytics } from '@/services/analytics';
 
 interface EffectState {
     effects: EffectConfig[];
-    selectedEffectId: string | null;
     selectedIds: Set<string>;
 
     // History
@@ -23,6 +22,9 @@ interface EffectState {
 
     isInSelectMode: boolean;
     setIsInSelectMode: (active: boolean) => void;
+
+    isInspectorOpen: boolean;
+    setIsInspectorOpen: (open: boolean) => void;
 
     undo: () => void;
     redo: () => void;
@@ -42,7 +44,6 @@ interface EffectState {
 export const useEffectStore = create<EffectState>((set, get) => ({
     isInSelectMode: false,
     effects: INITIAL_REACTIVE_EFFECTS,
-    selectedEffectId: INITIAL_REACTIVE_EFFECTS[0]?.id || null,
     selectedIds: new Set<string>(),
     past: [],
     future: [],
@@ -51,12 +52,15 @@ export const useEffectStore = create<EffectState>((set, get) => ({
 
     setIsInSelectMode: (isInSelectMode) => set({ isInSelectMode: isInSelectMode }),
 
+    isInspectorOpen: false,
+    setIsInspectorOpen: (isInspectorOpen) => set({ isInspectorOpen }),
+
     toggleSelected: (id, multi) => {
         const { selectedIds } = get();
         const next = new Set(multi ? selectedIds : []);
         if (next.has(id)) next.delete(id);
         else next.add(id);
-        set({ selectedIds: next, selectedEffectId: next.size === 1 ? [...next][0] : get().selectedEffectId });
+        set({ selectedIds: next });
     },
 
     selectRange: (id) => {
@@ -179,7 +183,6 @@ export const useEffectStore = create<EffectState>((set, get) => ({
             return {
                 effects: [...state.effects, ...clones],
                 selectedIds: newSelectedIds,
-                selectedEffectId: clones[0].id,
             };
         });
     },

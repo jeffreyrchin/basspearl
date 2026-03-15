@@ -2,12 +2,10 @@ import React from 'react';
 import { useEffectStore } from '../store/useEffectStore';
 import SidebarLibrary from './SidebarLibrary';
 import SidebarPipeline from './SidebarPipeline';
-import SidebarParams from './SidebarParams';
 import ActionBar from './ActionBar';
-import { EFFECT_METADATA } from '@/constants';
 import { loadMuxelsFile } from '@/services/sanitizeImportedEffects';
 
-export type SidebarView = 'pipeline' | 'effects' | 'params';
+export type SidebarView = 'pipeline' | 'effects';
 
 interface SidebarNavigationProps {
     onClose?: () => void;
@@ -27,11 +25,8 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     const future = useEffectStore(s => s.future);
     const isInSelectMode = useEffectStore(s => s.isInSelectMode);
     const setIsInSelectMode = useEffectStore(s => s.setIsInSelectMode);
-    const clearSelection = useEffectStore(s => s.clearSelection);
 
-    const selectedEffectId = useEffectStore(s => s.selectedEffectId);
     const setEffects = useEffectStore(s => s.setEffects);
-    const selectedEffect = effects.find(e => e.id === selectedEffectId) ?? null;
 
     const handleExport = () => {
         const dataStr = JSON.stringify(effects, null, 2);
@@ -138,32 +133,6 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         </div>
     );
 
-    if (view === 'params') {
-        return (
-            <div key="view-params" className="flex-1 flex flex-col min-h-0 pt-20 lg:pt-0 border-l border-white/5 animate-in fade-in slide-in-from-right-4 duration-300 bg-white/5">
-                {/* Header Bar */}
-                <div className="h-14 border-b border-white/5 flex items-center justify-between px-6 shrink-0">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => onViewChange('pipeline')}
-                            className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/5 transition-colors"
-                            title="Back to Controls">
-                            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-                        </button>
-                        <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">
-                            {selectedEffect ? EFFECT_METADATA[selectedEffect.type]?.label : "Parameters"}
-                        </span>
-                    </div>
-                    {HeaderRightControls}
-                </div>
-
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-                    <SidebarParams selectedEffect={selectedEffect} />
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div key="view-main" className="flex-1 flex flex-col min-h-0 pt-20 lg:pt-0 border-l border-white/5 animate-in fade-in slide-in-from-left-4 duration-300 bg-white/5 relative">
             {/* Header Bar */}
@@ -200,7 +169,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
             {/* Global Action Bar anchored to the bottom of the pipeline */}
             {view === 'pipeline' && (
-                <ActionBar onOpenParams={() => onViewChange('params')} />
+                <ActionBar />
             )}
         </div>
     );
