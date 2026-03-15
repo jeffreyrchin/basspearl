@@ -93,7 +93,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
         // 1. Handle Audio Option
         if (audioOption === 'demo') {
-            loadAudioFromUrl('/presets/trip.mp3', 'Demo Track').catch(err => {
+            loadAudioFromUrl('/trip.mp3', 'Demo Track').catch(err => {
                 console.error('Failed to load demo track:', err);
             });
         } else if (audioOption === 'upload' && audioFile) {
