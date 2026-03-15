@@ -77,3 +77,31 @@ export const sanitizeImportedEffects = (rawItems: any[]): EffectConfig[] => {
 
     return sanitized;
 };
+
+export const loadMuxelsFile = async (file: File): Promise<EffectConfig[]> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const content = event.target?.result as string;
+                const json = JSON.parse(content);
+
+                if (Array.isArray(json)) {
+                    const sanitized = sanitizeImportedEffects(json);
+                    if (sanitized.length > 0) {
+                        resolve(sanitized);
+                    } else {
+                        reject(new Error("No valid effects found in this .muxels file."));
+                    }
+                } else {
+                    reject(new Error("Invalid .muxels file format. Expected an array of effects."));
+                }
+            } catch (err) {
+                console.error("Failed to read .muxels file:", err);
+                reject(new Error("Failed to read .muxels file."));
+            }
+        };
+        reader.onerror = () => reject(new Error("Failed to read .muxels file."));
+        reader.readAsText(file);
+    });
+};

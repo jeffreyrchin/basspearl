@@ -35,7 +35,7 @@ const PlaybackBar: React.FC<PlaybackBarProps> = ({
                 disabled={!audioFile || isProcessing}
                 title={isPlaying ? "Pause" : "Play"}
                 aria-label={isPlaying ? "Pause" : "Play"}
-                className={`h-9 px-4 shrink-0 rounded-xl flex items-center justify-center transition-all border ${isPlaying ? 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)] text-primary' : (isProcessing ? 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed' : 'bg-white/5 border-white/10 text-white hover:bg-white/10')}`}>
+                className={`h-9 px-4 shrink-0 rounded-xl flex items-center justify-center transition-all border bg-white/5 border-white/10 text-white hover:bg-white/10 disabled:bg-white/5 disabled:border-white/5 disabled:text-white/40 ${isPlaying && 'bg-primary/20 border-primary/40 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)] text-primary'}`}>
                 <span className="material-symbols-outlined text-base">{isPlaying ? 'pause' : 'play_arrow'}</span>
             </button>
 

@@ -191,32 +191,36 @@ export const useAudioProcessor = () => {
         return offsetRef.current + (audioContextRef.current.currentTime - startTimeRef.current);
     }, []);
 
+    const loadAudioFromFile = async (file: File) => {
+        stopPlayback(true);
+        analytics.audio.started(file);
+
+        // 2. Clear context & Reset
+        resetAudioEngine();
+
+        try {
+            setIsProcessing(true);
+            setProcessingProgress(0);
+
+            // Yield to ensure the spinner appears immediately
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            const arrayBuffer = await file.arrayBuffer();
+            const audioBuffer = await getAudioContext().decodeAudioData(arrayBuffer);
+
+            await processAudio(audioBuffer, file);
+            analytics.audio.succeeded(file, audioBuffer.duration);
+        } catch (err: any) {
+            analytics.audio.failed(file, err);
+            console.error('Error processing uploaded audio:', err);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     const handleAudioUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            stopPlayback(true);
-            const file = e.target.files[0];
-            analytics.audio.started(file);
-
-            // 2. Clear context & Reset
-            resetAudioEngine();
-
-            try {
-                setIsProcessing(true);
-                setProcessingProgress(0);
-                // Yield to ensure the spinner appears immediately
-                await new Promise(resolve => setTimeout(resolve, 0));
-
-                const arrayBuffer = await file.arrayBuffer();
-                const audioBuffer = await getAudioContext().decodeAudioData(arrayBuffer);
-
-                await processAudio(audioBuffer, file);
-                analytics.audio.succeeded(file, audioBuffer.duration);
-            } catch (err: any) {
-                analytics.audio.failed(file, err);
-                console.error('Error processing uploaded audio:', err);
-            } finally {
-                setIsProcessing(false);
-            }
+            await loadAudioFromFile(e.target.files[0]);
         }
     };
 
@@ -225,17 +229,24 @@ export const useAudioProcessor = () => {
 
         // 2. Clear context & Reset
         resetAudioEngine();
-        setProcessingProgress(0);
 
         try {
+            setIsProcessing(true);
+            setProcessingProgress(0);
+
+            // Yield to ensure the spinner appears immediately
+            await new Promise(resolve => setTimeout(resolve, 0));
+
             const response = await fetch(url);
             const arrayBuffer = await response.arrayBuffer();
             const audioBuffer = await getAudioContext().decodeAudioData(arrayBuffer);
 
             await processAudio(audioBuffer, new File([arrayBuffer], label, { type: 'audio/mpeg' }));
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error loading audio from URL:', err);
             throw err; // Re-throw so the caller can handle its own state/analytics
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -326,6 +337,7 @@ export const useAudioProcessor = () => {
         isProcessing,
         setIsProcessing,
         processingProgress,
-        loadAudioFromUrl
+        loadAudioFromUrl,
+        loadAudioFromFile
     };
 };

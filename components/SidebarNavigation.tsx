@@ -5,7 +5,7 @@ import SidebarPipeline from './SidebarPipeline';
 import SidebarParams from './SidebarParams';
 import ActionBar from './ActionBar';
 import { EFFECT_METADATA } from '@/constants';
-import { sanitizeImportedEffects } from '@/services/sanitizeImportedEffects';
+import { loadMuxelsFile } from '@/services/sanitizeImportedEffects';
 
 export type SidebarView = 'pipeline' | 'effects' | 'params';
 
@@ -53,27 +53,14 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         input.onchange = (e: any) => {
             const file = e.target.files?.[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const json = JSON.parse(event.target?.result as string);
-                    if (Array.isArray(json)) {
-                        const sanitized = sanitizeImportedEffects(json);
-                        if (sanitized.length > 0) {
-                            setEffects(sanitized);
-                            onViewChange('pipeline');
-                        } else {
-                            alert("No valid effects found in this .muxels file.");
-                        }
-                    } else {
-                        alert("Invalid .muxels file format");
-                    }
-                } catch (err) {
-                    console.error("Failed to parse .muxels file", err);
-                    alert("Failed to parse .muxels file.");
-                }
-            };
-            reader.readAsText(file);
+            loadMuxelsFile(file)
+                .then(sanitized => {
+                    setEffects(sanitized);
+                    onViewChange('pipeline');
+                })
+                .catch(err => {
+                    alert(err.message);
+                });
         };
         input.click();
     };

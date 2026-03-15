@@ -11,6 +11,8 @@ import { Preset } from '@/constants';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 import { exportVideo } from '@/services/exportService';
 import { analytics } from '@/services/analytics';
+import LandingModal from './LandingModal';
+import { loadMuxelsFile } from '@/services/sanitizeImportedEffects';
 import { useEffectStore } from '../store/useEffectStore';
 import { SHARED_AUDIO_STATE } from '../services/audioState';
 
@@ -35,13 +37,16 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         isProcessing,
         setIsProcessing,
         processingProgress,
-        loadAudioFromUrl
+        loadAudioFromUrl,
+        loadAudioFromFile
     } = useAudioProcessor();
 
     const [isExporting, setIsExporting] = useState(false);
     const [exportProgress, setExportProgress] = useState(0);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [exportResult, setExportResult] = useState<{ fileUrl: string, fileName: string } | null>(null);
+
+    const [isLandingOpen, setIsLandingOpen] = useState(true);
 
     const [imageFile, setImageFile] = useState<File | null>(null);
     const effects = useEffectStore(s => s.effects);
@@ -121,15 +126,36 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         // Render initial imageless frame on mount
         renderFrame(0);
 
-        // Auto-load a default audio track so reactivity data is ready immediately
-        loadAudioFromUrl('/presets/trip.mp3', 'Demo Track').catch(err => {
-            console.error('Failed to load demo track:', err);
-        });
-
         return () => {
             if (requestRef.current) cancelAnimationFrame(requestRef.current);
         };
     }, []);
+
+    const handleLandingStart = (audioOption: 'demo' | 'upload', audioFile?: File, muxelsFile?: File) => {
+        setIsLandingOpen(false);
+
+        // 1. Handle Audio Option
+        if (audioOption === 'demo') {
+            loadAudioFromUrl('/presets/trip.mp3', 'Demo Track').catch(err => {
+                console.error('Failed to load demo track:', err);
+            });
+        } else if (audioOption === 'upload' && audioFile) {
+            loadAudioFromFile(audioFile).catch(err => {
+                console.error('Failed to load uploaded audio:', err);
+            });
+        }
+
+        // 2. Handle Project Loading (.muxels)
+        if (muxelsFile) {
+            loadMuxelsFile(muxelsFile)
+                .then(sanitized => {
+                    setEffects(sanitized);
+                })
+                .catch(err => {
+                    alert(err.message);
+                });
+        }
+    };
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -385,19 +411,11 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             <button
                                 onClick={handleExport}
                                 disabled={!audioFile || isExporting || isProcessing}
-                                className={`h-9 px-3 sm:px-4 rounded-xl flex items-center transition-all border ${isExporting || isProcessing ? 'bg-white/5 border-white/5 text-white/40 cursor-wait' : 'bg-[#FB00FF]/10 border-[#FB00FF]/20 text-[#FB00FF] hover:bg-[#FB00FF]/20 hover:border-[#FB00FF]/40 shadow-[0_0_15px_rgba(251,0,251,0.1)]'}`}
+                                className={`h-9 px-3 sm:px-4 rounded-xl flex items-center transition-all border disabled:bg-white/5 disabled:border-white/5 disabled:text-white/40 bg-[#FB00FF]/10 border-[#FB00FF]/20 text-[#FB00FF] hover:bg-[#FB00FF]/20 hover:border-[#FB00FF]/40 shadow-[0_0_15px_rgba(251,0,251,0.1)]`}
                                 title="Export"
                                 aria-label="Export">
-                                <span className={`material-symbols-outlined text-[18px] ${isExporting ? 'animate-spin' : ''}`}>
-                                    {isExporting ? 'autorenew' : 'download'}
-                                </span>
-                                <span className="text-[9px] font-bold uppercase tracking-widest leading-none">
-                                    {isExporting &&
-                                        <>
-                                            <span className="pl-2 hidden md:inline">Exporting </span>
-                                            <span className="md:pl-0 pl-1">{`${Math.round(exportProgress * 100)}%`}</span>
-                                        </>
-                                    }
+                                <span className="material-symbols-outlined text-[18px]">
+                                    download
                                 </span>
                             </button>
                         </div>
@@ -425,6 +443,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 )}
             </div>
             <Footer />
+            <LandingModal isOpen={isLandingOpen} onStart={handleLandingStart} onClose={() => setIsLandingOpen(false)} />
             <ExportModal
                 isOpen={isExportModalOpen}
                 onClose={() => {
