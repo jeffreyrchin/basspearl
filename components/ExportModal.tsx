@@ -52,10 +52,10 @@ const ExportModal: React.FC<ExportModalProps> = ({
                 onClick={() => !isExporting && onClose()}
             />
             {/* Modal */}
-            <div className="relative w-full bg-black/80 max-w-lg rounded-lg border border-white/10 shadow-2xl overflow-hidden animate-in fade-in duration-200">
+            <div className="relative w-full bg-slate-700 max-w-lg rounded-lg border border-white/10 shadow-2xl overflow-hidden animate-in fade-in duration-200">
                 {/* Header Area */}
                 <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-                    <h2 className="text-[10px] font-bold tracking-[0.2em] uppercase text-white">Export Video</h2>
+                    <h2 className="text-[12px] font-bold tracking-widest uppercase text-white">Export</h2>
                     {!isExporting && (
                         <button
                             onClick={onClose}
@@ -80,7 +80,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
                                         onClick={() => setFps(option.value)}
                                         disabled={isExporting}
                                         className={`px-4 py-3 rounded border text-xs font-medium transition-all flex items-center justify-between ${fps === option.value
-                                            ? 'bg-neutral-700 text-white border-neutral-500'
+                                            ? 'bg-white text-black border-white'
                                             : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/10'
                                             } ${isExporting ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
@@ -105,7 +105,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
                                         onClick={() => setResolution(option.value)}
                                         disabled={isExporting}
                                         className={`px-4 py-3 rounded border text-xs font-medium transition-all flex items-center justify-between ${resolution === option.value
-                                            ? 'bg-neutral-700 text-white border-neutral-500'
+                                            ? 'bg-white text-black border-white'
                                             : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/10'
                                             } ${isExporting ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
@@ -125,7 +125,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
                             <div className="flex flex-col items-center justify-center p-6 space-y-4 bg-white/5 rounded-lg border border-white/10">
                                 <div className="text-white font-medium text-sm tracking-widest uppercase">Export Complete</div>
                                 <p className="text-[10px] text-center text-white/60 leading-relaxed uppercase tracking-widest">
-                                    <a className="text-green-400 font-medium tracking-widest uppercase" href={exportResult.fileUrl} download={exportResult.fileName}>Click Here</a> if your download hasn't started.
+                                    <a className="text-green-400 font-bold tracking-widest uppercase" href={exportResult.fileUrl} download={exportResult.fileName}>Click Here</a> if your download hasn't started.
                                 </p>
                             </div>
                         </div>
@@ -147,9 +147,9 @@ const ExportModal: React.FC<ExportModalProps> = ({
                         <div className="mt-10 pt-8 border-t border-white/10">
                             <button
                                 onClick={() => onExport({ fps, resolution })}
-                                className="w-full py-4 rounded border border-neutral-600 bg-neutral-800 text-white hover:bg-neutral-700 active:scale-[0.99] font-bold text-[10px] uppercase tracking-[0.2em] transition-all"
+                                className="w-full py-4 rounded border border-white/20 bg-white/10 text-white hover:bg-white hover:text-black active:scale-[0.99] font-bold text-[10px] uppercase tracking-[0.2em] transition-all"
                             >
-                                Export
+                                Export .MP4
                             </button>
                         </div>
                     )}
