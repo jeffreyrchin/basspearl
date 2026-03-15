@@ -47,7 +47,7 @@ const SortableGroupItem = ({
                 {...(isOverlay ? {} : { ...attributes, ...listeners })}
                 onKeyDown={isOverlay ? undefined : (e) => onGripKeyDown(e, groupIndex)}
                 onClick={(e) => e.stopPropagation()}
-                className="group w-8 flex-shrink-0 flex flex-col items-center justify-center hover:bg-white/10 focus-visible:bg-primary/20 focus-visible:border-primary/50 outline-none rounded-l-md touch-none transition-colors cursor-grab active:cursor-grabbing"
+                className="group w-8 border-r border-white/10 flex-shrink-0 flex flex-col items-center justify-center hover:bg-white/10 focus-visible:bg-primary/20 focus-visible:border-primary/50 outline-none rounded-l-md touch-none transition-colors cursor-grab active:cursor-grabbing"
                 title="Drag to Reorder"
             >
                 <span className="material-symbols-outlined text-white/60 group-hover:text-white transition-colors text-[18px]">drag_indicator</span>

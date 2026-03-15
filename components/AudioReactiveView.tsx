@@ -46,12 +46,12 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [exportResult, setExportResult] = useState<{ fileUrl: string, fileName: string } | null>(null);
 
-    const [isLandingOpen, setIsLandingOpen] = useState(true);
-
     const [imageFile, setImageFile] = useState<File | null>(null);
     const effects = useEffectStore(s => s.effects);
     const setEffects = useEffectStore(s => s.setEffects);
     const [sidebarVisible, setSidebarVisible] = useState(false); // Default to hidden
+
+    const [isLandingOpen, setIsLandingOpen] = useState(effects.length === 0 && audioFile === null);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const requestRef = useRef<number>();
