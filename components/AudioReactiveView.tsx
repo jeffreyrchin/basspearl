@@ -49,7 +49,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const [imageFile, setImageFile] = useState<File | null>(null);
     const effects = useEffectStore(s => s.effects);
     const setEffects = useEffectStore(s => s.setEffects);
-    const [sidebarVisible, setSidebarVisible] = useState(false); // Default to hidden
+    const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
+    const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
 
     const [isLandingOpen, setIsLandingOpen] = useState(effects.length === 0 && audioFile === null);
 
@@ -287,7 +288,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             <Navbar />
             <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
                 {/* Main Content Area */}
-                <main className={`flex-1 flex flex-col min-h-0 min-w-0 transition-all duration-500 ease-in-out ${sidebarVisible ? 'lg:mr-0' : ''}`}>
+                <main className={`flex-1 flex flex-col min-h-0 min-w-0 transition-all duration-500 ease-in-out ${isSidebarOpen ? 'lg:mr-0' : ''}`}>
                     <MainToolbar
                         imageInputRef={imageInputRef}
                         audioInputRef={audioInputRef}
@@ -295,16 +296,14 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         audioFile={audioFile}
                         handleImageUpload={handleImageUpload}
                         handleAudioUpload={handleAudioUpload}
-                        sidebarVisible={sidebarVisible}
-                        setSidebarVisible={setSidebarVisible}
                     />
 
                     {/* Viewport */}
                     <div className="flex-1 flex items-center justify-center min-h-0 relative group">
                         {/* Mobile Floating Toggle */}
-                        {!sidebarVisible && (
+                        {!isSidebarOpen && (
                             <button
-                                onClick={() => setSidebarVisible(true)}
+                                onClick={() => setIsSidebarOpen(true)}
                                 className="absolute top-6 right-6 z-20 w-12 h-12 rounded-2xl bg-black/90 border border-[#FB00FF]/40 text-white shadow-[0_0_30px_rgba(0,0,0,0.5),0_0_15px_rgba(251,0,255,0.2)] flex items-center justify-center lg:hidden animate-in fade-in zoom-in duration-300 active:scale-90 hover:bg-black transition-all"
                                 aria-label="Show sidebar">
                                 <span className="material-symbols-outlined text-2xl">tune</span>
@@ -378,18 +377,18 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
                 {/* Sidebar: Effects Rack & Parameters */}
                 <aside
-                    className={`fixed inset-y-0 right-0 z-[60] lg:relative w-full sm:w-[400px] border-l border-white/5 bg-[#050B14] flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] lg:shadow-none will-change-transform ${sidebarVisible ? 'translate-x-0' : 'translate-x-full lg:hidden'}`}>
+                    className={`fixed inset-y-0 right-0 z-[60] lg:relative w-full sm:w-[400px] border-l border-white/5 bg-[#050B14] flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] lg:shadow-none will-change-transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full lg:hidden'}`}>
                     {/* Inner wrapper */}
                     <div className="flex-1 flex flex-col min-h-0 relative">
                         <SidebarNavigation
-                            onClose={() => setSidebarVisible(false)} />
+                            onClose={() => setIsSidebarOpen(false)} />
                     </div>
                 </aside>
 
                 {/* Mobile Backdrop */}
-                {sidebarVisible && (
+                {isSidebarOpen && (
                     <div
-                        onClick={() => setSidebarVisible(false)}
+                        onClick={() => setIsSidebarOpen(false)}
                         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden animate-in fade-in duration-300"
                     />
                 )}

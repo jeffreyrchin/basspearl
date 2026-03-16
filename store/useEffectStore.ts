@@ -29,6 +29,9 @@ interface EffectState {
     isLibraryOpen: boolean;
     setIsLibraryOpen: (open: boolean) => void;
 
+    isSidebarOpen: boolean;
+    setIsSidebarOpen: (open: boolean) => void;
+
     undo: () => void;
     redo: () => void;
     commitHistory: () => void;
@@ -59,6 +62,8 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     setIsInspectorOpen: (isInspectorOpen) => set({ isInspectorOpen }),
     isLibraryOpen: false,
     setIsLibraryOpen: (isLibraryOpen) => set({ isLibraryOpen }),
+    isSidebarOpen: false,
+    setIsSidebarOpen: (isSidebarOpen) => set({ isSidebarOpen }),
 
     toggleSelected: (id, multi) => {
         const { selectedIds } = get();
@@ -154,7 +159,8 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         analytics.effect.added(type);
         const newEffect = createEffectInstance(type);
         set((state) => ({
-            effects: [...state.effects, newEffect]
+            effects: [...state.effects, newEffect],
+            isSidebarOpen: true
         }));
     },
 
@@ -165,7 +171,8 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         if (newEffects.length === 0) return;
 
         set((state) => ({
-            effects: [...state.effects, ...newEffects]
+            effects: [...state.effects, ...newEffects],
+            isSidebarOpen: true
         }));
     },
 

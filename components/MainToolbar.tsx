@@ -8,8 +8,6 @@ interface MainToolbarProps {
     audioFile: File | null;
     handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleAudioUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    sidebarVisible: boolean;
-    setSidebarVisible: (visible: boolean) => void;
 }
 
 const ToolbarButton: React.FC<{
@@ -57,11 +55,11 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     audioFile,
     handleImageUpload,
     handleAudioUpload,
-    sidebarVisible,
-    setSidebarVisible
 }) => {
     const isLibraryOpen = useEffectStore(s => s.isLibraryOpen);
     const setIsLibraryOpen = useEffectStore(s => s.setIsLibraryOpen);
+    const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
+    const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
     return (
         <div className="h-14 border-b border-white/5 bg-white/5 flex items-center justify-center px-6 gap-4 shrink-0 overflow-x-auto no-scrollbar">
             {/* Local Assets Group */}
@@ -115,11 +113,11 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
             <div className="hidden lg:flex items-center ml-4 gap-2">
                 <ToolbarButton
                     onClick={() => {
-                        setSidebarVisible(!sidebarVisible);
+                        setIsSidebarOpen(!isSidebarOpen);
                     }}
                     icon="layers"
-                    title={sidebarVisible ? "Close Pipeline" : "Open Pipeline"}
-                    isActive={sidebarVisible}
+                    title={isSidebarOpen ? "Close Pipeline" : "Open Pipeline"}
+                    isActive={isSidebarOpen}
                     activeBg="bg-white/10"
                     activeBorder="border-white/30"
                 />
