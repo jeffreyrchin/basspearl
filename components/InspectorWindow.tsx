@@ -111,7 +111,7 @@ const InspectorWindow: React.FC = () => {
             style={{
                 position: 'absolute',
                 top: 80,
-                left: 50,
+                right: 400,
                 zIndex: activeWindow === 'inspector' ? 101 : 100
             }} // Default position right beside the sidebar
             className="w-80 min-h-[400px] max-h-[80vh] bg-slate-900/95 border border-white/10 rounded-xl shadow-2xl z-[100] flex flex-col pointer-events-auto"
