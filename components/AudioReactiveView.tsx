@@ -247,6 +247,48 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         }
     }, [effects, imageFile, currentTime, isPlaying, audioFile, duration]);
 
+    const handleTogglePlay = () => {
+        if (!audioFile || isProcessing) return;
+        analytics.playback.toggled(!isPlaying);
+        togglePlay(() => {
+            // Start animation loop if not already running
+            if (!requestRef.current) {
+                requestRef.current = requestAnimationFrame(animate);
+            }
+        });
+    };
+
+    // Keep a fresh reference to the toggle function to prevent stale closures without re-binding
+    const togglePlayRef = useRef(handleTogglePlay);
+    togglePlayRef.current = handleTogglePlay;
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Ignore if holding modifier keys (e.g. Cmd+Space for spotlight)
+            if (e.code !== 'Space' || e.metaKey || e.ctrlKey || e.altKey) return;
+
+            const target = e.target as HTMLElement;
+            const isTyping = target.tagName === 'INPUT' ||
+                target.tagName === 'TEXTAREA' ||
+                target.isContentEditable;
+
+            if (isTyping) return;
+
+            e.preventDefault(); // Prevent page scroll down
+
+            // If a button is focused (e.g., they just clicked "Add Effect"), 
+            // pressing space would natively click it again. We blur it to be safe.
+            if (target.tagName === 'BUTTON') {
+                target.blur();
+            }
+
+            togglePlayRef.current();
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []); // Empty dependency array: runs exactly once on mount, uses ref for fresh logic
+
     const handleExport = () => {
         setIsExportModalOpen(true);
     };
@@ -339,15 +381,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             currentTimeLabelRef={currentTimeLabelRef}
                             scrubberRef={scrubberRef}
                             isDraggingScrubberRef={isDraggingScrubberRef}
-                            onPlayPause={() => {
-                                analytics.playback.toggled(!isPlaying);
-                                togglePlay(() => {
-                                    // Start animation loop if not already running
-                                    if (!requestRef.current) {
-                                        requestRef.current = requestAnimationFrame(animate);
-                                    }
-                                });
-                            }}
+                            onPlayPause={handleTogglePlay}
                             onScrubberChange={(e) => {
                                 const val = parseFloat(e.target.value);
                                 updateScrubberUI(val);
