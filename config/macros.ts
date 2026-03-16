@@ -155,7 +155,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Scale', { v: 3, b: 'OFF' }),
           o('Extrusion', { v: 75, m: 43, b: 'SUB' }, { v: 67, m: 0, b: 'OFF' }),
-          o('Speed', { v: 50, b: 'OFF' }),
+          o('Speed', { v: 15, b: 'OFF' }),
           o('Resolution', { v: 99, b: 'OFF' }),
           o('Rotate X', { v: 0, b: 'OFF' }),
           o('Rotate Y', { v: 0, b: 'OFF' }),
@@ -185,7 +185,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Width', { v: 69, b: 'OFF' }),
           o('Height', { v: 64, b: 'OFF' }),
-          o('X-Freq', { v: 37, b: 'OFF' }),
+          o('X-Freq', { v: 50, b: 'OFF' }),
           o('Y-Freq', { v: 46, b: 'OFF' }),
           o('Density', { v: 100, b: 'OFF' }),
           o('Roundness', { v: 0, b: 'OFF' }),
@@ -197,23 +197,14 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'TERRAIN',
         params: [
           o('Scale', { v: 5, b: 'OFF' }),
-          o('Extrusion', { v: 100, b: 'OFF' }),
+          o('Extrusion', { v: 100, m: 58, b: 'SUB' }),
           o('Speed', { v: 5, b: 'OFF' }),
           o('Resolution', { v: 7, b: 'OFF' }),
-          o('Rotate X', { v: 92, b: 'OFF' }),
+          o('Rotate X', { v: 89, b: 'OFF' }),
           o('Rotate Y', { v: 0, b: 'OFF' }),
           o('Rotate Z', { v: 0, b: 'OFF' }),
-          o('Elevation', { v: 36, b: 'OFF' }),
-          o('Distance', { v: 31, b: 'OFF' }),
-        ],
-        melded: true
-      },
-      {
-        type: 'EDGE_MASK',
-        params: [
-          o('Sensitivity', { v: 0, b: 'OFF' }),
-          o('Thickness', { v: 2, b: 'OFF' }),
-          o('Invert', { v: 0, b: 'OFF' }),
+          o('Elevation', { v: 32, b: 'OFF' }),
+          o('Distance', { v: 32, b: 'OFF' }),
         ],
         melded: false
       },
@@ -223,7 +214,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Horizontal', { v: 56, b: 'OFF' }),
           o('Vertical', { v: 56, b: 'OFF' }),
           o('Thickness', { v: 0, b: 'OFF' }),
-          o('Feather', { v: 7, b: 'OFF' }),
+          o('Feather', { v: 8, b: 'OFF' }),
         ],
         melded: true
       },
@@ -232,7 +223,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Scale', { v: 3, b: 'OFF' }),
           o('Extrusion', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 17, b: 'OFF' }),
+          o('Speed', { v: 4, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
           o('Rotate X', { v: 89, b: 'OFF' }),
           o('Rotate Y', { v: 0, b: 'OFF' }),

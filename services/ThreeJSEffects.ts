@@ -151,7 +151,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 if (p && p.length >= 4) {
                     const scale = p[0];
                     const extrusion = p[1];
-                    const speed = (p[2] / 100.0 * 10.0);
+                    const speed = (p[2] / 100.0 * 50.0);
                     // Map 0-100 slider to 4-256 resolution range 
                     // Lower sliders use Voxels; 100 triggers full-res cinematic mode
                     const resolution = Math.max(1, p[3]);
