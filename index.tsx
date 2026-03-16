@@ -25,6 +25,25 @@ const updateVH = () => {
 window.addEventListener('resize', updateVH);
 updateVH();
 
+// Hybrid Zoom Prevention (Lighthouse-friendly)
+// We allow scaling in the meta tag to pass audits, but block the gestures in JS.
+document.addEventListener('touchstart', (e) => {
+  if (e.touches.length > 1) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
+document.addEventListener('wheel', (e) => {
+  if (e.ctrlKey) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
+// Prevents 'gesturestart' on iOS
+document.addEventListener('gesturestart', (e) => {
+  e.preventDefault();
+});
+
 const container = document.getElementById('root');
 const root = createRoot(container!);
 
