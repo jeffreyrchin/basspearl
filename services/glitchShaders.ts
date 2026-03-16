@@ -1122,12 +1122,23 @@ out vec4 outColor;
 
 ${GLSL_HASH}
 
+// Bhaskara I's sine approximation — branchless, continuous, max error 0.166%.
+// Avoids native transcendental sin/cos by using a rational parabolic function.
+// Works correctly over the full range with zero discontinuities at period boundaries.
+float fastSin(float x) {
+    x = fract(x * 0.15915);             // Normalize to one full period [0, 1)
+    float sign = step(0.5, x) * -2.0 + 1.0; // +1 for first half, -1 for second
+    x = fract(x * 2.0);                // Fold each half to [0, 1)
+    float k = 4.0 * x * (1.0 - x);    // Parabola with peak 1.0
+    return sign * k / (1.25 - 0.25 * k); // Bhaskara rational curve
+}
+
 void main() {
     // 1. Map parameters
     float xFreq = u_params[2] / 100.0;
     float yFreq = u_params[3] / 100.0;
-    float cellWidth = u_params[0] / 100.0 * 2.0;
-    float cellHeight = u_params[1] / 100.0 * 2.0;
+    float cellWidth = u_params[0] / 100.0 * 2.0;  // [0, 2]: allows overlapping dots
+    float cellHeight = u_params[1] / 100.0 * 2.0; // (requires 5x5 search when > 1)
     float probDensity = u_params[4] / 100.0;
     float jitter = u_params[5] / 100.0;
     float speed = u_params[6] / 100.0 * 15.0;
@@ -1148,7 +1159,8 @@ void main() {
 
     vec2 cellScaling = 1.0 / max(vec2(cellWidth, cellHeight), 0.01);
 
-    // Worley search in 5x5 neighborhood
+    // 5x5 Worley search — required when cellWidth > 1 (overlapping dots).
+    // Trig cost is reduced by using Bhaskara fastSin instead of native sin/cos.
     for (int y = -2; y <= 2; y++) {
         for (int x = -2; x <= 2; x++) {
             vec2 neighbor = vec2(float(x), float(y));
@@ -1162,12 +1174,12 @@ void main() {
             
             vec2 seed = vec2(baseHash, fract(baseHash * 43758.5453123));
 
-            // Morphic Jitter: centers wiggle over time
+            // Morphic Jitter: fastSin replaces native sin/cos with Bhaskara approximation
+            // cos(x) = sin(x + π/2), so fastSin(x + 1.5708) gives cosine for free
             vec2 wiggle = 0.5 + 0.5 * vec2(
-                sin(t + seed.x * 6.2831),
-                cos(t * 0.8 + seed.y * 6.2831)
+                fastSin(t + seed.x * 6.2831),
+                fastSin(t * 0.8 + seed.y * 6.2831 + 1.5708)
             );
-            
             vec2 offset = mix(vec2(0.5), wiggle, jitter);
             vec2 diff = neighbor + offset - fv;
 
