@@ -147,6 +147,8 @@ body {
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
+  /* Allow horizontal scrubbing on mobile even when body is locked */
+  touch-action: pan-x !important;
 }
 
 .custom-slider::-webkit-slider-runnable-track {

@@ -8,11 +8,18 @@ import './index.css';
 // CSS alone (overflow:hidden, position:fixed) is insufficient on older iOS.
 // { passive: false } is required to allow e.preventDefault() inside a touch handler.
 document.addEventListener('touchmove', (e) => {
-  // Allow touch scrolling if the user is swiping inside a dedicated scroll container
   const target = e.target as HTMLElement;
+
+  // Allow touch scrolling if the user is swiping inside a dedicated scroll container
   if (target.closest('.scroll-container') || target.closest('.custom-scrollbar')) {
     return;
   }
+
+  // Allow touch interactions with sliders and scrubbers
+  if (target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'range') {
+    return;
+  }
+
   e.preventDefault();
 }, { passive: false });
 
