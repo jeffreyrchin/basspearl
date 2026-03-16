@@ -4,6 +4,7 @@ interface ExportModalProps {
     isOpen: boolean;
     onClose: () => void;
     onExport: (options: { fps: number; resolution: number }) => void;
+    onCancelExport?: () => void;
     isExporting: boolean;
     exportProgress: number; // 0 to 100
     exportResult?: { fileUrl: string, fileName: string } | null;
@@ -13,6 +14,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
     isOpen,
     onClose,
     onExport,
+    onCancelExport,
     isExporting,
     exportProgress,
     exportResult
@@ -141,6 +143,15 @@ const ExportModal: React.FC<ExportModalProps> = ({
                                     className="h-full bg-white"
                                     style={{ width: `${exportProgress}%` }}
                                 />
+                            </div>
+
+                            <div className="flex justify-center pt-4">
+                                <button
+                                    onClick={onCancelExport}
+                                    className="px-6 py-2 rounded-lg bg-white/10 border border-white/20 text-white hover:bg-white/20 active:scale-[0.99] transition-all font-bold text-[10px] uppercase tracking-widest"
+                                >
+                                    Cancel Export
+                                </button>
                             </div>
                         </div>
                     ) : (

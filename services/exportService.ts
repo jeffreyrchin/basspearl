@@ -30,6 +30,7 @@ export interface ExportOptions {
     fps?: number;
     maxSize?: number;
     onProgress?: (progress: number) => void;
+    signal?: AbortSignal;
 }
 
 /**
@@ -155,6 +156,11 @@ export const exportVideo = async (options: ExportOptions): Promise<{ fileUrl: st
     // 8. Generation Loop (Deterministic offline rendering)
     try {
         for (let i = 0; i < totalFrames; i++) {
+            // Check for user cancellation
+            if (options.signal?.aborted) {
+                throw new DOMException("Export aborted", "AbortError");
+            }
+
             const time = i / fps;
 
             // The audio data was captured at 60Hz. We calculate the exact fractional index

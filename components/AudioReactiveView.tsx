@@ -64,6 +64,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const audioInputRef = useRef<HTMLInputElement>(null);
     const isDraggingScrubberRef = useRef(false);
     const frameCounterRef = useRef(0);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     // Sync ref with store state (Direct update during render)
     useEffect(() => {
@@ -300,6 +301,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         setIsExporting(true);
         setExportProgress(0);
 
+        // Create fresh controller for this export
+        abortControllerRef.current = new AbortController();
+
         try {
             analytics.export.started();
             const result = await exportVideo({
@@ -311,17 +315,29 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 duration: duration,
                 fps: options.fps,
                 maxSize: options.resolution,
-                onProgress: (p) => setExportProgress(p * 100)
+                onProgress: (p) => setExportProgress(p * 100),
+                signal: abortControllerRef.current.signal
             });
             analytics.export.succeeded(effects);
             setExportResult(result);
         } catch (err: any) {
+            if (err.name === 'AbortError') {
+                console.log("Export was canceled by user.");
+                return;
+            }
             analytics.export.failed(err);
             console.error("Export failed:", err);
             alert("Export failed. See console for details.");
         } finally {
             setIsExporting(false);
             setExportProgress(0);
+            abortControllerRef.current = null;
+        }
+    };
+
+    const handleCancelExport = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
         }
     };
 
@@ -442,6 +458,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     setIsExportModalOpen(false);
                 }}
                 onExport={handleActualExport}
+                onCancelExport={handleCancelExport}
                 isExporting={isExporting}
                 exportProgress={exportProgress}
                 exportResult={exportResult}
