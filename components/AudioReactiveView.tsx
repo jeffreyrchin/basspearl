@@ -326,7 +326,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     };
 
     return (
-        <div className="h-screen text-white flex flex-col overflow-hidden font-display leading-relaxed relative">
+        <div
+            className="text-white flex flex-col overflow-hidden font-display leading-relaxed relative"
+            style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
+        >
             <Navbar />
             <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
                 {/* Main Content Area */}

@@ -34,19 +34,47 @@
 }
 
 /* Base resets */
-body,
 html {
   height: 100%;
-  overscroll-behavior-y: none;
-  scroll-behavior: smooth;
+  height: calc(var(--vh, 1vh) * 100);
+  overflow-x: hidden;
+}
+
+body {
+  /* Prevent document-level scrolling */
+  overflow: hidden;
+  overflow-x: hidden;
+
+  /* Use dynamic viewport height to respect mobile browser chrome */
+  height: 100%;
+  height: calc(var(--vh, 1vh) * 100);
+  width: 100%;
+
+  /* Modern browsers: kill pull-to-refresh and elastic bounce */
+  overscroll-behavior: none;
+
+  /* Disable native swipe/pull touch gestures globally */
+  touch-action: none;
 }
 
 #root {
   height: 100%;
+  height: calc(var(--vh, 1vh) * 100);
+  width: 100%;
+  overflow: hidden;
+  overflow-x: hidden;
 }
 
 .overscroll-contain {
   overscroll-behavior-y: contain;
+}
+
+.scroll-container {
+  height: 100%;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y !important;
 }
 
 /* Custom UI Components */
