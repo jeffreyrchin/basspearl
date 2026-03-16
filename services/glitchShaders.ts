@@ -1159,10 +1159,12 @@ void main() {
 
     vec2 cellScaling = 1.0 / max(vec2(cellWidth, cellHeight), 0.01);
 
-    // 5x5 Worley search — required when cellWidth > 1 (overlapping dots).
-    // Trig cost is reduced by using Bhaskara fastSin instead of native sin/cos.
+    // 5x5 Worley search with Circular Pruning (13 iterations vs 25)
+    // Corners are mathematically too far to be nearest neighbors, even with jitter.
     for (int y = -2; y <= 2; y++) {
         for (int x = -2; x <= 2; x++) {
+            if (x*x + y*y > 4) continue; // Skip 12 furthest corner cells
+            
             vec2 neighbor = vec2(float(x), float(y));
             vec2 cell = gv + neighbor;
 
