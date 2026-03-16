@@ -45,7 +45,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
     ];
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[102] flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/80"

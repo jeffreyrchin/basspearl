@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAuthStore } from '@/store/useAuthStore';
 
@@ -9,11 +10,15 @@ const UserMenu: React.FC<UserMenuProps> = () => {
     const { user, signOut, isLoading } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const { openAuth } = useAuthStore();
+    const triggerRef = useRef<HTMLButtonElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+            if (
+                triggerRef.current && !triggerRef.current.contains(e.target as Node) &&
+                menuRef.current && !menuRef.current.contains(e.target as Node)
+            ) {
                 setIsOpen(false);
             }
         };
@@ -50,9 +55,68 @@ const UserMenu: React.FC<UserMenuProps> = () => {
         ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
         : user.email?.slice(0, 2).toUpperCase() || 'U';
 
+    const menuContent = (
+        <div
+            ref={menuRef}
+            className="fixed w-64 bg-black/90 backdrop-blur-xl rounded-xl overflow-hidden border border-white/10 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 z-[102]"
+            style={{
+                top: triggerRef.current ? triggerRef.current.getBoundingClientRect().bottom + 8 : 0,
+                right: triggerRef.current ? window.innerWidth - triggerRef.current.getBoundingClientRect().right : 0
+            }}
+        >
+            {/* User Info */}
+            <div className="p-4 border-b border-white/5">
+                <div className="flex items-center gap-3">
+                    {user.photoURL ? (
+                        <img
+                            src={user.photoURL}
+                            alt={user.displayName || 'User'}
+                            className="size-10 rounded-full object-cover"
+                        />
+                    ) : (
+                        <div className="size-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-sm font-bold text-white">
+                            {initials}
+                        </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold truncate">
+                            {user.displayName || 'GlitchBrain User'}
+                        </p>
+                        <p className="text-xs text-white/40 truncate">
+                            {user.email}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Pro Badge */}
+            <div className="p-4 border-b border-white/5">
+                <div className="flex items-center gap-2 text-primary">
+                    <span className="material-symbols-outlined text-[18px]">all_inclusive</span>
+                    <span className="text-xs font-bold uppercase tracking-widest">Unlimited Uploads</span>
+                </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-2">
+                <button
+                    onClick={async () => {
+                        await signOut();
+                        setIsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors text-white/60 hover:text-white"
+                >
+                    <span className="material-symbols-outlined text-[20px]">logout</span>
+                    <span className="text-sm font-medium">Sign Out</span>
+                </button>
+            </div>
+        </div>
+    );
+
     return (
-        <div className="relative" ref={menuRef}>
+        <div className="relative">
             <button
+                ref={triggerRef}
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center gap-3 group"
             >
@@ -72,56 +136,7 @@ const UserMenu: React.FC<UserMenuProps> = () => {
                 </span>
             </button>
 
-            {isOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 bg-black/90 backdrop-blur-xl rounded-xl overflow-hidden border border-white/10 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 z-50">
-                    {/* User Info */}
-                    <div className="p-4 border-b border-white/5">
-                        <div className="flex items-center gap-3">
-                            {user.photoURL ? (
-                                <img
-                                    src={user.photoURL}
-                                    alt={user.displayName || 'User'}
-                                    className="size-10 rounded-full object-cover"
-                                />
-                            ) : (
-                                <div className="size-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-sm font-bold text-white">
-                                    {initials}
-                                </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-bold truncate">
-                                    {user.displayName || 'GlitchBrain User'}
-                                </p>
-                                <p className="text-xs text-white/40 truncate">
-                                    {user.email}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Pro Badge */}
-                    <div className="p-4 border-b border-white/5">
-                        <div className="flex items-center gap-2 text-primary">
-                            <span className="material-symbols-outlined text-[18px]">all_inclusive</span>
-                            <span className="text-xs font-bold uppercase tracking-widest">Unlimited Uploads</span>
-                        </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="p-2">
-                        <button
-                            onClick={async () => {
-                                await signOut();
-                                setIsOpen(false);
-                            }}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors text-white/60 hover:text-white"
-                        >
-                            <span className="material-symbols-outlined text-[20px]">logout</span>
-                            <span className="text-sm font-medium">Sign Out</span>
-                        </button>
-                    </div>
-                </div>
-            )}
+            {isOpen && createPortal(menuContent, document.body)}
         </div>
     );
 };

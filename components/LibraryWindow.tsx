@@ -6,6 +6,8 @@ import SidebarLibrary from './SidebarLibrary';
 const LibraryWindow: React.FC = () => {
     const isLibraryOpen = useEffectStore(s => s.isLibraryOpen);
     const setIsLibraryOpen = useEffectStore(s => s.setIsLibraryOpen);
+    const activeWindow = useEffectStore(s => s.activeWindow);
+    const setActiveWindow = useEffectStore(s => s.setActiveWindow);
 
     const dragControls = useDragControls();
 
@@ -22,13 +24,17 @@ const LibraryWindow: React.FC = () => {
 
     return (
         isMobile ? (
-            <div className="fixed inset-0 z-[100] flex items-end pointer-events-none">
+            <div
+                className="fixed inset-0 z-[100] flex items-end pointer-events-none"
+                style={{ zIndex: activeWindow === 'library' ? 101 : 100 }}
+            >
                 <div
                     className="absolute inset-0 bg-black/40 pointer-events-auto z-0"
                     onClick={() => setIsLibraryOpen(false)}
                 />
                 <motion.div
                     onClick={(e) => e.stopPropagation()}
+                    onPointerDown={() => setActiveWindow('library')}
                     initial={{ y: "100%" }}
                     animate={{ y: 0 }}
                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
@@ -57,9 +63,15 @@ const LibraryWindow: React.FC = () => {
                 dragMomentum={false}
                 dragListener={false}
                 dragControls={dragControls}
+                onPointerDown={() => setActiveWindow('library')}
                 initial={{ opacity: 0, scale: 0.95, y: 0 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                style={{ position: 'absolute', top: 80, right: 400 }} // Default position to the left of the pipeline sidebar
+                style={{
+                    position: 'absolute',
+                    top: 80,
+                    right: 400,
+                    zIndex: activeWindow === 'library' ? 101 : 100
+                }} // Default position to the left of the pipeline sidebar
                 className="w-[360px] min-h-[500px] max-h-[85vh] bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-[100] flex flex-col pointer-events-auto"
             >
                 {/* Header / Drag Handle */}
@@ -82,7 +94,10 @@ const LibraryWindow: React.FC = () => {
                 {/* Content Body */}
                 <div
                     className="flex-1 overflow-y-auto custom-scrollbar isolate"
-                    onPointerDown={(e) => e.stopPropagation()} // Prevent window from being dragged when interacting with content inside
+                    onPointerDown={(e) => {
+                        e.stopPropagation(); // Prevent window from being dragged when interacting with content inside
+                        setActiveWindow('library');
+                    }}
                 >
                     <SidebarLibrary />
                 </div>

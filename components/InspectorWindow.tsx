@@ -7,6 +7,9 @@ import SidebarParams from './SidebarParams';
 const InspectorWindow: React.FC = () => {
     const isInspectorOpen = useEffectStore(s => s.isInspectorOpen);
     const setIsInspectorOpen = useEffectStore(s => s.setIsInspectorOpen);
+    const activeWindow = useEffectStore(s => s.activeWindow);
+    const setActiveWindow = useEffectStore(s => s.setActiveWindow);
+
     const selectedIds = useEffectStore(s => s.selectedIds);
     const effects = useEffectStore(s => s.effects);
 
@@ -65,13 +68,17 @@ const InspectorWindow: React.FC = () => {
     // Mobile View (full screen)
     if (isMobile) {
         return (
-            <div className="fixed inset-0 z-[100] flex items-end pointer-events-none">
+            <div
+                className="fixed inset-0 z-[100] flex items-end pointer-events-none"
+                style={{ zIndex: activeWindow === 'inspector' ? 101 : 100 }}
+            >
                 <div
                     className="absolute inset-0 bg-black/40 pointer-events-auto z-0"
                     onClick={() => setIsInspectorOpen(false)}
                 />
                 <motion.div
                     onClick={(e) => e.stopPropagation()}
+                    onPointerDown={() => setActiveWindow('inspector')}
                     initial={{ y: "100%" }}
                     animate={{ y: 0 }}
                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
@@ -98,9 +105,15 @@ const InspectorWindow: React.FC = () => {
             dragMomentum={false}
             dragListener={false}
             dragControls={dragControls}
+            onPointerDown={() => setActiveWindow('inspector')}
             initial={{ opacity: 0, scale: 0.95, y: 0 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            style={{ position: 'absolute', top: 80, left: 50 }} // Default position right beside the sidebar
+            style={{
+                position: 'absolute',
+                top: 80,
+                left: 50,
+                zIndex: activeWindow === 'inspector' ? 101 : 100
+            }} // Default position right beside the sidebar
             className="w-80 min-h-[400px] max-h-[80vh] bg-slate-900/95 border border-white/10 rounded-xl shadow-2xl z-[100] flex flex-col pointer-events-auto"
         >
             {/* Header / Drag Handle */}
@@ -117,7 +130,10 @@ const InspectorWindow: React.FC = () => {
             {/* Content Body */}
             <div
                 className="flex-1 overflow-y-auto custom-scrollbar p-5"
-                onPointerDown={(e) => e.stopPropagation()} // Prevent window from being dragged when interacting with sliders
+                onPointerDown={(e) => {
+                    e.stopPropagation(); // Prevent window from being dragged when interacting with sliders
+                    setActiveWindow('inspector');
+                }}
             >
                 <SidebarParams />
             </div>

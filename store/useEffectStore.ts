@@ -32,6 +32,9 @@ interface EffectState {
     isSidebarOpen: boolean;
     setIsSidebarOpen: (open: boolean) => void;
 
+    activeWindow: 'inspector' | 'library' | null;
+    setActiveWindow: (window: 'inspector' | 'library' | null) => void;
+
     undo: () => void;
     redo: () => void;
     commitHistory: () => void;
@@ -54,14 +57,23 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     past: [],
     future: [],
 
+    activeWindow: null,
+    setActiveWindow: (activeWindow) => set({ activeWindow }),
+
     setEffects: (effects) => set({ effects }),
 
     setIsInSelectMode: (isInSelectMode) => set({ isInSelectMode: isInSelectMode }),
 
     isInspectorOpen: false,
-    setIsInspectorOpen: (isInspectorOpen) => set({ isInspectorOpen }),
+    setIsInspectorOpen: (isInspectorOpen) => set(s => ({
+        isInspectorOpen,
+        activeWindow: isInspectorOpen ? 'inspector' : s.activeWindow === 'inspector' ? null : s.activeWindow
+    })),
     isLibraryOpen: false,
-    setIsLibraryOpen: (isLibraryOpen) => set({ isLibraryOpen }),
+    setIsLibraryOpen: (isLibraryOpen) => set(s => ({
+        isLibraryOpen,
+        activeWindow: isLibraryOpen ? 'library' : s.activeWindow === 'library' ? null : s.activeWindow
+    })),
     isSidebarOpen: false,
     setIsSidebarOpen: (isSidebarOpen) => set({ isSidebarOpen }),
 
