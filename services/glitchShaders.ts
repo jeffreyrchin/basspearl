@@ -724,9 +724,10 @@ void main() {
     vec2 cell = floor(cellCoord);
     vec2 p = fract(cellCoord) - 0.5; // Center coord [-0.5, 0.5]
 
-    // 5. Generate Random Noise Mask.
-    float threshold = hash(cell, u_seed); // full [0.0, 1.0] range for fair distribution
-    float brightness = hash(cell + 0.1, u_seed) * 0.99 + 0.01; // restrict brightness to [0.01, 1.0] to prevent black voids
+    // 5. Generate Random Noise Mask (Optimized: Single Hash Call)
+    float baseHash = hash(cell, u_seed);
+    float threshold = baseHash; // full [0.0, 1.0] range for fair distribution
+    float brightness = fract(baseHash * 43758.5453123) * 0.99 + 0.01; // restrict brightness to [0.01, 1.0] to prevent black voids
     float lit = step(1.0 - density, threshold) * step(0.001, density);
 
     // 6. Rounded Box SDF
@@ -882,10 +883,6 @@ out vec4 outColor;
 
 ${GLSL_HASH}
 
-vec2 hash2(vec2 col, float seed) {
-    return vec2(hash(col, seed), hash(col, seed + 1.23));
-}
-
 void main() {
     vec2 freq = max(vec2(1.0), floor(exp2(vec2(u_params[0], u_params[1]) * 0.08)));
     float density = u_params[2] / 100.0;
@@ -903,10 +900,12 @@ void main() {
             ivec2 off = ivec2(x, y);
             uvec2 cell = uvec2(ivec2(currentCell) + off);
             
-            float dActive = step(1.0 - density, hash(vec2(cell), u_seed));
+            // Optimized: Calculate one robust hash per cell and derive others
+            float h = hash(vec2(cell), u_seed);
+            float dActive = step(1.0 - density, h);
 
-            // Jittered center in cell space
-            vec2 offset = hash2(vec2(cell), u_seed) - 0.5;
+            // Jittered center in cell space (derived cheaply from same hash)
+            vec2 offset = vec2(h, fract(h * 43758.5453123)) - 0.5;
             vec2 p = localV - vec2(off) - offset * jitter;
 
             // Sample the incoming shape texture (centered at 0.5, 0.5)
@@ -1155,10 +1154,13 @@ void main() {
             vec2 neighbor = vec2(float(x), float(y));
             vec2 cell = gv + neighbor;
 
+            // One robust hash mapped to multiple cheap derivations
+            float baseHash = hash(cell, u_seed);
+
             // Probability check: should a point exist in this cell?
-            if (hash(cell, u_seed) > probDensity && probDensity < 0.99) continue;
+            if (baseHash > probDensity && probDensity < 0.99) continue;
             
-            vec2 seed = vec2(hash(cell, u_seed), hash(cell + vec2(1.0, 7.0), u_seed));
+            vec2 seed = vec2(baseHash, fract(baseHash * 43758.5453123));
 
             // Morphic Jitter: centers wiggle over time
             vec2 wiggle = 0.5 + 0.5 * vec2(
