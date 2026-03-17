@@ -53,7 +53,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
         if (mode === 'none' || !trackRef.current) return;
 
         const rect = trackRef.current.getBoundingClientRect();
-        startTrackWidthRef.current = rect.width - 28; // 14px padding on each side (inset-x-[14px])
+        startTrackWidthRef.current = rect.width - 32; // 16px padding on each side (inset-x-[16px])
         startXRef.current = clientX;
         startMinRef.current = currentMinRef.current;
         startMaxRef.current = currentMaxRef.current;
@@ -130,8 +130,8 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                 {/* Reactive Slider */}
                 <div key="reactive" className="relative w-full" ref={trackRef}>
                     {/* Visual Track (Padded to match thumb centers) */}
-                    <div className="absolute inset-x-0 h-6 bg-white/10 overflow-hidden rounded-full top-1/2 -translate-y-1/2 touch-none">
-                        <div className="absolute inset-x-[14px] inset-y-0">
+                    <div className="absolute inset-x-0 h-7 bg-white/10 overflow-hidden rounded-full top-1/2 -translate-y-1/2 touch-none">
+                        <div className="absolute inset-x-[16px] inset-y-0">
                             <div
                                 onPointerDown={(e) => { e.preventDefault(); handleDragStart(e.clientX, 'middle'); }}
                                 className="absolute h-full bg-primary/20 cursor-grab active:cursor-grabbing"
@@ -144,11 +144,11 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                     </div>
 
                     {/* Interactive Elements Layer */}
-                    <div className="absolute inset-x-[14px] inset-y-0 pointer-events-none">
+                    <div className="absolute inset-x-[16px] inset-y-0 pointer-events-none">
                         <SliderHandle label="Min" value={min} mode="left" onStart={handleDragStart} onKeyUpdate={d => onChangeRef.current({ min: Math.max(0, Math.min(100, min + d)) })} />
                         <SliderHandle label="Max" value={value} mode="right" onStart={handleDragStart} onKeyUpdate={d => onChangeRef.current({ value: Math.max(0, Math.min(100, value + d)) })} />
 
-                        <div ref={needleRef} className="absolute h-6 pointer-events-none z-10 top-1/2 -translate-y-1/2"
+                        <div ref={needleRef} className="absolute h-7 pointer-events-none z-10 top-1/2 -translate-y-1/2"
                             style={{ left: `${min}%`, width: '2px', backgroundColor: '#fb00ff' }}
                         />
                     </div>
@@ -172,7 +172,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                     }}
                     className="w-full h-10 mt-2 bg-transparent appearance-none cursor-pointer custom-slider relative z-10"
                 />
-                <div className="absolute inset-x-[14px] inset-y-0 pointer-events-none">
+                <div className="absolute inset-x-[16px] inset-y-0 pointer-events-none">
                     <SliderHandle
                         label="Value"
                         value={value}
@@ -210,10 +210,10 @@ const SliderHandle = memo<{
             if (e.key === 'ArrowLeft') onKeyUpdate(e.shiftKey ? -10 : -1);
             if (e.key === 'ArrowRight') onKeyUpdate(e.shiftKey ? 10 : 1);
         }}
-        className={`absolute w-7 h-7 z-20 top-1/2 group/handle outline-none focus-visible:ring-1 focus-visible:ring-primary/60 touch-none pointer-events-auto cursor-pointer hover:scale-110 hover:z-31 active:z-31 focus-within:z-30 transition-transform -translate-x-1/2 -translate-y-1/2 origin-center before:absolute before:content-[''] before:bg-transparent before:w-6 before:h-10 before:top-1/2 before:left-1/2 before:-translate-y-1/2 before:-translate-x-1/2`}
+        className={`absolute w-8 h-8 z-20 top-1/2 group/handle outline-none focus-visible:ring-1 focus-visible:ring-primary/60 touch-none pointer-events-auto cursor-pointer hover:scale-110 hover:z-31 active:z-31 focus-within:z-30 transition-transform -translate-x-1/2 -translate-y-1/2 origin-center before:absolute before:content-[''] before:bg-transparent before:w-8 before:h-10 before:top-1/2 before:left-1/2 before:-translate-y-1/2 before:-translate-x-1/2`}
         style={{ left: `${value}%` }}
     >
-        <div className="absolute inset-0 bg-slate-700 border border-white/20 rounded-full" />
+        <div className="absolute inset-0 bg-slate-700/50 border-2 border-white/60 rounded-full" />
 
         {/* Percentage Label */}
         <div key={`${mode}-label`} className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">

@@ -160,16 +160,16 @@ body {
 
 .custom-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  height: 28px;
-  width: 28px;
+  height: 32px;
+  width: 32px;
   background: transparent;
   /* Invisible hitbox: React SliderHandle handles visuals */
   border-top: 10px solid transparent;
   border-bottom: 10px solid transparent;
   border-radius: 0;
   cursor: pointer;
-  /* (Track Content 4 / 2) - (Thumb Content 28 / 2 + Border Top 10) = 2 - 24 = -22px */
-  margin-top: -22px;
+  /* (Track Content 4 / 2) - (Thumb Content 32 / 2 + Border Top 10) = 2 - 26 = -24px */
+  margin-top: -24px;
   box-sizing: content-box;
 }
 
@@ -182,8 +182,8 @@ body {
 }
 
 .custom-slider::-moz-range-thumb {
-  height: 28px;
-  width: 28px;
+  height: 32px;
+  width: 32px;
   background: transparent;
   border: 10px solid transparent;
   border-radius: 0;
