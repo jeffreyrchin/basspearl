@@ -53,7 +53,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
         if (mode === 'none' || !trackRef.current) return;
 
         const rect = trackRef.current.getBoundingClientRect();
-        startTrackWidthRef.current = rect.width - 20; // 10px padding on each side
+        startTrackWidthRef.current = rect.width - 28; // 14px padding on each side (inset-x-[14px])
         startXRef.current = clientX;
         startMinRef.current = currentMinRef.current;
         startMaxRef.current = currentMaxRef.current;
@@ -88,7 +88,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
 
     // --- 3. Optimized Global Drag Listener ---
     useEffect(() => {
-        if (dragMode === 'none' || !isReactive) return;
+        if (dragMode === 'none') return;
 
         const handleMove = (e: MouseEvent | TouchEvent) => {
             const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
@@ -122,33 +122,34 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
             window.removeEventListener('pointermove', handleMove);
             window.removeEventListener('pointerup', handleEnd);
         };
-    }, [dragMode, isReactive]);
+    }, [dragMode]);
 
     if (isReactive) {
         return (
-            <div className={`relative h-10 flex items-center mb-3`} onPointerDown={onPointerDown}>
+            <div className={`relative h-10 flex items-center my-2`} onPointerDown={onPointerDown}>
                 {/* Reactive Slider */}
                 <div key="reactive" className="relative w-full" ref={trackRef}>
                     {/* Visual Track (Padded to match thumb centers) */}
-                    <div className="absolute inset-x-2.5 h-6 bg-black/40 border border-white/5 overflow-hidden rounded-sm top-1/2 -translate-y-1/2 touch-none">
-                        <div
-                            onPointerDown={(e) => { e.preventDefault(); handleDragStart(e.clientX, 'middle'); }}
-                            className="absolute h-full cursor-grab active:cursor-grabbing hover:bg-white/[0.05] transition-colors"
-                            style={{
-                                left: `${Math.min(min, value)}%`,
-                                width: `${Math.abs(value - min)}%`,
-                                backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                            }}
-                        />
+                    <div className="absolute inset-x-0 h-6 bg-white/10 overflow-hidden rounded-full top-1/2 -translate-y-1/2 touch-none">
+                        <div className="absolute inset-x-[14px] inset-y-0">
+                            <div
+                                onPointerDown={(e) => { e.preventDefault(); handleDragStart(e.clientX, 'middle'); }}
+                                className="absolute h-full bg-primary/20 cursor-grab active:cursor-grabbing"
+                                style={{
+                                    left: `${Math.min(min, value)}%`,
+                                    width: `${Math.abs(value - min)}%`,
+                                }}
+                            />
+                        </div>
                     </div>
 
                     {/* Interactive Elements Layer */}
-                    <div className="absolute inset-x-2.5 inset-y-0 pointer-events-none">
+                    <div className="absolute inset-x-[14px] inset-y-0 pointer-events-none">
                         <SliderHandle label="Min" value={min} mode="left" onStart={handleDragStart} onKeyUpdate={d => onChangeRef.current({ min: Math.max(0, Math.min(100, min + d)) })} />
                         <SliderHandle label="Max" value={value} mode="right" onStart={handleDragStart} onKeyUpdate={d => onChangeRef.current({ value: Math.max(0, Math.min(100, value + d)) })} />
 
                         <div ref={needleRef} className="absolute h-6 pointer-events-none z-10 top-1/2 -translate-y-1/2"
-                            style={{ left: `${min}%`, width: '2px', backgroundColor: '#fb00ff', boxShadow: '0 0 8px rgba(251, 0, 255, 0.5)' }}
+                            style={{ left: `${min}%`, width: '2px', backgroundColor: '#fb00ff' }}
                         />
                     </div>
                 </div>
@@ -159,7 +160,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     return (
         <div className={`relative h-10 flex items-center mb-1`} onPointerDown={onPointerDown}>
             {/* Manual/Static Slider */}
-            <div key="static" className="relative flex-1 group/static">
+            <div key="static" className="relative flex-1 group/static" ref={trackRef}>
                 <input
                     type="range"
                     min={0}
@@ -169,12 +170,16 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                         const nextVal = parseInt(e.target.value);
                         if (nextVal !== value) onChange({ value: nextVal });
                     }}
-                    className="w-full h-10 bg-transparent appearance-none cursor-pointer custom-slider relative z-10 touch-none"
+                    className="w-full h-10 mt-2 bg-transparent appearance-none cursor-pointer custom-slider relative z-10"
                 />
-                <div className="absolute inset-x-2.5 inset-y-0 pointer-events-none">
-                    <div key="manual-label" className="absolute" style={{ left: `${value}%`, top: 28, transform: 'translateX(-50%)' }}>
-                        <span className="text-white/60 font-mono font-medium text-[10px] select-none">{Math.round(value)}%</span>
-                    </div>
+                <div className="absolute inset-x-[14px] inset-y-0 pointer-events-none">
+                    <SliderHandle
+                        label="Value"
+                        value={value}
+                        mode="right"
+                        onStart={handleDragStart}
+                        onKeyUpdate={d => onChange({ value: Math.max(0, Math.min(100, value + d)) })}
+                    />
                 </div>
             </div>
         </div>
@@ -204,16 +209,15 @@ const SliderHandle = memo<{
             if (e.key === 'ArrowLeft') onKeyUpdate(e.shiftKey ? -10 : -1);
             if (e.key === 'ArrowRight') onKeyUpdate(e.shiftKey ? 10 : 1);
         }}
-        className="absolute w-6 h-6 cursor-ew-resize z-20 top-1/2 group/handle outline-none focus-visible:ring-1 focus-visible:ring-primary/60 rounded-sm pointer-events-auto touch-none"
-        style={{ left: `${value}%`, transform: 'translate(-50%, -50%)' }}
+        className={`absolute w-7 h-7 z-20 top-1/2 group/handle outline-none focus-visible:ring-1 focus-visible:ring-primary/60 touch-none pointer-events-auto cursor-pointer hover:scale-110 hover:z-31 active:z-31 focus-within:z-30 transition-transform -translate-x-1/2 -translate-y-1/2 origin-center before:absolute before:content-[''] before:bg-transparent before:w-6 before:h-10 before:top-1/2 before:left-1/2 before:-translate-y-1/2 before:-translate-x-1/2`}
+        style={{ left: `${value}%` }}
     >
-        {/* Bar */}
-        <div className={`absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-2 bg-[silver] ${mode === 'left' ? 'rounded-l' : 'rounded-r'} group-hover/handle:scale-110 transition-all`} />
+        <div className="absolute inset-0 bg-slate-700 border border-white/20 rounded-full" />
 
-        {/* Percentage */}
-        <div key={`${mode}-label`} className={`absolute left-1/2 top-5 -translate-x-1/2`}>
-            <span className="text-white/60 font-mono font-medium text-[10px] select-none">
-                {Math.round(value)}%
+        {/* Percentage Label */}
+        <div key={`${mode}-label`} className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+            <span className="text-white font-mono font-medium text-[10px] select-none">
+                {Math.round(value)}
             </span>
         </div>
     </div>

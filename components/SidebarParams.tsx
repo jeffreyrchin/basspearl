@@ -48,7 +48,7 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
                     const param = selectedEffect.params[paramIdx];
                     return (
                         <div key={paramIdx} className="py-3 flex flex-col">
-                            <div className="flex justify-between items-center mb-1">
+                            <div className="flex justify-between items-center">
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-white/80">
                                     {paramMeta.name}
                                 </label>

@@ -218,7 +218,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         if (scrubberRef.current) {
             scrubberRef.current.value = time.toString();
             const percent = scrubberPercent(time, duration);
-            scrubberRef.current.style.background = `linear-gradient(to right, #fb00ff 0%, #fb00ff ${percent}%, rgba(255, 255, 255, 0.1) ${percent}%, rgba(255, 255, 255, 0.1) 100%)`;
+            scrubberRef.current.style.setProperty('--progress', `${percent}%`);
         }
     };
 

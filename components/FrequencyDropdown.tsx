@@ -115,7 +115,7 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
     );
 
     return (
-        <div className="relative" ref={dropdownRef} onKeyDown={handleKeyDown}>
+        <div className="relative z-50" ref={dropdownRef} onKeyDown={handleKeyDown}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 aria-haspopup="listbox"

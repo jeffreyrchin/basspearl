@@ -154,42 +154,122 @@ body {
 .custom-slider::-webkit-slider-runnable-track {
   width: 100%;
   height: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 2px;
 }
 
 .custom-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  height: 20px;
-  width: 20px;
-  border-radius: 50%;
-  background: silver;
+  height: 28px;
+  width: 28px;
+  background: transparent;
+  /* Invisible hitbox: React SliderHandle handles visuals */
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-radius: 0;
   cursor: pointer;
-  margin-top: -8px;
-  transition: transform 0.15s ease-in-out;
-}
-
-.custom-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
+  /* (Track Content 4 / 2) - (Thumb Content 28 / 2 + Border Top 10) = 2 - 24 = -22px */
+  margin-top: -22px;
+  box-sizing: content-box;
 }
 
 .custom-slider::-moz-range-track {
   width: 100%;
   height: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 2px;
+  border: none;
 }
 
 .custom-slider::-moz-range-thumb {
-  height: 20px;
-  width: 20px;
-  border: none;
-  border-radius: 50%;
-  background: silver;
+  height: 28px;
+  width: 28px;
+  background: transparent;
+  border: 10px solid transparent;
+  border-radius: 0;
   cursor: pointer;
+  box-sizing: content-box;
+}
+
+/* Scrubber: fully custom with CSS-variable white progress */
+.scrubber-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  /* Allow horizontal scrubbing on mobile even when body is locked */
+  touch-action: pan-x !important;
+}
+
+.scrubber-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  border: none;
+  /* White fill up to --progress, then dim white for the rest */
+  background: linear-gradient(to right,
+      white 0%,
+      white var(--progress, 0%),
+      rgba(255, 255, 255, 0.15) var(--progress, 0%),
+      rgba(255, 255, 255, 0.15) 100%);
+}
+
+.scrubber-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 24px;
+  width: 24px;
+  /* Visual circle via gradient: 12px radius = 24px diameter */
+  background: radial-gradient(circle at center, lightgray 12px, transparent 12px);
+  background-clip: content-box;
+  /* Expands vertical hit area to 44px */
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 0;
+  border-right: 0;
+  /* Rectangular hitbox */
+  border-radius: 0;
+  cursor: pointer;
+  /* (Track Content 4 / 2) - (Thumb Content 24 / 2 + Border Top 10) = 2 - 22 = -20px */
+  margin-top: -20px;
+  box-sizing: content-box;
   transition: transform 0.15s ease-in-out;
 }
 
-.custom-slider::-moz-range-thumb:hover {
-  transform: scale(1.1);
+.scrubber-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.scrubber-slider::-moz-range-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  border: none;
+}
+
+.scrubber-slider::-moz-range-thumb {
+  height: 24px;
+  width: 24px;
+  /* Visual circle via gradient: 12px radius = 24px diameter */
+  background: radial-gradient(circle at center, lightgray 12px, transparent 12px);
+  background-clip: content-box;
+  /* Expands vertical hit area to 44px */
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 0;
+  border-right: 0;
+  /* Rectangular hitbox */
+  border-radius: 0;
+  cursor: pointer;
+  box-sizing: content-box;
+  transition: transform 0.15s ease-in-out;
+}
+
+.scrubber-slider::-moz-range-thumb:hover {
+  transform: scale(1.15);
+}
+
+.scrubber-slider::-moz-range-progress {
+  height: 4px;
+  background: white;
+  border-radius: 2px;
 }
