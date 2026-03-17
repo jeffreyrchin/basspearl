@@ -10,6 +10,7 @@ const InspectorWindow: React.FC = () => {
     const activeWindow = useEffectStore(s => s.activeWindow);
     const setActiveWindow = useEffectStore(s => s.setActiveWindow);
     const setIsSidebarFocused = useEffectStore(s => s.setIsSidebarFocused);
+    const setActiveDropdownId = useEffectStore(s => s.setActiveDropdownId);
 
     const selectedIds = useEffectStore(s => s.selectedIds);
     const effects = useEffectStore(s => s.effects);
@@ -95,7 +96,7 @@ const InspectorWindow: React.FC = () => {
                         </span>
                         {headerControls}
                     </div>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-6" onScroll={() => setActiveDropdownId(null)}>
                         <SidebarParams />
                     </div>
                 </motion.div>
@@ -139,6 +140,7 @@ const InspectorWindow: React.FC = () => {
             {/* Content Body */}
             <div
                 className="flex-1 overflow-y-auto custom-scrollbar p-5"
+                onScroll={() => setActiveDropdownId(null)}
                 onPointerDown={(e) => {
                     e.stopPropagation(); // Prevent window from being dragged when interacting with sliders
                     setActiveWindow('inspector');

@@ -9,6 +9,7 @@ const LibraryWindow: React.FC = () => {
     const activeWindow = useEffectStore(s => s.activeWindow);
     const setActiveWindow = useEffectStore(s => s.setActiveWindow);
     const setIsSidebarFocused = useEffectStore(s => s.setIsSidebarFocused);
+    const setActiveDropdownId = useEffectStore(s => s.setActiveDropdownId);
 
     const dragControls = useDragControls();
 
@@ -57,7 +58,7 @@ const LibraryWindow: React.FC = () => {
                             <span className="material-symbols-outlined text-[18px]">close</span>
                         </button>
                     </div>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar" onScroll={() => setActiveDropdownId(null)}>
                         <SidebarLibrary onSelectEffect={() => setIsLibraryOpen(false)} />
                     </div>
                 </motion.div>
@@ -103,6 +104,7 @@ const LibraryWindow: React.FC = () => {
                 {/* Content Body */}
                 <div
                     className="flex-1 overflow-y-auto custom-scrollbar isolate"
+                    onScroll={() => setActiveDropdownId(null)}
                     onPointerDown={(e) => {
                         e.stopPropagation(); // Prevent window from being dragged when interacting with content inside
                         setActiveWindow('library');
