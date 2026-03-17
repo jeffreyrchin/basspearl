@@ -67,18 +67,19 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const isDraggingScrubberRef = useRef(false);
     const frameCounterRef = useRef(0);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const handleGlobalDownLogicRef = useRef<(e: PointerEvent) => void>(() => { });
 
-    // Sync ref with store state (Direct update during render)
+    // Sync refs with store state (Direct update during render)
     useEffect(() => {
         effectsRef.current = effects;
     }, [effects]);
 
-    // Fix for scrubber not releasing on pointer up/cancel + Close handles global dropdown clicks
+    // Update global interaction logic on every render
     useEffect(() => {
-        const handleUp = () => { isDraggingScrubberRef.current = false; };
-        const handleGlobalDown = (e: PointerEvent) => {
+        handleGlobalDownLogicRef.current = (e: PointerEvent) => {
             const target = e.target as HTMLElement;
             if (target.closest?.('[data-dropdown-ignore]')) return;
+
             setActiveDropdownId(null);
 
             // Explicit section-based focus handover
@@ -91,17 +92,23 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 setIsSidebarFocused(true);
             }
         };
+    });
+
+    // Global Interaction Handlers (Stable Listeners)
+    useEffect(() => {
+        const handleUp = () => { isDraggingScrubberRef.current = false; }; // Fix for scrubber not releasing on pointer up/cancel
+        const handleDown = (e: PointerEvent) => handleGlobalDownLogicRef.current(e);
 
         window.addEventListener('pointerup', handleUp);
         window.addEventListener('pointercancel', handleUp);
-        document.addEventListener('pointerdown', handleGlobalDown, { capture: true });
+        document.addEventListener('pointerdown', handleDown, { capture: true });
 
         return () => {
             window.removeEventListener('pointerup', handleUp);
             window.removeEventListener('pointercancel', handleUp);
-            document.removeEventListener('pointerdown', handleGlobalDown, { capture: true });
-        }
-    }, [setActiveDropdownId]);
+            document.removeEventListener('pointerdown', handleDown, { capture: true });
+        };
+    }, []); // Attached once, logic lives in the Ref
 
     useEffect(() => {
         // Render initial imageless frame on mount
