@@ -54,6 +54,7 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
                                 </label>
 
                                 <FrequencyDropdown
+                                    id={`${selectedEffect.id}-${paramIdx}`}
                                     value={param.frequencyBand}
                                     ariaLabel={`Frequency band for ${paramMeta.name}`}
                                     onChange={(band) => {

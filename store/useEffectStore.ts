@@ -35,6 +35,9 @@ interface EffectState {
     activeWindow: 'inspector' | 'library' | null;
     setActiveWindow: (window: 'inspector' | 'library' | null) => void;
 
+    activeDropdownId: string | null;
+    setActiveDropdownId: (id: string | null) => void;
+
     undo: () => void;
     redo: () => void;
     commitHistory: () => void;
@@ -59,6 +62,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
 
     activeWindow: null,
     setActiveWindow: (activeWindow) => set({ activeWindow }),
+
+    activeDropdownId: null,
+    setActiveDropdownId: (activeDropdownId) => set({ activeDropdownId: activeDropdownId }),
 
     setEffects: (effects) => set({ effects }),
 
@@ -108,7 +114,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         set({ selectedIds: new Set(effects.map(e => e.id)) });
     },
 
-    clearSelection: () => set({ selectedIds: new Set<string>() }),
+    clearSelection: () => set({ selectedIds: new Set<string>(), activeDropdownId: null }),
 
     // Push current effects onto the past stack. Call this BEFORE making changes.
     commitHistory: () => {

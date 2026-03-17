@@ -51,6 +51,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const setEffects = useEffectStore(s => s.setEffects);
     const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
     const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
+    const setActiveDropdownId = useEffectStore(s => s.setActiveDropdownId);
 
     const [isLandingOpen, setIsLandingOpen] = useState(effects.length === 0 && audioFile === null);
 
@@ -71,16 +72,24 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         effectsRef.current = effects;
     }, [effects]);
 
-    // Fix for scrubber not releasing on pointer up/cancel
+    // Fix for scrubber not releasing on pointer up/cancel + Close handles global dropdown clicks
     useEffect(() => {
         const handleUp = () => { isDraggingScrubberRef.current = false; };
+        const handleGlobalDown = (e: PointerEvent) => {
+            if ((e.target as HTMLElement).closest?.('[data-dropdown-ignore]')) return;
+            setActiveDropdownId(null);
+        };
+
         window.addEventListener('pointerup', handleUp);
         window.addEventListener('pointercancel', handleUp);
+        document.addEventListener('pointerdown', handleGlobalDown, { capture: true });
+
         return () => {
             window.removeEventListener('pointerup', handleUp);
             window.removeEventListener('pointercancel', handleUp);
+            document.removeEventListener('pointerdown', handleGlobalDown, { capture: true });
         }
-    }, []);
+    }, [setActiveDropdownId]);
 
     useEffect(() => {
         // Render initial imageless frame on mount

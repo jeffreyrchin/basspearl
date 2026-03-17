@@ -1,17 +1,22 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { FrequencyBand } from '../types';
+import { useEffectStore } from '../store/useEffectStore';
 
 interface FrequencyDropdownProps {
     value: FrequencyBand;
     onChange: (band: FrequencyBand) => void;
     ariaLabel?: string;
+    id: string;
 }
 
 const BANDS: FrequencyBand[] = ['OFF', 'SUB', 'BASS', 'MID', 'TREBLE'];
 
-export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onChange, ariaLabel }) => {
-    const [isOpen, setIsOpen] = useState(false);
+export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onChange, ariaLabel, id }) => {
+    const activeDropdownId = useEffectStore(s => s.activeDropdownId);
+    const setActiveDropdownId = useEffectStore(s => s.setActiveDropdownId);
+    const isOpen = activeDropdownId === id;
+
     const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({ opacity: 0 });
     const dropdownRef = useRef<HTMLDivElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -47,21 +52,10 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
         }
     }, [isOpen]);
 
-    // Close on click-away
-    useEffect(() => {
-        if (!isOpen) return;
-        const handle = (e: PointerEvent) => {
-            const target = e.target as Node;
-            if (dropdownRef.current?.contains(target) || menuRef.current?.contains(target)) return;
-            setIsOpen(false);
-        };
-        document.addEventListener('pointerdown', handle);
-        return () => document.removeEventListener('pointerdown', handle);
-    }, [isOpen]);
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Escape') {
-            setIsOpen(false);
+            setActiveDropdownId(null);
             dropdownRef.current?.querySelector('button')?.focus();
             return;
         }
@@ -95,6 +89,7 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
             ref={menuRef}
             role="listbox"
             style={menuStyle}
+            data-dropdown-ignore="true"
             className="bg-black border border-white/10 rounded-xl shadow-2xl overflow-y-auto custom-scrollbar"
         >
             <div className="p-1.5 space-y-0.5">
@@ -103,7 +98,7 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
                         key={band}
                         role="option"
                         aria-selected={value === band}
-                        onClick={() => { onChange(band); setIsOpen(false); }}
+                        onClick={() => { onChange(band); setActiveDropdownId(null); }}
                         className={`w-full flex items-center px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors outline-none
                             ${value === band ? 'bg-primary/20 text-primary' : 'text-white/60 hover:bg-white/5 focus:bg-white/20 hover:text-white'}`}
                     >
@@ -117,7 +112,8 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
     return (
         <div className="relative z-50" ref={dropdownRef} onKeyDown={handleKeyDown}>
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                data-dropdown-ignore="true"
+                onClick={() => setActiveDropdownId(isOpen ? null : id)}
                 aria-haspopup="listbox"
                 aria-expanded={isOpen}
                 aria-label={ariaLabel}
