@@ -52,6 +52,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
     const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
     const setActiveDropdownId = useEffectStore(s => s.setActiveDropdownId);
+    const setIsSidebarFocused = useEffectStore(s => s.setIsSidebarFocused);
 
     const [isLandingOpen, setIsLandingOpen] = useState(effects.length === 0 && audioFile === null);
 
@@ -76,8 +77,19 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     useEffect(() => {
         const handleUp = () => { isDraggingScrubberRef.current = false; };
         const handleGlobalDown = (e: PointerEvent) => {
-            if ((e.target as HTMLElement).closest?.('[data-dropdown-ignore]')) return;
+            const target = e.target as HTMLElement;
+            if (target.closest?.('[data-dropdown-ignore]')) return;
             setActiveDropdownId(null);
+
+            // Explicit section-based focus handover
+            if (target.closest?.('[data-section="sidebar"]')) {
+                setIsSidebarFocused(true);
+            } else if (target.closest?.('[data-section="window"]')) {
+                setIsSidebarFocused(false);
+            } else {
+                // Clicking "Background" (Canvas, Footer, etc) also resets to Sidebar shortcuts
+                setIsSidebarFocused(true);
+            }
         };
 
         window.addEventListener('pointerup', handleUp);
@@ -458,7 +470,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 <aside
                     className={`fixed inset-y-0 right-0 z-[60] lg:relative w-full sm:w-[400px] border-l border-white/5 bg-[#050B14] flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] lg:shadow-none will-change-transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full lg:hidden'}`}>
                     {/* Inner wrapper */}
-                    <div className="flex-1 flex flex-col min-h-0 relative">
+                    <div data-section="sidebar" className="flex-1 flex flex-col min-h-0 relative">
                         <SidebarNavigation
                             onClose={() => setIsSidebarOpen(false)} />
                     </div>

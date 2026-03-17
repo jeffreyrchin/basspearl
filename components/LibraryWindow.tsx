@@ -8,6 +8,7 @@ const LibraryWindow: React.FC = () => {
     const setIsLibraryOpen = useEffectStore(s => s.setIsLibraryOpen);
     const activeWindow = useEffectStore(s => s.activeWindow);
     const setActiveWindow = useEffectStore(s => s.setActiveWindow);
+    const setIsSidebarFocused = useEffectStore(s => s.setIsSidebarFocused);
 
     const dragControls = useDragControls();
 
@@ -34,11 +35,15 @@ const LibraryWindow: React.FC = () => {
                 />
                 <motion.div
                     onClick={(e) => e.stopPropagation()}
-                    onPointerDown={() => setActiveWindow('library')}
+                    onPointerDown={() => {
+                        setActiveWindow('library');
+                        setIsSidebarFocused(false);
+                    }}
                     initial={{ y: "100%" }}
                     animate={{ y: 0 }}
                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
                     className="relative z-10 w-full h-[85vh] bg-slate-900/95 backdrop-blur-xl border-t border-white/10 rounded-t-2xl pointer-events-auto flex flex-col shadow-2xl"
+                    data-section="window"
                 >
                     <div className="h-14 border-b bg-slate-900 border-white/10 flex items-center justify-between px-6 shrink-0">
                         <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">
@@ -63,7 +68,10 @@ const LibraryWindow: React.FC = () => {
                 dragMomentum={false}
                 dragListener={false}
                 dragControls={dragControls}
-                onPointerDown={() => setActiveWindow('library')}
+                onPointerDown={() => {
+                    setActiveWindow('library');
+                    setIsSidebarFocused(false);
+                }}
                 initial={{ opacity: 0, scale: 0.95, y: 0 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 style={{
@@ -73,6 +81,7 @@ const LibraryWindow: React.FC = () => {
                     zIndex: activeWindow === 'library' ? 101 : 100
                 }} // Default position to the left of the pipeline sidebar
                 className="w-[360px] min-h-[500px] max-h-[85vh] bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-[100] flex flex-col pointer-events-auto"
+                data-section="window"
             >
                 {/* Header / Drag Handle */}
                 <div
@@ -97,6 +106,7 @@ const LibraryWindow: React.FC = () => {
                     onPointerDown={(e) => {
                         e.stopPropagation(); // Prevent window from being dragged when interacting with content inside
                         setActiveWindow('library');
+                        setIsSidebarFocused(false);
                     }}
                 >
                     <SidebarLibrary />

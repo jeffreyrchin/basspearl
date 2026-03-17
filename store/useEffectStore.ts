@@ -38,6 +38,9 @@ interface EffectState {
     activeDropdownId: string | null;
     setActiveDropdownId: (id: string | null) => void;
 
+    isSidebarFocused: boolean;
+    setIsSidebarFocused: (focused: boolean) => void;
+
     undo: () => void;
     redo: () => void;
     commitHistory: () => void;
@@ -65,6 +68,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
 
     activeDropdownId: null,
     setActiveDropdownId: (activeDropdownId) => set({ activeDropdownId: activeDropdownId }),
+
+    isSidebarFocused: true,
+    setIsSidebarFocused: (isSidebarFocused) => set({ isSidebarFocused }),
 
     setEffects: (effects) => set({ effects }),
 

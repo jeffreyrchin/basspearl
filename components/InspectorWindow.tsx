@@ -9,6 +9,7 @@ const InspectorWindow: React.FC = () => {
     const setIsInspectorOpen = useEffectStore(s => s.setIsInspectorOpen);
     const activeWindow = useEffectStore(s => s.activeWindow);
     const setActiveWindow = useEffectStore(s => s.setActiveWindow);
+    const setIsSidebarFocused = useEffectStore(s => s.setIsSidebarFocused);
 
     const selectedIds = useEffectStore(s => s.selectedIds);
     const effects = useEffectStore(s => s.effects);
@@ -78,11 +79,15 @@ const InspectorWindow: React.FC = () => {
                 />
                 <motion.div
                     onClick={(e) => e.stopPropagation()}
-                    onPointerDown={() => setActiveWindow('inspector')}
+                    onPointerDown={() => {
+                        setActiveWindow('inspector');
+                        setIsSidebarFocused(false);
+                    }}
                     initial={{ y: "100%" }}
                     animate={{ y: 0 }}
                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
                     className="relative z-10 w-full h-[85vh] bg-slate-900/95 border-t border-white/10 rounded-t-2xl pointer-events-auto flex flex-col shadow-2xl"
+                    data-section="window"
                 >
                     <div className="h-14 border-b bg-slate-900 border-white/10 flex items-center justify-between px-6 shrink-0">
                         <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">
@@ -105,7 +110,10 @@ const InspectorWindow: React.FC = () => {
             dragMomentum={false}
             dragListener={false}
             dragControls={dragControls}
-            onPointerDown={() => setActiveWindow('inspector')}
+            onPointerDown={() => {
+                setActiveWindow('inspector');
+                setIsSidebarFocused(false);
+            }}
             initial={{ opacity: 0, scale: 0.95, y: 0 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             style={{
@@ -115,6 +123,7 @@ const InspectorWindow: React.FC = () => {
                 zIndex: activeWindow === 'inspector' ? 101 : 100
             }} // Default position right beside the sidebar
             className="w-80 min-h-[400px] max-h-[80vh] bg-slate-900/95 border border-white/10 rounded-xl shadow-2xl z-[100] flex flex-col pointer-events-auto"
+            data-section="window"
         >
             {/* Header / Drag Handle */}
             <div
@@ -133,6 +142,7 @@ const InspectorWindow: React.FC = () => {
                 onPointerDown={(e) => {
                     e.stopPropagation(); // Prevent window from being dragged when interacting with sliders
                     setActiveWindow('inspector');
+                    setIsSidebarFocused(false);
                 }}
             >
                 <SidebarParams />

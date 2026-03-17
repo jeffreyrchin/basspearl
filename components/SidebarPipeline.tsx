@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { DndContext, pointerWithin, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -23,6 +23,8 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
     const batchDuplicate = useEffectStore(s => s.batchDuplicate);
     const batchMeld = useEffectStore(s => s.batchMeld);
     const batchUnmeld = useEffectStore(s => s.batchUnmeld);
+    const isSidebarFocused = useEffectStore(s => s.isSidebarFocused);
+    const setIsSidebarFocused = useEffectStore(s => s.setIsSidebarFocused);
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
@@ -82,13 +84,21 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
         setActiveId(null);
     }, [effects, effectGroups, setEffects]);
 
-    // Keyboard shortcuts for pipeline actions
+    // Logic Ref for Keyboard Shortcuts (Prevents stale closures for selection/dropdowns)
+    const handleKeyDownRef = useRef<(e: KeyboardEvent) => void>(() => { });
+
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
+        handleKeyDownRef.current = (e: KeyboardEvent) => {
             const isMod = e.metaKey || e.ctrlKey;
             const key = e.key.toLowerCase();
+            const target = e.target as HTMLElement;
+            const isTyping = target.tagName === 'INPUT' ||
+                target.tagName === 'TEXTAREA' ||
+                target.isContentEditable;
 
-            // Select All - Ctrl/Cmd + A (always allow if sidebar is likely focused)
+            if (isTyping || !isSidebarFocused) return;
+
+            // Select All - Ctrl/Cmd + A
             if (isMod && key === 'a') {
                 e.preventDefault();
                 selectAll();
@@ -127,9 +137,15 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
                 batchMeld();
             }
         };
+    }); // Update logic on every render
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            handleKeyDownRef.current(e);
+        };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [selectedIds, batchRemove, clearSelection, selectAll, batchDuplicate, batchMeld, batchUnmeld]);
+    }, []); // Listener is attached once
 
     if (effects.length === 0) {
         return (
@@ -151,7 +167,10 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
         >
             <div
                 className="p-4 pb-24 flex flex-col gap-2 min-h-full cursor-default"
-                onClick={() => clearSelection()}
+                onClick={() => {
+                    setIsSidebarFocused(true);
+                    clearSelection();
+                }}
             >
                 <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
                     {effectGroups.map((group, i) => (
