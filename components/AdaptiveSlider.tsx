@@ -206,6 +206,7 @@ const SliderHandle = memo<{
             onStart(e.clientX, mode);
         }}
         onKeyDown={(e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.stopPropagation(); // Prevent playback scrubber from moving when adjusting sliders
             if (e.key === 'ArrowLeft') onKeyUpdate(e.shiftKey ? -10 : -1);
             if (e.key === 'ArrowRight') onKeyUpdate(e.shiftKey ? 10 : 1);
         }}

@@ -53,7 +53,7 @@ const PlaybackBar: React.FC<PlaybackBarProps> = ({
                 type="range"
                 min={0}
                 max={duration || 0}
-                step={0.1}
+                step="any"
                 defaultValue={currentTime}
                 onPointerDown={() => isDraggingScrubberRef.current = true}
                 onChange={onScrubberChange}

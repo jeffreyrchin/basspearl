@@ -259,15 +259,11 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         });
     };
 
-    // Keep a fresh reference to the toggle function to prevent stale closures without re-binding
-    const togglePlayRef = useRef(handleTogglePlay);
-    togglePlayRef.current = handleTogglePlay;
+    // Logic Ref for Keyboard Shortcuts (Prevents stale closures for duration/functions)
+    const handleKeyDownRef = useRef<(e: KeyboardEvent) => void>(() => { });
 
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            // Ignore if holding modifier keys (e.g. Cmd+Space for spotlight)
-            if (e.code !== 'Space' || e.metaKey || e.ctrlKey || e.altKey) return;
-
+        handleKeyDownRef.current = (e: KeyboardEvent) => {
             const target = e.target as HTMLElement;
             const isTyping = target.tagName === 'INPUT' ||
                 target.tagName === 'TEXTAREA' ||
@@ -275,15 +271,36 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
             if (isTyping) return;
 
-            e.preventDefault(); // Prevent page scroll down
-
-            // If a button is focused (e.g., they just clicked "Add Effect"), 
-            // pressing space would natively click it again. We blur it to be safe.
-            if (target.tagName === 'BUTTON') {
-                target.blur();
+            // Handle Space for Play/Pause
+            if (e.code === 'Space' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+                e.preventDefault(); // Prevent page scroll down
+                if (target.tagName === 'BUTTON') target.blur(); // If a button is focused (e.g., they just clicked "Add Effect"), pressing space would natively click it again. We blur it to be safe.
+                handleTogglePlay();
+                return;
             }
 
-            togglePlayRef.current();
+            // Handle Seeking
+            const isForward = e.key === 'ArrowRight' || e.key.toLowerCase() === 'l';
+            const isBackward = e.key === 'ArrowLeft' || e.key.toLowerCase() === 'j';
+
+            if (isForward || isBackward) {
+                // If it's a shifted arrow, we handle it as a 10s jump
+                e.preventDefault();
+                const delta = (e.shiftKey || e.key.toLowerCase() === 'j' || e.key.toLowerCase() === 'l') ? 10 : 5;
+                const time = getElapsedSeconds();
+                const nextTime = Math.max(0, Math.min(duration, time + (isForward ? delta : -delta)));
+
+                updateScrubberUI(nextTime);
+                handleSeek({ target: { value: nextTime.toString() } } as any, () => {
+                    if (!requestRef.current) requestRef.current = requestAnimationFrame(animate);
+                });
+            }
+        };
+    }); // This effect runs on every render to keep the Ref updated
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            handleKeyDownRef.current(e);
         };
 
         window.addEventListener('keydown', handleKeyDown);
