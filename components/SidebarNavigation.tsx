@@ -18,7 +18,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     const future = useEffectStore(s => s.future);
     const isInSelectMode = useEffectStore(s => s.isInSelectMode);
     const setIsInSelectMode = useEffectStore(s => s.setIsInSelectMode);
-    const setIsLibraryOpen = useEffectStore(s => s.setIsLibraryOpen);
+    const pushFocus = useEffectStore(s => s.pushFocus);
 
     const setEffects = useEffectStore(s => s.setEffects);
 
@@ -117,7 +117,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 <button
                     onClick={onClose}
                     className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/5"
-                    title="Close Sidebar">
+                    title="Close Pipeline (P)">
                     <span className="material-symbols-outlined text-[20px]">close</span>
                 </button>
             )}
@@ -131,9 +131,9 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 {/* Add Effect Button */}
                 <div className="flex items-center h-full">
                     <button
-                        onClick={() => setIsLibraryOpen(true)}
+                        onClick={() => pushFocus('library')}
                         className="h-8 px-3 rounded-full flex items-center justify-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white transition-colors border border-indigo-400 shadow-md"
-                        title="Add Effect">
+                        title="Open Library (Y)">
                         <span className="material-symbols-outlined text-[16px]">add</span>
                     </button>
                 </div>
@@ -141,7 +141,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             </div>
 
             <div key="pipeline-scroll" className="flex-1 overflow-y-auto custom-scrollbar">
-                <SidebarPipeline onNavigateToLibrary={() => setIsLibraryOpen(true)} />
+                <SidebarPipeline onNavigateToLibrary={() => pushFocus('library')} />
             </div>
 
             {/* Global Action Bar anchored to the bottom of the pipeline */}

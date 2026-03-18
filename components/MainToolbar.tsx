@@ -56,8 +56,10 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     handleImageUpload,
     handleAudioUpload,
 }) => {
-    const isLibraryOpen = useEffectStore(s => s.isLibraryOpen);
-    const setIsLibraryOpen = useEffectStore(s => s.setIsLibraryOpen);
+    const focusStack = useEffectStore(s => s.focusStack);
+    const pushFocus = useEffectStore(s => s.pushFocus);
+    const removeFocus = useEffectStore(s => s.removeFocus);
+    const isLibraryOpen = focusStack.includes('library');
     const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
     const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
     return (
@@ -116,17 +118,18 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                         setIsSidebarOpen(!isSidebarOpen);
                     }}
                     icon="layers"
-                    title={isSidebarOpen ? "Close Pipeline" : "Open Pipeline"}
+                    title={isSidebarOpen ? "Close Pipeline (P)" : "Open Pipeline (P)"}
                     isActive={isSidebarOpen}
                     activeBg="bg-white/10"
                     activeBorder="border-white/30"
                 />
                 <ToolbarButton
                     onClick={() => {
-                        setIsLibraryOpen(!isLibraryOpen);
+                        if (isLibraryOpen) removeFocus('library');
+                        else pushFocus('library');
                     }}
                     icon="add_circle"
-                    title={isLibraryOpen ? "Close Effects" : "Add Effect"}
+                    title={isLibraryOpen ? "Close Library (Y)" : "Open Library (Y)"}
                     isActive={isLibraryOpen}
                     activeBg="bg-white/10"
                     activeBorder="border-white/30"

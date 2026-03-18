@@ -51,9 +51,14 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const setEffects = useEffectStore(s => s.setEffects);
     const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
     const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
+    const focusStack = useEffectStore(s => s.focusStack);
+    const pushFocus = useEffectStore(s => s.pushFocus);
+    const removeFocus = useEffectStore(s => s.removeFocus);
+
+    const isInspectorOpen = focusStack.includes('inspector');
+    const isLibraryOpen = focusStack.includes('library');
+
     const setActiveDropdownId = useEffectStore(s => s.setActiveDropdownId);
-    const setIsSidebarFocused = useEffectStore(s => s.setIsSidebarFocused);
-    const setActiveWindow = useEffectStore(s => s.setActiveWindow);
 
     const [isLandingOpen, setIsLandingOpen] = useState(effects.length === 0 && audioFile === null);
 
@@ -70,6 +75,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const abortControllerRef = useRef<AbortController | null>(null);
     const handleGlobalPtrDownLogicRef = useRef<(e: PointerEvent) => void>(() => { });
     const handleGlobalFocusInLogicRef = useRef<(e: FocusEvent) => void>(() => { });
+    const handleGlobalKbdDownLogicRef = useRef<(e: KeyboardEvent) => void>(() => { });
 
     // Sync refs with store state (Direct update during render)
     useEffect(() => {
@@ -89,7 +95,12 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             const section = container?.dataset.section;
 
             // Update focus based on section
-            setIsSidebarFocused(section !== 'window');
+            if (section === 'window') {
+                const windowType = container?.dataset.window as 'inspector' | 'library' | undefined;
+                if (windowType) pushFocus(windowType);
+            } else {
+                pushFocus('pipeline');
+            }
         };
 
         handleGlobalFocusInLogicRef.current = (e: FocusEvent) => {
@@ -97,13 +108,63 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             const container = target.closest?.('[data-section]') as HTMLElement;
             const section = container?.dataset.section;
 
-            // Sidebar takes focus if not explicitly in a window
-            setIsSidebarFocused(section !== 'window');
-
-            // If we are in a window, update activeWindow to handle z-index stacking
             if (section === 'window') {
                 const windowType = container?.dataset.window as 'inspector' | 'library' | undefined;
-                if (windowType) setActiveWindow(windowType);
+                if (windowType) pushFocus(windowType);
+            } else {
+                pushFocus('pipeline');
+            }
+        };
+
+        handleGlobalKbdDownLogicRef.current = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement;
+            const isTyping = target.tagName === 'INPUT' ||
+                target.tagName === 'TEXTAREA' ||
+                target.isContentEditable;
+
+            // Block globals if typing
+            if (isTyping) return;
+
+            const key = e.key.toLowerCase();
+
+            // Toggle Sidebar - P
+            if (key === 'p') {
+                setIsSidebarOpen(!isSidebarOpen);
+            }
+            // Toggle Inspector - I
+            else if (key === 'i') {
+                if (isInspectorOpen) removeFocus('inspector');
+                else pushFocus('inspector');
+            }
+            // Toggle Library - Y
+            else if (key === 'y' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                if (isLibraryOpen) removeFocus('library');
+                else pushFocus('library');
+            }
+
+            // Handle Space for Play/Pause
+            if (e.code === 'Space' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+                e.preventDefault(); // Prevent page scroll down
+                if (target.tagName === 'BUTTON') target.blur(); // If a button is focused, blurring it prevents it from being natively clicked again.
+                handleTogglePlay();
+                return;
+            }
+
+            // Handle Seeking
+            const isForward = e.key === 'ArrowRight' || e.key.toLowerCase() === 'l';
+            const isBackward = e.key === 'ArrowLeft' || e.key.toLowerCase() === 'j';
+
+            if (isForward || isBackward) {
+                // If it's a shifted arrow, we handle it as a 10s jump
+                e.preventDefault();
+                const delta = (e.shiftKey || e.key.toLowerCase() === 'j' || e.key.toLowerCase() === 'l') ? 10 : 5;
+                const time = getElapsedSeconds();
+                const nextTime = Math.max(0, Math.min(duration, time + (isForward ? delta : -delta)));
+
+                updateScrubberUI(nextTime);
+                handleSeek({ target: { value: nextTime.toString() } } as any, () => {
+                    if (!requestRef.current) requestRef.current = requestAnimationFrame(animate);
+                });
             }
         };
     });
@@ -113,17 +174,20 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         const handleUp = () => { isDraggingScrubberRef.current = false; }; // Fix for scrubber not releasing on pointer up/cancel
         const handleDown = (e: PointerEvent) => handleGlobalPtrDownLogicRef.current(e);
         const handleFocus = (e: FocusEvent) => handleGlobalFocusInLogicRef.current(e);
+        const handleKeyDown = (e: KeyboardEvent) => handleGlobalKbdDownLogicRef.current(e);
 
         window.addEventListener('pointerup', handleUp);
         window.addEventListener('pointercancel', handleUp);
         document.addEventListener('pointerdown', handleDown, { capture: true });
         document.addEventListener('focusin', handleFocus);
+        document.addEventListener('keydown', handleKeyDown);
 
         return () => {
             window.removeEventListener('pointerup', handleUp);
             window.removeEventListener('pointercancel', handleUp);
             document.removeEventListener('pointerdown', handleDown, { capture: true });
             document.removeEventListener('focusin', handleFocus);
+            document.removeEventListener('keydown', handleKeyDown);
         };
     }, []); // Attached once, logic lives in the Ref
 
@@ -303,54 +367,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             }
         });
     };
-
-    // Logic Ref for Keyboard Shortcuts (Prevents stale closures for duration/functions)
-    const handleKeyDownRef = useRef<(e: KeyboardEvent) => void>(() => { });
-
-    useEffect(() => {
-        handleKeyDownRef.current = (e: KeyboardEvent) => {
-            const target = e.target as HTMLElement;
-            const isTyping = target.tagName === 'INPUT' ||
-                target.tagName === 'TEXTAREA' ||
-                target.isContentEditable;
-
-            if (isTyping) return;
-
-            // Handle Space for Play/Pause
-            if (e.code === 'Space' && !e.metaKey && !e.ctrlKey && !e.altKey) {
-                e.preventDefault(); // Prevent page scroll down
-                if (target.tagName === 'BUTTON') target.blur(); // If a button is focused (e.g., they just clicked "Add Effect"), pressing space would natively click it again. We blur it to be safe.
-                handleTogglePlay();
-                return;
-            }
-
-            // Handle Seeking
-            const isForward = e.key === 'ArrowRight' || e.key.toLowerCase() === 'l';
-            const isBackward = e.key === 'ArrowLeft' || e.key.toLowerCase() === 'j';
-
-            if (isForward || isBackward) {
-                // If it's a shifted arrow, we handle it as a 10s jump
-                e.preventDefault();
-                const delta = (e.shiftKey || e.key.toLowerCase() === 'j' || e.key.toLowerCase() === 'l') ? 10 : 5;
-                const time = getElapsedSeconds();
-                const nextTime = Math.max(0, Math.min(duration, time + (isForward ? delta : -delta)));
-
-                updateScrubberUI(nextTime);
-                handleSeek({ target: { value: nextTime.toString() } } as any, () => {
-                    if (!requestRef.current) requestRef.current = requestAnimationFrame(animate);
-                });
-            }
-        };
-    }); // This effect runs on every render to keep the Ref updated
-
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            handleKeyDownRef.current(e);
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []); // Empty dependency array: runs exactly once on mount, uses ref for fresh logic
 
     const handleExport = () => {
         setIsExportModalOpen(true);

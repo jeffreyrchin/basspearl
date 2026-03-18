@@ -4,11 +4,11 @@ import { useEffectStore } from '../store/useEffectStore';
 import SidebarLibrary from './SidebarLibrary';
 
 const LibraryWindow: React.FC = () => {
-    const isLibraryOpen = useEffectStore(s => s.isLibraryOpen);
-    const setIsLibraryOpen = useEffectStore(s => s.setIsLibraryOpen);
-    const activeWindow = useEffectStore(s => s.activeWindow);
-    const setActiveWindow = useEffectStore(s => s.setActiveWindow);
-    const setIsSidebarFocused = useEffectStore(s => s.setIsSidebarFocused);
+    const focusStack = useEffectStore(s => s.focusStack);
+    const pushFocus = useEffectStore(s => s.pushFocus);
+    const removeFocus = useEffectStore(s => s.removeFocus);
+    const isLibraryOpen = focusStack.includes('library');
+
     const setActiveDropdownId = useEffectStore(s => s.setActiveDropdownId);
 
     const dragControls = useDragControls();
@@ -28,17 +28,16 @@ const LibraryWindow: React.FC = () => {
         isMobile ? (
             <div
                 className="fixed inset-0 z-[100] flex items-end pointer-events-none"
-                style={{ zIndex: activeWindow === 'library' ? 101 : 100 }}
+                style={{ zIndex: 100 + focusStack.indexOf('library') }}
             >
                 <div
                     className="absolute inset-0 bg-black/40 pointer-events-auto z-0"
-                    onClick={() => setIsLibraryOpen(false)}
+                    onClick={() => removeFocus('library')}
                 />
                 <motion.div
                     onClick={(e) => e.stopPropagation()}
                     onPointerDown={() => {
-                        setActiveWindow('library');
-                        setIsSidebarFocused(false);
+                        pushFocus('library');
                     }}
                     initial={{ y: "100%" }}
                     animate={{ y: 0 }}
@@ -49,18 +48,18 @@ const LibraryWindow: React.FC = () => {
                 >
                     <div className="h-14 border-b bg-slate-900 border-white/10 flex items-center justify-between px-6 shrink-0">
                         <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">
-                            Add Effect
+                            Library
                         </span>
                         <button
-                            onClick={() => setIsLibraryOpen(false)}
+                            onClick={() => removeFocus('library')}
                             className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
-                            title="Close Effects"
+                            title="Close Library (Y)"
                         >
                             <span className="material-symbols-outlined text-[18px]">close</span>
                         </button>
                     </div>
                     <div className="flex-1 overflow-y-auto custom-scrollbar" onScroll={() => setActiveDropdownId(null)}>
-                        <SidebarLibrary onSelectEffect={() => setIsLibraryOpen(false)} />
+                        <SidebarLibrary onSelectEffect={() => removeFocus('library')} />
                     </div>
                 </motion.div>
             </div>
@@ -71,8 +70,7 @@ const LibraryWindow: React.FC = () => {
                 dragListener={false}
                 dragControls={dragControls}
                 onPointerDown={() => {
-                    setActiveWindow('library');
-                    setIsSidebarFocused(false);
+                    pushFocus('library');
                 }}
                 initial={{ opacity: 0, scale: 0.95, y: 0 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -80,7 +78,7 @@ const LibraryWindow: React.FC = () => {
                     position: 'absolute',
                     top: 80,
                     right: 400,
-                    zIndex: activeWindow === 'library' ? 101 : 100
+                    zIndex: 100 + focusStack.indexOf('library')
                 }} // Default position to the left of the pipeline sidebar
                 className="w-[360px] min-h-[500px] max-h-[85vh] bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-[100] flex flex-col pointer-events-auto"
                 data-section="window"
@@ -92,12 +90,12 @@ const LibraryWindow: React.FC = () => {
                     onPointerDown={(e) => dragControls.start(e)}
                 >
                     <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em] pointer-events-none">
-                        Add Effect
+                        Library
                     </span>
                     <button
-                        onClick={() => setIsLibraryOpen(false)}
+                        onClick={() => removeFocus('library')}
                         className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
-                        title="Close Effects"
+                        title="Close Library (Y)"
                     >
                         <span className="material-symbols-outlined text-[18px]">close</span>
                     </button>
@@ -109,8 +107,7 @@ const LibraryWindow: React.FC = () => {
                     onScroll={() => setActiveDropdownId(null)}
                     onPointerDown={(e) => {
                         e.stopPropagation(); // Prevent window from being dragged when interacting with content inside
-                        setActiveWindow('library');
-                        setIsSidebarFocused(false);
+                        pushFocus('library');
                     }}
                 >
                     <SidebarLibrary />

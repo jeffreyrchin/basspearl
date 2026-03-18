@@ -5,11 +5,11 @@ import { EFFECT_METADATA } from '@/constants';
 import SidebarParams from './SidebarParams';
 
 const InspectorWindow: React.FC = () => {
-    const isInspectorOpen = useEffectStore(s => s.isInspectorOpen);
-    const setIsInspectorOpen = useEffectStore(s => s.setIsInspectorOpen);
-    const activeWindow = useEffectStore(s => s.activeWindow);
-    const setActiveWindow = useEffectStore(s => s.setActiveWindow);
-    const setIsSidebarFocused = useEffectStore(s => s.setIsSidebarFocused);
+    const focusStack = useEffectStore(s => s.focusStack);
+    const pushFocus = useEffectStore(s => s.pushFocus);
+    const removeFocus = useEffectStore(s => s.removeFocus);
+    const isInspectorOpen = focusStack.includes('inspector');
+
     const setActiveDropdownId = useEffectStore(s => s.setActiveDropdownId);
 
     const selectedIds = useEffectStore(s => s.selectedIds);
@@ -58,9 +58,9 @@ const InspectorWindow: React.FC = () => {
                 </button>
             </div>
             <button
-                onClick={() => setIsInspectorOpen(false)}
+                onClick={() => removeFocus('inspector')}
                 className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
-                title="Close Inspector"
+                title="Close Inspector (I)"
             >
                 <span className="material-symbols-outlined text-[18px]">close</span>
             </button>
@@ -72,17 +72,16 @@ const InspectorWindow: React.FC = () => {
         return (
             <div
                 className="fixed inset-0 z-[100] flex items-end pointer-events-none"
-                style={{ zIndex: activeWindow === 'inspector' ? 101 : 100 }}
+                style={{ zIndex: 100 + focusStack.indexOf('inspector') }}
             >
                 <div
                     className="absolute inset-0 bg-black/40 pointer-events-auto z-0"
-                    onClick={() => setIsInspectorOpen(false)}
+                    onClick={() => removeFocus('inspector')}
                 />
                 <motion.div
                     onClick={(e) => e.stopPropagation()}
                     onPointerDown={() => {
-                        setActiveWindow('inspector');
-                        setIsSidebarFocused(false);
+                        pushFocus('inspector');
                     }}
                     initial={{ y: "100%" }}
                     animate={{ y: 0 }}
@@ -113,8 +112,7 @@ const InspectorWindow: React.FC = () => {
             dragListener={false}
             dragControls={dragControls}
             onPointerDown={() => {
-                setActiveWindow('inspector');
-                setIsSidebarFocused(false);
+                pushFocus('inspector');
             }}
             initial={{ opacity: 0, scale: 0.95, y: 0 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -122,7 +120,7 @@ const InspectorWindow: React.FC = () => {
                 position: 'absolute',
                 top: 80,
                 right: 400,
-                zIndex: activeWindow === 'inspector' ? 101 : 100
+                zIndex: 100 + focusStack.indexOf('inspector')
             }} // Default position right beside the sidebar
             className="w-80 min-h-[400px] max-h-[80vh] bg-slate-900/95 border border-white/10 rounded-xl shadow-2xl z-[100] flex flex-col pointer-events-auto"
             data-section="window"
@@ -145,8 +143,7 @@ const InspectorWindow: React.FC = () => {
                 onScroll={() => setActiveDropdownId(null)}
                 onPointerDown={(e) => {
                     e.stopPropagation(); // Prevent window from being dragged when interacting with sliders
-                    setActiveWindow('inspector');
-                    setIsSidebarFocused(false);
+                    pushFocus('inspector');
                 }}
             >
                 <SidebarParams />

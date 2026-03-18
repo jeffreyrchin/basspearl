@@ -23,23 +23,15 @@ interface EffectState {
     isInSelectMode: boolean;
     setIsInSelectMode: (active: boolean) => void;
 
-    isInspectorOpen: boolean;
-    setIsInspectorOpen: (open: boolean) => void;
-
-    isLibraryOpen: boolean;
-    setIsLibraryOpen: (open: boolean) => void;
+    focusStack: ('pipeline' | 'inspector' | 'library')[];
+    pushFocus: (zone: 'pipeline' | 'inspector' | 'library') => void;
+    removeFocus: (zone: 'pipeline' | 'inspector' | 'library') => void;
 
     isSidebarOpen: boolean;
     setIsSidebarOpen: (open: boolean) => void;
 
-    activeWindow: 'inspector' | 'library' | null;
-    setActiveWindow: (window: 'inspector' | 'library' | null) => void;
-
     activeDropdownId: string | null;
     setActiveDropdownId: (id: string | null) => void;
-
-    isSidebarFocused: boolean;
-    setIsSidebarFocused: (focused: boolean) => void;
 
     undo: () => void;
     redo: () => void;
@@ -63,31 +55,28 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     past: [],
     future: [],
 
-    activeWindow: null,
-    setActiveWindow: (activeWindow) => set({ activeWindow }),
+    focusStack: ['pipeline'],
+    pushFocus: (zone) => set(s => ({
+        focusStack: [...s.focusStack.filter(z => z !== zone), zone] as ('pipeline' | 'inspector' | 'library')[]
+    })),
+    removeFocus: (zone) => set(s => {
+        const filtered = s.focusStack.filter(z => z !== zone);
+        return {
+            focusStack: (filtered.length > 0 ? filtered : ['pipeline']) as ('pipeline' | 'inspector' | 'library')[]
+        };
+    }),
+    isSidebarOpen: false,
+    setIsSidebarOpen: (open) => set(s => ({
+        isSidebarOpen: open,
+        focusStack: open ? [...s.focusStack.filter(z => z !== 'pipeline'), 'pipeline'] as ('pipeline' | 'inspector' | 'library')[] : s.focusStack
+    })),
 
     activeDropdownId: null,
-    setActiveDropdownId: (activeDropdownId) => set({ activeDropdownId: activeDropdownId }),
-
-    isSidebarFocused: true,
-    setIsSidebarFocused: (isSidebarFocused) => set({ isSidebarFocused }),
+    setActiveDropdownId: (activeDropdownId) => set({ activeDropdownId }),
 
     setEffects: (effects) => set({ effects }),
 
     setIsInSelectMode: (isInSelectMode) => set({ isInSelectMode: isInSelectMode }),
-
-    isInspectorOpen: false,
-    setIsInspectorOpen: (isInspectorOpen) => set(s => ({
-        isInspectorOpen,
-        activeWindow: isInspectorOpen ? 'inspector' : s.activeWindow === 'inspector' ? null : s.activeWindow
-    })),
-    isLibraryOpen: false,
-    setIsLibraryOpen: (isLibraryOpen) => set(s => ({
-        isLibraryOpen,
-        activeWindow: isLibraryOpen ? 'library' : s.activeWindow === 'library' ? null : s.activeWindow
-    })),
-    isSidebarOpen: false,
-    setIsSidebarOpen: (isSidebarOpen) => set({ isSidebarOpen }),
 
     toggleSelected: (id, multi) => {
         const { selectedIds } = get();

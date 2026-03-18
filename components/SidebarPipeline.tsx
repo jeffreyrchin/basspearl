@@ -23,8 +23,9 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
     const batchDuplicate = useEffectStore(s => s.batchDuplicate);
     const batchMeld = useEffectStore(s => s.batchMeld);
     const batchUnmeld = useEffectStore(s => s.batchUnmeld);
-    const isSidebarFocused = useEffectStore(s => s.isSidebarFocused);
-    const setIsSidebarFocused = useEffectStore(s => s.setIsSidebarFocused);
+    const focusStack = useEffectStore(s => s.focusStack);
+    const activeFocus = focusStack[focusStack.length - 1];
+    const pushFocus = useEffectStore(s => s.pushFocus);
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
@@ -96,7 +97,7 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
                 target.tagName === 'TEXTAREA' ||
                 target.isContentEditable;
 
-            if (isTyping || !isSidebarFocused) return;
+            if (isTyping || activeFocus !== 'pipeline') return;
 
             // Select All - Ctrl/Cmd + A
             if (isMod && key === 'a') {
@@ -168,7 +169,7 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
             <div
                 className="p-4 pb-24 flex flex-col gap-2 min-h-full cursor-default"
                 onClick={() => {
-                    setIsSidebarFocused(true);
+                    pushFocus('pipeline');
                     clearSelection();
                 }}
             >

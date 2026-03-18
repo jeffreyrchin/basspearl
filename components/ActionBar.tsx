@@ -12,8 +12,9 @@ const ActionBar: React.FC<ActionBarProps> = () => {
     const batchDuplicate = useEffectStore(s => s.batchDuplicate);
 
     const selectionCount = selectedIds.size;
-    const isInspectorOpen = useEffectStore(s => s.isInspectorOpen);
-    const setIsInspectorOpen = useEffectStore(s => s.setIsInspectorOpen);
+    const focusStack = useEffectStore(s => s.focusStack);
+    const pushFocus = useEffectStore(s => s.pushFocus);
+    const isInspectorOpen = focusStack.includes('inspector');
 
     // Check if selected effects are contiguous (for meld eligibility)
     const canMeld = useMemo(() => {
@@ -38,22 +39,16 @@ const ActionBar: React.FC<ActionBarProps> = () => {
         return true;
     }, [canMeld, selectionCount, selectedIds, effects]);
 
-    const handleOpenParams = () => {
-        if (selectionCount === 1) {
-            setIsInspectorOpen(!isInspectorOpen);
-        }
-    };
-
     if (selectionCount === 0) return null;
 
     return (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-black/80 border border-white/15 shadow-2xl shadow-black/50 animate-in fade-in slide-in-from-bottom-2 duration-200 z-50">
             {/* Parameters — only for single selection */}
             <button
-                onClick={handleOpenParams}
+                onClick={() => pushFocus('inspector')}
                 disabled={selectionCount !== 1}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest enabled:hover:text-white enabled:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all ${isInspectorOpen && selectionCount === 1 ? 'text-white bg-white/10' : 'text-white/70'}`}
-                title="Edit Parameters"
+                title="Show Inspector (I)"
             >
                 <span className="material-symbols-outlined text-[16px]">tune</span>
             </button>
