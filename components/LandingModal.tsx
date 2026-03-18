@@ -53,7 +53,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ isOpen, onStart, onClose })
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/20" />
 
-            <div className="relative w-full max-w-sm bg-slate-700 rounded-2xl border border-white/20 overflow-hidden animate-in fade-in zoom-in-95 duration-300 flex flex-col items-center">
+            <div className="relative w-full max-w-sm bg-slate-700 rounded-2xl border border-white/20 max-h-[90vh] overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-300 flex flex-col items-center">
                 {/* Close Button */}
                 <button
                     onClick={onClose}
