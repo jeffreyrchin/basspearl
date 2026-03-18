@@ -101,7 +101,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             if (section === 'window') {
                 const windowType = container?.dataset.window as 'inspector' | 'library' | undefined;
                 if (windowType) pushFocus(windowType);
-            } else {
+            } else if (section === 'pipeline') {
                 pushFocus('pipeline');
             }
         };
@@ -114,7 +114,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             if (section === 'window') {
                 const windowType = container?.dataset.window as 'inspector' | 'library' | undefined;
                 if (windowType) pushFocus(windowType);
-            } else {
+            } else if (section === 'pipeline') {
                 pushFocus('pipeline');
             }
         };
