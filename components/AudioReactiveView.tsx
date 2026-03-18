@@ -53,6 +53,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
     const setActiveDropdownId = useEffectStore(s => s.setActiveDropdownId);
     const setIsSidebarFocused = useEffectStore(s => s.setIsSidebarFocused);
+    const setActiveWindow = useEffectStore(s => s.setActiveWindow);
 
     const [isLandingOpen, setIsLandingOpen] = useState(effects.length === 0 && audioFile === null);
 
@@ -67,7 +68,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const isDraggingScrubberRef = useRef(false);
     const frameCounterRef = useRef(0);
     const abortControllerRef = useRef<AbortController | null>(null);
-    const handleGlobalDownLogicRef = useRef<(e: PointerEvent) => void>(() => { });
+    const handleGlobalPtrDownLogicRef = useRef<(e: PointerEvent) => void>(() => { });
+    const handleGlobalFocusInLogicRef = useRef<(e: FocusEvent) => void>(() => { });
 
     // Sync refs with store state (Direct update during render)
     useEffect(() => {
@@ -76,20 +78,32 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
     // Update global interaction logic on every render
     useEffect(() => {
-        handleGlobalDownLogicRef.current = (e: PointerEvent) => {
+        handleGlobalPtrDownLogicRef.current = (e: PointerEvent) => {
             const target = e.target as HTMLElement;
             if (target.closest?.('[data-dropdown-ignore]')) return;
 
             setActiveDropdownId(null);
 
-            // Explicit section-based focus handover
-            if (target.closest?.('[data-section="sidebar"]')) {
-                setIsSidebarFocused(true);
-            } else if (target.closest?.('[data-section="window"]')) {
-                setIsSidebarFocused(false);
-            } else {
-                // Clicking "Background" (Canvas, Footer, etc) also resets to Sidebar shortcuts
-                setIsSidebarFocused(true);
+            // Find the parent section to manage logical focus
+            const container = target.closest?.('[data-section]') as HTMLElement;
+            const section = container?.dataset.section;
+
+            // Update focus based on section
+            setIsSidebarFocused(section !== 'window');
+        };
+
+        handleGlobalFocusInLogicRef.current = (e: FocusEvent) => {
+            const target = e.target as HTMLElement;
+            const container = target.closest?.('[data-section]') as HTMLElement;
+            const section = container?.dataset.section;
+
+            // Sidebar takes focus if not explicitly in a window
+            setIsSidebarFocused(section !== 'window');
+
+            // If we are in a window, update activeWindow to handle z-index stacking
+            if (section === 'window') {
+                const windowType = container?.dataset.window as 'inspector' | 'library' | undefined;
+                if (windowType) setActiveWindow(windowType);
             }
         };
     });
@@ -97,16 +111,19 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     // Global Interaction Handlers (Stable Listeners)
     useEffect(() => {
         const handleUp = () => { isDraggingScrubberRef.current = false; }; // Fix for scrubber not releasing on pointer up/cancel
-        const handleDown = (e: PointerEvent) => handleGlobalDownLogicRef.current(e);
+        const handleDown = (e: PointerEvent) => handleGlobalPtrDownLogicRef.current(e);
+        const handleFocus = (e: FocusEvent) => handleGlobalFocusInLogicRef.current(e);
 
         window.addEventListener('pointerup', handleUp);
         window.addEventListener('pointercancel', handleUp);
         document.addEventListener('pointerdown', handleDown, { capture: true });
+        document.addEventListener('focusin', handleFocus);
 
         return () => {
             window.removeEventListener('pointerup', handleUp);
             window.removeEventListener('pointercancel', handleUp);
             document.removeEventListener('pointerdown', handleDown, { capture: true });
+            document.removeEventListener('focusin', handleFocus);
         };
     }, []); // Attached once, logic lives in the Ref
 

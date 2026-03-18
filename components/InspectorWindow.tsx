@@ -89,6 +89,7 @@ const InspectorWindow: React.FC = () => {
                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
                     className="relative z-10 w-full h-[85vh] bg-slate-900/95 border-t border-white/10 rounded-t-2xl pointer-events-auto flex flex-col shadow-2xl"
                     data-section="window"
+                    data-window="inspector"
                 >
                     <div className="h-14 border-b bg-slate-900 border-white/10 flex items-center justify-between px-6 shrink-0">
                         <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">
@@ -125,6 +126,7 @@ const InspectorWindow: React.FC = () => {
             }} // Default position right beside the sidebar
             className="w-80 min-h-[400px] max-h-[80vh] bg-slate-900/95 border border-white/10 rounded-xl shadow-2xl z-[100] flex flex-col pointer-events-auto"
             data-section="window"
+            data-window="inspector"
         >
             {/* Header / Drag Handle */}
             <div
