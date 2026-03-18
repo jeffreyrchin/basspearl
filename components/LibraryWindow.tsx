@@ -15,6 +15,14 @@ const LibraryWindow: React.FC = () => {
 
     const [isMobile, setIsMobile] = useState(false);
 
+    const minWidth = 300;
+    const minHeight = 200;
+    const initialWidth = Math.max(minWidth, window.innerWidth * 0.3);
+    const initialHeight = Math.max(minHeight, window.innerHeight * 0.75);
+
+    const [winWidth, setWinWidth] = useState(initialWidth);
+    const [winHeight, setWinHeight] = useState(initialHeight);
+
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
         checkMobile();
@@ -77,10 +85,12 @@ const LibraryWindow: React.FC = () => {
                 style={{
                     position: 'absolute',
                     top: 80,
-                    right: 400,
+                    left: 400,
+                    width: winWidth,
+                    height: winHeight,
                     zIndex: `calc(var(--z-index-window) + ${focusStack.indexOf('library')})`
-                }} // Default position to the left of the pipeline sidebar
-                className="w-[360px] min-h-[500px] max-h-[85vh] bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-window flex flex-col pointer-events-auto"
+                }}
+                className="bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-window flex flex-col pointer-events-auto overflow-hidden"
                 data-section="window"
                 data-window="library"
             >
@@ -112,6 +122,34 @@ const LibraryWindow: React.FC = () => {
                 >
                     <SidebarLibrary />
                 </div>
+
+                {/* Resize Handle */}
+                <motion.div
+                    drag
+                    dragMomentum={false}
+                    dragConstraints={{ top: 0, left: 0, right: 0, bottom: 0 }}
+                    dragElastic={0}
+                    onDrag={(e, info) => {
+                        setWinWidth(prev => Math.max(minWidth, prev + info.delta.x));
+                        setWinHeight(prev => Math.max(minHeight, prev + info.delta.y));
+                    }}
+                    tabIndex={0}
+                    title="Resize Window"
+                    onKeyDown={(e) => {
+                        if (!['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+                        e.preventDefault(); e.stopPropagation();
+                        const step = e.shiftKey ? 40 : 10;
+                        if (e.key === 'ArrowRight') setWinWidth(prev => Math.max(minWidth, prev + step));
+                        if (e.key === 'ArrowLeft') setWinWidth(prev => Math.max(minWidth, prev - step));
+                        if (e.key === 'ArrowDown') setWinHeight(prev => Math.max(minHeight, prev + step));
+                        if (e.key === 'ArrowUp') setWinHeight(prev => Math.max(minHeight, prev - step));
+                    }}
+                    className="absolute bottom-0 right-0 w-6 h-6 flex items-center justify-center cursor-nwse-resize z-20 group outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
+                    <span className="material-symbols-outlined text-[16px] text-white/60 group-hover:text-white/60 transition-colors select-none">
+                        drag_pan
+                    </span>
+                </motion.div>
             </motion.div>
         )
     );

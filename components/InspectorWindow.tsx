@@ -24,6 +24,14 @@ const InspectorWindow: React.FC = () => {
 
     const [isMobile, setIsMobile] = useState(false);
 
+    const minWidth = 280;
+    const minHeight = 150;
+    const initialWidth = Math.max(minWidth, window.innerWidth * 0.25);
+    const initialHeight = Math.max(minHeight, window.innerHeight * 0.75);
+
+    const [winWidth, setWinWidth] = useState(initialWidth);
+    const [winHeight, setWinHeight] = useState(initialHeight);
+
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
         checkMobile();
@@ -39,6 +47,7 @@ const InspectorWindow: React.FC = () => {
         const selectedEffect = effects.find(e => e.id === selectedEffectId);
         metadata = EFFECT_METADATA[selectedEffect?.type];
     }
+
     const headerControls = (
         <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
@@ -65,7 +74,7 @@ const InspectorWindow: React.FC = () => {
                 <span className="material-symbols-outlined text-[18px]">close</span>
             </button>
         </div>
-    )
+    );
 
     // Mobile View (full screen)
     if (isMobile) {
@@ -104,7 +113,7 @@ const InspectorWindow: React.FC = () => {
         );
     }
 
-    // Desktop view: Draggable window
+    // Desktop view: draggable & resizable window
     return (
         <motion.div
             drag
@@ -119,10 +128,12 @@ const InspectorWindow: React.FC = () => {
             style={{
                 position: 'absolute',
                 top: 80,
-                right: 400,
+                left: 400,
+                width: winWidth,
+                height: winHeight,
                 zIndex: `calc(var(--z-index-window) + ${focusStack.indexOf('inspector')})`
-            }} // Default position right beside the sidebar
-            className="w-80 min-h-[400px] max-h-[80vh] bg-slate-900/95 border border-white/10 rounded-xl shadow-2xl z-window flex flex-col pointer-events-auto"
+            }}
+            className="bg-slate-900/95 border border-white/10 rounded-xl shadow-2xl z-window flex flex-col pointer-events-auto overflow-hidden"
             data-section="window"
             data-window="inspector"
         >
@@ -148,6 +159,34 @@ const InspectorWindow: React.FC = () => {
             >
                 <SidebarParams />
             </div>
+
+            {/* Resize Handle */}
+            <motion.div
+                drag
+                dragMomentum={false}
+                dragConstraints={{ top: 0, left: 0, right: 0, bottom: 0 }}
+                dragElastic={0}
+                onDrag={(e, info) => {
+                    setWinWidth(prev => Math.max(minWidth, prev + info.delta.x));
+                    setWinHeight(prev => Math.max(minHeight, prev + info.delta.y));
+                }}
+                tabIndex={0}
+                title="Resize Window"
+                onKeyDown={(e) => {
+                    if (!['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+                    e.preventDefault(); e.stopPropagation();
+                    const step = e.shiftKey ? 40 : 10;
+                    if (e.key === 'ArrowRight') setWinWidth(prev => Math.max(minWidth, prev + step));
+                    if (e.key === 'ArrowLeft') setWinWidth(prev => Math.max(minWidth, prev - step));
+                    if (e.key === 'ArrowDown') setWinHeight(prev => Math.max(minHeight, prev + step));
+                    if (e.key === 'ArrowUp') setWinHeight(prev => Math.max(minHeight, prev - step));
+                }}
+                className="absolute bottom-0 right-0 w-6 h-6 flex items-center justify-center cursor-nwse-resize z-20 group outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+                <span className="material-symbols-outlined text-[16px] text-white/60 group-hover:text-white/60 transition-colors select-none">
+                    drag_pan
+                </span>
+            </motion.div>
         </motion.div>
     );
 };
