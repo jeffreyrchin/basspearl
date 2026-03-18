@@ -12,6 +12,17 @@
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
   --radius-2xl: 1rem;
+  --z-index-processing: 10;
+  --z-index-fab: 50;
+  --z-index-footer: 50;
+  --z-index-mobilebackdrop: 55;
+  --z-index-sidebar: 60;
+  --z-index-actionbar: 61;
+  --z-index-navbar: 70;
+  --z-index-window: 100;
+  --z-index-overlay: 200;
+  --z-index-modal: 201;
+  --z-index-legal: 202;
 }
 
 /* Mixins and Plugins */

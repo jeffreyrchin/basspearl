@@ -42,7 +42,7 @@ const ActionBar: React.FC<ActionBarProps> = () => {
     if (selectionCount === 0) return null;
 
     return (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-black/80 border border-white/15 shadow-2xl shadow-black/50 animate-in fade-in slide-in-from-bottom-2 duration-200 z-50">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-black/80 border border-white/15 shadow-2xl shadow-black/50 animate-in fade-in slide-in-from-bottom-2 duration-200 z-actionbar">
             {/* Parameters — only for single selection */}
             <button
                 onClick={() => pushFocus('inspector')}

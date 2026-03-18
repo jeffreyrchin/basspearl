@@ -458,7 +458,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         {!isSidebarOpen && (
                             <button
                                 onClick={() => setIsSidebarOpen(true)}
-                                className="absolute top-6 right-6 z-20 w-12 h-12 rounded-2xl bg-black/90 border border-[#FB00FF]/40 text-white shadow-[0_0_30px_rgba(0,0,0,0.5),0_0_15px_rgba(251,0,255,0.2)] flex items-center justify-center lg:hidden animate-in fade-in zoom-in duration-300 active:scale-90 hover:bg-black transition-all"
+                                className="absolute top-6 right-6 z-fab w-12 h-12 rounded-2xl bg-black/90 border border-[#FB00FF]/40 text-white shadow-[0_0_30px_rgba(0,0,0,0.5),0_0_15px_rgba(251,0,255,0.2)] flex items-center justify-center lg:hidden animate-in fade-in zoom-in duration-300 active:scale-90 hover:bg-black transition-all"
                                 aria-label="Show sidebar">
                                 <span className="material-symbols-outlined text-2xl">tune</span>
                             </button>
@@ -470,7 +470,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         >
                             <canvas ref={canvasRef} className="max-w-full max-h-full border-l border-r border-white/5 object-contain" />
                             {isProcessing && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 animate-in fade-in duration-300 z-10 backdrop-blur-sm">
+                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 animate-in fade-in duration-300 z-processing backdrop-blur-sm">
                                     <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
                                     <div className="flex flex-col items-center gap-1">
                                         <h3 className="text-xs font-bold tracking-widest text-white uppercase">Analyzing Audio</h3>
@@ -523,7 +523,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
                 {/* Sidebar: Effects Rack & Parameters */}
                 <aside
-                    className={`fixed inset-y-0 right-0 z-[60] lg:relative w-full sm:w-[400px] border-l border-white/5 bg-[#050B14] flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] lg:shadow-none will-change-transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full lg:hidden'}`}>
+                    className={`fixed inset-y-0 right-0 z-sidebar lg:relative w-full sm:w-[400px] border-l border-white/5 bg-[#050B14] flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] lg:shadow-none will-change-transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full lg:hidden'}`}>
                     {/* Inner wrapper */}
                     <div data-section="sidebar" className="flex-1 flex flex-col min-h-0 relative">
                         <SidebarNavigation
@@ -535,7 +535,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 {isSidebarOpen && (
                     <div
                         onClick={() => setIsSidebarOpen(false)}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden animate-in fade-in duration-300"
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-mobilebackdrop lg:hidden animate-in fade-in duration-300"
                     />
                 )}
             </div>

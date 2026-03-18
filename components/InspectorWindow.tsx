@@ -71,8 +71,8 @@ const InspectorWindow: React.FC = () => {
     if (isMobile) {
         return (
             <div
-                className="fixed inset-0 z-[100] flex items-end pointer-events-none"
-                style={{ zIndex: 100 + focusStack.indexOf('inspector') }}
+                className="fixed inset-0 z-window flex items-end pointer-events-none"
+                style={{ zIndex: `calc(var(--z-index-window) + ${focusStack.indexOf('inspector')})` }}
             >
                 <div
                     className="absolute inset-0 bg-black/40 pointer-events-auto z-0"
@@ -120,9 +120,9 @@ const InspectorWindow: React.FC = () => {
                 position: 'absolute',
                 top: 80,
                 right: 400,
-                zIndex: 100 + focusStack.indexOf('inspector')
+                zIndex: `calc(var(--z-index-window) + ${focusStack.indexOf('inspector')})`
             }} // Default position right beside the sidebar
-            className="w-80 min-h-[400px] max-h-[80vh] bg-slate-900/95 border border-white/10 rounded-xl shadow-2xl z-[100] flex flex-col pointer-events-auto"
+            className="w-80 min-h-[400px] max-h-[80vh] bg-slate-900/95 border border-white/10 rounded-xl shadow-2xl z-window flex flex-col pointer-events-auto"
             data-section="window"
             data-window="inspector"
         >
