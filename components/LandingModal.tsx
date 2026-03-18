@@ -76,7 +76,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ isOpen, onStart, onClose })
                     {/* Audio Setup Radio Buttons */}
                     <div className="flex w-full items-center justify-center gap-6 text-sm tracking-wider uppercase font-medium">
                         <label className="flex items-center gap-2 cursor-pointer group">
-                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${audioSource === 'demo' ? 'border-primary bg-primary/10' : 'border-white/30 group-hover:border-white/60'}`}>
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${audioSource === 'demo' ? 'border-primary bg-primary/10' : 'border-white/30 group-hover:border-white/60'} group-focus-within:ring-2 group-focus-within:ring-primary/50 group-focus-within:border-primary`}>
                                 {audioSource === 'demo' && <div className="w-2 h-2 rounded-full bg-primary" />}
                             </div>
                             <span className={audioSource === 'demo' ? 'text-white' : 'text-white/50 group-hover:text-white/80'}>Demo Track</span>
@@ -84,14 +84,14 @@ const LandingModal: React.FC<LandingModalProps> = ({ isOpen, onStart, onClose })
                                 type="radio"
                                 name="audioSource"
                                 value="demo"
-                                className="hidden"
+                                className="sr-only"
                                 checked={audioSource === 'demo'}
                                 onChange={() => setAudioSource('demo')}
                             />
                         </label>
 
                         <label className="flex items-center gap-2 cursor-pointer group">
-                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${audioSource === 'upload' ? 'border-primary bg-primary/10' : 'border-white/30 group-hover:border-white/60'}`}>
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${audioSource === 'upload' ? 'border-primary bg-primary/10' : 'border-white/30 group-hover:border-white/60'} group-focus-within:ring-2 group-focus-within:ring-primary/50 group-focus-within:border-primary`}>
                                 {audioSource === 'upload' && <div className="w-2 h-2 rounded-full bg-primary" />}
                             </div>
                             <span className={audioSource === 'upload' ? 'text-white' : 'text-white/60 group-hover:text-white/80'}>Audio File</span>
@@ -99,7 +99,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ isOpen, onStart, onClose })
                                 type="radio"
                                 name="audioSource"
                                 value="upload"
-                                className="hidden"
+                                className="sr-only"
                                 checked={audioSource === 'upload'}
                                 onChange={() => setAudioSource('upload')}
                             />
