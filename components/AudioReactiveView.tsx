@@ -55,6 +55,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const pushFocus = useEffectStore(s => s.pushFocus);
     const removeFocus = useEffectStore(s => s.removeFocus);
 
+    const undo = useEffectStore(s => s.undo);
+    const redo = useEffectStore(s => s.redo);
+
     const isInspectorOpen = focusStack.includes('inspector');
     const isLibraryOpen = focusStack.includes('library');
 
@@ -122,10 +125,22 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 target.tagName === 'TEXTAREA' ||
                 target.isContentEditable;
 
-            // Block globals if typing
-            if (isTyping) return;
+            const isModalOpen = document.querySelector('[data-section="modal"]');
+
+            if (isTyping || isModalOpen) return;
 
             const key = e.key.toLowerCase();
+
+            // Global Undo/Redo - Cmd/Ctrl + (Shift) + Z/Y
+            const isMod = e.metaKey || e.ctrlKey;
+            if (isMod && key === 'z') {
+                if (e.shiftKey) redo();
+                else undo();
+                e.preventDefault();
+            } else if (isMod && key === 'y') {
+                redo();
+                e.preventDefault();
+            }
 
             // Toggle Sidebar - P
             if (key === 'p') {

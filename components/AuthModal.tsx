@@ -113,7 +113,7 @@ const AuthModal = () => {
             />
 
             {/* Modal */}
-            <div className="relative w-full max-w-md mx-4 glass-panel rounded-3xl border border-white/10 max-h-[90vh] overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-300">
+            <div data-section="modal" className="relative w-full max-w-md mx-4 glass-panel rounded-3xl border border-white/10 max-h-[90vh] overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-300">
                 {/* Header Gradient */}
                 <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-primary/20 to-transparent pointer-events-none" />
 

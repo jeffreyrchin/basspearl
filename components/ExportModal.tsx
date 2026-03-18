@@ -54,7 +54,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
                 onClick={() => !isExporting && onClose()}
             />
             {/* Modal */}
-            <div className="relative w-full bg-slate-900/90 max-w-lg rounded-lg border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar animate-in fade-in duration-200">
+            <div data-section="modal" className="relative w-full bg-slate-900/90 max-w-lg rounded-lg border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar animate-in fade-in duration-200">
                 {/* Header Area */}
                 <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
                     <h2 className="text-[12px] font-bold tracking-widest uppercase text-white">Export</h2>

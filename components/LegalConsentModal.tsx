@@ -24,7 +24,7 @@ const LegalConsentModal = () => {
                 onClick={() => closeLegal()}
             />
 
-            <div className="relative w-full max-w-2xl glass-panel rounded-2xl border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-300 flex flex-col max-h-[80vh]">
+            <div data-section="modal" className="relative w-full max-w-2xl glass-panel rounded-2xl border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-300 flex flex-col max-h-[80vh]">
                 {/* Header */}
                 <div className="p-6 border-b border-white/10 shrink-0 flex items-center justify-between">
                     <div className="flex items-center gap-3">

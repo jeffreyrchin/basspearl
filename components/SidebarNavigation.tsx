@@ -53,23 +53,6 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         input.click();
     };
 
-    // Keyboard shortcuts
-    React.useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            const isMod = e.metaKey || e.ctrlKey;
-            if (isMod && e.key === 'z') {
-                if (e.shiftKey) redo();
-                else undo();
-                e.preventDefault();
-            } else if (isMod && e.key === 'y') {
-                redo();
-                e.preventDefault();
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [undo, redo]);
-
     const HeaderRightControls = (
         <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">

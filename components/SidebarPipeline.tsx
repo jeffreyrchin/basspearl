@@ -26,6 +26,7 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
     const focusStack = useEffectStore(s => s.focusStack);
     const activeFocus = focusStack[focusStack.length - 1];
     const pushFocus = useEffectStore(s => s.pushFocus);
+    const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
@@ -97,7 +98,9 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
                 target.tagName === 'TEXTAREA' ||
                 target.isContentEditable;
 
-            if (isTyping || activeFocus !== 'pipeline') return;
+            const isModalOpen = document.querySelector('[data-section="modal"]');
+
+            if (isTyping || activeFocus !== 'pipeline' || !isSidebarOpen || isModalOpen) return;
 
             // Select All - Ctrl/Cmd + A
             if (isMod && key === 'a') {
