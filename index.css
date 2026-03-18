@@ -66,6 +66,21 @@ body {
 
   /* Disable native swipe/pull touch gestures globally */
   touch-action: none;
+
+  /* Prevent text selection globally */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Allow text selection in inputs and textareas */
+input,
+textarea {
+  user-select: auto;
+  -webkit-user-select: auto;
+  -moz-user-select: auto;
+  -ms-user-select: auto;
 }
 
 #root {
