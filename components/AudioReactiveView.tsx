@@ -100,27 +100,37 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         isDraggingScrubberRef
     });
 
+    const handleTogglePlay = () => {
+        if (!audioFile || isLiveMode || isProcessing) return;
+
+        analytics.playback.toggled(!isPlaying);
+        togglePlay(() => {
+            // Start animation loop if not already running
+            !requestRef.current && (requestRef.current = requestAnimationFrame(animate));
+        });
+    };
+
+    const handleScrub = (delta: number) => {
+        if (!audioFile || isLiveMode || isProcessing) return;
+
+        const time = getElapsedSeconds();
+        const nextTime = Math.max(0, Math.min(duration, time + delta));
+        updateScrubberUI(nextTime);
+        handleSeek({ target: { value: nextTime.toString() } } as any, () => {
+            !requestRef.current && (requestRef.current = requestAnimationFrame(animate));
+        });
+    };
+
     useAppShortcuts({
-        onTogglePlay: () => togglePlay(),
-        onScrub: (delta: number) => {
-            if (!audioFile || isLiveMode || isProcessing) return;
-            const time = getElapsedSeconds();
-            const nextTime = Math.max(0, Math.min(duration, time + delta));
-            updateScrubberUI(nextTime);
-            handleSeek({ target: { value: nextTime.toString() } } as any, () => {
-                if (!requestRef.current) requestRef.current = requestAnimationFrame(animate);
-            });
-        },
+        onTogglePlay: handleTogglePlay,
+        onScrub: handleScrub,
         onReleaseScrubber: () => { isDraggingScrubberRef.current = false; } // Fix for scrubber not releasing on pointer up/cancel
     });
 
     useEffect(() => {
         // Render initial imageless frame on mount
         renderFrame(0);
-
-        return () => {
-            if (requestRef.current) cancelAnimationFrame(requestRef.current);
-        };
+        return () => requestRef.current && cancelAnimationFrame(requestRef.current);
     }, []);
 
     // Update preview and scrubber UI when not playing (seeking while paused, audio upload)
@@ -129,7 +139,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             renderFrame(currentTime);
             updateScrubberUI(currentTime);
         }
-    }, [effects, imageFile, currentTime, isPlaying, audioFile, duration, isLiveMode]);
+    }, [effects, imageFile, currentTime, isPlaying, audioFile, isLiveMode]);
 
     // Sync effectsRef for export
     useEffect(() => {
@@ -145,16 +155,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
     const handleMicClick = () => {
         isLiveMode ? stopMic() : (stopPlayback(), startMic());
-    };
-
-    const handleTogglePlay = () => {
-        if (!audioFile || isLiveMode || isProcessing) return;
-
-        analytics.playback.toggled(!isPlaying);
-        togglePlay(() => {
-            // Start animation loop if not already running
-            !requestRef.current && (requestRef.current = requestAnimationFrame(animate));
-        });
     };
 
     const handleActualExport = async (options: { fps: number; resolution: number }) => {
@@ -236,9 +236,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                     const val = parseFloat(e.target.value);
                                     updateScrubberUI(val);
                                     handleSeek(e, () => {
-                                        if (!requestRef.current) {
-                                            requestRef.current = requestAnimationFrame(animate);
-                                        }
+                                        !requestRef.current && (requestRef.current = requestAnimationFrame(animate));
                                     });
                                 }}
                             />
@@ -272,8 +270,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     className={`fixed inset-y-0 right-0 z-sidebar lg:relative w-full sm:w-[400px] border-l border-white/5 bg-[#050B14] flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] lg:shadow-none will-change-transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full lg:hidden'}`}>
                     {/* Inner wrapper */}
                     <div data-section="sidebar" className="flex-1 flex flex-col min-h-0 relative">
-                        <SidebarNavigation
-                            onClose={() => setIsSidebarOpen(false)} />
+                        <SidebarNavigation onClose={() => setIsSidebarOpen(false)} />
                     </div>
                 </aside>
 
