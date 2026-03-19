@@ -126,7 +126,9 @@ export const useRenderLoop = ({
             return;
         }
 
-        const elapsed = Math.min(audioStore.getElapsedSeconds(), audioStore.duration);
+        const elapsed = isLiveModeRef.current
+            ? audioStore.getElapsedSeconds() // Don't clamp seconds in live mode (no max duration)
+            : Math.min(audioStore.getElapsedSeconds(), audioStore.duration);
         // Only throttle if not dragging scrubber
         if (frameCounterRef.current % 4 === 0 && !isDraggingScrubberRef.current && !isLiveModeRef.current) {
             updateScrubberUI(elapsed);

@@ -34,6 +34,7 @@ export interface AudioEngine {
     liveState: ReactivityState;
     liveIntegrated: { sub: number, bass: number, mid: number, treble: number };
     lastLiveTime: number;
+    micStartTime: number;
 }
 
 export const mainAudioEngine: AudioEngine = {
@@ -54,5 +55,6 @@ export const mainAudioEngine: AudioEngine = {
         prevBins: null
     },
     liveIntegrated: { sub: 0, bass: 0, mid: 0, treble: 0 },
-    lastLiveTime: 0
+    lastLiveTime: 0, // for tracking time passed between last live frame and current live frame
+    micStartTime: 0 // for tracking time passed since mic was turned on
 };

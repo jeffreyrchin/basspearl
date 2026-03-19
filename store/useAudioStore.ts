@@ -150,6 +150,8 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     },
 
     getElapsedSeconds: () => {
+        const { isLiveMode } = get();
+        if (isLiveMode) return (performance.now() / 1000) - mainAudioEngine.micStartTime;
         const ctx = mainAudioEngine.context;
         if (!ctx || !mainAudioEngine.isPlaying) return mainAudioEngine.offset;
         return mainAudioEngine.offset + (ctx.currentTime - mainAudioEngine.startTime);
@@ -314,6 +316,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
             };
             mainAudioEngine.liveIntegrated = { sub: 0, bass: 0, mid: 0, treble: 0 };
             mainAudioEngine.lastLiveTime = performance.now();
+            mainAudioEngine.micStartTime = performance.now() / 1000;
 
             set({ isLiveMode: true });
         } catch (err) {
@@ -368,7 +371,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
 
         mainAudioEngine.liveState = nextState;
 
-        const now = performance.now();
+        const now = performance.now(); // in ms
         const deltaSecs = (now - mainAudioEngine.lastLiveTime) / 1000;
         mainAudioEngine.lastLiveTime = now;
 
