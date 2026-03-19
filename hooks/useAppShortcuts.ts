@@ -72,7 +72,7 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
         handleGlobalKbdDownLogicRef.current = (e: KeyboardEvent) => {
             const { undo, redo, setIsSidebarOpen, isSidebarOpen, isInspectorOpen, pushFocus, removeFocus, isLibraryOpen, onTogglePlay, onScrub } = propsRef.current;
             const target = e.target as HTMLElement;
-            const isTyping = target.tagName === 'INPUT' ||
+            const isTyping = (target.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'button', 'submit'].includes((target as HTMLInputElement).type)) ||
                 target.tagName === 'TEXTAREA' ||
                 target.isContentEditable;
 
