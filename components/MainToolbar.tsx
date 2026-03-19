@@ -8,6 +8,8 @@ interface MainToolbarProps {
     audioFile: File | null;
     handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleAudioUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    isLiveMode: boolean;
+    startMic: () => void;
 }
 
 const ToolbarButton: React.FC<{
@@ -55,6 +57,8 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     audioFile,
     handleImageUpload,
     handleAudioUpload,
+    isLiveMode,
+    startMic,
 }) => {
     const focusStack = useEffectStore(s => s.focusStack);
     const pushFocus = useEffectStore(s => s.pushFocus);
@@ -106,7 +110,20 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                     colorHex="#3B82F6"
                     activeBg="bg-[#3B82F6]/5 hover:bg-[#3B82F6]/10"
                     activeBorder="border-[#3B82F6]/30 hover:border-[#3B82F6]/50"
-                    showDot={!!audioFile}
+                    showDot={!!audioFile && !isLiveMode}
+                    className="px-4"
+                />
+
+                {/* Microphone Input */}
+                <ToolbarButton
+                    onClick={startMic}
+                    icon="mic"
+                    title="Live Audio"
+                    isActive={isLiveMode}
+                    colorHex="#FF0055"
+                    activeBg="bg-[#FF0055]/5 hover:bg-[#FF0055]/10"
+                    activeBorder="border-[#FF0055]/30 hover:border-[#FF0055]/50"
+                    showDot={isLiveMode}
                     className="px-4"
                 />
             </div>
