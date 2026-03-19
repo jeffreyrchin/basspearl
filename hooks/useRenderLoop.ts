@@ -1,7 +1,10 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { mainGlitchEngine } from '@/services/glitchEngine';
 import { SHARED_AUDIO_STATE } from '@/services/audioState';
-import { EffectConfig } from '@/types';
+import { useAudioStore } from '../store/useAudioStore';
+import { mainAudioEngine } from '../services/audioEngine';
+import { useEffectStore } from '../store/useEffectStore';
+import { useLiveAudio } from './useLiveAudio';
 
 export interface UseRenderLoopProps {
     canvasRef: React.RefObject<HTMLCanvasElement>;
@@ -10,17 +13,7 @@ export interface UseRenderLoopProps {
     requestRef: React.MutableRefObject<number | undefined>;
     frameCounterRef: React.MutableRefObject<number>;
     imageFileRef: React.MutableRefObject<string | null>;
-    effectsRef: React.MutableRefObject<EffectConfig[]>;
-    reactivityMapRef: React.MutableRefObject<any>;
-    integratedReactivityMapRef: React.MutableRefObject<any>;
     isDraggingScrubberRef: React.MutableRefObject<boolean>;
-    isPlayingRef: React.MutableRefObject<boolean>;
-    isLiveModeRef: React.MutableRefObject<boolean>;
-    duration: number;
-    formatTime: (time: number) => string;
-    getElapsedSeconds: () => number;
-    isLiveMode: boolean;
-    getLiveReactivity: () => any;
 }
 
 export const useRenderLoop = ({
@@ -30,18 +23,24 @@ export const useRenderLoop = ({
     requestRef,
     frameCounterRef,
     imageFileRef,
-    effectsRef,
-    reactivityMapRef,
-    integratedReactivityMapRef,
-    isDraggingScrubberRef,
-    isPlayingRef,
-    isLiveModeRef,
-    duration,
-    formatTime,
-    getElapsedSeconds,
-    isLiveMode,
-    getLiveReactivity
+    isDraggingScrubberRef
 }: UseRenderLoopProps) => {
+    const effects = useEffectStore(s => s.effects);
+    const audioStore = useAudioStore();
+    const { isLiveMode, getLiveReactivity } = useLiveAudio();
+
+    const effectsRef = React.useRef(effects);
+    const isLiveModeRef = React.useRef(isLiveMode);
+
+    // Sync refs with store state internally
+    useEffect(() => {
+        effectsRef.current = effects;
+    }, [effects]);
+
+    useEffect(() => {
+        isLiveModeRef.current = isLiveMode;
+    }, [isLiveMode]);
+
     const renderFrame = useCallback(async (time: number) => {
         if (!canvasRef.current) return;
 
@@ -55,10 +54,10 @@ export const useRenderLoop = ({
                 smoothed = liveData.smoothed;
                 frameIntegrated = liveData.integrated;
             }
-        } else if (reactivityMapRef.current) {
+        } else if (mainAudioEngine.reactivityMap) {
             const fractionalFrame = time * 60;
             const f = Math.floor(fractionalFrame);
-            const map = reactivityMapRef.current;
+            const map = mainAudioEngine.reactivityMap;
 
             const max_f = map.bass.length - 1;
             const f_clamped = Math.min(max_f, f);
@@ -76,7 +75,7 @@ export const useRenderLoop = ({
                 treble: lerp(map.treble)
             };
 
-            const iMap = integratedReactivityMapRef.current;
+            const iMap = mainAudioEngine.integratedReactivityMap;
             if (iMap) {
                 frameIntegrated = {
                     sub: lerp(iMap.sub),
@@ -106,28 +105,28 @@ export const useRenderLoop = ({
                 currentTime: time
             }
         );
-    }, [isLiveMode, getLiveReactivity, canvasRef, reactivityMapRef, integratedReactivityMapRef, imageFileRef, effectsRef]);
+    }, [isLiveMode, getLiveReactivity, canvasRef, imageFileRef]);
 
     const scrubberPercent = useCallback((time: number, duration: number) => {
         return duration > 0 ? (time / duration) * 100 : 0;
     }, []);
 
     const updateScrubberUI = useCallback((time: number) => {
-        if (currentTimeLabelRef.current) currentTimeLabelRef.current.innerText = formatTime(time);
+        if (currentTimeLabelRef.current) currentTimeLabelRef.current.innerText = audioStore.formatTime(time);
         if (scrubberRef.current) {
             scrubberRef.current.value = time.toString();
-            const percent = scrubberPercent(time, duration);
+            const percent = scrubberPercent(time, audioStore.duration);
             scrubberRef.current.style.setProperty('--progress', `${percent}%`);
         }
-    }, [currentTimeLabelRef, formatTime, scrubberRef, scrubberPercent, duration]);
+    }, [currentTimeLabelRef, audioStore.formatTime, scrubberRef, scrubberPercent, audioStore.duration]);
 
     const animate = useCallback(async () => {
-        if (!isPlayingRef.current && !isLiveModeRef.current) {
+        if (!mainAudioEngine.isPlaying && !isLiveModeRef.current) {
             requestRef.current = undefined;
             return;
         }
 
-        const elapsed = Math.min(getElapsedSeconds(), duration);
+        const elapsed = Math.min(audioStore.getElapsedSeconds(), audioStore.duration);
         // Only throttle if not dragging scrubber
         if (frameCounterRef.current % 4 === 0 && !isDraggingScrubberRef.current && !isLiveModeRef.current) {
             updateScrubberUI(elapsed);
@@ -137,7 +136,7 @@ export const useRenderLoop = ({
         await renderFrame(elapsed);
 
         requestRef.current = requestAnimationFrame(animate); // Keep animation loop going even if no image or canvas
-    }, [isPlayingRef, isLiveModeRef, getElapsedSeconds, duration, frameCounterRef, isDraggingScrubberRef, updateScrubberUI, renderFrame, requestRef]);
+    }, [isLiveModeRef, audioStore, frameCounterRef, isDraggingScrubberRef, updateScrubberUI, renderFrame, requestRef]);
 
     return {
         renderFrame,

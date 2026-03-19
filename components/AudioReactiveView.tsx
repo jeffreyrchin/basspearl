@@ -32,7 +32,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const effectsRef = useRef<EffectConfig[]>(effects);
     const isDraggingScrubberRef = useRef(false);
     const frameCounterRef = useRef(0);
-    const isLiveModeRef = useRef(false);
     const audioInputRef = useRef<HTMLInputElement>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
 
@@ -46,7 +45,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         handleSeek,
         getElapsedSeconds,
         formatTime,
-        isPlayingRef,
         reactivityMapRef,
         integratedReactivityMapRef,
         audioBufferRef,
@@ -74,8 +72,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const {
         isLiveMode,
         startMic,
-        stopMic,
-        getLiveReactivity
+        stopMic
     } = useLiveAudio();
 
     const {
@@ -100,34 +97,11 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         requestRef,
         frameCounterRef,
         imageFileRef,
-        effectsRef,
-        reactivityMapRef,
-        integratedReactivityMapRef,
-        isDraggingScrubberRef,
-        isPlayingRef,
-        isLiveModeRef,
-        duration,
-        formatTime,
-        getElapsedSeconds,
-        isLiveMode,
-        getLiveReactivity
+        isDraggingScrubberRef
     });
 
-    // Sync refs with store state (Direct update during render)
-    useEffect(() => {
-        effectsRef.current = effects;
-    }, [effects]);
-
-    useEffect(() => {
-        isLiveModeRef.current = isLiveMode;
-        if (isLiveMode && !requestRef.current) {
-            // Start animation loop if not already running
-            requestRef.current = requestAnimationFrame(animate);
-        }
-    }, [isLiveMode, animate, requestRef]);
-
     useAppShortcuts({
-        onTogglePlay: () => handleTogglePlay(),
+        onTogglePlay: () => togglePlay(),
         onScrub: (delta: number) => {
             if (!audioFile || isLiveMode || isProcessing) return;
             const time = getElapsedSeconds();
@@ -156,6 +130,18 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             updateScrubberUI(currentTime);
         }
     }, [effects, imageFile, currentTime, isPlaying, audioFile, duration, isLiveMode]);
+
+    // Sync effectsRef for export
+    useEffect(() => {
+        effectsRef.current = effects;
+    }, [effects]);
+
+    useEffect(() => {
+        if (isLiveMode && !requestRef.current) {
+            // Start animation loop if not already running
+            requestRef.current = requestAnimationFrame(animate);
+        }
+    }, [isLiveMode, animate]);
 
     const handleMicClick = () => {
         isLiveMode ? stopMic() : (stopPlayback(), startMic());
