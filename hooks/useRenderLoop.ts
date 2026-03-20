@@ -32,6 +32,10 @@ export const useRenderLoop = ({
     const effectsRef = React.useRef(effects);
     const isLiveModeRef = React.useRef(isLiveMode);
 
+    // Persistent containers to avoid object allocations in the Hot Loop (60fps)
+    const staticSmoothedRef = React.useRef({ sub: 0, bass: 0, mid: 0, treble: 0 });
+    const staticIntegratedRef = React.useRef({ sub: 0, bass: 0, mid: 0, treble: 0 });
+
     // Sync refs with store state internally
     useEffect(() => {
         effectsRef.current = effects;
@@ -44,46 +48,52 @@ export const useRenderLoop = ({
     const renderFrame = useCallback(async (time: number) => {
         if (!canvasRef.current) return;
 
-        let smoothed: { sub: number, bass: number, mid: number, treble: number } | undefined;
-        let frameIntegrated: { sub: number, bass: number, mid: number, treble: number } | undefined;
+        let smoothed = staticSmoothedRef.current;
+        let frameIntegrated = staticIntegratedRef.current;
 
         // 1. Fetch Reactivity Data
         if (isLiveMode) {
             const liveData = getLiveReactivity();
             if (liveData) {
-                smoothed = liveData.smoothed;
-                frameIntegrated = liveData.integrated;
+                // Bulk copy to persistent object (no new allocation)
+                smoothed.sub = liveData.smoothed.sub;
+                smoothed.bass = liveData.smoothed.bass;
+                smoothed.mid = liveData.smoothed.mid;
+                smoothed.treble = liveData.smoothed.treble;
+
+                frameIntegrated.sub = liveData.integrated.sub;
+                frameIntegrated.bass = liveData.integrated.bass;
+                frameIntegrated.mid = liveData.integrated.mid;
+                frameIntegrated.treble = liveData.integrated.treble;
+            } else {
+                return; // Not ready
             }
         } else if (mainAudioEngine.reactivityMap) {
-            const fractionalFrame = time * 60;
-            const f = Math.floor(fractionalFrame);
             const map = mainAudioEngine.reactivityMap;
+            const iMap = mainAudioEngine.integratedReactivityMap;
+
+            const fractionalFrame = time * 60;
+            const f = fractionalFrame | 0; // Bitwise floor (Math.floor(fractionalFrame))
+            const t = fractionalFrame - f; // Interpolation factor (0.0 to 1.0) (fractionalFrame % 1)
 
             const max_f = map.bass.length - 1;
-            const f_clamped = Math.min(max_f, f);
-            const nf_clamped = Math.min(max_f, f + 1);
-            const t = fractionalFrame - f; // Interpolation factor (0.0 to 1.0)
+            const f1 = f > max_f ? max_f : f; // f_clamped = Math.min(max_f, f)
+            const f2 = (f + 1) > max_f ? max_f : (f + 1); // nf_clamped = Math.min(max_f, f + 1)
 
-            const lerp = (arr: Float32Array | Float64Array) => {
-                return arr[f_clamped] + (arr[nf_clamped] - arr[f_clamped]) * t;
-            }
+            // Linear interpolation
+            smoothed.sub = map.sub[f1] + (map.sub[f2] - map.sub[f1]) * t;
+            smoothed.bass = map.bass[f1] + (map.bass[f2] - map.bass[f1]) * t;
+            smoothed.mid = map.mid[f1] + (map.mid[f2] - map.mid[f1]) * t;
+            smoothed.treble = map.treble[f1] + (map.treble[f2] - map.treble[f1]) * t;
 
-            smoothed = {
-                sub: lerp(map.sub),
-                bass: lerp(map.bass),
-                mid: lerp(map.mid),
-                treble: lerp(map.treble)
-            };
-
-            const iMap = mainAudioEngine.integratedReactivityMap;
             if (iMap) {
-                frameIntegrated = {
-                    sub: lerp(iMap.sub),
-                    bass: lerp(iMap.bass),
-                    mid: lerp(iMap.mid),
-                    treble: lerp(iMap.treble)
-                };
+                frameIntegrated.sub = iMap.sub[f1] + (iMap.sub[f2] - iMap.sub[f1]) * t;
+                frameIntegrated.bass = iMap.bass[f1] + (iMap.bass[f2] - iMap.bass[f1]) * t;
+                frameIntegrated.mid = iMap.mid[f1] + (iMap.mid[f2] - iMap.mid[f1]) * t;
+                frameIntegrated.treble = iMap.treble[f1] + (iMap.treble[f2] - iMap.treble[f1]) * t;
             }
+        } else {
+            return;
         }
 
         // 2. Global State Update (for WebGL shaders)

@@ -158,7 +158,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     },
 
     precomputeReactivity: async (buffer, fps = 60) => {
-        const { setProcessingProgress } = get(); // returns 0?
+        const { setProcessingProgress } = get();
         const sampleRate = buffer.sampleRate;
         const channelData = buffer.getChannelData(0); // Analyze mono
         const totalFrames = Math.ceil(buffer.duration * fps);
