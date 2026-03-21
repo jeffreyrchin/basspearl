@@ -192,6 +192,10 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Density', { v: 100 }),
       p('Roundness', { v: 0 }),
       p('Blend', { v: 50 }, { v: 100 }),
+      p('Scale X', { v: 100 }),
+      p('Scale Y', { v: 100 }),
+      p('Pan X', { v: 50 }),
+      p('Pan Y', { v: 50 }),
     ],
   },
   SHAPE: {
@@ -303,6 +307,10 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Phase Offset', { v: 0 }),
       p('Speed', { v: 25 }),
       p('Strength', { v: 100 }),
+      p('Scale X', { v: 100 }),
+      p('Scale Y', { v: 100 }),
+      p('Pan X', { v: 50 }),
+      p('Pan Y', { v: 50 }),
     ],
   },
   BLACK_HOLE: {

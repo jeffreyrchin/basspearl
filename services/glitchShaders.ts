@@ -241,12 +241,14 @@ void main() {
 export const SPECTRAL_MAP_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[4]; // [resolution, phase offset, speed, strength]
+uniform float u_params[8]; // [resolution, phase offset, speed, strength, scaleX, scaleY, panX, panY]
 uniform float u_integrated_values[8];
 in vec2 v_texCoord;
 out vec4 outColor;
+${GLSL_TRANSFORM}
 
 void main() {
+    TR tr = getTransform_(v_texCoord, u_params[4], u_params[5], u_params[6], u_params[7]);
     vec4 src = texture(u_image, v_texCoord);
     
     // 1. Calculate Luminance (Luma)
@@ -273,7 +275,7 @@ void main() {
     // This preserves the internal darkness of the original image
     vec3 finalColor = mix(src.rgb, src.rgb * spectral, strength);
     
-    outColor = vec4(finalColor, src.a);
+    outColor = mix(src, vec4(finalColor, src.a), tr.mask);
 }
 `;
 
@@ -727,15 +729,16 @@ void main() {
 export const GRAIN_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[7]; // [width, height, x-freq, y-freq, density, roundness, blend]
+uniform float u_params[11]; // [width, height, x-freq, y-freq, density, roundness, blend, scaleX, scaleY, panX, panY]
 uniform vec2 u_resolution;
 uniform float u_seed;
 in vec2 v_texCoord;
 out vec4 outColor;
-
+${GLSL_TRANSFORM}
 ${GLSL_HASH}
 
 void main() {
+    TR tr = getTransform_(v_texCoord, u_params[7], u_params[8], u_params[9], u_params[10]);
     // 1. Map sliders to frequency and parameters.
     float xScale = u_params[0] / 100.0;
     float yScale = u_params[1] / 100.0;
@@ -756,7 +759,7 @@ void main() {
     vec4 src = texture(u_image, v_texCoord);
 
     // 4. Integer projection.
-    vec2 cellCoord = v_texCoord * freq;
+    vec2 cellCoord = tr.localUV * freq;
     vec2 cell = floor(cellCoord);
     vec2 p = fract(cellCoord) - 0.5; // Center coord [-0.5, 0.5]
 
@@ -782,7 +785,7 @@ void main() {
     float alpha = lit * blend;
     vec3 finalRGB = vec3(brightness) * alpha + src.rgb * (1.0 - alpha);
     float finalAlpha = alpha + src.a * (1.0 - alpha);
-    outColor = vec4(finalRGB, finalAlpha);
+    outColor = mix(src, vec4(finalRGB, finalAlpha), tr.mask);
 }
 `;
 

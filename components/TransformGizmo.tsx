@@ -182,6 +182,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
                     <div
                         className={`pointer-events-auto absolute left-1/2 top-1/2 w-8 h-8 -ml-4 -mt-4 bg-primary/20 border border-primary rounded-full flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-move`}
                         onPointerDown={(e) => handlePointerDown(e, 'pan')}
+                        title="Pan"
                         tabIndex={0}
                         onKeyDown={(e) => {
                             if (!['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
@@ -208,6 +209,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
                     <div
                         className={`pointer-events-auto absolute right-0 bottom-0 w-4 h-4 translate-x-1/2 translate-y-1/2 bg-black border border-primary outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-nwse-resize`}
                         onPointerDown={(e) => handlePointerDown(e, 'scale')}
+                        title="Scale"
                         tabIndex={0}
                         onKeyDown={(e) => {
                             if (!['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
