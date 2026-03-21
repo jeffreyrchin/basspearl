@@ -46,6 +46,7 @@ interface EffectState {
     batchMeld: () => void;
     batchUnmeld: () => void;
     updateParameter: (effectId: string, paramIndex: number, update: Partial<EffectConfig['params'][0]>) => void;
+    updateMultipleParameters: (effectId: string, updates: { paramIndex: number, update: Partial<EffectConfig['params'][0]> }[]) => void;
 }
 
 export const useEffectStore = create<EffectState>((set, get) => ({
@@ -296,6 +297,19 @@ export const useEffectStore = create<EffectState>((set, get) => ({
                 if (e.id !== effectId) return e;
                 const newParams = [...e.params];
                 newParams[paramIndex] = { ...newParams[paramIndex], ...update };
+                return { ...e, params: newParams };
+            }),
+        }));
+    },
+
+    updateMultipleParameters: (effectId, updates) => {
+        set((state) => ({
+            effects: state.effects.map((e) => {
+                if (e.id !== effectId) return e;
+                const newParams = [...e.params];
+                updates.forEach(({ paramIndex, update }) => {
+                    newParams[paramIndex] = { ...newParams[paramIndex], ...update };
+                });
                 return { ...e, params: newParams };
             }),
         }));

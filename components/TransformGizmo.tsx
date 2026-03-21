@@ -9,6 +9,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
     const effects = useEffectStore(s => s.effects);
     const selectedIds = useEffectStore(s => s.selectedIds);
     const updateParameter = useEffectStore(s => s.updateParameter);
+    const updateMultipleParameters = useEffectStore(s => s.updateMultipleParameters);
     const commitHistory = useEffectStore(s => s.commitHistory);
 
     const selectedId = selectedIds.size === 1 ? Array.from(selectedIds)[0] : null;
@@ -124,8 +125,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
                 const newPanX = Math.max(0, Math.min(100, startPanX + (px * 50)));
                 const newPanY = Math.max(0, Math.min(100, startPanY - (py * 50)));
 
-                updateParameter(selectedId, panXIdx, { value: newPanX });
-                updateParameter(selectedId, panYIdx, { value: newPanY });
+                updateMultipleParameters(selectedId, [{ paramIndex: panXIdx, update: { value: newPanX } }, { paramIndex: panYIdx, update: { value: newPanY } }]);
             } else if (isDragging === 'scale') {
                 // Dragging bottom-right handle.
                 // Edge shifts by dx/dy. Width/Height shift by 2 * that.
@@ -135,8 +135,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
                 const newScaleX = Math.max(0, Math.min(100, startScaleX + (px * 200)));
                 const newScaleY = Math.max(0, Math.min(100, startScaleY + (py * 200)));
 
-                updateParameter(selectedId, scaleXIdx, { value: newScaleX });
-                updateParameter(selectedId, scaleYIdx, { value: newScaleY });
+                updateMultipleParameters(selectedId, [{ paramIndex: scaleXIdx, update: { value: newScaleX } }, { paramIndex: scaleYIdx, update: { value: newScaleY } }]);
             }
         };
 
@@ -152,7 +151,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
             window.removeEventListener('pointermove', handlePointerMove);
             window.removeEventListener('pointerup', handlePointerUp);
         };
-    }, [isDragging, isValid, selectedId, panXIdx, panYIdx, scaleXIdx, scaleYIdx, updateParameter]);
+    }, [isDragging, isValid, selectedId, panXIdx, panYIdx, scaleXIdx, scaleYIdx, updateMultipleParameters]);
 
     if (!isValid) return null;
 
