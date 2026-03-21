@@ -16,7 +16,9 @@ import { useAppShortcuts } from '@/hooks/useAppShortcuts';
 import { useVideoExport } from '@/hooks/useVideoExport';
 import { useProjectAssets } from '@/hooks/useProjectAssets';
 import { useRenderLoop } from '@/hooks/useRenderLoop';
+import { useCanvasSelection } from '@/hooks/useCanvasSelection';
 import { useEffectStore } from '../store/useEffectStore';
+import { TransformGizmo } from './TransformGizmo';
 
 interface AudioReactiveViewProps {
 }
@@ -157,6 +159,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         isLiveMode ? stopMic() : (stopPlayback(), startMic());
     };
 
+    const handleCanvasPointerDown = useCanvasSelection(canvasRef);
+
     const handleActualExport = async (options: { fps: number; resolution: number }) => {
         await startExport({
             options,
@@ -205,7 +209,12 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             className="relative w-full h-full overflow-hidden bg-white/5 flex items-center justify-center"
                             style={{ transform: 'translateZ(0)' }}
                         >
-                            <canvas ref={canvasRef} className="max-w-full max-h-full border-l border-r border-white/5 object-contain" />
+                            <canvas
+                                ref={canvasRef}
+                                className="max-w-full max-h-full border-l border-r border-white/5 object-contain"
+                                onPointerDown={handleCanvasPointerDown}
+                            />
+                            <TransformGizmo canvasRef={canvasRef} />
                             {isProcessing && (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 animate-in fade-in duration-300 z-processing backdrop-blur-sm">
                                     <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
