@@ -34,6 +34,10 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     params: [
       p('Offset', { v: 20 }, { v: 100, b: 'SUB' }),
       p('Vertical Tear', { v: 20 }, { v: 100, b: 'SUB' }),
+      p('Scale X', { v: 100 }),
+      p('Scale Y', { v: 100 }),
+      p('Pan X', { v: 50 }),
+      p('Pan Y', { v: 50 }),
     ],
   },
   DATA_CORRUPTION: {
@@ -61,6 +65,10 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     params: [
       p('Quantize', { v: 0 }),
       p('Resample', { v: 20 }, { v: 50, b: 'SUB' }),
+      p('Scale X', { v: 100 }),
+      p('Scale Y', { v: 100 }),
+      p('Pan X', { v: 50 }),
+      p('Pan Y', { v: 50 }),
     ],
   },
   WAVE_DISTORTION: {
@@ -193,10 +201,13 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     params: [
       p('Side Count', { v: 4 }, { v: 4 }),
       p('Pointiness', { v: 0 }),
-      p('Roundness', { v: 0 }, { v: 100, b: 'SUB' }),
-      p('Size', { v: 20 }, { v: 50, b: 'SUB' }),
+      p('Roundness', { v: 100 }),
       p('Feather', { v: 0 }),
       p('Blend', { v: 100 }),
+      p('Scale X', { v: 50 }, { b: 'SUB' }),
+      p('Scale Y', { v: 50 }, { b: 'SUB' }),
+      p('Pan X', { v: 50 }),
+      p('Pan Y', { v: 50 }),
     ],
   },
   TILE: {
@@ -277,6 +288,10 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Vertical', { v: 30 }),
       p('Thickness', { v: 5 }),
       p('Feather', { v: 0 }),
+      p('Scale X', { v: 100 }),
+      p('Scale Y', { v: 100 }),
+      p('Pan X', { v: 50 }),
+      p('Pan Y', { v: 50 }),
     ],
   },
   SPECTRAL_MAP: {

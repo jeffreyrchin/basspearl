@@ -9,14 +9,43 @@ float hash(vec2 p, float seed) {
 }
 `;
 
+export const GLSL_TRANSFORM = `
+struct TR {
+    vec2 localUV; 
+    float mask;
+};
+
+// Affine transform: Supports arbitrary pivot and offset for gizmos
+TR getTransform_(vec2 uv_, vec2 scale_, vec2 pivot_, vec2 offset_) {
+    // 1. Inverse scale factors normalized to 100% (default)
+    float sx_ = max(scale_.x / 100.0, 0.0001);
+    float sy_ = max(scale_.y / 100.0, 0.0001);
+    
+    // 2. Linear Transform: Move space to Pivot -> Scale -> Translate -> Move back
+    // We transform the UVs inversely to manipulate the 'lookup window'
+    vec2 rel_ = (uv_ - pivot_ - (offset_ / 100.0)) / vec2(sx_, sy_) + pivot_;
+    
+    // 3. Stencil Boundary Mask
+    float m_ = step(0.0, rel_.x) * step(rel_.x, 1.0) * step(0.0, rel_.y) * step(rel_.y, 1.0);
+    
+    return TR(rel_, m_);
+}
+
+// Overload for center-based effects with wide pan (0-100 -> -100 to 100)
+TR getTransform_(vec2 uv_, float scaleX, float scaleY, float panX, float panY) {
+    return getTransform_(uv_, vec2(scaleX, scaleY), vec2(0.5), vec2((panX - 50.0) * 2.0, (-panY + 50.0) * 2.0));
+}
+`;
+
 export const CHANNEL_SHIFT_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[2]; // [shiftX, shiftY]
+uniform float u_params[6]; // [shiftX, shiftY, scaleX, scaleY, panX, panY]
 uniform float u_unit;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
+${GLSL_TRANSFORM}
 
 // Branchless (no if/else) sampling that returns transparent black outside 0..1 range (eliminates streaks)
 vec4 sampleTexture(sampler2D tex, vec2 uv) {
@@ -27,6 +56,7 @@ vec4 sampleTexture(sampler2D tex, vec2 uv) {
 }
 
 void main() {
+    TR tr = getTransform_(v_texCoord, u_params[2], u_params[3], u_params[4], u_params[5]);
     vec2 pixelSize = 1.0 / u_resolution;
     
     // Target: Max ~100px (10 units).
@@ -43,31 +73,37 @@ void main() {
     // Composite alpha ensures ghosts stay visible and solid when melded
     float finalAlpha = max(color.a, max(sampR.a, sampB.a));
     
-    outColor = vec4(sampR.r, color.g, sampB.b, finalAlpha);
+    outColor = mix(color, vec4(sampR.r, color.g, sampB.b, finalAlpha), tr.mask);
 }
 `;
 
 export const BIT_CRUSH_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[2]; // [quantize, resample]
+uniform float u_params[6]; // [quantize, resample, scaleX, scaleY, panX, panY]
 uniform float u_unit;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
+${GLSL_TRANSFORM}
 
 void main() {
+    TR tr = getTransform_(v_texCoord, u_params[2], u_params[3], u_params[4], u_params[5]);
     float qFactor = floor(pow(u_params[0] / 10.0, 2.2)) + 1.0;
     float rFactor = max(1.0, (u_params[1] * 0.1) * u_unit);
     
     vec2 res = u_resolution;
     vec2 gridCoord = floor(v_texCoord * res / rFactor) * rFactor / res;
     
-    vec4 color = texture(u_image, gridCoord);
+    // 1. Sample Background (Sharp) and Crushed pixels separately
+    vec4 src = texture(u_image, v_texCoord);
+    vec4 crushed = texture(u_image, gridCoord);
     
-    // Branchless quantization
-    vec3 quant = floor(color.rgb * 255.0 / qFactor) * qFactor / 255.0;
-    outColor = vec4(quant, color.a);
+    // 2. Apply quantization to the crushed sample
+    vec3 quant = floor(crushed.rgb * 255.0 / qFactor) * qFactor / 255.0;
+    
+    // 3. Mix: Sharp photo outside, Crushed math inside
+    outColor = mix(src, vec4(quant, crushed.a), tr.mask);
 }
 `;
 
@@ -753,10 +789,11 @@ void main() {
 export const SHAPE_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[6]; // [side count, pointiness, roundness, size, feather, blend]
+uniform float u_params[9]; // [side count, pointiness, roundness, feather, blend, scaleX, scaleY, panX, panY]
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
+${GLSL_TRANSFORM}
 
 float sdStar(vec2 p, float m, float aps, float inr, float edge) {
     float a = atan(p.y, p.x) + aps;
@@ -769,37 +806,43 @@ float sdStar(vec2 p, float m, float aps, float inr, float edge) {
 }
 
 void main() {
+    TR tr = getTransform_(v_texCoord, u_params[5], u_params[6], u_params[7], u_params[8]);
     float sides = max(floor(u_params[0]), 3.0);
     float roundFactor = u_params[2] / 100.0;
     float pointiness = (u_params[1] / 100.0) * (1.0 - roundFactor) * 0.99;
-    float size = u_params[3] / 100.0;
-    float feather = max(u_params[4] / 100.0, 0.001);
-    float blend = u_params[5] / 100.0;
+    float feather = u_params[3] / 100.0;
+    float blend = u_params[4] / 100.0;
 
-    vec2 uv = (v_texCoord - 0.5) * u_resolution / min(u_resolution.x, u_resolution.y);
-    
-    float aps = 3.14159265359 / sides;
-    float inr = 0.5 * size * (1.0 - roundFactor);
+    float pi = 3.14159265359;
+    float tau = 6.28318530718;
+
+    float aps = pi / sides;
+    float inr = 1.0 - roundFactor;
     float edge = inr * tan(aps);
-    float rounding = roundFactor * 0.5 * size;
+    float stepA = 2.0 * aps;
 
-    float d = sdStar(uv, pointiness, aps, inr, edge) - rounding;
+    float nearTop  = round((tau * 0.25) / stepA) * stepA;
+    float nearLeft = round(pi / stepA) * stepA;
 
-    // Use smoothstep for professional distance-based feathering
-    float shape = smoothstep(feather, 0.0, d);
-    
-    vec4 background = texture(u_image, v_texCoord);
+    bool topIsEdge  = abs(nearTop  - tau * 0.25)    > 0.0001;
+    bool leftIsEdge = abs(nearLeft - pi)            > 0.0001;
 
-    // Smoothly blend the shape onto the background (standard additive/overlay feel)
-    // 100% Blend = Solid White Shape, 0% Blend = Original Background
-    float effectAlpha = shape * blend;
-    vec3 blended = mix(background.rgb, vec3(1.0), effectAlpha);
-    float finalAlpha = effectAlpha + background.a * (1.0 - effectAlpha);
-    outColor = vec4(blended, finalAlpha);
+    float minX = leftIsEdge ? -1.0 / cos(aps) : -1.0;
+    float topY = topIsEdge  
+        ? max(sin(nearTop) / cos(aps), 1.0 / cos(nearTop - tau * 0.25))
+        : 1.0;
+
+    vec2 uv;
+    uv.x = mix(minX, 1.0, tr.localUV.x); // rightmost extent of the shape is always x = 1.0
+    uv.y = mix(-topY, topY, tr.localUV.y); // shape is vertically symmetric around y = 0
+    float d = sdStar(uv, pointiness, aps, inr, edge) - roundFactor;
+
+    vec4 src = texture(u_image, v_texCoord);
+    float shape = smoothstep(-feather, 0.0, -d);
+    float overlay = shape * blend;
+    outColor = mix(src, vec4(1.0), overlay);
 }
 `;
-
-
 
 export const BLACK_HOLE_SHADER = `#version 300 es
 precision highp float;
@@ -1260,13 +1303,16 @@ void main() {
 export const GRID_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[4]; // [horizontal, vertical, thickness, feather]
+uniform float u_params[8]; // [horizontal, vertical, thickness, feather, scaleX, scaleY, panX, panY]
 uniform vec2 u_resolution;
 uniform float u_unit;
 in vec2 v_texCoord;
 out vec4 outColor;
+${GLSL_TRANSFORM}
 
 void main() {
+    TR tr = getTransform_(v_texCoord, u_params[4], u_params[5], u_params[6], u_params[7]);
+
     // 1. Map sliders to frequency and parameters.
     float normX = u_params[0] / 100.0;
     float normY = u_params[1] / 100.0;
@@ -1284,7 +1330,7 @@ void main() {
     vec4 src = texture(u_image, v_texCoord);
 
     // 3. Simple integer projection.
-    vec2 uv = v_texCoord * freq;
+    vec2 uv = tr.localUV * freq;
 
     // Calculate Grid Mask with Anti-Aliasing & Feathering.
     // Scale widths by u_unit for resolution independence. 
@@ -1312,7 +1358,7 @@ void main() {
     // 5. Output Final Color (Balanced Additive)
     vec3 result = src.rgb * (1.0 - mask) + vec3(mask);
     float finalAlpha = mask + src.a * (1.0 - mask);
-    outColor = vec4(result, finalAlpha);
+    outColor = mix(src, vec4(result, finalAlpha), tr.mask);
 }
 `;
 
