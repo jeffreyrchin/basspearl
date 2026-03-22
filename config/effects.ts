@@ -178,6 +178,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Scale Y', { v: 50 }),
       p('Pan X', { v: 50 }),
       p('Pan Y', { v: 50 }),
+      p('Rotation', { v: 0 }),
     ],
   },
   SHAPE: {
@@ -194,6 +195,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Scale Y', { v: 25 }, { b: 'SUB' }),
       p('Pan X', { v: 50 }),
       p('Pan Y', { v: 50 }),
+      p('Rotation', { v: 0 }),
     ],
   },
   TILE: {
@@ -278,6 +280,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Scale Y', { v: 50 }),
       p('Pan X', { v: 50 }),
       p('Pan Y', { v: 50 }),
+      p('Rotation', { v: 0 }),
     ],
   },
   SPECTRAL_MAP: {
@@ -344,6 +347,20 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Rotate Z', { v: 0 }),
       p('Elevation', { v: 46 }, { v: 40 }),
       p('Distance', { v: 50 }),
+    ],
+  },
+  CHECKERBOARD: {
+    label: 'Checkerboard',
+    icon: 'grid_view',
+    category: 'Pattern',
+    params: [
+      p('Freq X', { v: 10 }),
+      p('Freq Y', { v: 10 }),
+      p('Scale X', { v: 50 }),
+      p('Scale Y', { v: 50 }),
+      p('Pan X', { v: 50 }),
+      p('Pan Y', { v: 50 }),
+      p('Rotation', { v: 0 }),
     ],
   },
   SCALE_PAN: {

@@ -15,25 +15,39 @@ struct TR {
     float mask;
 };
 
-// Affine transform: Supports arbitrary pivot and offset for gizmos
-TR getTransform_(vec2 uv_, vec2 scale_, vec2 pivot_, vec2 offset_) {
-    // 1. Inverse scale factors normalized to 100% (default)
+// Affine transform: Supports aspect-correct rotation, scale, and offset (pan)
+TR getTransform_(vec2 uv_, vec2 scale_, vec2 pivot_, vec2 offset_, float rotation_, vec2 res_) {
+    float aspect = res_.x / res_.y;
     float sx_ = max(scale_.x / 100.0, 0.0001);
     float sy_ = max(scale_.y / 100.0, 0.0001);
     
-    // 2. Linear Transform: Move space to Pivot -> Scale -> Translate -> Move back
-    // We transform the UVs inversely to manipulate the 'lookup window'
-    vec2 rel_ = (uv_ - pivot_ - (offset_ / 100.0)) / vec2(sx_, sy_) + pivot_;
+    // 1. Move space to Pivot and correct for aspect ratio
+    vec2 rel_ = uv_ - pivot_;
+    rel_.x *= aspect;
+
+    // 2. Rotate
+    float angle = -rotation_ / 100.0 * 6.28318530718;
+    float c = cos(angle), s = sin(angle);
+    rel_ = mat2(c, -s, s, c) * rel_;
     
-    // 3. Stencil Boundary Mask
+    // 3. Un-correct aspect, Scale and Offset (Inversely)
+    rel_.x /= aspect;
+    rel_ = (rel_ - (offset_ / 100.0)) / vec2(sx_, sy_) + pivot_;
+    
+    // 4. Stencil Boundary Mask
     float m_ = step(0.0, rel_.x) * step(rel_.x, 1.0) * step(0.0, rel_.y) * step(rel_.y, 1.0);
     
     return TR(rel_, m_);
 }
 
-// Overload for center-based effects with wide pan (0-100 -> -100 to 100)
+// Overload for center-based effects with wide pan (0-100 -> -100 to 100) and rotation
+TR getTransform_(vec2 uv_, float scaleX, float scaleY, float panX, float panY, float rotation, vec2 res_) {
+    return getTransform_(uv_, vec2(scaleX * 2.0, scaleY * 2.0), vec2(0.5), vec2((panX - 50.0) * 2.0, (panY - 50.0) * 2.0), rotation, res_);
+}
+
+// Overload for center-based effects with wide pan (0-100 -> -100 to 100) and no rotation
 TR getTransform_(vec2 uv_, float scaleX, float scaleY, float panX, float panY) {
-    return getTransform_(uv_, vec2(scaleX * 2.0, scaleY * 2.0), vec2(0.5), vec2((panX - 50.0) * 2.0, (panY - 50.0) * 2.0));
+    return getTransform_(uv_, vec2(scaleX * 2.0, scaleY * 2.0), vec2(0.5), vec2((panX - 50.0) * 2.0, (panY - 50.0) * 2.0), 0.0, vec2(1.0));
 }
 `;
 
@@ -666,7 +680,7 @@ void main() {
 export const GRAIN_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[11]; // [width, height, x-freq, y-freq, density, roundness, blend, scaleX, scaleY, panX, panY]
+uniform float u_params[12]; // [width, height, x-freq, y-freq, density, roundness, blend, scaleX, scaleY, panX, panY, rotation]
 uniform vec2 u_resolution;
 uniform float u_seed;
 in vec2 v_texCoord;
@@ -675,7 +689,7 @@ ${GLSL_TRANSFORM}
 ${GLSL_HASH}
 
 void main() {
-    TR tr = getTransform_(v_texCoord, u_params[7], u_params[8], u_params[9], u_params[10]);
+    TR tr = getTransform_(v_texCoord, u_params[7], u_params[8], u_params[9], u_params[10], u_params[11], u_resolution);
     // 1. Map sliders to frequency and parameters.
     float xScale = u_params[0] / 100.0;
     float yScale = u_params[1] / 100.0;
@@ -729,7 +743,7 @@ void main() {
 export const SHAPE_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[9]; // [side count, pointiness, roundness, feather, blend, scaleX, scaleY, panX, panY]
+uniform float u_params[10]; // [side count, pointiness, roundness, feather, blend, scaleX, scaleY, panX, panY, rotation]
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -746,7 +760,7 @@ float sdStar(vec2 p, float m, float aps, float inr, float edge) {
 }
 
 void main() {
-    TR tr = getTransform_(v_texCoord, u_params[5], u_params[6], u_params[7], u_params[8]);
+    TR tr = getTransform_(v_texCoord, u_params[5], u_params[6], u_params[7], u_params[8], u_params[9], u_resolution);
     float sides = max(floor(u_params[0]), 3.0);
     float roundFactor = u_params[2] / 100.0;
     float pointiness = (u_params[1] / 100.0) * (1.0 - roundFactor) * 0.99;
@@ -859,8 +873,6 @@ export const TILE_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[4]; // [scaleX, scaleY, panX, panY]
-uniform vec2 u_resolution;
-uniform float u_seed;
 in vec2 v_texCoord;
 out vec4 outColor;
 ${GLSL_TRANSFORM}
@@ -1208,7 +1220,7 @@ void main() {
 export const GRID_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[8]; // [horizontal, vertical, thickness, feather, scaleX, scaleY, panX, panY]
+uniform float u_params[9]; // [horizontal, vertical, thickness, feather, scaleX, scaleY, panX, panY, rotation]
 uniform vec2 u_resolution;
 uniform float u_unit;
 in vec2 v_texCoord;
@@ -1216,7 +1228,7 @@ out vec4 outColor;
 ${GLSL_TRANSFORM}
 
 void main() {
-    TR tr = getTransform_(v_texCoord, u_params[4], u_params[5], u_params[6], u_params[7]);
+    TR tr = getTransform_(v_texCoord, u_params[4], u_params[5], u_params[6], u_params[7], u_params[8], u_resolution);
 
     // 1. Map sliders to frequency and parameters.
     float normX = u_params[0] / 100.0;
@@ -1321,6 +1333,31 @@ void main() {
 }
 `;
 
+export const CHECKERBOARD_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[7]; // [freqX, freqY, scaleX, scaleY, panX, panY, rotation]
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+${GLSL_TRANSFORM}
+
+void main() {
+    TR tr = getTransform_(v_texCoord, u_params[2], u_params[3], u_params[4], u_params[5], u_params[6], u_resolution);
+
+    vec4 src = texture(u_image, v_texCoord);
+
+    vec2 grid = floor(tr.localUV * max(vec2(1.0), vec2(u_params[0], u_params[1])));
+    
+    // Calculate the grid value [0.0 or 1.0]
+    float val = mod(grid.x + grid.y, 2.0);
+
+    // Layer the checkerboard on top of the original image
+    float finalAlpha = val * tr.mask;
+    outColor = mix(src, vec4(vec3(finalAlpha), finalAlpha), finalAlpha);
+}
+`;
+
 export interface ShaderDefinition {
     name: string;
     fragmentSource: string;
@@ -1359,4 +1396,5 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     LUMINANCE_MAP: { name: 'LUMINANCE_MAP', fragmentSource: LUMINANCE_MAP_SHADER },
     TERRAIN: { name: 'TERRAIN', fragmentSource: '', velocityParamIndices: [2], is3D: true },
     SCALE_PAN: { name: 'SCALE_PAN', fragmentSource: SCALE_PAN_SHADER },
+    CHECKERBOARD: { name: 'CHECKERBOARD', fragmentSource: CHECKERBOARD_SHADER },
 };

@@ -30,7 +30,8 @@ export type GlitchEffectType =
   | 'SCROLL'
   | 'LUMINANCE_MAP'
   | 'TERRAIN'
-  | 'SCALE_PAN';
+  | 'SCALE_PAN'
+  | 'CHECKERBOARD';
 
 export type FrequencyBand = 'OFF' | 'SUB' | 'BASS' | 'MID' | 'TREBLE';
 
