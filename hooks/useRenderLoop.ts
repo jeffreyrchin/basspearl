@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { mainGlitchEngine } from '@/services/glitchEngine';
 import { SHARED_AUDIO_STATE } from '@/services/audioState';
 import { useAudioStore } from '../store/useAudioStore';
 import { mainAudioEngine } from '../services/audioEngine';
 import { useEffectStore } from '../store/useEffectStore';
 import { useLiveAudio } from './useLiveAudio';
+import { dragOverride } from '../services/dragOverride';
 
 export interface UseRenderLoopProps {
     canvasRef: React.RefObject<HTMLCanvasElement>;
@@ -45,8 +46,14 @@ export const useRenderLoop = ({
         isLiveModeRef.current = isLiveMode;
     }, [isLiveMode]);
 
+    // Track the "current time" in a ref so the drag render callback can use it
+    // without needing React state (which would cause a re-render).
+    const currentRenderTimeRef = useRef(0);
+
+
     const renderFrame = useCallback(async (time: number) => {
         if (!canvasRef.current) return;
+        currentRenderTimeRef.current = time;
 
         let smoothed = staticSmoothedRef.current;
         let frameIntegrated = staticIntegratedRef.current;
@@ -116,6 +123,15 @@ export const useRenderLoop = ({
             }
         );
     }, [isLiveMode, getLiveReactivity, canvasRef, imageFileRef]);
+
+    // Register a direct render callback into dragOverride so setDragOverride()
+    // can kick a frame render without going through React state at all.
+    useEffect(() => {
+        dragOverride.requestRender = () => {
+            renderFrame(currentRenderTimeRef.current);
+        };
+        return () => { dragOverride.requestRender = null; };
+    }, [renderFrame]);
 
     const scrubberPercent = useCallback((time: number, duration: number) => {
         return duration > 0 ? (time / duration) * 100 : 0;

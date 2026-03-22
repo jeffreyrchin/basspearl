@@ -1,4 +1,5 @@
 import { EffectConfig } from '../types';
+import { dragOverride } from './dragOverride';
 import { TextureManager } from './TextureManager';
 import { ShaderManager, BASE_VERTEX_SHADER, PASS_THROUGH_FRAGMENT_SHADER } from './ShaderManager';
 import { EffectPipeline } from './EffectPipeline';
@@ -255,9 +256,17 @@ export class GlitchEngine {
     // Fill reusable buffers instead of creating new ones
     this.uIntegratedBuffer.fill(currentTime || 0);
 
+    // If there is an active drag override for this effect, read from it directly —
+    // this avoids a Zustand store update + React re-render on every pointermove.
+    const liveOverrides = dragOverride.effectId === effect.id ? dragOverride.params : null;
+
     params.forEach((p, i) => {
       if (i < 16) {
-        let finalValue = p.value;
+        const override = liveOverrides?.find(o => o.index === i);
+        let finalMax = override?.value !== undefined ? override.value : p.value;
+        let finalMin = override?.min !== undefined ? override.min : p.min;
+        let finalValue = finalMax;
+
         const isVelocityParam = meta.velocityParamIndices?.includes(i);
 
         if (p.frequencyBand !== 'OFF') {
@@ -269,10 +278,10 @@ export class GlitchEngine {
               else if (p.frequencyBand === 'MID') audioClock = integratedReactivity.mid;
               else if (p.frequencyBand === 'TREBLE') audioClock = integratedReactivity.treble;
 
-              const range = p.value - p.min;
+              const range = finalMax - finalMin;
               const steadyTime = (currentTime || 0);
 
-              this.uIntegratedBuffer[i] = (p.min * steadyTime) + (range * audioClock);
+              this.uIntegratedBuffer[i] = (finalMin * steadyTime) + (range * audioClock);
               finalValue = 1.0;
             }
           } else {
@@ -283,8 +292,8 @@ export class GlitchEngine {
               else if (p.frequencyBand === 'MID') energy = reactivity.mid;
               else if (p.frequencyBand === 'TREBLE') energy = reactivity.treble;
 
-              const range = p.value - p.min;
-              finalValue = p.min + (range * energy);
+              const range = finalMax - finalMin;
+              finalValue = finalMin + (range * energy);
             }
           }
         }

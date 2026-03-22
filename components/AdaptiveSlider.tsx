@@ -1,6 +1,8 @@
 import React, { useRef, useState, useEffect, useCallback, memo } from 'react';
 import { FrequencyBand } from '../types';
 import { SHARED_AUDIO_STATE, BAND_INDEX } from '../services/audioState';
+import { setDragOverride, clearDragOverride } from '../services/dragOverride';
+import { useDragSync } from '../hooks/useDragSync';
 
 interface AdaptiveSliderProps {
     value: number;
@@ -8,6 +10,8 @@ interface AdaptiveSliderProps {
     frequencyBand: FrequencyBand;
     onChange: (update: { value?: number, min?: number }) => void;
     onPointerDown?: () => void;
+    effectId?: string;
+    paramIdx?: number;
 }
 
 type Mode = 'none' | 'left' | 'right' | 'middle';
@@ -21,11 +25,18 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     min,
     frequencyBand,
     onChange,
-    onPointerDown
+    onPointerDown,
+    effectId,
+    paramIdx
 }) => {
     // --- Refs for Performance & Animation ---
     const trackRef = useRef<HTMLDivElement>(null);
+    const trackFillRef = useRef<HTMLDivElement>(null);
     const needleRef = useRef<HTMLDivElement>(null);
+    const thumbRef = useRef<HTMLDivElement>(null);
+    const minThumbRef = useRef<HTMLDivElement>(null);
+    const valueLabelRef = useRef<HTMLSpanElement>(null);
+    const minLabelRef = useRef<HTMLSpanElement>(null);
     const onChangeRef = useRef(onChange);
 
     // Keep range in refs for zero-render needle updates
@@ -47,6 +58,27 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
         currentMinRef.current = min;
         currentMaxRef.current = value;
     }, [min, value]);
+
+    // --- 0. Drag Override Subscription (Direct DOM Update) ---
+    useDragSync(effectId, paramIdx, useCallback((liveValue, liveMinOverride) => {
+        // Direct DOM manipulation: bypass React entirely for 60fps sliders
+        if (liveValue !== undefined) {
+            if (thumbRef.current) thumbRef.current.style.left = `${liveValue}%`;
+            if (valueLabelRef.current) valueLabelRef.current.innerText = Math.round(liveValue).toString();
+        }
+        if (liveMinOverride !== undefined) {
+            if (minThumbRef.current) minThumbRef.current.style.left = `${liveMinOverride}%`;
+            if (minLabelRef.current) minLabelRef.current.innerText = Math.round(liveMinOverride).toString();
+        }
+
+        // Update the visual track fill
+        if (trackFillRef.current) {
+            const currentLiveMin = liveMinOverride !== undefined ? liveMinOverride : currentMinRef.current;
+            const currentLiveValue = liveValue !== undefined ? liveValue : currentMaxRef.current;
+            trackFillRef.current.style.left = `${Math.min(currentLiveMin, currentLiveValue)}%`;
+            trackFillRef.current.style.width = `${Math.abs(currentLiveValue - currentLiveMin)}%`;
+        }
+    }, []));
 
     // Memoized Drag Initialization
     const handleDragStart = useCallback((clientX: number, mode: Mode) => {
@@ -96,24 +128,49 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
 
             if (dragMode === 'left') {
                 const newMin = Math.max(0, Math.min(100, Math.round(startMinRef.current + deltaPercent)));
-                if (newMin !== currentMinRef.current) onChangeRef.current({ min: newMin });
-            } else if (dragMode === 'right') {
-                const newMax = Math.max(0, Math.min(100, Math.round(startMaxRef.current + deltaPercent)));
-                if (newMax !== currentMaxRef.current) onChangeRef.current({ value: newMax });
-            } else if (dragMode === 'middle') {
-                const shift = Math.round(deltaPercent);
-                const newMin = startMinRef.current + shift;
-                const newMax = startMaxRef.current + shift;
+                if (newMin !== currentMinRef.current) {
+                    currentMinRef.current = newMin;
 
-                if (newMin >= 0 && newMin <= 100 && newMax >= 0 && newMax <= 100) {
-                    if (newMin !== currentMinRef.current || newMax !== currentMaxRef.current) {
-                        onChangeRef.current({ min: newMin, value: newMax });
+                    // High-performance path: update the override module directly
+                    if (effectId && paramIdx !== undefined) {
+                        setDragOverride(effectId, [{ index: paramIdx, min: newMin }]);
+                    }
+                }
+            } else if (dragMode === 'right' || dragMode === 'middle') {
+                const shift = Math.round(deltaPercent);
+                const newMax = Math.max(0, Math.min(100, Math.round(startMaxRef.current + (dragMode === 'middle' ? shift : deltaPercent))));
+
+                if (dragMode === 'middle') {
+                    const newMin = Math.max(0, Math.min(100, startMinRef.current + shift));
+                    currentMinRef.current = newMin;
+                }
+
+                if (newMax !== currentMaxRef.current || dragMode === 'middle') {
+                    currentMaxRef.current = newMax;
+
+                    // High-performance path: update the override module directly
+                    if (effectId && paramIdx !== undefined) {
+                        setDragOverride(effectId, [{
+                            index: paramIdx,
+                            value: newMax,
+                            min: dragMode === 'middle' ? currentMinRef.current : undefined
+                        }]);
                     }
                 }
             }
         };
 
-        const handleEnd = () => setDragMode('none');
+        const handleEnd = () => {
+            // Commit final state to React/Zustand exactly ONCE
+            if (effectId && paramIdx !== undefined) {
+                clearDragOverride();
+                onChangeRef.current({
+                    value: currentMaxRef.current,
+                    min: currentMinRef.current
+                });
+            }
+            setDragMode('none');
+        };
 
         window.addEventListener('pointermove', handleMove, { passive: true });
         window.addEventListener('pointerup', handleEnd);
@@ -133,6 +190,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                     <div className="absolute inset-x-0 h-7 bg-white/10 overflow-hidden rounded-full top-1/2 -translate-y-1/2 touch-none">
                         <div className="absolute inset-x-[16px] inset-y-0">
                             <div
+                                ref={trackFillRef}
                                 onPointerDown={(e) => { e.preventDefault(); handleDragStart(e.clientX, 'middle'); }}
                                 className="absolute h-full bg-primary/20 cursor-grab active:cursor-grabbing"
                                 style={{
@@ -145,8 +203,12 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
 
                     {/* Interactive Elements Layer */}
                     <div className="absolute inset-x-[16px] inset-y-0 pointer-events-none">
-                        <SliderHandle label="Min" value={min} mode="left" onStart={handleDragStart} onKeyUpdate={d => onChangeRef.current({ min: Math.max(0, Math.min(100, min + d)) })} />
-                        <SliderHandle label="Max" value={value} mode="right" onStart={handleDragStart} onKeyUpdate={d => onChangeRef.current({ value: Math.max(0, Math.min(100, value + d)) })} />
+                        <div ref={minThumbRef} className="absolute inset-y-0 pointer-events-none" style={{ left: `${min}%` }}>
+                            <SliderHandle label="Min" value={min} mode="left" onStart={handleDragStart} onKeyUpdate={d => onChangeRef.current({ min: Math.max(0, Math.min(100, min + d)) })} labelRef={minLabelRef} />
+                        </div>
+                        <div ref={thumbRef} className="absolute inset-y-0 pointer-events-none" style={{ left: `${value}%` }}>
+                            <SliderHandle label="Max" value={value} mode="right" onStart={handleDragStart} onKeyUpdate={d => onChangeRef.current({ value: Math.max(0, Math.min(100, value + d)) })} labelRef={valueLabelRef} />
+                        </div>
 
                         <div ref={needleRef} className="absolute h-7 pointer-events-none z-10 top-1/2 -translate-y-1/2"
                             style={{ left: `${min}%`, width: '2px', backgroundColor: '#fb00ff' }}
@@ -173,13 +235,16 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                     className="w-full h-10 mt-2 bg-transparent appearance-none cursor-pointer custom-slider relative z-10"
                 />
                 <div className="absolute inset-x-[16px] inset-y-0 pointer-events-none">
-                    <SliderHandle
-                        label="Value"
-                        value={value}
-                        mode="right"
-                        onStart={handleDragStart}
-                        onKeyUpdate={d => onChange({ value: Math.max(0, Math.min(100, value + d)) })}
-                    />
+                    <div ref={thumbRef} className="absolute inset-y-0 pointer-events-none" style={{ left: `${value}%` }}>
+                        <SliderHandle
+                            label="Value"
+                            value={value}
+                            mode="right"
+                            onStart={handleDragStart}
+                            onKeyUpdate={d => onChange({ value: Math.max(0, Math.min(100, value + d)) })}
+                            labelRef={valueLabelRef}
+                        />
+                    </div>
                 </div>
             </div>
         </div>
@@ -191,8 +256,9 @@ const SliderHandle = memo<{
     value: number,
     mode: Mode,
     onStart: (cx: number, m: Mode) => void,
-    onKeyUpdate: (d: number) => void
-}>(({ label, value, mode, onStart, onKeyUpdate }) => (
+    onKeyUpdate: (d: number) => void,
+    labelRef?: React.RefObject<HTMLSpanElement>
+}>(({ label, value, mode, onStart, onKeyUpdate, labelRef }) => (
     <div
         role="slider"
         aria-label={label}
@@ -211,13 +277,12 @@ const SliderHandle = memo<{
             if (e.key === 'ArrowRight') onKeyUpdate(e.shiftKey ? 10 : 1);
         }}
         className={`absolute w-8 h-8 z-20 top-1/2 group/handle outline-none focus-visible:ring-1 focus-visible:ring-primary/60 touch-none pointer-events-auto cursor-pointer hover:scale-110 hover:z-31 active:z-31 focus-within:z-30 transition-transform -translate-x-1/2 -translate-y-1/2 origin-center before:absolute before:content-[''] before:bg-transparent before:w-8 before:h-10 before:top-1/2 before:left-1/2 before:-translate-y-1/2 before:-translate-x-1/2`}
-        style={{ left: `${value}%` }}
     >
         <div className="absolute inset-0 bg-slate-700/50 border-2 border-white/60 rounded-full" />
 
         {/* Percentage Label */}
         <div key={`${mode}-label`} className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-            <span className="text-white font-mono font-medium text-[10px] select-none">
+            <span ref={labelRef} className="text-white font-mono font-medium text-[10px] select-none">
                 {Math.round(value)}
             </span>
         </div>

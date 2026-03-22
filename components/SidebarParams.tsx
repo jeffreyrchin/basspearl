@@ -70,6 +70,8 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
                                 frequencyBand={param.frequencyBand}
                                 onPointerDown={() => commitHistory()}
                                 onChange={(update) => updateParameter(selectedEffect.id, paramIdx, update)}
+                                effectId={selectedEffect.id}
+                                paramIdx={paramIdx}
                             />
                         </div>
                     );
