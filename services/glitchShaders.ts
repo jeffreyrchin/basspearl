@@ -15,14 +15,14 @@ struct TR {
     float mask;
 };
 
-// Affine transform: Supports aspect-correct rotation, scale, and offset (pan)
+// Affine transform: Supports localized aspect-correct rotation, scale, and offset (pan)
 TR getTransform_(vec2 uv_, vec2 scale_, vec2 pivot_, vec2 offset_, float rotation_, vec2 res_) {
     float aspect = res_.x / res_.y;
     float sx_ = max(scale_.x / 100.0, 0.0001);
     float sy_ = max(scale_.y / 100.0, 0.0001);
     
-    // 1. Move space to Pivot and correct for aspect ratio
-    vec2 rel_ = uv_ - pivot_;
+    // 1. Move space to the panned center (pivot + offset) and correct for aspect ratio
+    vec2 rel_ = uv_ - (pivot_ + offset_ / 100.0);
     rel_.x *= aspect;
 
     // 2. Rotate
@@ -30,9 +30,9 @@ TR getTransform_(vec2 uv_, vec2 scale_, vec2 pivot_, vec2 offset_, float rotatio
     float c = cos(angle), s = sin(angle);
     rel_ = mat2(c, -s, s, c) * rel_;
     
-    // 3. Un-correct aspect, Scale and Offset (Inversely)
+    // 3. Un-correct aspect, scale relative to the local center, and move to pivot
     rel_.x /= aspect;
-    rel_ = (rel_ - (offset_ / 100.0)) / vec2(sx_, sy_) + pivot_;
+    rel_ = rel_ / vec2(sx_, sy_) + pivot_;
     
     // 4. Stencil Boundary Mask
     float m_ = step(0.0, rel_.x) * step(rel_.x, 1.0) * step(0.0, rel_.y) * step(rel_.y, 1.0);
