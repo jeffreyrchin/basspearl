@@ -8,14 +8,14 @@ import { subscribeToDrag, LiveParamOverride } from '../services/dragOverride';
  * 
  * @param effectId The ID of the effect being dragged.
  * @param paramIdx The index of the parameter being updated.
- * @param callback The function to run when the parameter is updated. It receives the new `value` (Max) and `min`.
+ * @param callback The function to run when the parameter is updated. It receives the new value (max).
  */
 
 // Overload 1: Single Parameter Mode (Sliders)
 export function useDragSync(
     effectId: string | undefined | null,
     paramIdx: number | undefined | null,
-    callback: (value?: number, min?: number) => void
+    callback: (value?: number) => void
 ): void;
 
 // Overload 2: Multi-Parameter Mode (Gizmo)
@@ -46,8 +46,8 @@ export function useDragSync(
                 const override = params.find(p => p.index === paramIdx);
                 if (!override) return;
 
-                if (override.value !== undefined || override.min !== undefined) {
-                    callback(override.value, override.min);
+                if (override.value !== undefined) {
+                    callback(override.value);
                 }
             } else {
                 // Mode 2: Gizmo (All Parameters)
