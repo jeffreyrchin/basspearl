@@ -117,15 +117,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Inversion', { v: 100 }),
     ],
   },
-  SCALE: {
-    label: 'Scale',
-    icon: 'aspect_ratio',
-    category: 'Spatial',
-    params: [
-      p('Width', { v: 70, m: 50, b: 'BASS' }, { v: 100, b: 'SUB' }),
-      p('Height', { v: 70, m: 50, b: 'BASS' }, { v: 100, b: 'SUB' }),
-    ],
-  },
   ROTATE: {
     label: 'Rotate',
     icon: 'rotate_right',
@@ -159,15 +150,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     params: [
       p('Density', { v: 40 }),
       p('Speed', { v: 40, b: 'SUB' }, { v: 5 }),
-    ],
-  },
-  RETRO_GRID: {
-    label: 'Retro Grid',
-    icon: 'grid_on',
-    category: 'Pattern',
-    params: [
-      p('Thickness', { v: 100 }),
-      p('Speed', { v: 10 }),
     ],
   },
   TUNNEL_WARP: {
@@ -217,12 +199,12 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
   TILE: {
     label: 'Tile',
     icon: 'apps',
-    category: 'Pattern',
+    category: 'Spatial',
     params: [
-      p('X-Freq', { v: 15 }),
-      p('Y-Freq', { v: 15 }),
-      p('Density', { v: 100 }),
-      p('Jitter', { v: 0 }),
+      p('Scale X', { v: 15 }),
+      p('Scale Y', { v: 15 }),
+      p('Pan X', { v: 50 }),
+      p('Pan Y', { v: 50 }),
     ],
   },
   ORGANIC_NOISE: {
@@ -335,15 +317,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Center Y', { v: 50 }),
     ],
   },
-  PAN: {
-    label: 'Pan',
-    icon: 'open_with',
-    category: 'Spatial',
-    params: [
-      p('Pan X', { v: 10 }, { v: 100, b: 'SUB' }),
-      p('Pan Y', { v: 10 }, { v: 100, b: 'SUB' }),
-    ],
-  },
   SCROLL: {
     label: 'Scroll',
     icon: 'sync_alt',
@@ -371,6 +344,17 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Rotate Z', { v: 0 }),
       p('Elevation', { v: 46 }, { v: 40 }),
       p('Distance', { v: 50 }),
+    ],
+  },
+  SCALE_PAN: {
+    label: 'Scale-Pan',
+    icon: 'open_with',
+    category: 'Spatial',
+    params: [
+      p('Scale X', { v: 50 }),
+      p('Scale Y', { v: 50 }),
+      p('Pan X', { v: 50 }),
+      p('Pan Y', { v: 50 }),
     ],
   },
 };

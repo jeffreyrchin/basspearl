@@ -46,7 +46,7 @@ export const getThumbnailDataUrl = (effects: EffectConfig[]): Promise<string> =>
 
         const firstType = effects[0]?.type;
         let imageSrc = "./girlvibe_square.jpeg";
-        if (firstType === 'STARFIELD' || firstType === 'RETRO_GRID' || effects.length > 1) {
+        if (firstType === 'STARFIELD' || effects.length > 1) {
             imageSrc = "./black.png";
         }
 
@@ -80,7 +80,7 @@ export const renderThumbnail = (
         // Use black background for generators and macros
         const firstType = effects[0]?.type;
         let imageSrc = "./girlvibe_square.jpeg";
-        if (firstType === 'STARFIELD' || firstType === 'RETRO_GRID' || effects.length > 1) {
+        if (firstType === 'STARFIELD' || effects.length > 1) {
             imageSrc = "./black.png";
         }
 

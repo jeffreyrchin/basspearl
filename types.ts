@@ -11,12 +11,10 @@ export type GlitchEffectType =
   | 'COMPRESSION_HELL'
   | 'HUE_ROTATION'
   | 'INVERT'
-  | 'SCALE'
   | 'ROTATE'
   | 'SKEW'
   | 'SCREEN_SHAKE'
   | 'STARFIELD'
-  | 'RETRO_GRID'
   | 'TUNNEL_WARP'
   | 'GRAIN'
   | 'GRID'
@@ -29,10 +27,10 @@ export type GlitchEffectType =
   | 'EDGE_MASK'
   | 'BLACK_HOLE'
   | 'WHITE_HOLE'
-  | 'PAN'
   | 'SCROLL'
   | 'LUMINANCE_MAP'
-  | 'TERRAIN';
+  | 'TERRAIN'
+  | 'SCALE_PAN';
 
 export type FrequencyBand = 'OFF' | 'SUB' | 'BASS' | 'MID' | 'TREBLE';
 
@@ -63,7 +61,15 @@ export interface EffectMetadata {
   params: EffectParamMetadata[];
 }
 
-export type MacroType = 'FOG_VORTEX' | 'RAINBOW_DOT' | 'RUBBER_BAND' | 'METRO' | 'LANDSCAPE' | 'WATER' | 'ICE';
+export type MacroType =
+  'FOG_VORTEX' |
+  'RAINBOW_DOT' |
+  'RUBBER_BAND' |
+  'METRO' |
+  'LANDSCAPE' |
+  'WATER' |
+  'ICE' |
+  'GRID_PLANE';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;

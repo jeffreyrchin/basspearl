@@ -316,5 +316,40 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         melded: false
       }
     ]
+  },
+  GRID_PLANE: {
+    id: 'GRID_PLANE',
+    label: 'Grid Plane',
+    effects: [
+      {
+        type: 'GRID',
+        params: [
+          o('Horizontal', { v: 30, b: 'OFF' }),
+          o('Vertical', { v: 30, b: 'OFF' }),
+          o('Thickness', { v: 1, b: 'OFF' }),
+          o('Feather', { v: 30, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TERRAIN',
+        params: [
+          o('Scale', { v: 5, b: 'OFF' }),
+          o('Extrusion', { v: 0, b: 'OFF' }),
+          o('Speed', { v: 10, b: 'OFF' }),
+          o('Resolution', { v: 100, b: 'OFF' }),
+          o('Rotate X', { v: 0, b: 'OFF' }),
+          o('Rotate Y', { v: 0, b: 'OFF' }),
+          o('Rotate Z', { v: 0, b: 'OFF' }),
+          o('Elevation', { v: 50, b: 'OFF' }),
+          o('Distance', { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
   }
 };

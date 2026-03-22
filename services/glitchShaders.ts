@@ -452,27 +452,6 @@ void main() {
 }
 `;
 
-export const SCALE_SHADER = `#version 300 es
-precision highp float;
-uniform sampler2D u_image;
-uniform float u_params[2]; // [width, height]
-in vec2 v_texCoord;
-out vec4 outColor;
-
-void main() {
-    float scaleX = max(0.01, 2.0 * u_params[0] / 100.0);
-    float scaleY = max(0.01, 2.0 * u_params[1] / 100.0);
-
-    vec2 uv = (v_texCoord - 0.5);
-    uv.x /= scaleX;
-    uv.y /= scaleY;
-    uv += 0.5;
-
-    float inBounds = step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0);
-    outColor = texture(u_image, uv) * inBounds;
-}
-`;
-
 export const ROTATE_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
@@ -644,48 +623,6 @@ void main() {
     // Balanced Additive: 1:1 Light/Background compensation to prevent halos
     vec3 result = src.rgb * (1.0 - starAlpha) + color; 
     float finalAlpha = starAlpha + src.a * (1.0 - starAlpha);
-    outColor = vec4(result, finalAlpha);
-}
-`;
-
-export const RETRO_GRID_SHADER = `#version 300 es
-precision highp float;
-uniform sampler2D u_image;
-uniform float u_params[2]; // [thickness, speed]
-uniform float u_integrated_values[8];
-uniform vec2 u_resolution;
-in vec2 v_texCoord;
-out vec4 outColor;
-
-void main() {
-    float thickness = u_params[0] / 100.0 * 0.1;
-    float speed = u_params[1] / 100.0;
-    float time = u_integrated_values[1] * speed * 10.0;
-
-    vec2 uv = (v_texCoord - 0.5) * u_resolution / u_resolution.y;
-
-    // Perspective: Split into floor and ceiling
-    float horizon = 0.0;
-    float depth = 1.0 / (abs(uv.y - horizon) + 0.01);
-
-    // Grid coordinates
-    vec2 gridUV = vec2(uv.x * depth, depth + time);
-
-    // Line calculation
-    vec2 grid = abs(fract(gridUV - 0.5) - 0.5);
-    float lines = smoothstep(thickness, 0.0, grid.x) + smoothstep(thickness * 2.0, 0.0, grid.y);
-
-    // Fade out at the horizon and edges
-    float fade = smoothstep(12.0, 3.0, depth) * smoothstep(0.0, 0.1, abs(uv.y));
-    
-    vec3 gridColor = vec3(1.0, 0.0, 1.0) * lines * fade;
-    
-    vec4 src = texture(u_image, v_texCoord);
-    float gridAlpha = clamp(lines * fade, 0.0, 1.0);
-
-    // Balanced Additive: Compensate background for gridColor
-    vec3 result = src.rgb * (1.0 - gridAlpha) + gridColor;
-    float finalAlpha = gridAlpha + src.a * (1.0 - gridAlpha);
     outColor = vec4(result, finalAlpha);
 }
 `;
@@ -921,52 +858,17 @@ void main() {
 export const TILE_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[4]; // [xFreq, yFreq, density, jitter]
+uniform float u_params[4]; // [scaleX, scaleY, panX, panY]
 uniform vec2 u_resolution;
 uniform float u_seed;
 in vec2 v_texCoord;
 out vec4 outColor;
-
-${GLSL_HASH}
+${GLSL_TRANSFORM}
 
 void main() {
-    vec2 freq = max(vec2(1.0), floor(exp2(vec2(u_params[0], u_params[1]) * 0.08)));
-    float density = u_params[2] / 100.0;
-    float jitter = u_params[3] / 100.0;
-    
-    vec2 uv = v_texCoord * freq;
-    uvec2 currentCell = uvec2(ivec2(floor(uv)));
-    vec2 localV = fract(uv) - 0.5;
-    
-    vec4 finalColor = vec4(0.0);
-
-    // 3x3 Search loop is required to prevent clipping and allow organic overlap
-    for (int y = -1; y <= 1; y++) {
-        for (int x = -1; x <= 1; x++) {
-            ivec2 off = ivec2(x, y);
-            uvec2 cell = uvec2(ivec2(currentCell) + off);
-            
-            // Optimized: Calculate one robust hash per cell and derive others
-            float h = hash(vec2(cell), u_seed);
-            float dActive = step(1.0 - density, h);
-
-            // Jittered center in cell space (derived cheaply from same hash)
-            vec2 offset = vec2(h, fract(h * 43758.5453123)) - 0.5;
-            vec2 p = localV - vec2(off) - offset * jitter;
-
-            // Sample the incoming shape texture (centered at 0.5, 0.5)
-            vec2 sampleUV = p + 0.5;
-
-            // Bounds check to prevent edge smearing (branch-free)
-            float mask = step(0.0, sampleUV.x) * step(sampleUV.x, 1.0) * 
-                         step(0.0, sampleUV.y) * step(sampleUV.y, 1.0);
-            
-            vec4 sampled = texture(u_image, sampleUV) * dActive * mask;
-            finalColor = max(finalColor, sampled);
-        }
-    }
-
-    outColor = finalColor;
+    TR tr = getTransform_(v_texCoord, u_params[0], u_params[1], u_params[2], u_params[3]);
+    vec2 uv = fract(tr.localUV);
+    outColor = texture(u_image, uv);
 }
 `;
 
@@ -1365,20 +1267,6 @@ void main() {
 }
 `;
 
-export const PAN_SHADER = `#version 300 es
-precision highp float;
-uniform sampler2D u_image;
-uniform float u_params[2]; // [X Offset, Y Offset]
-in vec2 v_texCoord;
-out vec4 outColor;
-
-void main() {
-    vec2 offset = vec2(u_params[0], u_params[1]) / 100.0;
-    vec2 coord = fract(v_texCoord - offset);
-    outColor = texture(u_image, coord);
-}
-`;
-
 export const SCROLL_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
@@ -1418,6 +1306,21 @@ void main() {
 }
 `;
 
+export const SCALE_PAN_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[4]; // [Scale X, Scale Y, Pan X, Pan Y]
+in vec2 v_texCoord;
+out vec4 outColor;
+${GLSL_TRANSFORM}
+
+void main() {
+    TR tr = getTransform_(v_texCoord, u_params[0], u_params[1], u_params[2], u_params[3]);
+    vec4 src = texture(u_image, tr.localUV);
+    outColor = mix(vec4(0.0), src, tr.mask);
+}
+`;
+
 export interface ShaderDefinition {
     name: string;
     fragmentSource: string;
@@ -1438,11 +1341,9 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     COMPRESSION_HELL: { name: 'COMPRESSION_HELL', fragmentSource: COMPRESSION_HELL_SHADER },
     SCREEN_SHAKE: { name: 'SCREEN_SHAKE', fragmentSource: SCREEN_SHAKE_SHADER, velocityParamIndices: [1] },
     STARFIELD: { name: 'STARFIELD', fragmentSource: STARFIELD_SHADER, velocityParamIndices: [1] },
-    RETRO_GRID: { name: 'RETRO_GRID', fragmentSource: RETRO_GRID_SHADER, velocityParamIndices: [1] },
     TUNNEL_WARP: { name: 'TUNNEL_WARP', fragmentSource: TUNNEL_WARP_SHADER, velocityParamIndices: [1] },
     GRAIN: { name: 'GRAIN', fragmentSource: GRAIN_SHADER },
     SHAPE: { name: 'SHAPE', fragmentSource: SHAPE_SHADER },
-    SCALE: { name: 'SCALE', fragmentSource: SCALE_SHADER },
     ROTATE: { name: 'ROTATE', fragmentSource: ROTATE_SHADER, velocityParamIndices: [1] },
     SKEW: { name: 'SKEW', fragmentSource: SKEW_SHADER },
     TILE: { name: 'TILE', fragmentSource: TILE_SHADER },
@@ -1454,8 +1355,8 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     WHITE_HOLE: { name: 'WHITE_HOLE', fragmentSource: WHITE_HOLE_SHADER },
     GRID: { name: 'GRID', fragmentSource: GRID_SHADER },
     SPECTRAL_MAP: { name: 'SPECTRAL_MAP', fragmentSource: SPECTRAL_MAP_SHADER, velocityParamIndices: [2] },
-    PAN: { name: 'PAN', fragmentSource: PAN_SHADER },
     SCROLL: { name: 'SCROLL', fragmentSource: SCROLL_SHADER, velocityParamIndices: [0, 1, 2, 3] },
     LUMINANCE_MAP: { name: 'LUMINANCE_MAP', fragmentSource: LUMINANCE_MAP_SHADER },
     TERRAIN: { name: 'TERRAIN', fragmentSource: '', velocityParamIndices: [2], is3D: true },
+    SCALE_PAN: { name: 'SCALE_PAN', fragmentSource: SCALE_PAN_SHADER },
 };
