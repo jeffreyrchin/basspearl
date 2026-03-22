@@ -30,8 +30,8 @@ export const useCanvasSelection = (canvasRef: React.RefObject<HTMLCanvasElement>
             const panYParam = effect.params.find(p => p.param === 'Pan Y');
 
             if (scaleXParam && scaleYParam && panXParam && panYParam) {
-                const sx = scaleXParam.value;
-                const sy = scaleYParam.value;
+                const sx = scaleXParam.value * 2;
+                const sy = scaleYParam.value * 2;
                 const posX = panXParam.value;
                 const posY = panYParam.value;
 

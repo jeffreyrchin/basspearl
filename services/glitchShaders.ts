@@ -33,7 +33,7 @@ TR getTransform_(vec2 uv_, vec2 scale_, vec2 pivot_, vec2 offset_) {
 
 // Overload for center-based effects with wide pan (0-100 -> -100 to 100)
 TR getTransform_(vec2 uv_, float scaleX, float scaleY, float panX, float panY) {
-    return getTransform_(uv_, vec2(scaleX, scaleY), vec2(0.5), vec2((panX - 50.0) * 2.0, (panY - 50.0) * 2.0));
+    return getTransform_(uv_, vec2(scaleX * 2.0, scaleY * 2.0), vec2(0.5), vec2((panX - 50.0) * 2.0, (panY - 50.0) * 2.0));
 }
 `;
 
