@@ -47,6 +47,8 @@ interface EffectState {
     batchUnmeld: () => void;
     updateParameter: (effectId: string, paramIndex: number, update: Partial<EffectConfig['params'][0]>) => void;
     updateMultipleParameters: (effectId: string, updates: { paramIndex: number, update: Partial<EffectConfig['params'][0]> }[]) => void;
+
+    addColor: () => void;
 }
 
 export const useEffectStore = create<EffectState>((set, get) => ({
@@ -75,7 +77,10 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     activeDropdownId: null,
     setActiveDropdownId: (activeDropdownId) => set({ activeDropdownId }),
 
-    setEffects: (effects) => set({ effects }),
+    setEffects: (effects) => {
+        get().commitHistory();
+        set({ effects })
+    },
 
     setIsInSelectMode: (isInSelectMode) => set({ isInSelectMode: isInSelectMode }),
 
@@ -180,12 +185,43 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         }));
     },
 
+    addColor: () => {
+        const { selectedIds } = get();
+        if (selectedIds.size !== 1) return;
+        set((state) => {
+            const next = [...state.effects];
+            const selectedId = selectedIds.values().next().value;
+            const idx = next.findIndex(e => e.id === selectedId);
+
+            if (idx === -1) return {};
+            if (next[idx].type === 'RGBA') return {};
+
+            let targetSelection: Set<string>;
+            if (next[idx + 1] && next[idx + 1].type === 'RGBA') {
+                targetSelection = new Set([next[idx + 1].id]);
+            } else {
+                get().commitHistory();
+                analytics.effect.added('RGBA');
+                const newEffect = createEffectInstance('RGBA');
+                newEffect.melded = next[idx].melded;
+                next[idx] = { ...next[idx], melded: true };
+                next.splice(idx + 1, 0, newEffect);
+                targetSelection = new Set([newEffect.id]);
+            }
+            return {
+                effects: next,
+                selectedIds: targetSelection
+            };
+        });
+        get().pushFocus('inspector');
+    },
+
     addMacro: (macroType) => {
-        get().commitHistory();
-        analytics.effect.added(`MACRO_${macroType}` as any);
         const newEffects = createMacroInstance(macroType);
         if (newEffects.length === 0) return;
 
+        get().commitHistory();
+        analytics.effect.added(`MACRO_${macroType}` as any);
         set((state) => ({
             effects: [...state.effects, ...newEffects],
             isSidebarOpen: true,

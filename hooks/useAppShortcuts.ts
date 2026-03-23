@@ -50,7 +50,7 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
             if (section === 'window') {
                 const windowType = container?.dataset.window as 'inspector' | 'library' | undefined;
                 if (windowType) pushFocus(windowType);
-            } else if (section === 'pipeline') {
+            } else if (section === 'pipeline' || section === 'viewport') {
                 pushFocus('pipeline');
             }
         };
@@ -64,7 +64,7 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
             if (section === 'window') {
                 const windowType = container?.dataset.window as 'inspector' | 'library' | undefined;
                 if (windowType) pushFocus(windowType);
-            } else if (section === 'pipeline') {
+            } else if (section === 'pipeline' || section === 'viewport') {
                 pushFocus('pipeline');
             }
         };

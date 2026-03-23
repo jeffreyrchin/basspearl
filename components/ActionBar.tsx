@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useEffectStore } from '../store/useEffectStore';
+import { EFFECT_METADATA } from '../config/effects';
 
 interface ActionBarProps { }
 
@@ -15,6 +16,15 @@ const ActionBar: React.FC<ActionBarProps> = () => {
     const focusStack = useEffectStore(s => s.focusStack);
     const pushFocus = useEffectStore(s => s.pushFocus);
     const isInspectorOpen = focusStack.includes('inspector');
+
+    const addColor = useEffectStore(s => s.addColor);
+
+    const [selectedId, selectedEffect, canAddColor] = useMemo(() => {
+        const selectedId = selectionCount === 1 ? selectedIds.values().next().value : null;
+        const selectedEffect = effects.find(e => e.id === selectedId);
+        const canAddColor = selectedEffect && EFFECT_METADATA[selectedEffect?.type]?.isColorable;
+        return [selectedId, selectedEffect, canAddColor];
+    }, [selectionCount, selectedIds, effects]); // Only run when selectionCount, selectedIds, or effects change
 
     // Check if selected effects are contiguous (for meld eligibility)
     const canMeld = useMemo(() => {
@@ -51,6 +61,18 @@ const ActionBar: React.FC<ActionBarProps> = () => {
                 title="Show Inspector (I)"
             >
                 <span className="material-symbols-outlined text-[16px]">tune</span>
+            </button>
+
+            <div className="w-[1px] h-4 bg-white/20" />
+
+            {/* Add Color — only for single selection */}
+            <button
+                disabled={!selectedId || !selectedEffect || !canAddColor}
+                onClick={addColor}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest enabled:hover:text-white enabled:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all ${isInspectorOpen && selectedEffect?.type === 'RGBA' ? 'text-white bg-white/10' : 'text-white/70'}`}
+                title="Color Select (C)"
+            >
+                <span className="material-symbols-outlined text-[16px]">palette</span>
             </button>
 
             <div className="w-[1px] h-4 bg-white/20" />

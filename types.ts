@@ -61,6 +61,7 @@ export interface EffectMetadata {
   icon: string;
   category: EffectCategory;
   params: EffectParamMetadata[];
+  isColorable?: boolean;
 }
 
 export type MacroType =

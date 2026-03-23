@@ -144,7 +144,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({ r, g, b, onChange, onP
                 {/* Label */}
                 <div className="flex flex-col flex-1 min-w-0">
                     <div className="flex justify-between items-baseline">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Color Select</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Color</span>
                     </div>
                 </div>
             </div>

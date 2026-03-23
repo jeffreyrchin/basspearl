@@ -15,7 +15,6 @@ interface SidebarPipelineProps {
 const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
     const effects = useEffectStore(s => s.effects);
     const setEffects = useEffectStore(s => s.setEffects);
-    const commitHistory = useEffectStore(s => s.commitHistory);
     const selectedIds = useEffectStore(s => s.selectedIds);
     const clearSelection = useEffectStore(s => s.clearSelection);
     const selectAll = useEffectStore(s => s.selectAll);
@@ -27,6 +26,7 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
     const activeFocus = focusStack[focusStack.length - 1];
     const pushFocus = useEffectStore(s => s.pushFocus);
     const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
+    const addColor = useEffectStore(s => s.addColor);
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
@@ -53,7 +53,6 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
             const newIndex = index + direction;
 
             if (newIndex >= 0 && newIndex < effectGroups.length) {
-                commitHistory();
                 const newEffects = reorderEffectGroups(effects, index, newIndex);
                 setEffects(newEffects);
 
@@ -64,12 +63,11 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
                 }, 0);
             }
         }
-    }, [effects, effectGroups, setEffects, commitHistory]);
+    }, [effects, effectGroups, setEffects]);
 
     const onDragStart = useCallback((event: any) => {
-        commitHistory();
         setActiveId(event.active.id);
-    }, [commitHistory]);
+    }, []);
 
     const onDragEnd = useCallback((event: any) => {
         const { active, over } = event;
@@ -120,6 +118,12 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
             // Clear selection - Escape
             else if (e.key === 'Escape') {
                 clearSelection();
+            }
+
+            // Add Color - C
+            else if (key === 'c') {
+                e.preventDefault();
+                addColor();
             }
 
             // Duplicate selected effects - Ctrl/Cmd + D
