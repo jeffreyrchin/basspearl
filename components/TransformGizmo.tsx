@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback, memo } from 'react';
+import React, { useRef, useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { useEffectStore } from '../store/useEffectStore';
 import { setDragOverride, clearDragOverride } from '../services/dragOverride';
 import { useDragSync } from '../hooks/useDragSync';
@@ -20,21 +20,24 @@ type TransformType = 'pan' | 'rotate' | ScaleCornerId;
 
 export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => {
     const handleCanvasPointerDown = useCanvasSelection(canvasRef);
-    const effects = useEffectStore(s => s.effects);
-    const selectedIds = useEffectStore(s => s.selectedIds);
     const updateParameter = useEffectStore(s => s.updateParameter);
     const updateMultipleParameters = useEffectStore(s => s.updateMultipleParameters);
     const commitHistory = useEffectStore(s => s.commitHistory);
 
-    const selectedId = selectedIds.size === 1 ? Array.from(selectedIds)[0] : null;
-    const effect = selectedId ? effects.find(e => e.id === selectedId) : null;
+    const selectedId = useEffectStore(s => s.selectedIds.size === 1 ? s.selectedIds.values().next().value : null);
+    const effect = useEffectStore(s => s.effects.find(e => e.id === selectedId));
 
     // --- 1. Parameter Definitions ---
-    const panXIdx = effect ? effect.params.findIndex(p => p.param === 'Pan X') : -1;
-    const panYIdx = effect ? effect.params.findIndex(p => p.param === 'Pan Y') : -1;
-    const scaleXIdx = effect ? effect.params.findIndex(p => p.param === 'Scale X') : -1;
-    const scaleYIdx = effect ? effect.params.findIndex(p => p.param === 'Scale Y') : -1;
-    const rotationIdx = effect ? effect.params.findIndex(p => p.param === 'Rotation') : -1;
+    const [panXIdx, panYIdx, scaleXIdx, scaleYIdx, rotationIdx] = useMemo(() => {
+        if (!effect) return [-1, -1, -1, -1, -1];
+        return [
+            effect.params.findIndex(p => p.param === 'Pan X'),
+            effect.params.findIndex(p => p.param === 'Pan Y'),
+            effect.params.findIndex(p => p.param === 'Scale X'),
+            effect.params.findIndex(p => p.param === 'Scale Y'),
+            effect.params.findIndex(p => p.param === 'Rotation')
+        ];
+    }, [selectedId]);
 
     const isValid = effect && scaleXIdx !== -1 && scaleYIdx !== -1 && panXIdx !== -1 && panYIdx !== -1;
 
