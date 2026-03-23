@@ -79,8 +79,8 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     const handleDragStart = useCallback((clientX: number, mode: Mode) => {
         if (mode === 'none' || !trackRef.current) return;
 
-        const rect = trackRef.current.getBoundingClientRect();
-        startTrackWidthRef.current = rect.width - 32; // 16px padding on each side (inset-x-[16px])
+        const width = trackRef.current.offsetWidth;
+        startTrackWidthRef.current = width - 32; // 16px padding on each side (inset-x-[16px])
         startXRef.current = clientX;
         startMinRef.current = currentMinRef.current;
         startMaxRef.current = currentMaxRef.current;
@@ -268,7 +268,27 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                     min={0}
                     max={100}
                     value={value}
+                    onPointerDown={(e) => {
+                        if (!trackRef.current) return;
+
+                        // Calculate initial value from click position (offsetX is relative to element)
+                        const width = e.currentTarget.offsetWidth;
+                        const offsetX = e.nativeEvent.offsetX;
+                        const relativeX = offsetX - 16;
+                        const visualWidth = width - 32;
+                        const newMax = Math.max(0, Math.min(100, (relativeX / visualWidth) * 100));
+
+                        // Snap visually
+                        currentMaxRef.current = newMax;
+                        if (thumbRef.current) thumbRef.current.style.left = `${newMax}%`;
+                        if (valueLabelRef.current) valueLabelRef.current.innerText = Math.round(newMax).toString();
+                        setDragOverride(effectId, [{ index: paramIdx, value: newMax }]);
+
+                        // Start high-performance drag
+                        handleDragStart(e.clientX, 'right');
+                    }}
                     onChange={(e) => {
+                        if (dragMode !== 'none') return;
                         const nextVal = parseInt(e.target.value);
                         if (nextVal !== value) onChange({ value: nextVal });
                     }}

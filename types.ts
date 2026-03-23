@@ -31,7 +31,8 @@ export type GlitchEffectType =
   | 'LUMINANCE_MAP'
   | 'TERRAIN'
   | 'SCALE_PAN'
-  | 'CHECKERBOARD';
+  | 'CHECKERBOARD'
+  | 'RGBA';
 
 export type FrequencyBand = 'OFF' | 'SUB' | 'BASS' | 'MID' | 'TREBLE';
 

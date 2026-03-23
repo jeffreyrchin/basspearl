@@ -374,4 +374,15 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Pan Y', { v: 50 }),
     ],
   },
+  RGBA: {
+    label: 'Color Select',
+    icon: 'palette',
+    category: 'Color',
+    params: [
+      p('Red', { v: 50 }),
+      p('Green', { v: 80 }),
+      p('Blue', { v: 100 }),
+      p('Opacity', { v: 100 }),
+    ],
+  },
 };

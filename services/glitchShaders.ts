@@ -1358,6 +1358,32 @@ void main() {
 }
 `;
 
+export const RGBA_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[4]; // [r, g, b, a]
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    vec4 color = texture(u_image, v_texCoord);
+
+    float r = u_params[0] / 100.0;
+    float g = u_params[1] / 100.0;
+    float b = u_params[2] / 100.0;
+    float a = u_params[3] / 100.0;
+
+    float finalAlpha = color.a * a;
+
+    outColor = vec4(
+        color.r * r * finalAlpha,
+        color.g * g * finalAlpha,
+        color.b * b * finalAlpha,
+        finalAlpha
+    );
+}
+`;
+
 export interface ShaderDefinition {
     name: string;
     fragmentSource: string;
@@ -1397,4 +1423,5 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     TERRAIN: { name: 'TERRAIN', fragmentSource: '', velocityParamIndices: [2], is3D: true },
     SCALE_PAN: { name: 'SCALE_PAN', fragmentSource: SCALE_PAN_SHADER },
     CHECKERBOARD: { name: 'CHECKERBOARD', fragmentSource: CHECKERBOARD_SHADER },
+    RGBA: { name: 'RGBA', fragmentSource: RGBA_SHADER },
 };

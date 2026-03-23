@@ -2,6 +2,7 @@ import React from 'react';
 import { EFFECT_METADATA } from '../constants';
 import { AdaptiveSlider } from './AdaptiveSlider';
 import { FrequencyDropdown } from './FrequencyDropdown';
+import { ColorPicker } from './ColorPicker';
 import { useEffectStore } from '@/store/useEffectStore';
 
 interface SidebarParamsProps { }
@@ -12,6 +13,7 @@ interface SidebarParamsProps { }
  */
 const SidebarParams: React.FC<SidebarParamsProps> = () => {
     const updateParameter = useEffectStore(s => s.updateParameter);
+    const updateMultipleParameters = useEffectStore(s => s.updateMultipleParameters);
     const commitHistory = useEffectStore(s => s.commitHistory);
     const selectedIds = useEffectStore(s => s.selectedIds);
     const effects = useEffectStore(s => s.effects);
@@ -44,6 +46,22 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
             {/* Parameters List */}
             <div className="flex flex-col">
+                {selectedEffect.type === 'RGBA' && (
+                    <ColorPicker
+                        r={selectedEffect.params[0].value}
+                        g={selectedEffect.params[1].value}
+                        b={selectedEffect.params[2].value}
+                        onPointerDown={() => commitHistory()}
+                        onChange={(r, g, b) => {
+                            updateMultipleParameters(selectedEffect.id, [
+                                { paramIndex: 0, update: { value: r } },
+                                { paramIndex: 1, update: { value: g } },
+                                { paramIndex: 2, update: { value: b } }
+                            ]);
+                        }}
+                        effectId={selectedEffect.id}
+                    />
+                )}
                 {EFFECT_METADATA[selectedEffect.type]?.params?.map((paramMeta, paramIdx) => {
                     const param = selectedEffect.params[paramIdx];
                     return (
