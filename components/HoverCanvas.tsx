@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { EffectConfig } from '../types';
 import { renderThumbnail } from '../services/thumbnailService';
+import { THUMBNAIL_SIZE } from '../constants';
 
 interface HoverCanvasProps {
     targetEl: HTMLElement | null;
@@ -69,8 +70,8 @@ const HoverCanvas: React.FC<HoverCanvasProps> = ({ targetEl, blueprint }) => {
         <canvas
             ref={canvasRef}
             className="absolute inset-0 w-full h-full object-cover animate-in fade-in duration-150 pointer-events-none z-[5]"
-            width={256}
-            height={256}
+            width={THUMBNAIL_SIZE}
+            height={THUMBNAIL_SIZE}
         />,
         targetEl
     );

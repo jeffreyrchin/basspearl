@@ -1,5 +1,6 @@
 import { GlitchEngine } from './glitchEngine';
-import { EffectConfig, GlitchEffectType } from '../types';
+import { EffectConfig } from '../types';
+import { THUMBNAIL_SIZE } from '../constants';
 
 // The single engine we share for all thumbnails
 let engine: GlitchEngine | null = null;
@@ -16,8 +17,8 @@ let scratchCanvas: HTMLCanvasElement | null = null;
 const getScratchCanvas = () => {
     if (!scratchCanvas) {
         scratchCanvas = document.createElement('canvas');
-        scratchCanvas.width = 256;
-        scratchCanvas.height = 256;
+        scratchCanvas.width = THUMBNAIL_SIZE;
+        scratchCanvas.height = THUMBNAIL_SIZE;
     }
     return scratchCanvas;
 };
@@ -52,11 +53,11 @@ export const getThumbnailDataUrl = (effects: EffectConfig[]): Promise<string> =>
 
         // Use a static frame (time=10.0) for the cached poster
         await eng.renderToCanvas(canvas, imageSrc, effects, {
-            maxSize: 256,
+            maxSize: THUMBNAIL_SIZE,
             currentTime: 10.0,
             reactivity: { sub: 0.9, bass: 0.9, mid: 0.9, treble: 0.9 },
-            imagelessWidth: 256,
-            imagelessHeight: 256
+            imagelessWidth: THUMBNAIL_SIZE,
+            imagelessHeight: THUMBNAIL_SIZE
         });
 
         const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
@@ -95,11 +96,11 @@ export const renderThumbnail = (
 
         // Render directly using the zero-allocation reactivity path
         await eng.renderToCanvas(targetCanvas, imageSrc, effects, {
-            maxSize: 256,
+            maxSize: THUMBNAIL_SIZE,
             currentTime,
             reactivity: syntheticSmoothed,
-            imagelessWidth: 256,
-            imagelessHeight: 256
+            imagelessWidth: THUMBNAIL_SIZE,
+            imagelessHeight: THUMBNAIL_SIZE
         });
     });
 

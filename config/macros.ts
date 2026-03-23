@@ -155,7 +155,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Scale', { v: 3, b: 'OFF' }),
           o('Extrusion', { v: 75, m: 43, b: 'SUB' }, { v: 67, m: 0, b: 'OFF' }),
-          o('Speed', { v: 15, b: 'OFF' }),
+          o('Speed', { v: 5, b: 'OFF' }),
           o('Resolution', { v: 99, b: 'OFF' }),
           o('Rotate X', { v: 0, b: 'OFF' }),
           o('Rotate Y', { v: 0, b: 'OFF' }),
@@ -169,7 +169,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'EDGE_MASK',
         params: [
           o('Sensitivity', { v: 0, b: 'OFF' }),
-          o('Thickness', { v: 2, b: 'OFF' }),
+          o('Thickness', { v: 5, b: 'OFF' }, { v: 15 }),
           o('Invert', { v: 0, b: 'OFF' }),
         ],
         melded: false
