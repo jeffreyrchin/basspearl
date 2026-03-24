@@ -2,6 +2,7 @@ import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { FrequencyBand } from '../types';
 import { useEffectStore } from '../store/useEffectStore';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface FrequencyDropdownProps {
     value: FrequencyBand;
@@ -85,8 +86,13 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
     }, [isOpen]);
 
     const Menu = (
-        <div
+        <motion.div
+            key="frequency-dropdown"
             ref={menuRef}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
             role="listbox"
             style={menuStyle}
             data-dropdown-ignore="true"
@@ -106,7 +112,7 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
                     </button>
                 ))}
             </div>
-        </div>
+        </motion.div>
     );
 
     return (
@@ -121,9 +127,22 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
                     ${value !== 'OFF' ? 'bg-primary/10 text-primary border-primary/30' : 'bg-white/5 text-white/60 border-white/10'}`}
             >
                 <span>{value === 'OFF' ? 'Manual' : value}</span>
-                <span className={`material-symbols-outlined text-[18px] ${isOpen ? 'rotate-180' : ''}`}>expand_more</span>
+                <motion.span
+                    key="frequency-dropdown-arrow"
+                    initial={{ rotate: 0 }}
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="material-symbols-outlined text-[18px]"
+                >
+                    expand_more
+                </motion.span>
             </button>
-            {isOpen && createPortal(Menu, document.body)}
+            {createPortal(
+                <AnimatePresence>
+                    {isOpen && Menu}
+                </AnimatePresence>,
+                document.body
+            )}
         </div>
     );
 };

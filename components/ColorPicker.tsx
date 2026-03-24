@@ -2,6 +2,7 @@ import { useDragSync } from '@/hooks/useDragSync';
 import { clearDragOverride, setDragOverride } from '@/services/dragOverride';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { HexColorPicker } from 'react-colorful';
+import { AnimatePresence, motion } from 'framer-motion';
 
 /**
  * ColorPicker: A specialized UI for the RGBA effect.
@@ -100,46 +101,55 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({ r, g, b, onChange, onP
                 />
 
                 {/* Popover & Backdrop */}
-                {isOpen && (
-                    <>
-                        {/* Invisible Backdrop: Catches 'outside' clicks */}
-                        <div
-                            className="fixed inset-0 z-[90] bg-transparent cursor-default"
-                            onPointerDown={(e) => {
-                                e.stopPropagation();
-                                setIsOpen(false);
-                                clearDragOverride();
-                                onChange(rRef.current, gRef.current, bRef.current);
-                            }}
-                        />
+                <AnimatePresence>
+                    {isOpen && (
+                        <>
+                            {/* Invisible Backdrop: Catches 'outside' clicks */}
+                            <div
+                                className="fixed inset-0 z-[90] bg-transparent cursor-default"
+                                onPointerDown={(e) => {
+                                    e.stopPropagation();
+                                    setIsOpen(false);
+                                    clearDragOverride();
+                                    onChange(rRef.current, gRef.current, bRef.current);
+                                }}
+                            />
 
-                        {/* The Actual Picker Popover */}
-                        <div className="absolute top-full left-0 mt-3 z-[100] animate-in fade-in zoom-in-95 duration-150 origin-top-left">
-                            <div className="p-3 bg-slate-800 border border-white/10 rounded-xl shadow-2xl relative">
-                                <div onKeyDown={(e) => {
-                                    // Stop arrow keys from triggering the playback scrubber or navigation
-                                    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-                                        e.stopPropagation();
-                                    }
-                                }}>
-                                    <HexColorPicker color={currentHex} onChange={handlePickerChange} />
+                            {/* The Actual Picker Popover */}
+                            <motion.div
+                                key="color-picker"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ duration: 0.2 }}
+                                className="absolute top-full left-0 mt-3 z-[100]"
+                            >
+                                <div className="p-3 bg-slate-800 border border-white/10 rounded-xl shadow-2xl relative">
+                                    <div onKeyDown={(e) => {
+                                        // Stop arrow keys from triggering the playback scrubber or navigation
+                                        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                                            e.stopPropagation();
+                                        }
+                                    }}>
+                                        <HexColorPicker color={currentHex} onChange={handlePickerChange} />
+                                    </div>
+                                    <div className="mt-3 flex items-center justify-end">
+                                        <button
+                                            onClick={() => {
+                                                setIsOpen(false);
+                                                clearDragOverride();
+                                                onChange(rRef.current, gRef.current, bRef.current);
+                                            }}
+                                            className="px-2 py-1 text-[9px] font-bold tracking-widest bg-white/10 hover:bg-white/20 rounded uppercase text-white/80"
+                                        >
+                                            Done
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="mt-3 flex items-center justify-end">
-                                    <button
-                                        onClick={() => {
-                                            setIsOpen(false);
-                                            clearDragOverride();
-                                            onChange(rRef.current, gRef.current, bRef.current);
-                                        }}
-                                        className="px-2 py-1 text-[9px] font-bold tracking-widest bg-white/10 hover:bg-white/20 rounded uppercase text-white/80"
-                                    >
-                                        Done
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </>
-                )}
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>
 
                 {/* Label */}
                 <div className="flex flex-col flex-1 min-w-0">

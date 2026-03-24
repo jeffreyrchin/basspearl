@@ -19,6 +19,7 @@ import { useRenderLoop } from '@/hooks/useRenderLoop';
 import { useCanvasSelection } from '@/hooks/useCanvasSelection';
 import { useEffectStore } from '../store/useEffectStore';
 import { TransformGizmo } from './TransformGizmo';
+import { AnimatePresence } from 'framer-motion';
 
 interface AudioReactiveViewProps {
 }
@@ -292,7 +293,14 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 )}
             </div>
             <Footer />
-            <LandingModal isOpen={isLandingOpen} onStart={handleLandingStart} onClose={() => setIsLandingOpen(false)} />
+            <AnimatePresence>
+                {isLandingOpen && (
+                    <LandingModal
+                        onStart={handleLandingStart}
+                        onClose={() => setIsLandingOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
             <ExportModal
                 isOpen={isExportModalOpen}
                 onClose={closeExportModal}

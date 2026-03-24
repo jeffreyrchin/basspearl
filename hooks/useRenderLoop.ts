@@ -72,8 +72,6 @@ export const useRenderLoop = ({
                 frameIntegrated.bass = liveData.integrated.bass;
                 frameIntegrated.mid = liveData.integrated.mid;
                 frameIntegrated.treble = liveData.integrated.treble;
-            } else {
-                return; // Not ready
             }
         } else if (mainAudioEngine.reactivityMap) {
             const map = mainAudioEngine.reactivityMap;
@@ -99,8 +97,6 @@ export const useRenderLoop = ({
                 frameIntegrated.mid = iMap.mid[f1] + (iMap.mid[f2] - iMap.mid[f1]) * t;
                 frameIntegrated.treble = iMap.treble[f1] + (iMap.treble[f2] - iMap.treble[f1]) * t;
             }
-        } else {
-            return;
         }
 
         // 2. Global State Update (for WebGL shaders)
