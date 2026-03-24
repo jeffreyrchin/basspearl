@@ -23,6 +23,8 @@ const LibraryWindow: React.FC = () => {
     const [winWidth, setWinWidth] = useState(initialWidth);
     const [winHeight, setWinHeight] = useState(initialHeight);
 
+    const [entranceComplete, setEntranceComplete] = useState(false);
+
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
         checkMobile();
@@ -50,6 +52,7 @@ const LibraryWindow: React.FC = () => {
                     initial={{ y: "100%" }}
                     animate={{ y: 0 }}
                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                    onAnimationComplete={() => setEntranceComplete(true)}
                     className="relative z-10 w-full h-[85vh] bg-slate-900/95 backdrop-blur-xl border-t border-white/10 rounded-t-2xl pointer-events-auto flex flex-col shadow-2xl"
                     data-section="window"
                     data-window="library"
@@ -67,7 +70,22 @@ const LibraryWindow: React.FC = () => {
                         </button>
                     </div>
                     <div className="flex-1 overflow-y-auto custom-scrollbar" onScroll={() => setActiveDropdownId(null)}>
-                        <SidebarLibrary onSelectEffect={() => removeFocus('library')} />
+                        {entranceComplete ? (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.1 }}
+                            >
+                                <SidebarLibrary onSelectEffect={() => removeFocus('library')} />
+                            </motion.div>
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center gap-2">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white/60"></div>
+                                <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">
+                                    Loading...
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </motion.div>
             </div>
@@ -82,6 +100,7 @@ const LibraryWindow: React.FC = () => {
                 }}
                 initial={{ opacity: 0, scale: 0.95, y: 0 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
+                onAnimationComplete={() => setEntranceComplete(true)}
                 style={{
                     position: 'absolute',
                     top: 80,
@@ -120,7 +139,22 @@ const LibraryWindow: React.FC = () => {
                         pushFocus('library');
                     }}
                 >
-                    <SidebarLibrary />
+                    {entranceComplete ? (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.1 }}
+                        >
+                            <SidebarLibrary />
+                        </motion.div>
+                    ) : (
+                        <div className="h-full flex flex-col items-center justify-center gap-2">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white/60"></div>
+                            <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">
+                                Loading...
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Resize Handle */}

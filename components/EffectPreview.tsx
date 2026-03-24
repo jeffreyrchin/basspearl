@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { GlitchEffectType, MacroType } from '../types';
-import { getThumbnailDataUrl } from '../services/thumbnailService';
+import { getThumbnailDataUrl, getCachedThumbnail } from '../services/thumbnailService';
 import { createMacroInstance, createEffectInstance } from '../constants';
+import { motion } from 'framer-motion';
 
 interface EffectPreviewProps {
     type?: GlitchEffectType;
@@ -17,15 +18,17 @@ interface EffectPreviewProps {
  * which is a single shared canvas that portals into the active card.
  */
 const EffectPreview: React.FC<EffectPreviewProps> = ({ type, macroType }) => {
-    const [posterUrl, setPosterUrl] = useState<string | null>(null);
-
     const blueprint = React.useMemo(() => {
         return macroType
             ? createMacroInstance(macroType, true)
             : [createEffectInstance(type, true)];
     }, [type, macroType]);
 
+    const [posterUrl, setPosterUrl] = useState<string | null>(() => getCachedThumbnail(blueprint));
+    const wasCachedOnMount = useRef(!!posterUrl);
+
     useEffect(() => {
+        if (posterUrl) return;
         let mounted = true;
         getThumbnailDataUrl(blueprint).then(url => {
             if (mounted) setPosterUrl(url);
@@ -36,11 +39,15 @@ const EffectPreview: React.FC<EffectPreviewProps> = ({ type, macroType }) => {
     return (
         <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
             {posterUrl && (
-                <img
+                <motion.img
+                    key={posterUrl}
                     src={posterUrl}
                     alt="Effect Preview"
                     className="w-full h-full object-cover"
                     draggable={false}
+                    initial={{ opacity: wasCachedOnMount.current ? 1 : 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2 }}
                 />
             )}
         </div>

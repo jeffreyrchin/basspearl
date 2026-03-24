@@ -108,3 +108,8 @@ export const renderThumbnail = (
     queue = task.catch(() => { });
     return task;
 };
+
+export const getCachedThumbnail = (effects: EffectConfig[]): string | null => {
+    const cacheKey = effects.map(e => e.type).sort().join('|');
+    return THUMBNAIL_CACHE.get(cacheKey) || null;
+};
