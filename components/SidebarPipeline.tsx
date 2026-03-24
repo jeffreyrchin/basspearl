@@ -98,7 +98,7 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
 
             const isModalOpen = document.querySelector('[data-section="modal"]');
 
-            if (isTyping || activeFocus !== 'pipeline' || !isSidebarOpen || isModalOpen) return;
+            if (isTyping || activeFocus !== 'pipeline' || isModalOpen) return;
 
             // Select All - Ctrl/Cmd + A
             if (isMod && key === 'a') {

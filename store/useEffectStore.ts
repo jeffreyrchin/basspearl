@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { EffectConfig, GlitchEffectType, MacroType } from '../types';
 import { INITIAL_REACTIVE_EFFECTS, createEffectInstance, createMacroInstance } from '../constants';
 import { analytics } from '@/services/analytics';
+import { EFFECT_METADATA } from '@/config/effects';
 
 interface EffectState {
     effects: EffectConfig[];
@@ -71,6 +72,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     isSidebarOpen: false,
     setIsSidebarOpen: (open) => set(s => ({
         isSidebarOpen: open,
+        selectedIds: open ? s.selectedIds : new Set<string>(),
         focusStack: open ? [...s.focusStack.filter(z => z !== 'pipeline'), 'pipeline'] as ('pipeline' | 'inspector' | 'library')[] : s.focusStack
     })),
 
@@ -188,13 +190,15 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     addColor: () => {
         const { selectedIds } = get();
         if (selectedIds.size !== 1) return;
+        let colorAdded = false;
         set((state) => {
             const next = [...state.effects];
             const selectedId = selectedIds.values().next().value;
             const idx = next.findIndex(e => e.id === selectedId);
 
             if (idx === -1) return {};
-            if (next[idx].type === 'RGBA') return {};
+            if (next[idx].type === 'RGBA') { colorAdded = true; return {}; };
+            if (!EFFECT_METADATA[next[idx].type]?.isColorable) return {};
 
             let targetSelection: Set<string>;
             if (next[idx + 1] && next[idx + 1].type === 'RGBA') {
@@ -208,12 +212,13 @@ export const useEffectStore = create<EffectState>((set, get) => ({
                 next.splice(idx + 1, 0, newEffect);
                 targetSelection = new Set([newEffect.id]);
             }
+            colorAdded = true;
             return {
                 effects: next,
                 selectedIds: targetSelection
             };
         });
-        get().pushFocus('inspector');
+        colorAdded && get().pushFocus('inspector');
     },
 
     addMacro: (macroType) => {

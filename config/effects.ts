@@ -391,6 +391,5 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Blue', { v: 100 }),
       p('Opacity', { v: 100 }),
     ],
-    isColorable: true // added so that the "Color Select" button is not disabled when RGBA is selected
   },
 };
