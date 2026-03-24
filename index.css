@@ -48,7 +48,13 @@
 html {
   height: 100%;
   height: calc(var(--vh, 1vh) * 100);
-  overflow-x: hidden;
+  overflow: hidden;
+
+  /* Modern browsers: kill pull-to-refresh and elastic bounce */
+  overscroll-behavior: none;
+
+  /* Disable native swipe/pull touch gestures globally */
+  touch-action: none;
 }
 
 body {
@@ -60,12 +66,6 @@ body {
   height: 100%;
   height: calc(var(--vh, 1vh) * 100);
   width: 100%;
-
-  /* Modern browsers: kill pull-to-refresh and elastic bounce */
-  overscroll-behavior: none;
-
-  /* Disable native swipe/pull touch gestures globally */
-  touch-action: none;
 
   /* Prevent text selection globally */
   user-select: none;

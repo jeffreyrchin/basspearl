@@ -52,6 +52,8 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
     const gizmoRef = useRef<HTMLDivElement>(null);
     const [canvasRect, setCanvasRect] = useState<{ left: number, top: number, width: number, height: number } | null>(null);
 
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
     useEffect(() => {
         if (!containerRef.current || !canvasRef.current) return;
 
@@ -119,10 +121,19 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
         });
     }, [panXIdx, panYIdx, scaleXIdx, scaleYIdx, rotationIdx]));
 
+    const getCurrentScale = () => {
+        const fromScroll = !!timerRef.current;
+        const currentScaleX = fromScroll ? dragStateRef.current.scaleX : scaleX;
+        const currentScaleY = fromScroll ? dragStateRef.current.scaleY : scaleY;
+        return { currentScaleX, currentScaleY };
+    };
+
     // --- 5. Unified Drag Handlers ---
     const handlePointerDown = (e: React.PointerEvent, type: TransformType) => {
         e.preventDefault();
         e.stopPropagation();
+        const { currentScaleX, currentScaleY } = getCurrentScale(); // 1. Capture truth
+        flushScroll(); // 2. Clean up
         commitHistory();
         setDragType(type);
 
@@ -139,7 +150,8 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
             containerW: rect?.width || 1,
             containerH: rect?.height || 1,
             panX, panY,
-            scaleX, scaleY,
+            scaleX: currentScaleX,
+            scaleY: currentScaleY,
             rotation,
             centerX: cX,
             centerY: cY,
@@ -163,10 +175,81 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
             ]);
         } else { // Scale
             if (selectedId) setDragOverride(selectedId, [
-                { index: scaleXIdx, value: scaleX },
-                { index: scaleYIdx, value: scaleY }
+                { index: scaleXIdx, value: dragStateRef.current.scaleX },
+                { index: scaleYIdx, value: dragStateRef.current.scaleY }
             ]);
         }
+    };
+
+    const handleScroll = useCallback((e: WheelEvent) => {
+        if (dragType) return;
+
+        const target = e.target as HTMLElement;
+        const container = target.closest?.('[data-section]') as HTMLElement;
+        const section = container?.dataset.section;
+        if (section !== 'viewport') return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const state = dragStateRef.current;
+        if (timerRef.current) {
+            clearTimeout(timerRef.current);
+        } else {
+            commitHistory();
+            state.scaleX = scaleX;
+            state.scaleY = scaleY;
+            state.scaleXIdx = scaleXIdx;
+            state.scaleYIdx = scaleYIdx;
+        }
+        timerRef.current = setTimeout(() => {
+            flushScroll();
+        }, 200);
+
+        const zoomSpeed = 0.001;
+        let factor = 1 - (e.deltaY * zoomSpeed);
+
+        const minScale = 0.1;
+        const maxScale = 100;
+
+        // If growing, don't let factor be larger than the room remaining for the tighter axis
+        if (factor > 1) {
+            const roomX = maxScale / Math.max(state.scaleX, 0.001);
+            const roomY = maxScale / Math.max(state.scaleY, 0.001);
+            factor = Math.min(factor, roomX, roomY);
+        }
+
+        // If shrinking, don't let factor take us below our minimum (e.g. 1)
+        else {
+            const roomX = minScale / Math.max(state.scaleX, 0.001);
+            const roomY = minScale / Math.max(state.scaleY, 0.001);
+            factor = Math.max(factor, roomX, roomY);
+        }
+
+        state.scaleX *= factor;
+        state.scaleY *= factor;
+
+        setDragOverride(selectedId, [
+            { index: scaleXIdx, value: state.scaleX },
+            { index: scaleYIdx, value: state.scaleY }
+        ]);
+
+        if (gizmoRef.current) {
+            gizmoRef.current.style.width = `${state.scaleX * 2}%`;
+            gizmoRef.current.style.height = `${state.scaleY * 2}%`;
+        }
+    }, [dragType, selectedId, scaleX, scaleY, scaleXIdx, scaleYIdx]);
+
+    const flushScroll = () => {
+        if (!timerRef.current) return;
+        setDragType(null);
+        clearDragOverride();
+        updateMultipleParameters(selectedId, [
+            { paramIndex: scaleXIdx, update: { value: dragStateRef.current.scaleX } },
+            { paramIndex: scaleYIdx, update: { value: dragStateRef.current.scaleY } }
+        ]);
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
     };
 
     useEffect(() => {
@@ -286,6 +369,15 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
         };
     }, [dragType, isValid, selectedId, updateMultipleParameters]);
 
+    useEffect(() => {
+        if (!isValid || !selectedId) return;
+
+        window.addEventListener('wheel', handleScroll, { passive: false });
+        return () => {
+            window.removeEventListener('wheel', handleScroll);
+        }
+    }, [isValid, selectedId, handleScroll]);
+
     if (!isValid) return null;
 
     const safeBox = canvasRect || { left: 0, top: 0, width: 100, height: 100 };
@@ -323,6 +415,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
                         if (!['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
                         e.preventDefault();
                         e.stopPropagation();
+                        flushScroll();
                         commitHistory();
                         const step = e.shiftKey ? 5 : 1;
                         if (e.key === 'ArrowRight') updateParameter(selectedId!, panXIdx, { value: Math.max(0, Math.min(100, panX + step)) });
@@ -339,6 +432,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
                                 className="relative w-8 h-8 md:w-5 md:h-5 -mt-1 rounded-full bg-black border border-primary"
                                 onPointerDown={(e) => handlePointerDown(e, 'rotate')}
                                 onKeyPress={(key, shift) => {
+                                    flushScroll();
                                     commitHistory();
                                     const step = shift ? 5 : 1;
                                     if (key === 'ArrowRight') updateParameter(selectedId!, rotationIdx, { value: (rotation + step + 100) % 100 });
@@ -355,13 +449,15 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
                             className={`z-10 absolute w-7 h-7 md:w-4 md:h-4 rounded-full bg-black border border-primary ${corner.className}`}
                             onPointerDown={(e) => handlePointerDown(e, id as ScaleCornerId)}
                             onKeyPress={(key, shift) => {
+                                const { currentScaleX, currentScaleY } = getCurrentScale(); // 1. Capture truth
+                                flushScroll(); // 2. Clean up
                                 commitHistory();
                                 const step = shift ? 5 : 1;
                                 // Keyboard arrows map logically based on mx/my multipliers
-                                if (key === 'ArrowRight') updateParameter(selectedId!, scaleXIdx, { value: Math.max(0, Math.min(100, scaleX + step * corner.xDir)) });
-                                else if (key === 'ArrowLeft') updateParameter(selectedId!, scaleXIdx, { value: Math.max(0, Math.min(100, scaleX - step * corner.xDir)) });
-                                else if (key === 'ArrowUp') updateParameter(selectedId!, scaleYIdx, { value: Math.max(0, Math.min(100, scaleY - step * corner.yDir)) });
-                                else if (key === 'ArrowDown') updateParameter(selectedId!, scaleYIdx, { value: Math.max(0, Math.min(100, scaleY + step * corner.yDir)) });
+                                if (key === 'ArrowRight') updateParameter(selectedId!, scaleXIdx, { value: Math.max(0, Math.min(100, currentScaleX + step * corner.xDir)) });
+                                else if (key === 'ArrowLeft') updateParameter(selectedId!, scaleXIdx, { value: Math.max(0, Math.min(100, currentScaleX - step * corner.xDir)) });
+                                else if (key === 'ArrowUp') updateParameter(selectedId!, scaleYIdx, { value: Math.max(0, Math.min(100, currentScaleY - step * corner.yDir)) });
+                                else if (key === 'ArrowDown') updateParameter(selectedId!, scaleYIdx, { value: Math.max(0, Math.min(100, currentScaleY + step * corner.yDir)) });
                             }}
                         />
                     ))}
