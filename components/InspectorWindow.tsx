@@ -87,14 +87,11 @@ const InspectorWindow: React.FC = () => {
                     className="absolute inset-0 bg-black/40 pointer-events-auto z-0"
                     onClick={() => removeFocus('inspector')}
                 />
-                <motion.div
+                <div
                     onClick={(e) => e.stopPropagation()}
                     onPointerDown={() => {
                         pushFocus('inspector');
                     }}
-                    initial={{ y: "100%" }}
-                    animate={{ y: 0 }}
-                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
                     className="relative z-10 w-full h-[85vh] bg-slate-900/95 border-t border-white/10 rounded-t-2xl pointer-events-auto flex flex-col shadow-2xl"
                     data-section="window"
                     data-window="inspector"
@@ -108,7 +105,7 @@ const InspectorWindow: React.FC = () => {
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-6" onScroll={() => setActiveDropdownId(null)}>
                         <SidebarParams />
                     </div>
-                </motion.div>
+                </div>
             </div>
         );
     }

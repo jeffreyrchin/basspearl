@@ -37,8 +37,8 @@ const EffectPreview: React.FC<EffectPreviewProps> = ({ type, macroType }) => {
     }, [blueprint]);
 
     return (
-        <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
-            {posterUrl && (
+        <div className="absolute inset-0 w-full h-full overflow-hidden bg-slate-900">
+            {posterUrl ? (
                 <motion.img
                     key={posterUrl}
                     src={posterUrl}
@@ -47,9 +47,9 @@ const EffectPreview: React.FC<EffectPreviewProps> = ({ type, macroType }) => {
                     draggable={false}
                     initial={{ opacity: wasCachedOnMount.current ? 1 : 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.3 }}
                 />
-            )}
+            ) : <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />}
         </div>
     );
 };
