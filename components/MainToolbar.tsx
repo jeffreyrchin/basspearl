@@ -11,6 +11,9 @@ interface MainToolbarProps {
     handleAudioUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
     isLiveMode: boolean;
     startMic: () => void;
+    onPlayPause: () => void;
+    isPlaying: boolean;
+    isProcessing: boolean;
 }
 
 const ToolbarButton: React.FC<{
@@ -23,8 +26,9 @@ const ToolbarButton: React.FC<{
     colorHex?: string;
     showDot?: boolean;
     className?: string;
-}> = ({ onClick, icon, title, isActive, activeBg, activeBorder, colorHex, showDot, className = "w-12" }) => {
-    const baseClass = "h-9 flex items-center justify-center rounded-xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2";
+    disabled?: boolean;
+}> = ({ onClick, icon, title, isActive, activeBg, activeBorder, colorHex, showDot, className = "w-12", disabled }) => {
+    const baseClass = "h-9 flex items-center justify-center rounded-xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none";
     const idleClass = "border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10 text-white";
     const activeStyles = isActive ? `${activeBg} ${activeBorder}` : idleClass;
 
@@ -32,6 +36,7 @@ const ToolbarButton: React.FC<{
         <button
             type="button"
             onClick={onClick}
+            disabled={disabled}
             onPointerDown={(e) => e.stopPropagation()}
             className={`${baseClass} ${activeStyles} ${className}`}
             title={title}
@@ -61,6 +66,9 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     handleAudioUpload,
     isLiveMode,
     startMic,
+    onPlayPause,
+    isPlaying,
+    isProcessing,
 }) => {
     const focusStack = useEffectStore(s => s.focusStack);
     const pushFocus = useEffectStore(s => s.pushFocus);
@@ -144,6 +152,20 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             activeBg="bg-[#FF0055]/5 hover:bg-[#FF0055]/10"
                             activeBorder="border-[#FF0055]/30 hover:border-[#FF0055]/50"
                             showDot={isLiveMode}
+                            className="px-4"
+                        />
+
+                        {/* Play/Pause */}
+                        <ToolbarButton
+                            onClick={onPlayPause}
+                            disabled={!audioFile || isProcessing || isLiveMode}
+                            title={isPlaying ? "Pause" : "Play"}
+                            aria-label={isPlaying ? "Pause" : "Play"}
+                            icon={isPlaying ? 'pause' : 'play_arrow'}
+                            isActive={isPlaying}
+                            colorHex="white"
+                            activeBg="bg-primary/50"
+                            activeBorder="border-primary/50"
                             className="px-4"
                         />
                     </div>

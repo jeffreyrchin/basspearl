@@ -192,6 +192,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         handleAudioUpload={handleAudioUpload}
                         isLiveMode={isLiveMode}
                         startMic={handleMicClick}
+                        onPlayPause={handleTogglePlay}
+                        isPlaying={isPlaying}
+                        isProcessing={isProcessing}
                     />
 
                     {/* Viewport */}
@@ -236,7 +239,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     {!isLiveMode ? (
                         <div className="h-14 bg-white/5 border-t border-white/5 flex items-center pr-3 sm:pr-6 shrink-0 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <PlaybackBar
-                                isPlaying={isPlaying}
                                 audioFile={audioFile}
                                 isProcessing={isProcessing}
                                 formatTime={formatTime}
@@ -245,7 +247,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                 currentTimeLabelRef={currentTimeLabelRef}
                                 scrubberRef={scrubberRef}
                                 isDraggingScrubberRef={isDraggingScrubberRef}
-                                onPlayPause={handleTogglePlay}
                                 onScrubberChange={(e) => {
                                     const val = parseFloat(e.target.value);
                                     updateScrubberUI(val);
@@ -256,11 +257,11 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             />
 
                             {/* Export Button */}
-                            <div className="flex items-center pl-2 sm:pl-4 border-l border-white/10 ml-1 sm:ml-2 shrink-0">
+                            <div className="flex items-center border-l pl-3 sm:pl-5 border-white/10 shrink-0">
                                 <button
                                     onClick={openExportModal}
-                                    disabled={!audioFile || isExporting || isProcessing}
-                                    className={`h-9 px-3 sm:px-4 rounded-xl flex items-center transition-all border disabled:bg-white/5 disabled:border-white/5 disabled:text-white/40 bg-[#FB00FF]/10 border-[#FB00FF]/20 text-[#FB00FF] hover:bg-[#FB00FF]/20 hover:border-[#FB00FF]/40 shadow-[0_0_15px_rgba(251,0,251,0.1)]`}
+                                    disabled={!audioFile || isExporting || isProcessing || isLiveMode}
+                                    className={`h-9 px-3 sm:px-4 rounded-xl flex items-center transition-all border disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none bg-white/5 border-white/5 text-white hover:bg-white/10 hover:border-white/20 shadow-[0_0_15px_rgba(251,0,251,0.1)]`}
                                     title="Export"
                                     aria-label="Export">
                                     <span className="material-symbols-outlined text-[18px]">
