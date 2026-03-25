@@ -1,12 +1,14 @@
 import React, { useRef, useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { useEffectStore } from '../store/useEffectStore';
-import { setDragOverride, clearDragOverride } from '../services/dragOverride';
+import { setDragOverride, clearDragOverride, dragOverride } from '../services/dragOverride';
 import { useDragSync } from '../hooks/useDragSync';
 import { useCanvasSelection } from '../hooks/useCanvasSelection';
 
 interface TransformGizmoProps {
     effectId: string;
     canvasRef: React.RefObject<HTMLCanvasElement>;
+    flushGlobalScroll: () => void;
+    setFlushGlobalScroll: (fn: () => void) => void;
 }
 
 const SCALE_CORNERS = {
@@ -19,7 +21,7 @@ const SCALE_CORNERS = {
 type ScaleCornerId = keyof typeof SCALE_CORNERS;
 type TransformType = 'pan' | 'rotate' | ScaleCornerId;
 
-export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvasRef }) => {
+export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvasRef, flushGlobalScroll, setFlushGlobalScroll }) => {
     const handleCanvasPointerDown = useCanvasSelection(canvasRef);
     const updateParameter = useEffectStore(s => s.updateParameter);
     const updateMultipleParameters = useEffectStore(s => s.updateMultipleParameters);
@@ -37,7 +39,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
             effect.params.findIndex(p => p.param === 'Scale Y'),
             effect.params.findIndex(p => p.param === 'Rotation')
         ];
-    }, [effectId]);
+    }, [effectId, effect]);
 
     const isValid = effect && scaleXIdx !== -1 && scaleYIdx !== -1 && panXIdx !== -1 && panYIdx !== -1;
 
@@ -82,7 +84,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
         observer.observe(canvasRef.current);
 
         return () => observer.disconnect();
-    }, [isValid, canvasRef]);
+    }, [isValid, canvasRef, containerRef]);
 
     // --- 3. Dragging State ---
     const [dragType, setDragType] = useState<TransformType | null>(null);
@@ -99,7 +101,8 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
         panXIdx: -1, panYIdx: -1,
         scaleXIdx: -1, scaleYIdx: -1,
         rotationIdx: -1,
-        xDir: 1, yDir: 1
+        xDir: 1, yDir: 1,
+        siblingStarts: undefined as Map<string, { scaleX: number; scaleY: number; sxIdx: number; syIdx: number }> | undefined
     });
 
     // --- 4. Unified Fast-Track Sync ---
@@ -121,19 +124,44 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
         });
     }, [panXIdx, panYIdx, scaleXIdx, scaleYIdx, rotationIdx]));
 
-    const getCurrentScale = () => {
-        const fromScroll = !!timerRef.current;
-        const currentScaleX = fromScroll ? dragStateRef.current.scaleX : scaleX;
-        const currentScaleY = fromScroll ? dragStateRef.current.scaleY : scaleY;
-        return { currentScaleX, currentScaleY };
+    const getCurrentValues = () => {
+        let cPanX = panX, cPanY = panY, cScaleX = scaleX, cScaleY = scaleY, cRot = rotation;
+
+        // 1. Freshest store state (bypasses component closure staleness)
+        const freshEffect = useEffectStore.getState().effects.find(e => e.id === effectId);
+        if (freshEffect) {
+            cPanX = panXIdx !== -1 ? freshEffect.params[panXIdx].value : cPanX;
+            cPanY = panYIdx !== -1 ? freshEffect.params[panYIdx].value : cPanY;
+            cScaleX = scaleXIdx !== -1 ? freshEffect.params[scaleXIdx].value : cScaleX;
+            cScaleY = scaleYIdx !== -1 ? freshEffect.params[scaleYIdx].value : cScaleY;
+            cRot = rotationIdx !== -1 ? freshEffect.params[rotationIdx].value : cRot;
+        }
+
+        // 2. Overrides (highest priority, captures active scroll/drag without waiting for a re-render)
+        const overrides = dragOverride.overrides.get(effectId);
+        if (overrides) {
+            overrides.forEach(o => {
+                if (o.index === panXIdx && o.value !== undefined) cPanX = o.value;
+                if (o.index === panYIdx && o.value !== undefined) cPanY = o.value;
+                if (o.index === scaleXIdx && o.value !== undefined) cScaleX = o.value;
+                if (o.index === scaleYIdx && o.value !== undefined) cScaleY = o.value;
+                if (o.index === rotationIdx && o.value !== undefined) cRot = o.value;
+            });
+        }
+
+        return { currentPanX: cPanX, currentPanY: cPanY, currentScaleX: cScaleX, currentScaleY: cScaleY, currentRotation: cRot };
     };
+
+    // Only the "last selected" gizmo claims the scroll wheel to avoid conflicts
+    // when multiple gizmos are rendered simultaneously.
+    const isScrollOwner = useEffectStore(s => Array.from(s.selectedIds).at(-1) === effectId);
 
     // --- 5. Unified Drag Handlers ---
     const handlePointerDown = (e: React.PointerEvent, type: TransformType) => {
         e.preventDefault();
         e.stopPropagation();
-        const { currentScaleX, currentScaleY } = getCurrentScale(); // 1. Capture truth
-        flushScroll(); // 2. Clean up
+        const { currentPanX, currentPanY, currentScaleX, currentScaleY, currentRotation } = getCurrentValues(); // 1. Capture absolute truth
+        flushGlobalScroll(); // 2. Clean up
         commitHistory();
         setDragType(type);
 
@@ -149,10 +177,10 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
             startY: e.clientY,
             containerW: rect?.width || 1,
             containerH: rect?.height || 1,
-            panX, panY,
+            panX: currentPanX, panY: currentPanY,
             scaleX: currentScaleX,
             scaleY: currentScaleY,
-            rotation,
+            rotation: currentRotation,
             centerX: cX,
             centerY: cY,
             startAngle: type === 'rotate' ? Math.atan2(e.clientY - cY, e.clientX - cX) : 0,
@@ -166,24 +194,50 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
         // Prime the drag override so the effect doesn't jump
         if (type === 'pan') {
             if (effectId) setDragOverride(effectId, [
-                { index: panXIdx, value: panX },
-                { index: panYIdx, value: panY }
+                { index: panXIdx, value: currentPanX },
+                { index: panYIdx, value: currentPanY }
             ]);
         } else if (type === 'rotate') {
             if (effectId) setDragOverride(effectId, [
-                { index: rotationIdx, value: rotation }
+                { index: rotationIdx, value: currentRotation }
             ]);
         } else { // Scale
             if (effectId) setDragOverride(effectId, [
-                { index: scaleXIdx, value: dragStateRef.current.scaleX },
-                { index: scaleYIdx, value: dragStateRef.current.scaleY }
+                { index: scaleXIdx, value: currentScaleX },
+                { index: scaleYIdx, value: currentScaleY }
             ]);
         }
     };
 
-    const handleScroll = useCallback((e: WheelEvent) => {
-        if (dragType) return;
+    const flushScroll = useCallback(() => {
+        if (!timerRef.current) return;
+        setDragType(null);
+        clearDragOverride();
 
+        // Commit self
+        updateMultipleParameters(effectId, [
+            { paramIndex: scaleXIdx, update: { value: dragStateRef.current.scaleX } },
+            { paramIndex: scaleYIdx, update: { value: dragStateRef.current.scaleY } }
+        ]);
+
+        // Commit siblings
+        if (dragStateRef.current.siblingStarts) {
+            dragStateRef.current.siblingStarts.forEach((sib, sibId) => {
+                updateMultipleParameters(sibId, [
+                    { paramIndex: sib.sxIdx, update: { value: sib.scaleX } },
+                    { paramIndex: sib.syIdx, update: { value: sib.scaleY } }
+                ]);
+            });
+            dragStateRef.current.siblingStarts = undefined;
+        }
+
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+        setFlushGlobalScroll(() => { });
+    }, [effectId, scaleXIdx, scaleYIdx, updateMultipleParameters]);
+
+    const handleScroll = useCallback((e: WheelEvent) => {
+        if (dragOverride.overrides.size > 0 && !timerRef.current) return;
         const target = e.target as HTMLElement;
         const container = target.closest?.('[data-section]') as HTMLElement;
         const section = container?.dataset.section;
@@ -193,14 +247,37 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
         e.stopPropagation();
 
         const state = dragStateRef.current;
+        const allEffects = useEffectStore.getState().effects;
+        const allSelectedIds = Array.from(useEffectStore.getState().selectedIds);
+
         if (timerRef.current) {
             clearTimeout(timerRef.current);
         } else {
+            setFlushGlobalScroll(() => { flushScroll(); });
+            // --- First frame of scroll sequence: Initialize state for self AND siblings ---
+            const { currentScaleX, currentScaleY } = getCurrentValues();
             commitHistory();
-            state.scaleX = scaleX;
-            state.scaleY = scaleY;
+            state.scaleX = currentScaleX;
+            state.scaleY = currentScaleY;
             state.scaleXIdx = scaleXIdx;
             state.scaleYIdx = scaleYIdx;
+
+            // Capture sibling starting scales
+            state.siblingStarts = new Map<string, { scaleX: number; scaleY: number; sxIdx: number; syIdx: number }>();
+            allSelectedIds.forEach(sibId => {
+                if (sibId === effectId) return;
+                const sib = allEffects.find(e => e.id === sibId);
+                if (!sib) return;
+                const sxIdx = sib.params.findIndex(p => p.param === 'Scale X');
+                const syIdx = sib.params.findIndex(p => p.param === 'Scale Y');
+                if (sxIdx === -1 || syIdx === -1) return;
+                state.siblingStarts!.set(sibId, {
+                    scaleX: sib.params[sxIdx].value,
+                    scaleY: sib.params[syIdx].value,
+                    sxIdx,
+                    syIdx
+                });
+            });
         }
         timerRef.current = setTimeout(() => {
             flushScroll();
@@ -229,28 +306,29 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
         state.scaleX *= factor;
         state.scaleY *= factor;
 
+        // --- Apply and Broadcast Factor ---
         setDragOverride(effectId, [
             { index: scaleXIdx, value: state.scaleX },
             { index: scaleYIdx, value: state.scaleY }
         ]);
 
+        if (state.siblingStarts) {
+            state.siblingStarts.forEach((sib, sibId) => {
+                sib.scaleX *= factor;
+                sib.scaleY *= factor;
+                setDragOverride(sibId, [
+                    { index: sib.sxIdx, value: sib.scaleX },
+                    { index: sib.syIdx, value: sib.scaleY }
+                ]);
+            });
+        }
+
         if (gizmoRef.current) {
             gizmoRef.current.style.width = `${state.scaleX * 2}%`;
             gizmoRef.current.style.height = `${state.scaleY * 2}%`;
         }
-    }, [dragType, effectId, scaleX, scaleY, scaleXIdx, scaleYIdx]);
+    }, [dragType, effectId, scaleX, scaleY, scaleXIdx, scaleYIdx, commitHistory, flushScroll]);
 
-    const flushScroll = () => {
-        if (!timerRef.current) return;
-        setDragType(null);
-        clearDragOverride();
-        updateMultipleParameters(effectId, [
-            { paramIndex: scaleXIdx, update: { value: dragStateRef.current.scaleX } },
-            { paramIndex: scaleYIdx, update: { value: dragStateRef.current.scaleY } }
-        ]);
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-    };
 
     useEffect(() => {
         if (!dragType || !isValid || !effectId) return;
@@ -411,13 +489,13 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
     }, [dragType, isValid, effectId, updateMultipleParameters, updateParameter]);
 
     useEffect(() => {
-        if (!isValid || !effectId) return;
+        if (!isValid || !effectId || !isScrollOwner) return;
 
         window.addEventListener('wheel', handleScroll, { passive: false });
         return () => {
             window.removeEventListener('wheel', handleScroll);
         }
-    }, [isValid, effectId, handleScroll]);
+    }, [isValid, effectId, isScrollOwner, handleScroll]);
 
     if (!isValid) return null;
 
@@ -456,13 +534,14 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
                         if (!['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
                         e.preventDefault();
                         e.stopPropagation();
-                        flushScroll();
+                        const { currentPanX, currentPanY } = getCurrentValues();
+                        flushGlobalScroll();
                         commitHistory();
                         const step = e.shiftKey ? 5 : 1;
-                        if (e.key === 'ArrowRight') updateParameter(effectId!, panXIdx, { value: Math.max(0, Math.min(100, panX + step)) });
-                        else if (e.key === 'ArrowLeft') updateParameter(effectId!, panXIdx, { value: Math.max(0, Math.min(100, panX - step)) });
-                        else if (e.key === 'ArrowUp') updateParameter(effectId!, panYIdx, { value: Math.max(0, Math.min(100, panY + step)) });
-                        else if (e.key === 'ArrowDown') updateParameter(effectId!, panYIdx, { value: Math.max(0, Math.min(100, panY - step)) });
+                        if (e.key === 'ArrowRight') updateParameter(effectId!, panXIdx, { value: Math.max(0, Math.min(100, currentPanX + step)) });
+                        else if (e.key === 'ArrowLeft') updateParameter(effectId!, panXIdx, { value: Math.max(0, Math.min(100, currentPanX - step)) });
+                        else if (e.key === 'ArrowUp') updateParameter(effectId!, panYIdx, { value: Math.max(0, Math.min(100, currentPanY + step)) });
+                        else if (e.key === 'ArrowDown') updateParameter(effectId!, panYIdx, { value: Math.max(0, Math.min(100, currentPanY - step)) });
                     }}
                 >
                     {/* Rotation Handle */}
@@ -473,11 +552,12 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
                                 className="relative w-8 h-8 md:w-5 md:h-5 -mt-1 rounded-full bg-black border border-primary"
                                 onPointerDown={(e) => handlePointerDown(e, 'rotate')}
                                 onKeyPress={(key, shift) => {
-                                    flushScroll();
+                                    const { currentRotation } = getCurrentValues();
+                                    flushGlobalScroll();
                                     commitHistory();
                                     const step = shift ? 5 : 1;
-                                    if (key === 'ArrowRight') updateParameter(effectId!, rotationIdx, { value: (rotation + step + 100) % 100 });
-                                    else if (key === 'ArrowLeft') updateParameter(effectId!, rotationIdx, { value: (rotation - step + 100) % 100 });
+                                    if (key === 'ArrowRight') updateParameter(effectId!, rotationIdx, { value: (currentRotation + step + 100) % 100 });
+                                    else if (key === 'ArrowLeft') updateParameter(effectId!, rotationIdx, { value: (currentRotation - step + 100) % 100 });
                                 }}
                             />
                         </div>
@@ -490,8 +570,8 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
                             className={`z-10 absolute w-7 h-7 md:w-4 md:h-4 rounded-full bg-black border border-primary ${corner.className}`}
                             onPointerDown={(e) => handlePointerDown(e, id as ScaleCornerId)}
                             onKeyPress={(key, shift) => {
-                                const { currentScaleX, currentScaleY } = getCurrentScale(); // 1. Capture truth
-                                flushScroll(); // 2. Clean up
+                                const { currentScaleX, currentScaleY } = getCurrentValues();
+                                flushGlobalScroll();
                                 commitHistory();
                                 const step = shift ? 5 : 1;
                                 // Keyboard arrows map logically based on mx/my multipliers
