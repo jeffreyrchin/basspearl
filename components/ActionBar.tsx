@@ -65,11 +65,10 @@ const ActionBar: React.FC<ActionBarProps> = () => {
 
             <div className="w-[1px] h-4 bg-white/20" />
 
-            {/* Add Color — only for single selection */}
+            {/* Add Color */}
             <button
-                disabled={!selectedId || !selectedEffect || (!canAddColor && selectedEffect?.type !== 'RGBA')}
                 onClick={addColor}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest enabled:hover:text-white enabled:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all ${isInspectorOpen && selectedEffect?.type === 'RGBA' ? 'text-white bg-white/10' : 'text-white/70'}`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-white/70 hover:text-white hover:bg-white/10 transition-all`}
                 title="Color Select (C)"
             >
                 <span className="material-symbols-outlined text-[16px]">palette</span>

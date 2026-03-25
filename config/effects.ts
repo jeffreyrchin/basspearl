@@ -370,17 +370,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     ],
     isColorable: true
   },
-  SCALE_PAN: {
-    label: 'Scale-Pan',
-    icon: 'open_with',
-    category: 'Spatial',
-    params: [
-      p('Scale X', { v: 50 }),
-      p('Scale Y', { v: 50 }),
-      p('Pan X', { v: 50 }),
-      p('Pan Y', { v: 50 }),
-    ],
-  },
   TRANSFORM: {
     label: 'Transform',
     icon: 'open_with',
@@ -398,8 +387,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     icon: 'palette',
     category: 'Color',
     params: [
-      p('Red', { v: 50 }),
-      p('Green', { v: 80 }),
+      p('Red', { v: 100 }),
+      p('Green', { v: 100 }),
       p('Blue', { v: 100 }),
       p('Opacity', { v: 100 }),
     ],

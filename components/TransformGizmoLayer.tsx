@@ -9,11 +9,7 @@ interface TransformGizmoLayerProps {
 const TransformGizmoLayer = ({ canvasRef }: TransformGizmoLayerProps) => {
     const selectedIds = useEffectStore(s => s.selectedIds);
 
-    const selectedHandles = new Set(
-        [...selectedIds].map(id => useEffectStore.getState().findGroupHandle(id))
-    );
-
-    return [...selectedHandles].map(id => (
+    return [...selectedIds].map(id => (
         <TransformGizmo key={id} effectId={id} canvasRef={canvasRef} />
     ));
 };

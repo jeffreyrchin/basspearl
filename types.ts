@@ -30,7 +30,6 @@ export type GlitchEffectType =
   | 'SCROLL'
   | 'LUMINANCE_MAP'
   | 'TERRAIN'
-  | 'SCALE_PAN'
   | 'TRANSFORM'
   | 'CHECKERBOARD'
   | 'RGBA';

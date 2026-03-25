@@ -321,7 +321,6 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
 
                 // Broadcast pan delta to all other selected effects
                 siblingStarts.forEach(({ panX: startX, panY: startY, panXIdx: sxIdx, panYIdx: syIdx }, sibId) => {
-                    if (effect.type === 'TRANSFORM') return;
                     setDragOverride(sibId, [
                         { index: sxIdx, value: Math.max(0, Math.min(100, startX + (pxRaw * 50))) },
                         { index: syIdx, value: Math.max(0, Math.min(100, startY - (pyRaw * 50))) }
@@ -383,7 +382,6 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
 
                 // Commit pan to all other selected siblings
                 siblingStarts.forEach(({ panX: startX, panY: startY, panXIdx: sxIdx, panYIdx: syIdx }, sibId) => {
-                    if (effect.type === 'TRANSFORM') return;
                     const finalX = Math.max(0, Math.min(100, startX + (liveValues.panX - state.panX)));
                     const finalY = Math.max(0, Math.min(100, startY + (liveValues.panY - state.panY)));
                     updateMultipleParameters(sibId, [

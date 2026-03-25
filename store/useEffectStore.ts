@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { EffectConfig, GlitchEffectType, MacroType } from '../types';
 import { INITIAL_REACTIVE_EFFECTS, createEffectInstance, createMacroInstance } from '../constants';
 import { analytics } from '@/services/analytics';
-import { EFFECT_METADATA } from '@/config/effects';
 
 interface EffectState {
     effects: EffectConfig[];
@@ -50,10 +49,6 @@ interface EffectState {
     updateMultipleParameters: (effectId: string, updates: { paramIndex: number, update: Partial<EffectConfig['params'][0]> }[]) => void;
 
     addColor: () => void;
-
-    findGroup: (id: string) => Set<string>;
-    findGroupHandle: (id: string) => string;
-    toggleGroup: (id: string) => void;
 }
 
 export const useEffectStore = create<EffectState>((set, get) => ({
@@ -91,26 +86,10 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     setIsInSelectMode: (isInSelectMode) => set({ isInSelectMode: isInSelectMode }),
 
     toggleSelected: (id, multi) => {
-        const { selectedIds, effects } = get();
+        const { selectedIds } = get();
         const next = new Set(multi ? selectedIds : []);
         if (next.has(id)) next.delete(id);
-        else {
-            const effect = effects.find(e => e.id === id);
-            if (effect?.type === 'TRANSFORM') {
-                // Clicking the TRANSFORM handle selects the whole group
-                const group = get().findGroup(id);
-                group.forEach(gId => next.add(gId));
-            } else {
-                next.add(id);
-            }
-        }
-        set({ selectedIds: next });
-    },
-
-    toggleGroup: (id) => {
-        const next = new Set([]);
-        const group = get().findGroup(id);
-        group.forEach(id => next.add(id));
+        else next.add(id);
         set({ selectedIds: next });
     },
 
@@ -128,58 +107,8 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         const lo = Math.min(from, to);
         const hi = Math.max(from, to);
         const next = new Set(selectedIds);
-        for (let i = lo; i <= hi; i++) {
-            const effect = effects.find(e => e.id === ids[i]);
-            if (effect?.type === 'TRANSFORM') {
-                // Selecting the TRANSFORM handle selects the whole group
-                const group = get().findGroup(ids[i]);
-                group.forEach(gId => next.add(gId));
-            } else {
-                next.add(ids[i]);
-            }
-        }
+        for (let i = lo; i <= hi; i++) next.add(ids[i]);
         set({ selectedIds: next });
-    },
-
-    findGroup: (id) => {
-        const { effects } = get();
-        const idx = effects.findIndex(e => e.id === id);
-        if (idx === -1) return new Set<string>();
-
-        const group = new Set<string>();
-        group.add(id);
-
-        // forward: check if previous item is melded
-        for (let i = idx + 1; i < effects.length; i++) {
-            if (!effects[i - 1].melded) break;
-            group.add(effects[i].id);
-        }
-
-        // backward: check if current item is melded
-        for (let i = idx - 1; i >= 0; i--) {
-            if (!effects[i].melded) break;
-            group.add(effects[i].id);
-        }
-
-        return group;
-    },
-
-    // Given any effect ID, returns the handle of the group (last effect in the group).
-    // If the effect is not part of a melded group, returns the original ID.
-    findGroupHandle: (id) => {
-        const { effects } = get();
-        const idx = effects.findIndex(e => e.id === id);
-        if (idx === -1) return id;
-
-        // Walk forward to find the tail
-        if (effects[idx].melded) {
-            for (let i = idx + 1; i < effects.length; i++) {
-                if (!effects[i].melded) return effects[i].id;
-            }
-        }
-
-        // Solo effect — no group handle
-        return id;
     },
 
     selectAll: () => {
@@ -258,37 +187,18 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     },
 
     addColor: () => {
-        const { selectedIds } = get();
-        if (selectedIds.size !== 1) return;
-        let colorAdded = false;
         set((state) => {
             const next = [...state.effects];
-            const selectedId = selectedIds.values().next().value;
-            const idx = next.findIndex(e => e.id === selectedId);
-
-            if (idx === -1) return {};
-            if (next[idx].type === 'RGBA') { colorAdded = true; return {}; };
-            if (!EFFECT_METADATA[next[idx].type]?.isColorable) return {};
-
-            let targetSelection: Set<string>;
-            if (next[idx + 1] && next[idx + 1].type === 'RGBA') {
-                targetSelection = new Set([next[idx + 1].id]);
-            } else {
-                get().commitHistory();
-                analytics.effect.added('RGBA');
-                const newEffect = createEffectInstance('RGBA');
-                newEffect.melded = next[idx].melded;
-                next[idx] = { ...next[idx], melded: true };
-                next.splice(idx + 1, 0, newEffect);
-                targetSelection = new Set([newEffect.id]);
-            }
-            colorAdded = true;
+            get().commitHistory();
+            analytics.effect.added('RGBA');
+            const newEffect = createEffectInstance('RGBA');
+            next.push(newEffect);
             return {
                 effects: next,
-                selectedIds: targetSelection
+                selectedIds: new Set([newEffect.id]),
             };
         });
-        colorAdded && get().pushFocus('inspector');
+        get().pushFocus('inspector');
     },
 
     addMacro: (macroType) => {
@@ -377,14 +287,11 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         get().commitHistory();
         set((state) => {
             const next = [...state.effects];
-            // Meld all selected
-            for (let i = 0; i < indices.length; i++) {
+            // Meld all selected except the last one
+            for (let i = 0; i < indices.length - 1; i++) {
                 next[indices[i]] = { ...next[indices[i]], melded: true };
             }
-            const newEffect = createEffectInstance('TRANSFORM');
-            newEffect.melded = false;
-            next.splice(indices[indices.length - 1] + 1, 0, newEffect);
-            return { effects: next, selectedIds: new Set([newEffect.id, ...selectedIds]) };
+            return { effects: next, selectedIds: new Set(indices.map(i => next[i].id)) };
         });
     },
 
@@ -406,11 +313,13 @@ export const useEffectStore = create<EffectState>((set, get) => ({
                 next[indices[i]] = { ...next[indices[i]], melded: false };
             }
 
-            const lastIdx = indices[indices.length - 1];
-            if (next[lastIdx].type === "TRANSFORM") {
-                next.splice(lastIdx, 1);
+            // Unmeld previous effect if melded
+            const firstIdx = indices[0];
+            if (firstIdx - 1 >= 0 && next[firstIdx - 1].melded) {
+                next[firstIdx - 1] = { ...next[firstIdx - 1], melded: false };
             }
-            return { effects: next, selectedIds: new Set<string>(next.map(e => e.id)) };
+
+            return { effects: next, selectedIds: new Set(indices.map(i => next[i].id)) };
         });
     },
 
