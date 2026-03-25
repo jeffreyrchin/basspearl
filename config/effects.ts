@@ -381,6 +381,18 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Pan Y', { v: 50 }),
     ],
   },
+  TRANSFORM: {
+    label: 'Transform',
+    icon: 'open_with',
+    category: 'Spatial',
+    params: [
+      p('Scale X', { v: 50 }),
+      p('Scale Y', { v: 50 }),
+      p('Pan X', { v: 50 }),
+      p('Pan Y', { v: 50 }),
+      p('Rotation', { v: 0 }),
+    ],
+  },
   RGBA: {
     label: 'Color Select',
     icon: 'palette',

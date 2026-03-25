@@ -31,6 +31,7 @@ export type GlitchEffectType =
   | 'LUMINANCE_MAP'
   | 'TERRAIN'
   | 'SCALE_PAN'
+  | 'TRANSFORM'
   | 'CHECKERBOARD'
   | 'RGBA';
 

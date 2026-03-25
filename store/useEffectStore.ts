@@ -50,6 +50,10 @@ interface EffectState {
     updateMultipleParameters: (effectId: string, updates: { paramIndex: number, update: Partial<EffectConfig['params'][0]> }[]) => void;
 
     addColor: () => void;
+
+    findGroup: (id: string) => Set<string>;
+    findGroupHandle: (id: string) => string;
+    toggleGroup: (id: string) => void;
 }
 
 export const useEffectStore = create<EffectState>((set, get) => ({
@@ -87,10 +91,26 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     setIsInSelectMode: (isInSelectMode) => set({ isInSelectMode: isInSelectMode }),
 
     toggleSelected: (id, multi) => {
-        const { selectedIds } = get();
+        const { selectedIds, effects } = get();
         const next = new Set(multi ? selectedIds : []);
         if (next.has(id)) next.delete(id);
-        else next.add(id);
+        else {
+            const effect = effects.find(e => e.id === id);
+            if (effect?.type === 'TRANSFORM') {
+                // Clicking the TRANSFORM handle selects the whole group
+                const group = get().findGroup(id);
+                group.forEach(gId => next.add(gId));
+            } else {
+                next.add(id);
+            }
+        }
+        set({ selectedIds: next });
+    },
+
+    toggleGroup: (id) => {
+        const next = new Set([]);
+        const group = get().findGroup(id);
+        group.forEach(id => next.add(id));
         set({ selectedIds: next });
     },
 
@@ -108,8 +128,58 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         const lo = Math.min(from, to);
         const hi = Math.max(from, to);
         const next = new Set(selectedIds);
-        for (let i = lo; i <= hi; i++) next.add(ids[i]);
+        for (let i = lo; i <= hi; i++) {
+            const effect = effects.find(e => e.id === ids[i]);
+            if (effect?.type === 'TRANSFORM') {
+                // Selecting the TRANSFORM handle selects the whole group
+                const group = get().findGroup(ids[i]);
+                group.forEach(gId => next.add(gId));
+            } else {
+                next.add(ids[i]);
+            }
+        }
         set({ selectedIds: next });
+    },
+
+    findGroup: (id) => {
+        const { effects } = get();
+        const idx = effects.findIndex(e => e.id === id);
+        if (idx === -1) return new Set<string>();
+
+        const group = new Set<string>();
+        group.add(id);
+
+        // forward: check if previous item is melded
+        for (let i = idx + 1; i < effects.length; i++) {
+            if (!effects[i - 1].melded) break;
+            group.add(effects[i].id);
+        }
+
+        // backward: check if current item is melded
+        for (let i = idx - 1; i >= 0; i--) {
+            if (!effects[i].melded) break;
+            group.add(effects[i].id);
+        }
+
+        return group;
+    },
+
+    // Given any effect ID, returns the handle of the group (last effect in the group).
+    // If the effect is not part of a melded group, returns the original ID.
+    findGroupHandle: (id) => {
+        const { effects } = get();
+        const idx = effects.findIndex(e => e.id === id);
+        if (idx === -1) return id;
+
+        // Walk forward to find the tail
+        if (effects[idx].melded) {
+            for (let i = idx + 1; i < effects.length; i++) {
+                if (!effects[i].melded) return effects[i].id;
+            }
+        }
+
+        // Solo effect — no group handle
+        return id;
     },
 
     selectAll: () => {
@@ -243,12 +313,16 @@ export const useEffectStore = create<EffectState>((set, get) => ({
             // Collect selected effects in their pipeline order
             const selected = state.effects.filter(e => selectedIds.has(e.id));
 
-            // Clone each one, stripping melded so they paste as independent effects at the end
+            // Clone each effect
             const clones: EffectConfig[] = selected.map(src => ({
                 ...JSON.parse(JSON.stringify(src)),
-                id: crypto.randomUUID(),
-                melded: false,
+                id: crypto.randomUUID()
             }));
+
+            // Break meld link of the last clone
+            if (clones.length > 0) {
+                clones[clones.length - 1].melded = false;
+            }
 
             const newSelectedIds = new Set(clones.map(c => c.id));
             return {
@@ -303,13 +377,14 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         get().commitHistory();
         set((state) => {
             const next = [...state.effects];
-            // Meld all selected except the last one
-            for (let i = 0; i < indices.length - 1; i++) {
+            // Meld all selected
+            for (let i = 0; i < indices.length; i++) {
                 next[indices[i]] = { ...next[indices[i]], melded: true };
             }
-            // The last selected should NOT be melded (it terminates the group)
-            next[indices[indices.length - 1]] = { ...next[indices[indices.length - 1]], melded: false };
-            return { effects: next };
+            const newEffect = createEffectInstance('TRANSFORM');
+            newEffect.melded = false;
+            next.splice(indices[indices.length - 1] + 1, 0, newEffect);
+            return { effects: next, selectedIds: new Set([newEffect.id, ...selectedIds]) };
         });
     },
 
@@ -330,7 +405,12 @@ export const useEffectStore = create<EffectState>((set, get) => ({
             for (let i = 0; i < indices.length; i++) {
                 next[indices[i]] = { ...next[indices[i]], melded: false };
             }
-            return { effects: next };
+
+            const lastIdx = indices[indices.length - 1];
+            if (next[lastIdx].type === "TRANSFORM") {
+                next.splice(lastIdx, 1);
+            }
+            return { effects: next, selectedIds: new Set<string>(next.map(e => e.id)) };
         });
     },
 

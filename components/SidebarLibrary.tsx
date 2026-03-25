@@ -145,7 +145,7 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
                     ))}
 
                     {/* Render Individual Effects */}
-                    {filteredEffects.map(([type]) => (
+                    {filteredEffects.filter(([type]) => type !== 'TRANSFORM').map(([type]) => (
                         <LibraryCard
                             key={type}
                             effectType={type}

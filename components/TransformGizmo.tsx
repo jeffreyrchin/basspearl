@@ -5,6 +5,7 @@ import { useDragSync } from '../hooks/useDragSync';
 import { useCanvasSelection } from '../hooks/useCanvasSelection';
 
 interface TransformGizmoProps {
+    effectId: string;
     canvasRef: React.RefObject<HTMLCanvasElement>;
 }
 
@@ -18,14 +19,13 @@ const SCALE_CORNERS = {
 type ScaleCornerId = keyof typeof SCALE_CORNERS;
 type TransformType = 'pan' | 'rotate' | ScaleCornerId;
 
-export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => {
+export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvasRef }) => {
     const handleCanvasPointerDown = useCanvasSelection(canvasRef);
     const updateParameter = useEffectStore(s => s.updateParameter);
     const updateMultipleParameters = useEffectStore(s => s.updateMultipleParameters);
     const commitHistory = useEffectStore(s => s.commitHistory);
 
-    const selectedId = useEffectStore(s => s.selectedIds.size === 1 ? s.selectedIds.values().next().value : null);
-    const effect = useEffectStore(s => s.effects.find(e => e.id === selectedId));
+    const effect = useEffectStore(s => s.effects.find(e => e.id === effectId));
 
     // --- 1. Parameter Definitions ---
     const [panXIdx, panYIdx, scaleXIdx, scaleYIdx, rotationIdx] = useMemo(() => {
@@ -37,7 +37,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
             effect.params.findIndex(p => p.param === 'Scale Y'),
             effect.params.findIndex(p => p.param === 'Rotation')
         ];
-    }, [selectedId]);
+    }, [effectId]);
 
     const isValid = effect && scaleXIdx !== -1 && scaleYIdx !== -1 && panXIdx !== -1 && panYIdx !== -1;
 
@@ -45,7 +45,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
     const panY = isValid ? effect.params[panYIdx].value : 0;
     const scaleX = isValid ? effect.params[scaleXIdx].value : 0;
     const scaleY = isValid ? effect.params[scaleYIdx].value : 0;
-    const rotation = rotationIdx !== -1 ? effect.params[rotationIdx].value : 0;
+    const rotation = isValid && rotationIdx !== -1 ? effect.params[rotationIdx].value : 0;
 
     // --- 2. Element Refs and Canvas Math ---
     const containerRef = useRef<HTMLDivElement>(null);
@@ -104,9 +104,9 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
 
     // --- 4. Unified Fast-Track Sync ---
     // Listens to the sliders in the sidebar and moves the Gizmo without re-rendering
-    const isGizmoListening = selectedId && !dragType;
+    const isGizmoListening = effectId && !dragType;
 
-    useDragSync(isGizmoListening ? selectedId : null, null, useCallback((params) => {
+    useDragSync(isGizmoListening ? effectId : null, null, useCallback((params) => {
         if (!gizmoRef.current) return;
 
         params.forEach(p => {
@@ -165,16 +165,16 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
 
         // Prime the drag override so the effect doesn't jump
         if (type === 'pan') {
-            if (selectedId) setDragOverride(selectedId, [
+            if (effectId) setDragOverride(effectId, [
                 { index: panXIdx, value: panX },
                 { index: panYIdx, value: panY }
             ]);
         } else if (type === 'rotate') {
-            if (selectedId) setDragOverride(selectedId, [
+            if (effectId) setDragOverride(effectId, [
                 { index: rotationIdx, value: rotation }
             ]);
         } else { // Scale
-            if (selectedId) setDragOverride(selectedId, [
+            if (effectId) setDragOverride(effectId, [
                 { index: scaleXIdx, value: dragStateRef.current.scaleX },
                 { index: scaleYIdx, value: dragStateRef.current.scaleY }
             ]);
@@ -229,7 +229,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
         state.scaleX *= factor;
         state.scaleY *= factor;
 
-        setDragOverride(selectedId, [
+        setDragOverride(effectId, [
             { index: scaleXIdx, value: state.scaleX },
             { index: scaleYIdx, value: state.scaleY }
         ]);
@@ -238,13 +238,13 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
             gizmoRef.current.style.width = `${state.scaleX * 2}%`;
             gizmoRef.current.style.height = `${state.scaleY * 2}%`;
         }
-    }, [dragType, selectedId, scaleX, scaleY, scaleXIdx, scaleYIdx]);
+    }, [dragType, effectId, scaleX, scaleY, scaleXIdx, scaleYIdx]);
 
     const flushScroll = () => {
         if (!timerRef.current) return;
         setDragType(null);
         clearDragOverride();
-        updateMultipleParameters(selectedId, [
+        updateMultipleParameters(effectId, [
             { paramIndex: scaleXIdx, update: { value: dragStateRef.current.scaleX } },
             { paramIndex: scaleYIdx, update: { value: dragStateRef.current.scaleY } }
         ]);
@@ -253,7 +253,30 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
     };
 
     useEffect(() => {
-        if (!dragType || !isValid || !selectedId) return;
+        if (!dragType || !isValid || !effectId) return;
+
+        // Gather sibling selected effects that also have the relevant parameters
+        // so we can broadcast drag deltas to all selected gizmos simultaneously
+        const allEffects = useEffectStore.getState().effects;
+        const allSelectedIds = [...useEffectStore.getState().selectedIds];
+
+        // Capture each sibling's starting pan values at drag-start (like state.panX for the primary)
+        // so we can compute pan overrides relative to a fixed origin each frame.
+        const siblingStarts = new Map<string, { panX: number; panY: number; panXIdx: number; panYIdx: number }>();
+        allSelectedIds.forEach(sibId => {
+            if (sibId === effectId) return;
+            const sib = allEffects.find(e => e.id === sibId);
+            if (!sib) return;
+            const sxIdx = sib.params.findIndex(p => p.param === 'Pan X');
+            const syIdx = sib.params.findIndex(p => p.param === 'Pan Y');
+            if (sxIdx === -1 || syIdx === -1) return;
+            siblingStarts.set(sibId, {
+                panX: sib.params[sxIdx].value,
+                panY: sib.params[syIdx].value,
+                panXIdx: sxIdx,
+                panYIdx: syIdx
+            });
+        });
 
         const state = dragStateRef.current;
 
@@ -291,10 +314,19 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
                 liveValues.panY = Math.max(0, Math.min(100, state.panY - (pyRaw * 50)));
 
                 // Update canvas directly
-                setDragOverride(selectedId, [
+                setDragOverride(effectId, [
                     { index: state.panXIdx, value: liveValues.panX },
                     { index: state.panYIdx, value: liveValues.panY }
                 ]);
+
+                // Broadcast pan delta to all other selected effects
+                siblingStarts.forEach(({ panX: startX, panY: startY, panXIdx: sxIdx, panYIdx: syIdx }, sibId) => {
+                    if (effect.type === 'TRANSFORM') return;
+                    setDragOverride(sibId, [
+                        { index: sxIdx, value: Math.max(0, Math.min(100, startX + (pxRaw * 50))) },
+                        { index: syIdx, value: Math.max(0, Math.min(100, startY - (pyRaw * 50))) }
+                    ]);
+                });
 
                 // Update gizmo position
                 if (gizmoRef.current) {
@@ -309,7 +341,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
                 // newRot = oldRot + (delta / 3.6). We use mod 100 to loop correctly.
                 liveValues.rotation = (state.rotation + (deltaAngle / 3.6) + 100) % 100;
 
-                setDragOverride(selectedId, [
+                setDragOverride(effectId, [
                     { index: state.rotationIdx, value: liveValues.rotation }
                 ]);
 
@@ -322,7 +354,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
                 liveValues.scaleY = Math.max(0, Math.min(100, state.scaleY + (py * 100 * state.yDir)));
 
                 // Update canvas directly
-                setDragOverride(selectedId, [
+                setDragOverride(effectId, [
                     { index: state.scaleXIdx, value: liveValues.scaleX },
                     { index: state.scaleYIdx, value: liveValues.scaleY }
                 ]);
@@ -344,14 +376,25 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
                 const dist = Math.sqrt(Math.pow(e.clientX - state.startX, 2) + Math.pow(e.clientY - state.startY, 2));
                 if (dist < 3) handleCanvasPointerDown(e as any);
 
-                updateMultipleParameters(selectedId, [
+                updateMultipleParameters(effectId, [
                     { paramIndex: state.panXIdx, update: { value: liveValues.panX } },
                     { paramIndex: state.panYIdx, update: { value: liveValues.panY } }
                 ]);
+
+                // Commit pan to all other selected siblings
+                siblingStarts.forEach(({ panX: startX, panY: startY, panXIdx: sxIdx, panYIdx: syIdx }, sibId) => {
+                    if (effect.type === 'TRANSFORM') return;
+                    const finalX = Math.max(0, Math.min(100, startX + (liveValues.panX - state.panX)));
+                    const finalY = Math.max(0, Math.min(100, startY + (liveValues.panY - state.panY)));
+                    updateMultipleParameters(sibId, [
+                        { paramIndex: sxIdx, update: { value: finalX } },
+                        { paramIndex: syIdx, update: { value: finalY } }
+                    ]);
+                });
             } else if (dragType === 'rotate') {
-                updateParameter(selectedId, state.rotationIdx, { value: liveValues.rotation });
+                updateParameter(effectId, state.rotationIdx, { value: liveValues.rotation });
             } else { // Scale
-                updateMultipleParameters(selectedId, [
+                updateMultipleParameters(effectId, [
                     { paramIndex: state.scaleXIdx, update: { value: liveValues.scaleX } },
                     { paramIndex: state.scaleYIdx, update: { value: liveValues.scaleY } }
                 ]);
@@ -367,16 +410,16 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
             window.removeEventListener('pointermove', handlePointerMove);
             window.removeEventListener('pointerup', handlePointerUp);
         };
-    }, [dragType, isValid, selectedId, updateMultipleParameters]);
+    }, [dragType, isValid, effectId, updateMultipleParameters, updateParameter]);
 
     useEffect(() => {
-        if (!isValid || !selectedId) return;
+        if (!isValid || !effectId) return;
 
         window.addEventListener('wheel', handleScroll, { passive: false });
         return () => {
             window.removeEventListener('wheel', handleScroll);
         }
-    }, [isValid, selectedId, handleScroll]);
+    }, [isValid, effectId, handleScroll]);
 
     if (!isValid) return null;
 
@@ -418,10 +461,10 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
                         flushScroll();
                         commitHistory();
                         const step = e.shiftKey ? 5 : 1;
-                        if (e.key === 'ArrowRight') updateParameter(selectedId!, panXIdx, { value: Math.max(0, Math.min(100, panX + step)) });
-                        else if (e.key === 'ArrowLeft') updateParameter(selectedId!, panXIdx, { value: Math.max(0, Math.min(100, panX - step)) });
-                        else if (e.key === 'ArrowUp') updateParameter(selectedId!, panYIdx, { value: Math.max(0, Math.min(100, panY + step)) });
-                        else if (e.key === 'ArrowDown') updateParameter(selectedId!, panYIdx, { value: Math.max(0, Math.min(100, panY - step)) });
+                        if (e.key === 'ArrowRight') updateParameter(effectId!, panXIdx, { value: Math.max(0, Math.min(100, panX + step)) });
+                        else if (e.key === 'ArrowLeft') updateParameter(effectId!, panXIdx, { value: Math.max(0, Math.min(100, panX - step)) });
+                        else if (e.key === 'ArrowUp') updateParameter(effectId!, panYIdx, { value: Math.max(0, Math.min(100, panY + step)) });
+                        else if (e.key === 'ArrowDown') updateParameter(effectId!, panYIdx, { value: Math.max(0, Math.min(100, panY - step)) });
                     }}
                 >
                     {/* Rotation Handle */}
@@ -435,8 +478,8 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
                                     flushScroll();
                                     commitHistory();
                                     const step = shift ? 5 : 1;
-                                    if (key === 'ArrowRight') updateParameter(selectedId!, rotationIdx, { value: (rotation + step + 100) % 100 });
-                                    else if (key === 'ArrowLeft') updateParameter(selectedId!, rotationIdx, { value: (rotation - step + 100) % 100 });
+                                    if (key === 'ArrowRight') updateParameter(effectId!, rotationIdx, { value: (rotation + step + 100) % 100 });
+                                    else if (key === 'ArrowLeft') updateParameter(effectId!, rotationIdx, { value: (rotation - step + 100) % 100 });
                                 }}
                             />
                         </div>
@@ -454,10 +497,10 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ canvasRef }) => 
                                 commitHistory();
                                 const step = shift ? 5 : 1;
                                 // Keyboard arrows map logically based on mx/my multipliers
-                                if (key === 'ArrowRight') updateParameter(selectedId!, scaleXIdx, { value: Math.max(0, Math.min(100, currentScaleX + step * corner.xDir)) });
-                                else if (key === 'ArrowLeft') updateParameter(selectedId!, scaleXIdx, { value: Math.max(0, Math.min(100, currentScaleX - step * corner.xDir)) });
-                                else if (key === 'ArrowUp') updateParameter(selectedId!, scaleYIdx, { value: Math.max(0, Math.min(100, currentScaleY - step * corner.yDir)) });
-                                else if (key === 'ArrowDown') updateParameter(selectedId!, scaleYIdx, { value: Math.max(0, Math.min(100, currentScaleY + step * corner.yDir)) });
+                                if (key === 'ArrowRight') updateParameter(effectId!, scaleXIdx, { value: Math.max(0, Math.min(100, currentScaleX + step * corner.xDir)) });
+                                else if (key === 'ArrowLeft') updateParameter(effectId!, scaleXIdx, { value: Math.max(0, Math.min(100, currentScaleX - step * corner.xDir)) });
+                                else if (key === 'ArrowUp') updateParameter(effectId!, scaleYIdx, { value: Math.max(0, Math.min(100, currentScaleY - step * corner.yDir)) });
+                                else if (key === 'ArrowDown') updateParameter(effectId!, scaleYIdx, { value: Math.max(0, Math.min(100, currentScaleY + step * corner.yDir)) });
                             }}
                         />
                     ))}

@@ -16,16 +16,14 @@ export interface LiveParamOverride {
 }
 
 interface DragOverrideState {
-    effectId: string | null;
-    params: LiveParamOverride[];
+    overrides: Map<string, LiveParamOverride[]> // id -> params
     /** Registered by useRenderLoop so the Gizmo can request a canvas redraw
      *  without touching React state at all. */
     requestRender: (() => void) | null;
 }
 
 export const dragOverride: DragOverrideState = {
-    effectId: null,
-    params: [],
+    overrides: new Map(),
     requestRender: null,
 };
 
@@ -40,8 +38,7 @@ export function subscribeToDrag(fn: DragListener) {
 
 /** Called on every pointermove. Zero React cost. Automatically requests a redraw. */
 export function setDragOverride(effectId: string, params: LiveParamOverride[]): void {
-    dragOverride.effectId = effectId;
-    dragOverride.params = params;
+    dragOverride.overrides.set(effectId, params);
     // Kick the render loop without going through React at all
     dragOverride.requestRender?.();
     // Notify UI subscribers (e.g. sliders)
@@ -50,6 +47,5 @@ export function setDragOverride(effectId: string, params: LiveParamOverride[]): 
 
 /** Called once on pointerup, after committing final values to the store. */
 export function clearDragOverride(): void {
-    dragOverride.effectId = null;
-    dragOverride.params = [];
+    dragOverride.overrides.clear();
 }

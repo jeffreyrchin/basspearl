@@ -1318,6 +1318,22 @@ void main() {
 }
 `;
 
+export const TRANSFORM_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[5]; // [Scale X, Scale Y, Pan X, Pan Y, Rotation]
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+${GLSL_TRANSFORM}
+
+void main() {
+    TR tr = getTransform_(v_texCoord, u_params[0], u_params[1], u_params[2], u_params[3], u_params[4], u_resolution);
+    vec4 src = texture(u_image, tr.localUV);
+    outColor = mix(vec4(0.0), src, tr.mask);
+}
+`;
+
 export const SCALE_PAN_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
@@ -1422,6 +1438,7 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     LUMINANCE_MAP: { name: 'LUMINANCE_MAP', fragmentSource: LUMINANCE_MAP_SHADER },
     TERRAIN: { name: 'TERRAIN', fragmentSource: '', velocityParamIndices: [2], is3D: true },
     SCALE_PAN: { name: 'SCALE_PAN', fragmentSource: SCALE_PAN_SHADER },
+    TRANSFORM: { name: 'TRANSFORM', fragmentSource: TRANSFORM_SHADER },
     CHECKERBOARD: { name: 'CHECKERBOARD', fragmentSource: CHECKERBOARD_SHADER },
     RGBA: { name: 'RGBA', fragmentSource: RGBA_SHADER },
 };

@@ -258,7 +258,7 @@ export class GlitchEngine {
 
     // If there is an active drag override for this effect, read from it directly —
     // this avoids a Zustand store update + React re-render on every pointermove.
-    const liveOverrides = dragOverride.effectId === effect.id ? dragOverride.params : null;
+    const liveOverrides = dragOverride.overrides.get(effect.id) || null;
 
     params.forEach((p, i) => {
       if (i < 16) {

@@ -52,14 +52,29 @@ export const useCanvasSelection = (canvasRef: React.RefObject<HTMLCanvasElement>
         }
 
         if (hitList.length > 0) {
-            // Find the currently selected element if there is only one
-            const currentSelectedId = store.selectedIds.size === 1 ? Array.from(store.selectedIds)[0] : null;
-            const currentIndex = currentSelectedId ? hitList.indexOf(currentSelectedId) : -1;
+            // Map every raw pixel hit to its group's handle (or itself if solo)
+            // then deduplicate — so a 3-layer melded group counts as a single hit target.
+            const groupHandles = [...new Set(hitList.map(id => store.findGroupHandle(id)))];
 
-            // "Drill-Down" Algorithm: cycle through hits backwards
-            const nextIndex = currentIndex !== -1 ? (currentIndex + 1) % hitList.length : 0;
+            // Find which handle is currently active so we can cycle from it
+            // Check all selected IDs (not just the first) so cycling works with multi-selection
+            const selectedHandles = new Set(
+                [...store.selectedIds].map(id => store.findGroupHandle(id))
+            );
+            const firstActiveHandle = groupHandles.find(h => selectedHandles.has(h)) ?? null;
+            const currentIndex = firstActiveHandle ? groupHandles.indexOf(firstActiveHandle) : -1;
 
-            useEffectStore.setState({ selectedIds: new Set([hitList[nextIndex]]) });
+            // "Drill-Down" Algorithm: cycle through unique group handles
+            const nextIndex = currentIndex !== -1 ? (currentIndex + 1) % groupHandles.length : 0;
+            const nextHandle = groupHandles[nextIndex];
+
+            if (e.shiftKey) {
+                // Shift+click: add/remove the group from the existing selection
+                store.toggleSelected(nextHandle, true);
+            } else {
+                // Normal click: replace selection with just this group
+                store.toggleGroup(nextHandle);
+            }
         } else {
             // If we clicked outside all effects, clear the selection
             store.clearSelection();

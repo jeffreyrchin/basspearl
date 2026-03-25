@@ -18,8 +18,8 @@ import { useProjectAssets } from '@/hooks/useProjectAssets';
 import { useRenderLoop } from '@/hooks/useRenderLoop';
 import { useCanvasSelection } from '@/hooks/useCanvasSelection';
 import { useEffectStore } from '../store/useEffectStore';
-import { TransformGizmo } from './TransformGizmo';
 import { AnimatePresence } from 'framer-motion';
+import TransformGizmoLayer from './TransformGizmoLayer';
 
 interface AudioReactiveViewProps {
 }
@@ -215,7 +215,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                 className="max-w-full max-h-full border-l border-r border-white/5 object-contain"
                                 onPointerDown={handleCanvasPointerDown}
                             />
-                            <TransformGizmo canvasRef={canvasRef} />
+                            <TransformGizmoLayer canvasRef={canvasRef} />
                             {isProcessing && (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 animate-in fade-in duration-300 z-processing backdrop-blur-sm">
                                     <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
