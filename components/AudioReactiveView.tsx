@@ -182,7 +182,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             <Navbar />
             <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
                 {/* Main Content Area */}
-                <main className={`flex-1 flex flex-col min-h-0 min-w-0 transition-all duration-500 ease-in-out ${isSidebarOpen ? 'lg:mr-0' : ''}`}>
+                <main className="flex-1 flex flex-col min-h-0 min-w-0">
                     <MainToolbar
                         imageInputRef={imageInputRef}
                         audioInputRef={audioInputRef}
@@ -207,12 +207,16 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         )}
 
                         <div
-                            className="relative w-full h-full overflow-hidden bg-white/5 flex items-center justify-center"
+                            className="relative w-full h-full overflow-hidden bg-black flex items-center justify-center"
                             style={{ transform: 'translateZ(0)' }}
                         >
                             <canvas
                                 ref={canvasRef}
-                                className="max-w-full max-h-full border-l border-r border-white/5 object-contain"
+                                className="max-w-full max-h-full object-contain"
+                                style={{
+                                    WebkitMaskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)',
+                                    maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)'
+                                }}
                                 onPointerDown={handleCanvasPointerDown}
                             />
                             <TransformGizmoLayer canvasRef={canvasRef} />
@@ -277,7 +281,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
                 {/* Sidebar: Effects Rack & Parameters */}
                 <aside
-                    className={`fixed inset-y-0 right-0 z-sidebar lg:relative w-full sm:w-[400px] border-l border-white/5 bg-[#050B14] flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] lg:shadow-none will-change-transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full lg:hidden'}`}>
+                    className={`fixed inset-y-0 right-0 z-sidebar w-full sm:w-[380px] border-l border-white/5 bg-[#050B14]/95 backdrop-blur-2xl flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] will-change-transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                     {/* Inner wrapper */}
                     <div data-section="sidebar" className="flex-1 flex flex-col min-h-0 relative">
                         <SidebarNavigation onClose={() => setIsSidebarOpen(false)} />

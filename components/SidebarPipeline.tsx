@@ -158,7 +158,7 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
     if (effects.length === 0) {
         return (
             <div className="py-20 flex flex-col items-center justify-center text-center px-6">
-                <span className="material-symbols-outlined text-white/30 text-5xl mb-4">layers_clear</span>
+                <span className="material-symbols-outlined text-white/60 text-5xl mb-4">layers_clear</span>
                 <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] leading-relaxed">No active effects</p>
                 <button onClick={onNavigateToLibrary} className="mt-6 px-4 py-2 rounded-full border border-white/10 text-[9px] font-bold text-white/60 uppercase tracking-widest hover:bg-white/5 hover:text-white transition-all">Browse Effects</button>
             </div>
