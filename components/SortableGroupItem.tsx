@@ -24,6 +24,7 @@ const SortableGroupItem = ({
     const toggleSelected = useEffectStore(s => s.toggleSelected);
     const selectRange = useEffectStore(s => s.selectRange);
     const isInSelectMode = useEffectStore(s => s.isInSelectMode);
+    const pushFocus = useEffectStore(s => s.pushFocus);
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: group.id,
@@ -40,14 +41,14 @@ const SortableGroupItem = ({
         <div
             ref={isOverlay ? undefined : setNodeRef}
             style={style}
-            className={`flex flex-row w-full border border-white/10 rounded-md ${isOverlay ? 'bg-black shadow-2xl ring-1 ring-white/20' : 'bg-white/5'}`}
+            className={`flex flex-row w-full border border-white/5 rounded-md overflow-hidden ${isOverlay ? 'bg-black shadow-2xl ring-1 ring-white/10' : 'bg-white/5'}`}
         >
             {/* Grip Handle */}
             <button
                 {...(isOverlay ? {} : { ...attributes, ...listeners })}
                 onKeyDown={isOverlay ? undefined : (e) => onGripKeyDown(e, groupIndex)}
                 onClick={(e) => e.stopPropagation()}
-                className="group w-8 border-r border-white/10 flex-shrink-0 flex flex-col items-center justify-center hover:bg-white/10 focus-visible:bg-primary/20 focus-visible:border-primary/50 outline-none rounded-l-md touch-none transition-colors cursor-grab active:cursor-grabbing"
+                className="group w-8 flex-shrink-0 flex flex-col items-center justify-center hover:bg-white/10 focus-visible:bg-primary/20 focus-visible:border-primary/50 outline-none rounded-l-md touch-none transition-colors cursor-grab active:cursor-grabbing"
                 title="Drag to Reorder"
             >
                 <span className="material-symbols-outlined text-white/60 group-hover:text-white transition-colors text-[18px]">drag_indicator</span>
@@ -65,7 +66,11 @@ const SortableGroupItem = ({
                         if (e.shiftKey) {
                             selectRange(effect.id);
                         } else {
-                            toggleSelected(effect.id, isInSelectMode || e.metaKey || e.ctrlKey);
+                            if (selectedIds.has(effect.id)) { // Double click to open inspector
+                                pushFocus('inspector');
+                            } else {
+                                toggleSelected(effect.id, isInSelectMode || e.metaKey || e.ctrlKey);
+                            }
                         }
                     };
 
@@ -91,7 +96,11 @@ const SortableGroupItem = ({
                             if (e.shiftKey) {
                                 selectRange(effect.id);
                             } else {
-                                toggleSelected(effect.id, isInSelectMode || e.metaKey || e.ctrlKey);
+                                if (selectedIds.has(effect.id)) { // Double press to open inspector
+                                    pushFocus('inspector');
+                                } else {
+                                    toggleSelected(effect.id, isInSelectMode || e.metaKey || e.ctrlKey);
+                                }
                             }
                         }
                     };
@@ -134,7 +143,7 @@ const SortableGroupItem = ({
                                         <div className="w-[1px] h-8 md:h-5 bg-white/10"></div>
                                         <button
                                             onClick={() => toggleMute(effect.id)}
-                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/20 transition-colors rounded-r-md ${effect.muted ? 'bg-cyan-900 text-white' : 'text-white/30 hover:bg-white/10 hover:text-white'}`}
+                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/20 transition-colors ${effect.muted ? 'bg-indigo-500 text-white' : 'text-white/30 hover:bg-white/10 hover:text-white'}`}
                                             title="Toggle Visibility"
                                         >
                                             <span className="material-symbols-outlined text-[18px]">{effect.muted ? 'visibility_off' : 'visibility'}</span>

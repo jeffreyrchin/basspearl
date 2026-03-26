@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useEffectStore } from '../store/useEffectStore';
 import { EFFECT_METADATA } from '../config/effects';
+import { motion } from 'framer-motion';
 
 interface ActionBarProps { }
 
@@ -52,7 +53,11 @@ const ActionBar: React.FC<ActionBarProps> = () => {
     if (selectionCount === 0) return null;
 
     return (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-black/80 border border-white/15 shadow-2xl shadow-black/50 animate-in fade-in slide-in-from-bottom-2 duration-200 z-actionbar">
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-black border border-white/15 shadow-2xl shadow-black/50 z-actionbar">
             {/* Parameters — only for single selection */}
             <button
                 onClick={() => pushFocus('inspector')}
@@ -105,12 +110,12 @@ const ActionBar: React.FC<ActionBarProps> = () => {
             {/* Remove */}
             <button
                 onClick={batchRemove}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-red-400/80 hover:text-red-400 hover:bg-red-400/10 transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-all"
                 title="Remove (Backspace)"
             >
                 <span className="material-symbols-outlined text-[16px]">delete</span>
             </button>
-        </div>
+        </motion.div>
     );
 };
 
