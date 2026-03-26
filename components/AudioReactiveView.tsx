@@ -199,11 +199,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     />
 
                     {/* Viewport */}
-                    <div
-                        data-section="viewport"
-                        className="flex-1 flex items-center justify-center min-h-0 relative group"
-                        onPointerDown={clearSelection}
-                    >
+                    <div data-section="viewport" className="flex-1 flex items-center justify-center min-h-0 relative group">
                         {/* Mobile Floating Toggle */}
                         {!isSidebarOpen && (
                             <button
@@ -217,13 +213,14 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         <div
                             className="relative w-full h-full overflow-hidden bg-black flex items-center justify-center"
                             style={{ transform: 'translateZ(0)' }}
+                            onPointerDown={clearSelection}
                         >
                             <canvas
                                 ref={canvasRef}
                                 className="max-w-full max-h-full object-contain"
                                 style={{
-                                    WebkitMaskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)',
-                                    maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)'
+                                    WebkitMaskImage: 'linear-gradient(to right, transparent, black 3%, black 97%, transparent)',
+                                    maskImage: 'linear-gradient(to right, transparent, black 3%, black 97%, transparent)'
                                 }}
                                 onPointerDown={(e) => {
                                     e.stopPropagation();
