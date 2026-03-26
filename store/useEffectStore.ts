@@ -71,7 +71,6 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     isSidebarOpen: false,
     setIsSidebarOpen: (open) => set(s => ({
         isSidebarOpen: open,
-        selectedIds: open ? s.selectedIds : new Set<string>(),
         focusStack: open ? [...s.focusStack.filter(z => z !== 'pipeline'), 'pipeline'] as ('pipeline' | 'inspector' | 'library')[] : s.focusStack
     })),
 

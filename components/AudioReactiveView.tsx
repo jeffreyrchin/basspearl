@@ -28,6 +28,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const effects = useEffectStore(s => s.effects);
     const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
     const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
+    const clearSelection = useEffectStore(s => s.clearSelection);
 
     const requestRef = useRef<number>();
     const currentTimeLabelRef = useRef<HTMLSpanElement>(null);
@@ -198,7 +199,11 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     />
 
                     {/* Viewport */}
-                    <div data-section="viewport" className="flex-1 flex items-center justify-center min-h-0 relative group">
+                    <div
+                        data-section="viewport"
+                        className="flex-1 flex items-center justify-center min-h-0 relative group"
+                        onPointerDown={clearSelection}
+                    >
                         {/* Mobile Floating Toggle */}
                         {!isSidebarOpen && (
                             <button
@@ -220,7 +225,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                     WebkitMaskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)',
                                     maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)'
                                 }}
-                                onPointerDown={handleCanvasPointerDown}
+                                onPointerDown={(e) => {
+                                    e.stopPropagation();
+                                    handleCanvasPointerDown(e);
+                                }}
                             />
                             <TransformGizmoLayer canvasRef={canvasRef} />
                             {isProcessing && (
