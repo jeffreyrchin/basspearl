@@ -393,4 +393,14 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Opacity', { v: 100 }),
     ],
   },
+  LINEAR_GRADIENT: {
+    label: 'Gradient',
+    icon: 'linear_gradient',
+    category: 'Pattern',
+    params: [
+      p('Feather', { v: 50 }),
+      p('Rotation', { v: 50 }),
+      p('Pan', { v: 50 }, { b: 'SUB' }),
+    ],
+  },
 };

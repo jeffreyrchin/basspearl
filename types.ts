@@ -32,7 +32,8 @@ export type GlitchEffectType =
   | 'TERRAIN'
   | 'TRANSFORM'
   | 'CHECKERBOARD'
-  | 'RGBA';
+  | 'RGBA'
+  | 'LINEAR_GRADIENT';
 
 export type FrequencyBand = 'OFF' | 'SUB' | 'BASS' | 'MID' | 'TREBLE';
 

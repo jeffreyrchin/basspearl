@@ -1400,6 +1400,36 @@ void main() {
 }
 `;
 
+export const LINEAR_GRADIENT_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[3]; // [feather, rotation, pan]
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    float feather = u_params[0] / 100.0;
+    float rotation = u_params[1] / 100.0 * 6.28318;
+    float pan = 1.0 - (u_params[2] / 100.0) - 0.5;
+
+    vec2 uv = v_texCoord - 0.5;
+    mat2 rot = mat2(cos(rotation), -sin(rotation), sin(rotation), cos(rotation));
+    vec2 rotatedUV = rot * uv;
+
+    float g = rotatedUV.x + pan;
+
+    float halfWidth = max(feather * 0.5, 0.00001);
+    float alpha = smoothstep(-halfWidth, halfWidth, g);
+
+    vec4 src = texture(u_image, v_texCoord);
+
+    vec3 mixedRGB = mix(src.rgb, vec3(1.0), alpha);
+    float mixedA  = mix(src.a, 1.0, alpha);
+
+    outColor = vec4(mixedRGB, mixedA);
+}
+`;
+
 export interface ShaderDefinition {
     name: string;
     fragmentSource: string;
@@ -1441,4 +1471,5 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     TRANSFORM: { name: 'TRANSFORM', fragmentSource: TRANSFORM_SHADER },
     CHECKERBOARD: { name: 'CHECKERBOARD', fragmentSource: CHECKERBOARD_SHADER },
     RGBA: { name: 'RGBA', fragmentSource: RGBA_SHADER },
+    LINEAR_GRADIENT: { name: 'LINEAR_GRADIENT', fragmentSource: LINEAR_GRADIENT_SHADER },
 };
