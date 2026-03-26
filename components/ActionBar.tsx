@@ -65,7 +65,7 @@ const ActionBar: React.FC<ActionBarProps> = () => {
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest enabled:hover:text-white enabled:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all ${isInspectorOpen && selectionCount === 1 ? 'text-white bg-white/10' : 'text-white/70'}`}
                 title="Show Inspector (I)"
             >
-                <span className="material-symbols-outlined text-[16px]">tune</span>
+                <span className="material-symbols-outlined text-[16px]">info</span>
             </button>
 
             <div className="w-[1px] h-4 bg-white/20" />

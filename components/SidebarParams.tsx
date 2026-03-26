@@ -18,28 +18,29 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
     const selectedIds = useEffectStore(s => s.selectedIds);
     const effects = useEffectStore(s => s.effects);
 
+    const NoEffectSelected = () => (
+        <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
+            <span className="material-symbols-outlined text-white/60 text-5xl">info</span>
+            <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] leading-relaxed">No effect selected</p>
+        </div>
+    );
+
     if (selectedIds.size > 1) {
         return <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
-            <span className="material-symbols-outlined text-white/60 text-5xl">tune</span>
+            <span className="material-symbols-outlined text-white/60 text-5xl">info</span>
             <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] leading-relaxed">Multiple effects selected</p>
         </div>
     }
 
     if (selectedIds.size === 0) {
-        return <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
-            <span className="material-symbols-outlined text-white/60 text-5xl">tune</span>
-            <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] leading-relaxed">No effect selected</p>
-        </div>
+        return <NoEffectSelected />
     }
 
     const selectedEffectId = selectedIds.values().next().value;
     const selectedEffect = effects.find(e => e.id === selectedEffectId);
 
     if (!selectedEffect) {
-        return <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
-            <span className="material-symbols-outlined text-white/60 text-5xl">tune</span>
-            <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] leading-relaxed">No effect selected</p>
-        </div>
+        return <NoEffectSelected />
     }
 
     return (

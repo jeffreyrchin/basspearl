@@ -75,6 +75,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     const pushFocus = useEffectStore(s => s.pushFocus);
     const removeFocus = useEffectStore(s => s.removeFocus);
     const isLibraryOpen = focusStack.includes('library');
+    const isInspectorOpen = focusStack.includes('inspector');
     const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
     const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
 
@@ -214,6 +215,20 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             icon="add_circle"
                             title={isLibraryOpen ? "Close Library (Y)" : "Open Library (Y)"}
                             isActive={isLibraryOpen}
+                            activeBg="bg-white/10"
+                            activeBorder="border-white/30"
+                            className="hidden lg:flex px-3"
+                        />
+
+                        {/* Inspector Toggle (Desktop only) */}
+                        <ToolbarButton
+                            onPointerDown={() => {
+                                if (isInspectorOpen) removeFocus('inspector');
+                                else pushFocus('inspector');
+                            }}
+                            icon="info"
+                            title={isInspectorOpen ? "Close Inspector (I)" : "Open Inspector (I)"}
+                            isActive={isInspectorOpen}
                             activeBg="bg-white/10"
                             activeBorder="border-white/30"
                             className="hidden lg:flex px-3"
