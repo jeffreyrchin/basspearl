@@ -196,20 +196,11 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         onPlayPause={handleTogglePlay}
                         isPlaying={isPlaying}
                         isProcessing={isProcessing}
+                        onScrub={handleScrub}
                     />
 
                     {/* Viewport */}
                     <div data-section="viewport" className="flex-1 flex items-center justify-center min-h-0 relative group">
-                        {/* Mobile Floating Toggle */}
-                        {!isSidebarOpen && (
-                            <button
-                                onClick={() => setIsSidebarOpen(true)}
-                                className="absolute top-6 right-6 z-fab w-12 h-12 rounded-2xl bg-black/90 border border-[#FB00FF]/40 text-white shadow-[0_0_30px_rgba(0,0,0,0.5),0_0_15px_rgba(251,0,255,0.2)] flex items-center justify-center lg:hidden animate-in fade-in zoom-in duration-300 active:scale-90 hover:bg-black transition-all"
-                                aria-label="Show sidebar">
-                                <span className="material-symbols-outlined text-2xl">tune</span>
-                            </button>
-                        )}
-
                         <div
                             className="relative w-full h-full overflow-hidden bg-black flex items-center justify-center"
                             style={{ transform: 'translateZ(0)' }}

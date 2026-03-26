@@ -14,10 +14,11 @@ interface MainToolbarProps {
     onPlayPause: () => void;
     isPlaying: boolean;
     isProcessing: boolean;
+    onScrub: (delta: number) => void;
 }
 
 const ToolbarButton: React.FC<{
-    onClick: () => void;
+    onPointerDown: () => void;
     icon: string;
     title: string;
     isActive?: boolean;
@@ -27,17 +28,16 @@ const ToolbarButton: React.FC<{
     showDot?: boolean;
     className?: string;
     disabled?: boolean;
-}> = ({ onClick, icon, title, isActive, activeBg, activeBorder, colorHex, showDot, className = "w-12", disabled }) => {
-    const baseClass = "h-9 flex items-center justify-center rounded-xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none";
+}> = ({ onPointerDown, icon, title, isActive, activeBg, activeBorder, colorHex, showDot, className = "w-12", disabled }) => {
+    const baseClass = "h-9 flex items-center justify-center rounded-xl border transition-all duration-200 outline-none focus-visible:ring-2 disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none";
     const idleClass = "border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10 text-white";
     const activeStyles = isActive ? `${activeBg} ${activeBorder}` : idleClass;
 
     return (
         <button
             type="button"
-            onClick={onClick}
+            onPointerDown={(e) => { e.stopPropagation(); onPointerDown() }}
             disabled={disabled}
-            onPointerDown={(e) => e.stopPropagation()}
             className={`${baseClass} ${activeStyles} ${className}`}
             title={title}
         >
@@ -69,6 +69,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     onPlayPause,
     isPlaying,
     isProcessing,
+    onScrub
 }) => {
     const focusStack = useEffectStore(s => s.focusStack);
     const pushFocus = useEffectStore(s => s.pushFocus);
@@ -87,7 +88,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                     dragConstraints={constraintsRef}
                     dragMomentum={false}
                     dragElastic={0}
-                    className="h-14 bg-[#0A0F1E]/80 backdrop-blur-2xl border border-white/10 rounded-2xl flex items-center pl-3 pr-6 gap-4 shadow-[0_12px_48px_rgba(0,0,0,0.5),0_0_20px_rgba(251,0,255,0.08)] ring-1 ring-white/5 pointer-events-auto overflow-x-auto no-scrollbar group cursor-default"
+                    className="h-14 bg-[#0A0F1E]/80 backdrop-blur-2xl border border-white/10 rounded-2xl flex items-center pl-2 pr-4 gap-2 shadow-[0_12px_48px_rgba(0,0,0,0.5),0_0_20px_rgba(251,0,255,0.08)] ring-1 ring-white/5 pointer-events-auto overflow-x-auto no-scrollbar group cursor-default"
                 >
                     {/* Drag Handle */}
                     <div className="flex items-center justify-center w-8 h-8 cursor-grab active:cursor-grabbing hover:bg-white/5 rounded-lg transition-colors group/handle shrink-0">
@@ -96,7 +97,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                         </span>
                     </div>
 
-                    {/* Local Assets Group */}
+                    {/* Toolbar Buttons */}
                     <div className="flex items-center gap-3 shrink-0">
                         {/* Choose Image */}
                         <input
@@ -104,12 +105,12 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             type="file"
                             accept="image/*, .jpg, .jpeg, .png, .webp, .heic"
                             onChange={handleImageUpload}
-                            onClick={(e) => { (e.target as HTMLInputElement).value = ''; }} // Clear input so onChange always fires
+                            onPointerDown={(e) => { (e.target as HTMLInputElement).value = ''; }} // Clear input so onChange always fires
                             title="Choose Image"
                             className="sr-only"
                         />
                         <ToolbarButton
-                            onClick={() => imageInputRef.current?.click()}
+                            onPointerDown={() => imageInputRef.current?.click()}
                             icon="image"
                             title="Choose Image"
                             isActive={!!imageFile}
@@ -117,7 +118,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             activeBg="bg-[#00F0FF]/5 hover:bg-[#00F0FF]/10"
                             activeBorder="border-[#00F0FF]/30 hover:border-[#00F0FF]/50"
                             showDot={!!imageFile}
-                            className="px-4"
+                            className="px-3"
                         />
 
                         {/* Choose Audio */}
@@ -126,12 +127,12 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             type="file"
                             accept="audio/*, .mp3, .wav, .m4a, .aac, .ogg"
                             onChange={handleAudioUpload}
-                            onClick={(e) => { (e.target as HTMLInputElement).value = ''; }}
+                            onPointerDown={(e) => { (e.target as HTMLInputElement).value = ''; }}
                             title="Choose Audio"
                             className="sr-only"
                         />
                         <ToolbarButton
-                            onClick={() => audioInputRef.current?.click()}
+                            onPointerDown={() => audioInputRef.current?.click()}
                             icon="graphic_eq"
                             title="Choose Audio"
                             isActive={!!audioFile}
@@ -139,12 +140,12 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             activeBg="bg-[#3B82F6]/5 hover:bg-[#3B82F6]/10"
                             activeBorder="border-[#3B82F6]/30 hover:border-[#3B82F6]/50"
                             showDot={!!audioFile && !isLiveMode}
-                            className="px-4"
+                            className="px-3"
                         />
 
                         {/* Microphone Input */}
                         <ToolbarButton
-                            onClick={startMic}
+                            onPointerDown={startMic}
                             icon="mic"
                             title="Live Audio"
                             isActive={isLiveMode}
@@ -152,12 +153,23 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             activeBg="bg-[#FF0055]/5 hover:bg-[#FF0055]/10"
                             activeBorder="border-[#FF0055]/30 hover:border-[#FF0055]/50"
                             showDot={isLiveMode}
-                            className="px-4"
+                            className="px-3"
+                        />
+
+                        {/* Seek Backward (Desktop only) */}
+                        <ToolbarButton
+                            onPointerDown={() => onScrub(-5)}
+                            disabled={!audioFile || isProcessing || isLiveMode}
+                            title="Seek Backward"
+                            aria-label="Seek Backward"
+                            icon="fast_rewind"
+                            colorHex="white"
+                            className="px-2 hidden lg:flex"
                         />
 
                         {/* Play/Pause */}
                         <ToolbarButton
-                            onClick={onPlayPause}
+                            onPointerDown={onPlayPause}
                             disabled={!audioFile || isProcessing || isLiveMode}
                             title={isPlaying ? "Pause" : "Play"}
                             aria-label={isPlaying ? "Pause" : "Play"}
@@ -166,17 +178,23 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             colorHex="white"
                             activeBg="bg-primary/50"
                             activeBorder="border-primary/50"
-                            className="px-4"
+                            className="px-3"
                         />
-                    </div>
 
-                    {/* Divider */}
-                    <div className="hidden lg:block w-px h-6 bg-white/10 shrink-0" />
-
-                    {/* Sidebar Toggles (Desktop only in header) */}
-                    <div className="hidden lg:flex items-center gap-2">
+                        {/* Seek Forward (Desktop only) */}
                         <ToolbarButton
-                            onClick={() => {
+                            onPointerDown={() => onScrub(5)}
+                            disabled={!audioFile || isProcessing || isLiveMode}
+                            title="Seek Forward"
+                            aria-label="Seek Forward"
+                            icon="fast_forward"
+                            colorHex="white"
+                            className="px-2 hidden lg:flex"
+                        />
+
+                        {/* Open/Close Pipeline */}
+                        <ToolbarButton
+                            onPointerDown={() => {
                                 setIsSidebarOpen(!isSidebarOpen);
                             }}
                             icon="layers"
@@ -184,9 +202,12 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             isActive={isSidebarOpen}
                             activeBg="bg-white/10"
                             activeBorder="border-white/30"
+                            className="px-3"
                         />
+
+                        {/* Library Toggle (Desktop only) */}
                         <ToolbarButton
-                            onClick={() => {
+                            onPointerDown={() => {
                                 if (isLibraryOpen) removeFocus('library');
                                 else pushFocus('library');
                             }}
@@ -195,6 +216,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             isActive={isLibraryOpen}
                             activeBg="bg-white/10"
                             activeBorder="border-white/30"
+                            className="hidden lg:flex px-3"
                         />
                     </div>
                 </motion.div>
