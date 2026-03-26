@@ -131,22 +131,24 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     },
 
     undo: () => {
-        const { past, effects, future } = get();
+        const { past, effects, future, selectedIds } = get();
         if (past.length === 0) return;
         const previous = past[past.length - 1];
         set({
             effects: previous,
+            selectedIds: new Set(previous.filter(e => selectedIds.has(e.id)).map(e => e.id)),
             past: past.slice(0, -1),
             future: [JSON.parse(JSON.stringify(effects)), ...future],
         });
     },
 
     redo: () => {
-        const { past, effects, future } = get();
+        const { past, effects, future, selectedIds } = get();
         if (future.length === 0) return;
         const [next, ...rest] = future;
         set({
             effects: next,
+            selectedIds: new Set(next.filter(e => selectedIds.has(e.id)).map(e => e.id)),
             past: [...past, JSON.parse(JSON.stringify(effects))],
             future: rest,
         });
