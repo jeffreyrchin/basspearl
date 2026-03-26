@@ -25,6 +25,7 @@ const SortableGroupItem = ({
     const selectRange = useEffectStore(s => s.selectRange);
     const isInSelectMode = useEffectStore(s => s.isInSelectMode);
     const pushFocus = useEffectStore(s => s.pushFocus);
+    const focusStack = useEffectStore(s => s.focusStack);
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: group.id,
@@ -66,8 +67,12 @@ const SortableGroupItem = ({
                         if (e.shiftKey) {
                             selectRange(effect.id);
                         } else {
-                            if (selectedIds.has(effect.id)) { // Double click to open inspector
-                                pushFocus('inspector');
+                            if (selectedIds.has(effect.id)) { // On double-click
+                                if (focusStack.includes('inspector')) { // If inspector is already open, clicking again should switch focus to pipeline
+                                    pushFocus('pipeline');
+                                } else { // On double-click, only switch focus to inspector if it's not already open
+                                    pushFocus('inspector');
+                                }
                             } else {
                                 toggleSelected(effect.id, isInSelectMode || e.metaKey || e.ctrlKey);
                             }
@@ -96,8 +101,12 @@ const SortableGroupItem = ({
                             if (e.shiftKey) {
                                 selectRange(effect.id);
                             } else {
-                                if (selectedIds.has(effect.id)) { // Double press to open inspector
-                                    pushFocus('inspector');
+                                if (selectedIds.has(effect.id)) {  // On double-press
+                                    if (focusStack.includes('inspector')) { // If inspector is already open, pressing again should switch focus to pipeline
+                                        pushFocus('pipeline');
+                                    } else { // Only switch focus to inspector if it's not already open
+                                        pushFocus('inspector');
+                                    }
                                 } else {
                                     toggleSelected(effect.id, isInSelectMode || e.metaKey || e.ctrlKey);
                                 }
