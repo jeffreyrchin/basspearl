@@ -1333,21 +1333,6 @@ void main() {
 }
 `;
 
-export const SCALE_PAN_SHADER = `#version 300 es
-precision highp float;
-uniform sampler2D u_image;
-uniform float u_params[4]; // [Scale X, Scale Y, Pan X, Pan Y]
-in vec2 v_texCoord;
-out vec4 outColor;
-${GLSL_TRANSFORM}
-
-void main() {
-    TR tr = getTransform_(v_texCoord, u_params[0], u_params[1], u_params[2], u_params[3]);
-    vec4 src = texture(u_image, tr.localUV);
-    outColor = mix(vec4(0.0), src, tr.mask);
-}
-`;
-
 export const CHECKERBOARD_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
@@ -1425,6 +1410,46 @@ void main() {
 }
 `;
 
+export const RADIAL_GRADIENT_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[5]; // [feather, frequency, speed, panX, panY]
+uniform float u_integrated_values[8];
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    float feather = max(u_params[0] / 100.0 * 10.0, 0.0001);
+    float frequency = u_params[1] / 10.0;
+    float speed = u_params[2] / 100.0 * 10.0;
+    vec2 pan = vec2(u_params[3] / 100.0, u_params[4] / 100.0);
+
+    float aspect = u_resolution.x / u_resolution.y;
+    vec2 uv = v_texCoord - pan;
+    uv.x *= aspect;
+
+    float d = length(uv);
+    
+    // Wave phase using integrated speed
+    float phase = u_integrated_values[2] * speed;
+    
+    // Calculate ripple wave using sine
+    float wave = sin(d * frequency * 6.28318 - phase);
+    
+    // Normalize wave [-1, 1] to [0, 1] and apply feathering
+    float halfFeather = feather * 0.5;
+    float alpha = smoothstep(-halfFeather, halfFeather, wave);
+
+    vec4 src = texture(u_image, v_texCoord);
+    
+    // Premultiplied Mix
+    vec3 finalRGB = mix(src.rgb, vec3(1.0), alpha);
+    float finalAlpha = mix(src.a, 1.0, alpha);
+    outColor = vec4(finalRGB, finalAlpha);
+}
+`;
+
 export interface ShaderDefinition {
     name: string;
     fragmentSource: string;
@@ -1462,9 +1487,9 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     SCROLL: { name: 'SCROLL', fragmentSource: SCROLL_SHADER, velocityParamIndices: [0, 1, 2, 3] },
     LUMINANCE_MAP: { name: 'LUMINANCE_MAP', fragmentSource: LUMINANCE_MAP_SHADER },
     TERRAIN: { name: 'TERRAIN', fragmentSource: '', velocityParamIndices: [2], is3D: true },
-    SCALE_PAN: { name: 'SCALE_PAN', fragmentSource: SCALE_PAN_SHADER },
     TRANSFORM: { name: 'TRANSFORM', fragmentSource: TRANSFORM_SHADER },
     CHECKERBOARD: { name: 'CHECKERBOARD', fragmentSource: CHECKERBOARD_SHADER },
     RGBA: { name: 'RGBA', fragmentSource: RGBA_SHADER },
     LINEAR_GRADIENT: { name: 'LINEAR_GRADIENT', fragmentSource: LINEAR_GRADIENT_SHADER },
+    RADIAL_GRADIENT: { name: 'RADIAL_GRADIENT', fragmentSource: RADIAL_GRADIENT_SHADER, velocityParamIndices: [2] },
 };

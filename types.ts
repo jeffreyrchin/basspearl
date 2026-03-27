@@ -33,7 +33,8 @@ export type GlitchEffectType =
   | 'TRANSFORM'
   | 'CHECKERBOARD'
   | 'RGBA'
-  | 'LINEAR_GRADIENT';
+  | 'LINEAR_GRADIENT'
+  | 'RADIAL_GRADIENT';
 
 export type FrequencyBand = 'OFF' | 'SUB' | 'BASS' | 'MID' | 'TREBLE';
 

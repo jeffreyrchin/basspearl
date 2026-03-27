@@ -403,4 +403,16 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Pan', { v: 50 }, { b: 'SUB' }),
     ],
   },
+  RADIAL_GRADIENT: {
+    label: 'Radial Gradient',
+    icon: 'radio_button_checked',
+    category: 'Pattern',
+    params: [
+      p('Feather', { v: 50 }),
+      p('Frequency', { v: 25 }),
+      p('Speed', { v: 50 }),
+      p('Pan X', { v: 50 }),
+      p('Pan Y', { v: 50 }),
+    ],
+  },
 };
