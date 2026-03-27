@@ -634,10 +634,10 @@ void main() {
     // Final Star Alpha (luminance-based)
     float starAlpha = clamp(max(color.r, max(color.g, color.b)), 0.0, 1.0);
 
-    // Balanced Additive: 1:1 Light/Background compensation to prevent halos
-    vec3 result = src.rgb * (1.0 - starAlpha) + color; 
-    float finalAlpha = starAlpha + src.a * (1.0 - starAlpha);
-    outColor = vec4(result, finalAlpha);
+    // Premultiplied Mix
+    vec3 finalRGB = mix(src.rgb, vec3(1.0), starAlpha);
+    float finalAlpha = mix(src.a, 1.0, starAlpha);
+    outColor = vec4(finalRGB, finalAlpha);
 }
 `;
 
@@ -733,10 +733,10 @@ void main() {
     lit *= shapeMask * step(0.001, xScale) * step(0.001, yScale); // multiply by 0 when width/height is at 0% to make pixels disappear.
 
     // 8. Output final color with blend support.
-    float alpha = lit * blend;
-    vec3 finalRGB = vec3(brightness) * alpha + src.rgb * (1.0 - alpha);
-    float finalAlpha = alpha + src.a * (1.0 - alpha);
-    outColor = mix(src, vec4(finalRGB, finalAlpha), tr.mask);
+    float alpha = lit * blend * tr.mask;
+    vec3 finalRGB = mix(src.rgb, vec3(brightness), alpha);
+    float finalAlpha = mix(src.a, 1.0, alpha);
+    outColor = vec4(finalRGB, finalAlpha);
 }
 `;
 
@@ -994,9 +994,9 @@ void main() {
 
     // ---- Domain warp (2 noise calls) ----
     vec2 warpVec = vec2(
-    snoise(uv + t * 0.5),
-    snoise(uv + vec2(5.2, 1.3) + t * 0.5)
-);
+        snoise(uv + t * 0.5),
+        snoise(uv + vec2(5.2, 1.3) + t * 0.5)
+    );
 
     vec2 warpedUV = uv + warp * warpVec * scale;
 
@@ -1008,12 +1008,10 @@ void main() {
 
     vec4 src = texture(u_image, v_texCoord);
 
-    // Correct Composition: Premultiplied mix
-    float alpha = blend;
-    vec3 rgb = vec3(noiseVal) * alpha;
-    vec3 finalRGB = rgb + src.rgb * (1.0 - alpha);
-    float finalAlpha = alpha + src.a * (1.0 - alpha);
-    outColor = vec4(finalRGB, finalAlpha);
+    // Premultiplied Mix
+    vec3 mixedRGB = mix(src.rgb, vec3(noiseVal), blend);
+    float mixedAlpha = mix(src.a, 1.0, blend);
+    outColor = vec4(mixedRGB, mixedAlpha);
 }
 `;
 
@@ -1036,7 +1034,7 @@ void main() {
     float mask = smoothstep(threshold - feather, threshold + feather, luma);
     mask = mix(mask, 1.0 - mask, invert);
 
-    outColor = vec4(src.rgb * mask, src.a * mask);
+    outColor = src * mask;
 }
 `;
 
@@ -1160,10 +1158,9 @@ void main() {
     vec4 src = texture(u_image, v_texCoord);
     float alpha = blend * step(0.001, probDensity);
 
-    // Correct Composition: Premultiplied mix
-    vec3 rgb = vec3(intensity) * alpha;
-    vec3 finalRGB = rgb + src.rgb * (1.0 - alpha);
-    float finalAlpha = alpha + src.a * (1.0 - alpha);
+    // Premultiplied Mix
+    vec3 finalRGB = mix(src.rgb, vec3(intensity), alpha);
+    float finalAlpha = mix(src.a, 1.0, alpha);
     outColor = vec4(finalRGB, finalAlpha);
 }
 `;
@@ -1214,8 +1211,8 @@ void main() {
 
     // Apply mask to the original image
     vec4 src = texture(u_image, v_texCoord);
-    outColor = vec4(src.rgb * mask, src.a * mask);
-} `;
+    outColor = src * mask;
+}`;
 
 export const GRID_SHADER = `#version 300 es
 precision highp float;
@@ -1272,10 +1269,12 @@ void main() {
 
     float mask = max(grid.x, grid.y);
 
-    // 5. Output Final Color (Balanced Additive)
-    vec3 result = src.rgb * (1.0 - mask) + vec3(mask);
-    float finalAlpha = mask + src.a * (1.0 - mask);
-    outColor = mix(src, vec4(result, finalAlpha), tr.mask);
+    float factor = mask * tr.mask;
+
+    // 5. Output Final Color (Premultiplied Mix)
+    vec3 finalRGB = mix(src.rgb, vec3(1.0), factor);
+    float finalAlpha = mix(src.a, 1.0, factor);
+    outColor = vec4(finalRGB, finalAlpha);
 }
 `;
 
@@ -1368,9 +1367,11 @@ void main() {
     // Calculate the grid value [0.0 or 1.0]
     float val = mod(grid.x + grid.y, 2.0);
 
-    // Layer the checkerboard on top of the original image
-    float finalAlpha = val * tr.mask;
-    outColor = mix(src, vec4(vec3(finalAlpha), finalAlpha), finalAlpha);
+    // Premultiplied Mix
+    float factor = val * tr.mask;
+    vec3 finalRGB = mix(src.rgb, vec3(1.0), factor);
+    float finalAlpha = mix(src.a, 1.0, factor);
+    outColor = vec4(finalRGB, finalAlpha);
 }
 `;
 
@@ -1389,14 +1390,9 @@ void main() {
     float b = u_params[2] / 100.0;
     float a = u_params[3] / 100.0;
 
-    float finalAlpha = color.a * a;
-
-    outColor = vec4(
-        color.r * r * finalAlpha,
-        color.g * g * finalAlpha,
-        color.b * b * finalAlpha,
-        finalAlpha
-    );
+    // Apply sliders to the current color. Since the input is already 
+    // premultiplied, we only scale by the *new* alpha value.
+    outColor = vec4(color.rgb * vec3(r, g, b) * a, color.a * a);
 }
 `;
 
@@ -1424,9 +1420,8 @@ void main() {
     vec4 src = texture(u_image, v_texCoord);
 
     vec3 mixedRGB = mix(src.rgb, vec3(1.0), alpha);
-    float mixedA  = mix(src.a, 1.0, alpha);
-
-    outColor = vec4(mixedRGB, mixedA);
+    float mixedAlpha  = mix(src.a, 1.0, alpha);
+    outColor = vec4(mixedRGB, mixedAlpha);
 }
 `;
 
