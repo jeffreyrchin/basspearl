@@ -1,6 +1,7 @@
 import { GlitchEngine } from './glitchEngine';
 import { EffectConfig } from '../types';
 import { THUMBNAIL_SIZE } from '../constants';
+import { EFFECT_METADATA } from '../config/effects';
 
 // The single engine we share for all thumbnails
 let engine: GlitchEngine | null = null;
@@ -28,6 +29,23 @@ const getEngine = (): GlitchEngine => {
     return engine;
 };
 
+const getThumbnailBackground = (effects: EffectConfig[]): string => {
+    if (effects.length === 1) {
+        const effect = EFFECT_METADATA[effects[0].type];
+        if (effect.category === 'Pattern') {
+            return "./black.png";
+        } else if (effect.category === 'Color') {
+            return "./clocktower_square.png";
+        } else if (effect.category === 'Spatial') {
+            return "./sunset_square.jpeg";
+        } else if (effect.category === 'Distort') {
+            return "./girlvibe_square.jpeg";
+        }
+    } else {
+        return "./black.png";
+    }
+};
+
 /**
  * Returns a static DataURL for an effect type. 
  * Resolves immediately if cached, otherwise queues a background render.
@@ -45,11 +63,7 @@ export const getThumbnailDataUrl = (effects: EffectConfig[]): Promise<string> =>
         const eng = getEngine();
         const canvas = getScratchCanvas();
 
-        const firstType = effects[0]?.type;
-        let imageSrc = "./girlvibe_square.jpeg";
-        if (firstType === 'STARFIELD' || effects.length > 1) {
-            imageSrc = "./black.png";
-        }
+        const imageSrc = getThumbnailBackground(effects);
 
         // Use a static frame (time=10.0) for the cached poster
         await eng.renderToCanvas(canvas, imageSrc, effects, {
@@ -78,12 +92,7 @@ export const renderThumbnail = (
     const task = queue.then(async () => {
         const eng = getEngine();
 
-        // Use black background for generators and macros
-        const firstType = effects[0]?.type;
-        let imageSrc = "./girlvibe_square.jpeg";
-        if (firstType === 'STARFIELD' || effects.length > 1) {
-            imageSrc = "./black.png";
-        }
+        const imageSrc = getThumbnailBackground(effects);
 
         // Generate Synthetic Reactivity for thumbnail animation
         const beat = Math.pow(Math.abs(Math.sin(currentTime * 2)), 0.5);
