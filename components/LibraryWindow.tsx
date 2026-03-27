@@ -22,6 +22,7 @@ const LibraryWindow: React.FC = () => {
 
     const [winWidth, setWinWidth] = useState(initialWidth);
     const [winHeight, setWinHeight] = useState(initialHeight);
+    const [winX, setWinX] = useState((window.innerWidth - initialWidth) / 2);
 
     const [entranceComplete, setEntranceComplete] = useState(false);
 
@@ -85,7 +86,7 @@ const LibraryWindow: React.FC = () => {
                 style={{
                     position: 'absolute',
                     top: 80,
-                    left: (window.innerWidth - winWidth) / 2,
+                    left: winX,
                     width: winWidth,
                     height: winHeight,
                     zIndex: `calc(var(--z-index-window) + ${focusStack.indexOf('library')})`

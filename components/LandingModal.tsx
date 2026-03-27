@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLegalStore } from '../store/useLegalStore';
+import { useEffectStore } from '@/store/useEffectStore';
 
 interface LandingModalProps {
     onStart: (audioOption: 'demo' | 'upload', audioFile?: File, muxelsFile?: File) => void;
@@ -13,7 +14,8 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
     const audioInputRef = useRef<HTMLInputElement>(null);
     const muxelsInputRef = useRef<HTMLInputElement>(null);
 
-    const { openLegal } = useLegalStore();
+    const openLegal = useLegalStore(e => e.openLegal);
+    const pushFocus = useEffectStore(e => e.pushFocus);
 
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -42,6 +44,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
 
     const handleBlankProject = () => {
         onStart(audioSource, audioFile || undefined, undefined);
+        pushFocus('library');
     };
 
     return (
