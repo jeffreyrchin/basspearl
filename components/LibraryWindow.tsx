@@ -17,7 +17,7 @@ const LibraryWindow: React.FC = () => {
 
     const minWidth = 300;
     const minHeight = 200;
-    const initialWidth = Math.max(minWidth, window.innerWidth * 0.3);
+    const initialWidth = Math.max(minWidth, window.innerWidth * 0.5);
     const initialHeight = Math.max(minHeight, window.innerHeight * 0.75);
 
     const [winWidth, setWinWidth] = useState(initialWidth);
@@ -85,7 +85,7 @@ const LibraryWindow: React.FC = () => {
                 style={{
                     position: 'absolute',
                     top: 80,
-                    left: 400,
+                    left: (window.innerWidth - winWidth) / 2,
                     width: winWidth,
                     height: winHeight,
                     zIndex: `calc(var(--z-index-window) + ${focusStack.indexOf('library')})`

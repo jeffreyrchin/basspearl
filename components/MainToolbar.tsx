@@ -82,8 +82,8 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     const constraintsRef = useRef(null);
 
     return (
-        <div className="absolute inset-0 z-fab pointer-events-none overflow-hidden" ref={constraintsRef}>
-            <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center p-4">
+        <div className="absolute inset-0 z-toolbar pointer-events-none overflow-hidden" ref={constraintsRef}>
+            <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center p-20">
                 <motion.div
                     drag
                     dragConstraints={constraintsRef}

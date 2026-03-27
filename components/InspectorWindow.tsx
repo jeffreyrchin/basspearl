@@ -125,7 +125,7 @@ const InspectorWindow: React.FC = () => {
             style={{
                 position: 'absolute',
                 top: 80,
-                left: 400,
+                left: (window.innerWidth - winWidth) / 2,
                 width: winWidth,
                 height: winHeight,
                 zIndex: `calc(var(--z-index-window) + ${focusStack.indexOf('inspector')})`

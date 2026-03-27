@@ -181,24 +181,23 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
         >
             <Navbar />
+            <MainToolbar
+                imageInputRef={imageInputRef}
+                audioInputRef={audioInputRef}
+                imageFile={imageFile}
+                audioFile={audioFile}
+                handleImageUpload={handleImageUpload}
+                handleAudioUpload={handleAudioUpload}
+                isLiveMode={isLiveMode}
+                startMic={handleMicClick}
+                onPlayPause={handleTogglePlay}
+                isPlaying={isPlaying}
+                isProcessing={isProcessing}
+                onScrub={handleScrub}
+            />
             <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
                 {/* Main Content Area */}
                 <main className="flex-1 flex flex-col min-h-0 min-w-0">
-                    <MainToolbar
-                        imageInputRef={imageInputRef}
-                        audioInputRef={audioInputRef}
-                        imageFile={imageFile}
-                        audioFile={audioFile}
-                        handleImageUpload={handleImageUpload}
-                        handleAudioUpload={handleAudioUpload}
-                        isLiveMode={isLiveMode}
-                        startMic={handleMicClick}
-                        onPlayPause={handleTogglePlay}
-                        isPlaying={isPlaying}
-                        isProcessing={isProcessing}
-                        onScrub={handleScrub}
-                    />
-
                     {/* Viewport */}
                     <div data-section="viewport" className="flex-1 flex items-center justify-center min-h-0 relative group">
                         <div
