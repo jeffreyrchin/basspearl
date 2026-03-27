@@ -1,18 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLegalStore } from '../store/useLegalStore';
 import { useEffectStore } from '@/store/useEffectStore';
 
 interface LandingModalProps {
-    onStart: (audioOption: 'demo' | 'upload', audioFile?: File, muxelsFile?: File) => void;
+    onStart: (audioOption: 'demo' | 'upload' | 'live', audioFile?: File) => void;
     onClose: () => void;
 }
 
 const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
-    const [audioSource, setAudioSource] = useState<'demo' | 'upload'>('demo');
-    const [audioFile, setAudioFile] = useState<File | null>(null);
     const audioInputRef = useRef<HTMLInputElement>(null);
-    const muxelsInputRef = useRef<HTMLInputElement>(null);
 
     const openLegal = useLegalStore(e => e.openLegal);
     const pushFocus = useEffectStore(e => e.pushFocus);
@@ -25,26 +22,64 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [onClose]);
 
-    const handleAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleAudioFile = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setAudioFile(e.target.files[0]);
+            onStart('upload', e.target.files[0]);
+            pushFocus('library');
         }
     };
 
-    const handleMuxelsUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            onStart(audioSource, audioFile || undefined, file);
-        }
-        // clear input in case they want to upload it again later
-        if (e.target) {
-            e.target.value = '';
-        }
-    };
-
-    const handleBlankProject = () => {
-        onStart(audioSource, audioFile || undefined, undefined);
+    const handleDemoTrack = () => {
+        onStart('demo');
         pushFocus('library');
+    };
+
+    const handleExternalSource = () => {
+        onStart('live');
+        pushFocus('library');
+    };
+
+    const LandingCard: React.FC<{
+        onClick: () => void;
+        icon: string;
+        label: string;
+        color: 'cyan' | 'red' | 'pink';
+    }> = ({ onClick, icon, label, color }) => {
+        const theme = {
+            cyan: {
+                border: 'border-accent-blue/30 hover:border-accent-blue/60',
+                bg: 'bg-accent-blue/5 hover:bg-accent-blue/10',
+                text: 'text-accent-blue'
+            },
+            red: {
+                border: 'border-red-500/30 hover:border-red-500/60',
+                bg: 'bg-red-500/5 hover:bg-red-500/10',
+                text: 'text-red-400'
+            },
+            pink: {
+                border: 'border-primary/30 hover:border-primary/60',
+                bg: 'bg-primary/5 hover:bg-primary/10',
+                text: 'text-primary'
+            }
+        }[color];
+
+        return (
+            <button
+                onClick={onClick}
+                className={`flex-1 rounded-2xl border ${theme.border} ${theme.bg} backdrop-blur-sm transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-2 sm:p-4 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 shadow-2xl relative overflow-hidden`}
+            >
+                <div className={`absolute -inset-2 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+
+                <span className={`material-symbols-outlined !text-3xl sm:!text-4xl md:!text-5xl ${theme.text} transition-all duration-300 group-hover:scale-110`}>
+                    {icon}
+                </span>
+                <div className="flex flex-col items-center gap-1.5 z-10 text-center px-1">
+                    <span className="text-[11px] sm:text-[12px] font-medium uppercase tracking-[0.1em] sm:tracking-[0.2em] text-white/90 group-hover:text-white transition-colors">
+                        {label}
+                    </span>
+                </div>
+            </button>
+        );
     };
 
     return (
@@ -55,7 +90,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/10 backdrop-blur-sm"
             />
 
             <motion.div
@@ -65,7 +100,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ type: 'spring', damping: 50, stiffness: 1000 }}
                 data-section="modal"
-                className="relative w-full max-w-sm bg-slate-800 rounded-2xl border border-white/10 max-h-[90vh] overflow-y-auto custom-scrollbar flex flex-col items-center shadow-2xl"
+                className="relative w-full max-w-xl bg-[#0a0a1a] rounded-2xl border border-white/5 max-h-xl overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
             >
                 {/* Close Button */}
                 <button
@@ -78,111 +113,52 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
 
                 {/* Header Section */}
                 <div className="w-full text-center pt-8 pb-4">
-                    <h1 className="text-xl font-bold tracking-normal uppercase">
+                    <motion.h1
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                        className="text-2xl font-bold tracking-normal uppercase bg-gradient-to-r from-primary via-indigo-300 to-white bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-move will-change-transform">
                         muxels
-                    </h1>
+                    </motion.h1>
                     <p className="text-white/60 text-xs tracking-widest uppercase">Audio Visualizer</p>
                 </div>
 
                 {/* Body Section */}
-                <div className="w-full p-6 pt-0">
-                    {/* Audio Setup Radio Buttons */}
-                    <div className="flex w-full pb-3 items-center justify-center gap-6 text-sm tracking-wider uppercase font-medium">
-                        <label className="flex items-center gap-2 cursor-pointer group">
-                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${audioSource === 'demo' ? 'border-primary bg-primary/10' : 'border-white/30 group-hover:border-white/60'} group-focus-within:ring-2 group-focus-within:ring-primary/50 group-focus-within:border-primary`}>
-                                {audioSource === 'demo' && <div className="w-2 h-2 rounded-full bg-primary" />}
-                            </div>
-                            <span className={`transition-colors ${audioSource === 'demo' ? 'text-white' : 'text-white/50 group-hover:text-white/80'}`}>Demo Track</span>
-                            <input
-                                type="radio"
-                                name="audioSource"
-                                value="demo"
-                                className="sr-only"
-                                checked={audioSource === 'demo'}
-                                onChange={() => setAudioSource('demo')}
-                            />
-                        </label>
-
-                        <label className="flex items-center gap-2 cursor-pointer group">
-                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${audioSource === 'upload' ? 'border-primary bg-primary/10' : 'border-white/30 group-hover:border-white/60'} group-focus-within:ring-2 group-focus-within:ring-primary/50 group-focus-within:border-primary`}>
-                                {audioSource === 'upload' && <div className="w-2 h-2 rounded-full bg-primary" />}
-                            </div>
-                            <span className={`transition-colors ${audioSource === 'upload' ? 'text-white' : 'text-white/60 group-hover:text-white/80'}`}>Audio File</span>
-                            <input
-                                type="radio"
-                                name="audioSource"
-                                value="upload"
-                                className="sr-only"
-                                checked={audioSource === 'upload'}
-                                onChange={() => setAudioSource('upload')}
-                            />
-                        </label>
-                    </div>
-
-                    {/* Revealer for File Selection — always rendered, height driven by state */}
-                    <motion.div
-                        animate={{
-                            height: audioSource === 'upload' ? 'auto' : 0,
-                            opacity: audioSource === 'upload' ? 1 : 0,
-                        }}
-                        initial={{ height: 0, opacity: 0 }}
-                        transition={{ type: 'tween', duration: 0.2, ease: 'easeOut' }}
-                        className="w-full flex flex-col items-center overflow-hidden"
-                        style={{ pointerEvents: audioSource === 'upload' ? 'auto' : 'none' }}
-                    >
+                <div className="w-full p-8 pt-4">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-4">
                         <input
                             ref={audioInputRef}
                             type="file"
-                            accept="audio/*, .mp3, .wav, .m4a, .aac, .ogg"
-                            onChange={handleAudioUpload}
+                            accept="audio/*"
+                            onChange={handleAudioFile}
                             className="hidden"
                         />
-                        <button
+
+                        <LandingCard
                             onClick={() => audioInputRef.current?.click()}
-                            className="w-48 min-h-10 my-3 rounded-xl border border-white/10 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-white/80 text-xs font-bold uppercase tracking-widest group"
-                        >
-                            <span className="material-symbols-outlined text-[18px] group-hover:text-white transition-colors">graphic_eq</span>
-                            Select Audio
-                        </button>
-                        {audioFile && (
-                            <div className="text-[10px] text-green-400 font-bold tracking-wider uppercase flex items-center gap-1">
-                                <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                                {audioFile.name.substring(0, 20)}{audioFile.name.length > 20 ? '...' : ''}
-                            </div>
-                        )}
-                    </motion.div>
+                            icon="upload_file"
+                            label="Audio File"
+                            color="cyan"
+                        />
 
-                    {/* Hidden input for muxels */}
-                    <input
-                        ref={muxelsInputRef}
-                        type="file"
-                        accept=".muxels"
-                        onChange={handleMuxelsUpload}
-                        className="hidden"
-                    />
+                        <LandingCard
+                            onClick={handleExternalSource}
+                            icon="mic"
+                            label="Live Source"
+                            color="red"
+                        />
 
-                    {/* Actions */}
-                    <div className="w-full flex flex-col pt-3 gap-3">
-                        <button
-                            onClick={handleBlankProject}
-                            className="w-full py-4 rounded-xl bg-white hover:bg-white/90 text-black transition-colors duration-300 text-xs font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2"
-                        >
-                            <span className="material-symbols-outlined text-[18px]">draft</span>
-                            Blank Project
-                        </button>
-                        <button
-                            onClick={() => muxelsInputRef.current?.click()}
-                            className="w-full py-4 rounded-xl border border-white/20 hover:border-white/50 hover:bg-white/5 transition-colors duration-300 text-white text-xs font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2"
-                        >
-                            <span className="material-symbols-outlined text-[18px]">upload_file</span>
-                            Load muxels
-                        </button>
+                        <LandingCard
+                            onClick={handleDemoTrack}
+                            icon="music_note"
+                            label="Demo Track"
+                            color="pink"
+                        />
                     </div>
 
                     {/* Disclaimer */}
-                    <div className="w-full pt-4 text-center">
-                        <p className="text-[12px] text-white/60 leading-relaxed mx-auto">
-                            This site may produce flashing or strobing effects.<br />By using this site, you agree to our <button onClick={openLegal} className="text-white/60 hover:text-white underline underline-offset-2 transition-colors">Privacy & Terms</button>.
+                    <div className="mt-8 flex flex-col items-center gap-4">
+                        <p className="text-[12px] text-white/60 uppercase tracking-[0.2em] leading-relaxed text-center max-w-md">
+                            This site may produce flashing or strobing effects. By continuing, you acknowledge that you have the rights to your media sources and agree to our <button onClick={openLegal} className="text-white hover:text-indigo-300 uppercase transition-colors">Privacy & Terms</button>
                         </p>
                     </div>
                 </div>

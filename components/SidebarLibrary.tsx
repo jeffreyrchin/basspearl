@@ -35,7 +35,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
 
     return (
         <button
-            className="w-full aspect-square relative group transition-all duration-500 overflow-hidden bg-white/[0.01] border-white/5 hover:border-white/20 hover:bg-white/[0.03] cursor-pointer"
+            className="w-full aspect-square relative group transition-all duration-500 overflow-hidden cursor-pointer"
             onClick={onClick}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={onHoverEnd}
@@ -132,7 +132,7 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
 
             {/* Gallery Grid */}
             <div className="rounded-lg m-3 overflow-hidden">
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))]">
+                <div className="grid gap-[1px] grid-cols-[repeat(auto-fill,minmax(120px,1fr))]">
                     {/* Render Macros first if in 'All' or 'Macro' */}
                     {(selectedCategory === 'All' || selectedCategory === 'Macro') && Object.entries(MACRO_METADATA).map(([id]) => (
                         <LibraryCard

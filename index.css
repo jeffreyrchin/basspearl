@@ -315,3 +315,17 @@ textarea {
   will-change: transform;
   /* Important for Safari */
 }
+
+@keyframes gradient-move {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: -200% 50%;
+  }
+}
+
+.animate-gradient-move {
+  animation: gradient-move 3s linear infinite;
+}

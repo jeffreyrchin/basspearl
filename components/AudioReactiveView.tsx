@@ -60,6 +60,12 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     } = useAudioProcessor();
 
     const {
+        isLiveMode,
+        startMic,
+        stopMic
+    } = useLiveAudio();
+
+    const {
         isLandingOpen,
         setIsLandingOpen,
         imageFile,
@@ -69,15 +75,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         imageFileRef
     } = useProjectAssets({
         audioFile,
+        startMic,
         loadAudioFromUrl,
         loadAudioFromFile
     });
-
-    const {
-        isLiveMode,
-        startMic,
-        stopMic
-    } = useLiveAudio();
 
     const {
         isExporting,

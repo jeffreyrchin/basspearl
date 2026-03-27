@@ -1,22 +1,22 @@
 import React, { useState, useCallback } from 'react';
 import { mainGlitchEngine } from '@/services/glitchEngine';
-import { loadMuxelsFile } from '@/services/sanitizeImportedEffects';
 import { analytics } from '@/services/analytics';
 import { useEffectStore } from '../store/useEffectStore';
 
 export interface UseProjectAssetsProps {
     audioFile: File | null;
+    startMic: () => Promise<void>;
     loadAudioFromUrl: (url: string, title: string) => Promise<void>;
     loadAudioFromFile: (file: File) => Promise<void>;
 }
 
 export const useProjectAssets = ({
     audioFile,
+    startMic,
     loadAudioFromUrl,
     loadAudioFromFile
 }: UseProjectAssetsProps) => {
     const effects = useEffectStore(s => s.effects);
-    const setEffects = useEffectStore(s => s.setEffects);
 
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
     const imageFileRef = React.useRef<string | null>(null);
@@ -24,7 +24,7 @@ export const useProjectAssets = ({
     const [isLandingOpen, setIsLandingOpen] = useState(effects.length === 0 && audioFile === null);
     const [imageFile, setImageFile] = useState<File | null>(null);
 
-    const handleLandingStart = useCallback((audioOption: 'demo' | 'upload', selectedAudioFile?: File, muxelsFile?: File) => {
+    const handleLandingStart = useCallback((audioOption: 'upload' | 'live' | 'demo', selectedAudioFile?: File) => {
         setIsLandingOpen(false);
 
         // 1. Handle Audio Option
@@ -36,19 +36,12 @@ export const useProjectAssets = ({
             loadAudioFromFile(selectedAudioFile).catch(err => {
                 console.error('Failed to load uploaded audio:', err);
             });
+        } else if (audioOption === 'live') {
+            startMic().catch(err => {
+                console.error('Failed to start mic:', err);
+            });
         }
-
-        // 2. Handle Project Loading (.muxels)
-        if (muxelsFile) {
-            loadMuxelsFile(muxelsFile)
-                .then(sanitized => {
-                    setEffects(sanitized);
-                })
-                .catch(err => {
-                    alert(err.message);
-                });
-        }
-    }, [loadAudioFromUrl, loadAudioFromFile, setEffects]);
+    }, [loadAudioFromUrl, loadAudioFromFile, startMic]);
 
     const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
