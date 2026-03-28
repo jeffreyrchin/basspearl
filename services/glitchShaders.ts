@@ -1231,7 +1231,7 @@ void main() {
     float normX = u_params[0] / 100.0;
     float normY = u_params[1] / 100.0;
     float thickness = u_params[2] / 100.0;
-    float feather = u_params[3] / 100.0;
+    float feather = u_params[3] / 100.0 * 5.0;
 
     // Exponential frequency: freq=1 at 1%, doubling from there.
     // Fixed reference (1024) ensures the grid look won't change as you resize the window/export.

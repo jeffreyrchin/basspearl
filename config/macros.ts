@@ -190,6 +190,11 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Density', { v: 100, b: 'OFF' }),
           o('Roundness', { v: 0, b: 'OFF' }),
           o('Blend', { v: 100, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
         ],
         melded: true
       },
@@ -197,39 +202,14 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'TERRAIN',
         params: [
           o('Scale', { v: 5, b: 'OFF' }),
-          o('Extrusion', { v: 100, m: 58, b: 'SUB' }),
-          o('Speed', { v: 5, b: 'OFF' }),
-          o('Resolution', { v: 7, b: 'OFF' }),
-          o('Rotate X', { v: 89, b: 'OFF' }),
+          o('Extrusion', { v: 34, b: 'OFF' }),
+          o('Speed', { v: 17, b: 'OFF' }),
+          o('Resolution', { v: 9, b: 'OFF' }),
+          o('Rotate X', { v: 0, b: 'OFF' }),
           o('Rotate Y', { v: 0, b: 'OFF' }),
           o('Rotate Z', { v: 0, b: 'OFF' }),
-          o('Elevation', { v: 32, b: 'OFF' }),
-          o('Distance', { v: 32, b: 'OFF' }),
-        ],
-        melded: false
-      },
-      {
-        type: 'GRID',
-        params: [
-          o('Horizontal', { v: 56, b: 'OFF' }),
-          o('Vertical', { v: 56, b: 'OFF' }),
-          o('Thickness', { v: 0, b: 'OFF' }),
-          o('Feather', { v: 8, b: 'OFF' }),
-        ],
-        melded: true
-      },
-      {
-        type: 'TERRAIN',
-        params: [
-          o('Scale', { v: 3, b: 'OFF' }),
-          o('Extrusion', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 4, b: 'OFF' }),
-          o('Resolution', { v: 100, b: 'OFF' }),
-          o('Rotate X', { v: 89, b: 'OFF' }),
-          o('Rotate Y', { v: 0, b: 'OFF' }),
-          o('Rotate Z', { v: 0, b: 'OFF' }),
-          o('Elevation', { v: 36, b: 'OFF' }),
-          o('Distance', { v: 37, b: 'OFF' }),
+          o('Elevation', { v: 50, b: 'OFF' }),
+          o('Distance', { v: 50, b: 'OFF' }),
         ],
         melded: false
       }
@@ -245,7 +225,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Horizontal', { v: 30, b: 'OFF' }),
           o('Vertical', { v: 30, b: 'OFF' }),
           o('Thickness', { v: 20, b: 'OFF' }),
-          o('Feather', { v: 50, b: 'OFF' }),
+          o('Feather', { v: 25, b: 'OFF' }),
           o('Scale X', { v: 50, b: 'OFF' }),
           o('Scale Y', { v: 50, b: 'OFF' }),
           o('Pan X', { v: 50, b: 'OFF' }),
@@ -309,9 +289,9 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 5, b: 'OFF' }),
-          o('Complexity', { v: 0, b: 'OFF' }),
-          o('Warp', { v: 3, b: 'OFF' }),
+          o('Scale', { v: 3, b: 'OFF' }),
+          o('Complexity', { v: 43, b: 'OFF' }),
+          o('Warp', { v: 5, b: 'OFF' }),
           o('Speed', { v: 10, b: 'OFF' }),
           o('Blend', { v: 100, b: 'OFF' }),
         ],
@@ -328,7 +308,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'TERRAIN',
         params: [
-          o('Scale', { v: 3, b: 'OFF' }),
+          o('Scale', { v: 2, b: 'OFF' }),
           o('Extrusion', { v: 50, b: 'OFF' }),
           o('Speed', { v: 0, b: 'OFF' }),
           o('Resolution', { v: 27, b: 'OFF' }),
@@ -344,8 +324,110 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'EDGE_MASK',
         params: [
           o('Sensitivity', { v: 0, b: 'OFF' }),
-          o('Thickness', { v: 0, b: 'OFF' }),
+          o('Thickness', { v: 3, b: 'OFF' }),
           o('Invert', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  SPEED_TUNNEL: {
+    id: 'SPEED_TUNNEL',
+    label: 'Speed Tunnel',
+    effects: [
+      {
+        type: 'GRAIN',
+        params: [
+          o('Width', { v: 43, b: 'OFF' }),
+          o('Height', { v: 100, b: 'OFF' }),
+          o('X-Freq', { v: 63, b: 'OFF' }),
+          o('Y-Freq', { v: 53, b: 'OFF' }),
+          o('Density', { v: 44, b: 'OFF' }),
+          o('Roundness', { v: 0, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TUNNEL_WARP',
+        params: [
+          o('Scale', { v: 2, b: 'OFF' }),
+          o('Speed', { v: 20, b: 'OFF' }),
+          o('Twist', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  RINGS: {
+    id: 'RINGS',
+    label: 'Rings',
+    effects: [
+      {
+        type: 'GRID',
+        params: [
+          o('Horizontal', { v: 0, b: 'OFF' }),
+          o('Vertical', { v: 17, b: 'OFF' }),
+          o('Thickness', { v: 30, b: 'OFF' }),
+          o('Feather', { v: 25, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TUNNEL_WARP',
+        params: [
+          o('Scale', { v: 5, b: 'OFF' }),
+          o('Speed', { v: 20, b: 'OFF' }),
+          o('Twist', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  PLUME: {
+    id: 'PLUME',
+    label: 'Plume',
+    effects: [
+      {
+        type: 'GRID',
+        params: [
+          o('Horizontal', { v: 25, b: 'OFF' }, { v: 20 }),
+          o('Vertical', { v: 0, b: 'OFF' }),
+          o('Thickness', { v: 100, b: 'OFF' }, { v: 75 }),
+          o('Feather', { v: 0, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'WAVE_DISTORTION',
+        params: [
+          o('Amplitude', { v: 19, b: 'OFF' }),
+          o('Frequency', { v: 5, b: 'OFF' }),
+          o('Speed', { v: 0, b: 'OFF' })
+        ],
+        melded: true
+      },
+      {
+        type: 'TUNNEL_WARP',
+        params: [
+          o('Scale', { v: 5, b: 'OFF' }),
+          o('Speed', { v: 52, b: 'OFF' }),
+          o('Twist', { v: 0, b: 'OFF' }),
         ],
         melded: false
       }

@@ -74,7 +74,10 @@ export type MacroType =
   'LANDSCAPE' |
   'GRID_PLANE' |
   'LIQUID' |
-  'PLANE_MESH';
+  'PLANE_MESH' |
+  'SPEED_TUNNEL' |
+  'RINGS' |
+  'PLUME';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;
