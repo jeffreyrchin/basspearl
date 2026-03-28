@@ -72,9 +72,9 @@ export type MacroType =
   'RUBBER_BAND' |
   'METRO' |
   'LANDSCAPE' |
-  'WATER' |
-  'ICE' |
-  'GRID_PLANE';
+  'GRID_PLANE' |
+  'LIQUID' |
+  'PLANE_MESH';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;

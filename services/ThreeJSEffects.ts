@@ -67,16 +67,19 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                     // Step 3: Map world coordinates to scrolling texture UVs
                     vUv = vec2(pos.x / 300.0 + 0.5, 1.0 - ((pos.z / 20.0) * (u_scale / 50.0) + u_uv_offset));
                     
+                    vec3 luminanceWeights = vec3(0.333);
                     vec4 tex = texture(u_image, vUv);
-                    float h = tex.r * (u_extrusion / 1.0);
+                    float luminance = dot(tex.rgb, luminanceWeights);
+                    float h = luminance * (u_extrusion / 1.0);
                     
                     // Step 4: Right-side face color fix
                     // We sample the neighbor to the left to ensure right-facing mountain 
                     // slopes are colored with the peak color rather than the ground.
                     vec3 leftPos = pos - vec3(blockSize, 0.0, 0.0);
                     vec2 leftUv = vec2(leftPos.x / 300.0 + 0.5, 1.0 - ((leftPos.z / 20.0) * (u_scale / 50.0) + u_uv_offset));
-                    float hL = texture(u_image, leftUv).r;
-                    vColorFlat = (hL > tex.r) ? texture(u_image, leftUv) : tex;
+                    vec4 leftTex = texture(u_image, leftUv);
+                    float hL = dot(leftTex.rgb, luminanceWeights);
+                    vColorFlat = mix(tex, leftTex, clamp((hL - luminance) * 10.0, 0.0, 1.0)); // Prevent flickering colors
                     
                     pos.y += h;
                     vLocalPos = vec2(position.x, position.z + u_mesh_z);

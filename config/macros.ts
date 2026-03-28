@@ -169,7 +169,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'EDGE_MASK',
         params: [
           o('Sensitivity', { v: 0, b: 'OFF' }),
-          o('Thickness', { v: 5, b: 'OFF' }, { v: 15 }),
+          o('Thickness', { v: 5, b: 'OFF' }, { v: 10 }),
           o('Invert', { v: 0, b: 'OFF' }),
         ],
         melded: false
@@ -235,88 +235,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       }
     ]
   },
-  WATER: {
-    id: 'WATER',
-    label: 'Water',
-    effects: [
-      {
-        type: 'ORGANIC_NOISE',
-        params: [
-          o('Scale', { v: 5, b: 'OFF' }),
-          o('Complexity', { v: 0, b: 'OFF' }),
-          o('Warp', { v: 6, b: 'OFF' }),
-          o('Speed', { v: 45, b: 'SUB' }, { v: 20, b: 'OFF' }),
-          o('Blend', { v: 100, b: 'OFF' }),
-        ],
-        melded: true
-      },
-      {
-        type: 'TERRAIN',
-        params: [
-          o('Scale', { v: 6, b: 'OFF' }),
-          o('Extrusion', { v: 75, b: 'OFF' }),
-          o('Speed', { v: 0, b: 'OFF' }),
-          o('Resolution', { v: 100, b: 'OFF' }),
-          o('Rotate X', { v: 0, b: 'OFF' }),
-          o('Rotate Y', { v: 0, b: 'OFF' }),
-          o('Rotate Z', { v: 0, b: 'OFF' }),
-          o('Elevation', { v: 46, b: 'OFF' }),
-          o('Distance', { v: 60, b: 'OFF' }),
-        ],
-        melded: true
-      },
-      {
-        type: 'SPECTRAL_MAP',
-        params: [
-          o('Resolution', { v: 16, b: 'OFF' }),
-          o('Phase Offset', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 0, b: 'OFF' }),
-          o('Strength', { v: 72, b: 'OFF' }),
-        ],
-        melded: false
-      }
-    ]
-  },
-  ICE: {
-    id: 'ICE',
-    label: 'Ice',
-    effects: [
-      {
-        type: 'ORGANIC_NOISE',
-        params: [
-          o('Scale', { v: 6, b: 'OFF' }),
-          o('Complexity', { v: 0, b: 'OFF' }),
-          o('Warp', { v: 10, b: 'OFF' }),
-          o('Speed', { v: 18, b: 'SUB' }),
-          o('Blend', { v: 100, b: 'OFF' }),
-        ],
-        melded: true
-      },
-      {
-        type: 'DEEP_FRY',
-        params: [
-          o('Heat', { v: 30, b: 'OFF' }),
-          o('Posterize', { v: 0, b: 'OFF' }),
-        ],
-        melded: true
-      },
-      {
-        type: 'TERRAIN',
-        params: [
-          o('Scale', { v: 6, b: 'OFF' }),
-          o('Extrusion', { v: 100, b: 'OFF' }),
-          o('Speed', { v: 0, b: 'OFF' }),
-          o('Resolution', { v: 100, b: 'OFF' }),
-          o('Rotate X', { v: 0, b: 'OFF' }),
-          o('Rotate Y', { v: 0, b: 'OFF' }),
-          o('Rotate Z', { v: 0, b: 'OFF' }),
-          o('Elevation', { v: 39, b: 'OFF' }),
-          o('Distance', { v: 41, b: 'OFF' }),
-        ],
-        melded: false
-      }
-    ]
-  },
   GRID_PLANE: {
     id: 'GRID_PLANE',
     label: 'Grid Plane',
@@ -326,8 +244,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Horizontal', { v: 30, b: 'OFF' }),
           o('Vertical', { v: 30, b: 'OFF' }),
-          o('Thickness', { v: 1, b: 'OFF' }),
-          o('Feather', { v: 30, b: 'OFF' }),
+          o('Thickness', { v: 20, b: 'OFF' }),
+          o('Feather', { v: 50, b: 'OFF' }),
           o('Scale X', { v: 50, b: 'OFF' }),
           o('Scale Y', { v: 50, b: 'OFF' }),
           o('Pan X', { v: 50, b: 'OFF' }),
@@ -338,15 +256,96 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'TERRAIN',
         params: [
-          o('Scale', { v: 5, b: 'OFF' }),
+          o('Scale', { v: 3, b: 'OFF' }),
           o('Extrusion', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 10, b: 'OFF' }),
+          o('Speed', { v: 5, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
           o('Rotate X', { v: 0, b: 'OFF' }),
           o('Rotate Y', { v: 0, b: 'OFF' }),
           o('Rotate Z', { v: 0, b: 'OFF' }),
           o('Elevation', { v: 50, b: 'OFF' }),
           o('Distance', { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  LIQUID: {
+    id: 'LIQUID',
+    label: 'Liquid',
+    effects: [
+      {
+        type: 'ORGANIC_NOISE',
+        params: [
+          o('Scale', { v: 15, b: 'OFF' }),
+          o('Complexity', { v: 2, b: 'OFF' }),
+          o('Warp', { v: 3, b: 'OFF' }),
+          o('Speed', { v: 5, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TERRAIN',
+        params: [
+          o('Scale', { v: 3, b: 'OFF' }),
+          o('Extrusion', { v: 28, b: 'OFF' }),
+          o('Speed', { v: 0, b: 'OFF' }),
+          o('Resolution', { v: 100, b: 'OFF' }),
+          o('Rotate X', { v: 0, b: 'OFF' }),
+          o('Rotate Y', { v: 0, b: 'OFF' }),
+          o('Rotate Z', { v: 0, b: 'OFF' }),
+          o('Elevation', { v: 46, b: 'OFF' }),
+          o('Distance', { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  PLANE_MESH: {
+    id: 'PLANE_MESH',
+    label: 'Plane Mesh',
+    effects: [
+      {
+        type: 'ORGANIC_NOISE',
+        params: [
+          o('Scale', { v: 5, b: 'OFF' }),
+          o('Complexity', { v: 0, b: 'OFF' }),
+          o('Warp', { v: 3, b: 'OFF' }),
+          o('Speed', { v: 10, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'DEEP_FRY',
+        params: [
+          o('Heat', { v: 19, b: 'OFF' }),
+          o('Posterize', { v: 0, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TERRAIN',
+        params: [
+          o('Scale', { v: 3, b: 'OFF' }),
+          o('Extrusion', { v: 50, b: 'OFF' }),
+          o('Speed', { v: 0, b: 'OFF' }),
+          o('Resolution', { v: 27, b: 'OFF' }),
+          o('Rotate X', { v: 0, b: 'OFF' }),
+          o('Rotate Y', { v: 0, b: 'OFF' }),
+          o('Rotate Z', { v: 0, b: 'OFF' }),
+          o('Elevation', { v: 46, b: 'OFF' }),
+          o('Distance', { v: 50, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'EDGE_MASK',
+        params: [
+          o('Sensitivity', { v: 0, b: 'OFF' }),
+          o('Thickness', { v: 0, b: 'OFF' }),
+          o('Invert', { v: 0, b: 'OFF' }),
         ],
         melded: false
       }
