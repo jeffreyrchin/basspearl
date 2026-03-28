@@ -89,7 +89,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                     dragConstraints={constraintsRef}
                     dragMomentum={false}
                     dragElastic={0}
-                    className="h-14 bg-[#0A0F1E]/80 backdrop-blur-2xl border border-white/10 rounded-2xl flex items-center pl-2 pr-4 gap-2 shadow-[0_12px_48px_rgba(0,0,0,0.5),0_0_20px_rgba(251,0,255,0.08)] ring-1 ring-white/5 pointer-events-auto overflow-x-auto no-scrollbar group cursor-default"
+                    className="h-14 bg-[#0A0F1E]/95 border border-white/10 rounded-2xl flex items-center pl-2 pr-4 gap-2 shadow-[0_12px_48px_rgba(0,0,0,0.5),0_0_20px_rgba(251,0,255,0.08)] ring-1 ring-white/5 pointer-events-auto overflow-x-auto no-scrollbar group cursor-default"
                 >
                     {/* Drag Handle */}
                     <div className="flex items-center justify-center w-8 h-8 cursor-grab active:cursor-grabbing hover:bg-white/5 rounded-lg transition-colors group/handle shrink-0">

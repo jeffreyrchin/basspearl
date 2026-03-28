@@ -58,7 +58,7 @@ const UserMenu: React.FC<UserMenuProps> = () => {
     const menuContent = (
         <div
             ref={menuRef}
-            className="fixed w-64 bg-black/90 backdrop-blur-xl rounded-xl overflow-hidden border border-white/10 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 z-overlay"
+            className="fixed w-64 bg-black/90 rounded-xl overflow-hidden border border-white/10 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 z-overlay"
             style={{
                 top: triggerRef.current ? triggerRef.current.getBoundingClientRect().bottom + 8 : 0,
                 right: triggerRef.current ? window.innerWidth - triggerRef.current.getBoundingClientRect().right : 0

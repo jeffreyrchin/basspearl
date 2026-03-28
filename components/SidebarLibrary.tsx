@@ -61,7 +61,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
 
             {/* Macro Indicator */}
             {macroType && (
-                <div className="absolute top-2 left-2 z-30 w-5 h-5 rounded-sm bg-indigo-500/30 backdrop-blur-md border border-indigo-400/30 pointer-events-none flex items-center justify-center">
+                <div className="absolute top-2 left-2 z-30 w-5 h-5 rounded-sm bg-indigo-500/80 border border-indigo-400/30 pointer-events-none flex items-center justify-center">
                     <span className="text-[10px] font-medium text-indigo-100 uppercase leading-none">M</span>
                 </div>
             )}

@@ -220,11 +220,11 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             />
                             <TransformGizmoLayer canvasRef={canvasRef} />
                             {isProcessing && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 animate-in fade-in duration-300 z-processing backdrop-blur-sm">
+                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-processing bg-black/80">
                                     <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
                                     <div className="flex flex-col items-center gap-1">
                                         <h3 className="text-xs font-bold tracking-widest text-white uppercase">Analyzing Audio</h3>
-                                        <p className="text-[9px] text-white/60 uppercase tracking-[0.2em]">{processingProgress}%</p>
+                                        <p className="text-[10px] text-white uppercase tracking-[0.2em]">{processingProgress}%</p>
                                     </div>
                                 </div>
                             )}
@@ -278,7 +278,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
                 {/* Sidebar: Effects Rack & Parameters */}
                 <aside
-                    className={`fixed inset-y-0 right-0 z-sidebar w-full sm:w-[380px] border-l border-white/5 bg-[#050B14]/95 backdrop-blur-2xl flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] will-change-transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                    className={`fixed inset-y-0 right-0 z-sidebar w-full sm:w-[380px] border-l border-white/5 bg-[#050B14] flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] will-change-transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                     {/* Inner wrapper */}
                     <div data-section="sidebar" className="flex-1 flex flex-col min-h-0 relative">
                         <SidebarNavigation onClose={() => setIsSidebarOpen(false)} />
@@ -289,7 +289,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 {isSidebarOpen && (
                     <div
                         onClick={() => setIsSidebarOpen(false)}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-mobilebackdrop lg:hidden animate-in fade-in duration-300"
+                        className="fixed inset-0 bg-black/80 z-mobilebackdrop lg:hidden animate-in fade-in duration-300"
                     />
                 )}
             </div>

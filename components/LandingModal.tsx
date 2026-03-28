@@ -66,7 +66,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
         return (
             <button
                 onClick={onClick}
-                className={`flex-1 rounded-2xl border ${theme.border} ${theme.bg} backdrop-blur-sm transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-2 sm:p-4 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 shadow-2xl relative overflow-hidden`}
+                className={`flex-1 rounded-2xl border ${theme.border} ${theme.bg} transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-2 sm:p-4 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 shadow-2xl relative overflow-hidden`}
             >
                 <div className={`absolute -inset-2 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
@@ -87,7 +87,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
             {/* Backdrop */}
             <motion.div
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 0.6 }}
+                animate={{ opacity: 0.5 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
                 className="absolute inset-0 bg-black"

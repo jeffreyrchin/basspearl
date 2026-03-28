@@ -50,7 +50,7 @@ const LibraryWindow: React.FC = () => {
                     onPointerDown={() => {
                         pushFocus('library');
                     }}
-                    className="relative z-10 w-full h-[85vh] bg-slate-900/95 backdrop-blur-xl border-t border-white/10 rounded-t-2xl pointer-events-auto flex flex-col shadow-2xl"
+                    className="relative z-10 w-full h-[85vh] bg-slate-900/95 border-t border-white/10 rounded-t-2xl pointer-events-auto flex flex-col shadow-2xl"
                     data-section="window"
                     data-window="library"
                 >
@@ -91,7 +91,7 @@ const LibraryWindow: React.FC = () => {
                     height: winHeight,
                     zIndex: `calc(var(--z-index-window) + ${focusStack.indexOf('library')})`
                 }}
-                className="bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-window flex flex-col pointer-events-auto overflow-hidden"
+                className="bg-slate-900/95 border border-white/10 rounded-xl shadow-2xl z-window flex flex-col pointer-events-auto overflow-hidden"
                 data-section="window"
                 data-window="library"
             >
