@@ -18,7 +18,8 @@ interface MainToolbarProps {
 }
 
 const ToolbarButton: React.FC<{
-    onPointerDown: () => void;
+    onClick?: () => void;
+    onPointerDown?: () => void;
     icon: string;
     title: string;
     isActive?: boolean;
@@ -28,7 +29,7 @@ const ToolbarButton: React.FC<{
     showDot?: boolean;
     className?: string;
     disabled?: boolean;
-}> = ({ onPointerDown, icon, title, isActive, activeBg, activeBorder, colorHex, showDot, className = "w-12", disabled }) => {
+}> = ({ onClick, onPointerDown, icon, title, isActive, activeBg, activeBorder, colorHex, showDot, className = "w-12", disabled }) => {
     const baseClass = "h-9 flex items-center justify-center rounded-xl border transition-all duration-200 outline-none focus-visible:ring-2 disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none";
     const idleClass = "border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10 text-white";
     const activeStyles = isActive ? `${activeBg} ${activeBorder}` : idleClass;
@@ -36,7 +37,8 @@ const ToolbarButton: React.FC<{
     return (
         <button
             type="button"
-            onPointerDown={(e) => { e.stopPropagation(); onPointerDown() }}
+            onClick={() => onClick?.()}
+            onPointerDown={(e) => { e.stopPropagation(); onPointerDown?.() }}
             disabled={disabled}
             className={`${baseClass} ${activeStyles} ${className}`}
             title={title}
@@ -106,12 +108,11 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             type="file"
                             accept="image/*, .jpg, .jpeg, .png, .webp, .heic"
                             onChange={handleImageUpload}
-                            onPointerDown={(e) => { (e.target as HTMLInputElement).value = ''; }} // Clear input so onChange always fires
                             title="Choose Image"
                             className="sr-only"
                         />
                         <ToolbarButton
-                            onPointerDown={() => imageInputRef.current?.click()}
+                            onClick={() => imageInputRef.current && (imageInputRef.current.value = '', imageInputRef.current.click())} // Clear input so onChange always fires
                             icon="image"
                             title="Choose Image"
                             isActive={!!imageFile}
@@ -128,12 +129,11 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             type="file"
                             accept="audio/*, .mp3, .wav, .m4a, .aac, .ogg"
                             onChange={handleAudioUpload}
-                            onPointerDown={(e) => { (e.target as HTMLInputElement).value = ''; }}
                             title="Choose Audio"
                             className="sr-only"
                         />
                         <ToolbarButton
-                            onPointerDown={() => audioInputRef.current?.click()}
+                            onClick={() => audioInputRef.current && (audioInputRef.current.value = '', audioInputRef.current.click())}
                             icon="graphic_eq"
                             title="Choose Audio"
                             isActive={!!audioFile}
