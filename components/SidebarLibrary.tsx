@@ -59,6 +59,13 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
                 </span>
             </div>
 
+            {/* Macro Indicator */}
+            {macroType && (
+                <div className="absolute top-2 left-2 z-30 w-5 h-5 rounded-sm bg-indigo-500/30 backdrop-blur-md border border-indigo-400/30 pointer-events-none flex items-center justify-center">
+                    <span className="text-[10px] font-medium text-indigo-100 uppercase leading-none">M</span>
+                </div>
+            )}
+
             {/* Quick add indicator */}
             <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-y-[-4px] group-hover:translate-y-0 pointer-events-none z-20">
                 <span className="text-sm material-symbols-outlined text-white">add</span>
@@ -87,11 +94,28 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
         setHoverTarget(null);
     }, []);
 
-    const filteredEffects = useMemo(() => {
-        if (selectedCategory === 'Macro') return [];
-        return (Object.entries(EFFECT_METADATA) as [GlitchEffectType, typeof EFFECT_METADATA[GlitchEffectType]][])
-            .filter(([, meta]) => selectedCategory === 'All' || meta.category === selectedCategory)
-            .sort(([, a], [, b]) => a.label.localeCompare(b.label));
+    const libraryItems = useMemo(() => {
+        const effects = (Object.entries(EFFECT_METADATA) as [GlitchEffectType, typeof EFFECT_METADATA[GlitchEffectType]][])
+            .map(([type, meta]) => ({
+                id: type,
+                label: meta.label,
+                category: meta.category,
+                effectType: type,
+            }));
+
+        const macros = (Object.entries(MACRO_METADATA) as [MacroType, typeof MACRO_METADATA[MacroType]][])
+            .map(([type, meta]) => ({
+                id: type,
+                label: meta.label,
+                category: 'Macro' as EffectCategory,
+                macroType: type,
+            }));
+
+        const items = [...effects, ...macros];
+
+        return items
+            .filter((item) => selectedCategory === 'All' || item.category === selectedCategory)
+            .sort((a, b) => a.label.localeCompare(b.label));
     }, [selectedCategory]);
 
     const handleAdd = (type: GlitchEffectType) => {
@@ -133,23 +157,12 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
             {/* Gallery Grid */}
             <div className="rounded-lg m-3 overflow-hidden">
                 <div className="grid gap-[1px] grid-cols-[repeat(auto-fill,minmax(120px,1fr))]">
-                    {/* Render Macros first if in 'All' or 'Macro' */}
-                    {(selectedCategory === 'All' || selectedCategory === 'Macro') && Object.entries(MACRO_METADATA).map(([id]) => (
+                    {libraryItems.map((item) => (
                         <LibraryCard
-                            key={id}
-                            macroType={id as MacroType}
-                            onClick={() => handleAddMacro(id as MacroType)}
-                            onHoverStart={handleHoverStart}
-                            onHoverEnd={handleHoverEnd}
-                        />
-                    ))}
-
-                    {/* Render Individual Effects */}
-                    {filteredEffects.map(([type]) => (
-                        <LibraryCard
-                            key={type}
-                            effectType={type}
-                            onClick={() => handleAdd(type)}
+                            key={item.id}
+                            effectType={item.effectType}
+                            macroType={item.macroType}
+                            onClick={() => item.macroType ? handleAddMacro(item.macroType) : handleAdd(item.effectType!)}
                             onHoverStart={handleHoverStart}
                             onHoverEnd={handleHoverEnd}
                         />
