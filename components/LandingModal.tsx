@@ -87,10 +87,10 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
             {/* Backdrop */}
             <motion.div
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                animate={{ opacity: 0.5 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-black/10 backdrop-blur-sm"
+                className="absolute inset-0 bg-black"
             />
 
             <motion.div
