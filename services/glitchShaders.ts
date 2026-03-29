@@ -1117,25 +1117,25 @@ void main() {
 
     vec2 cellScaling = 1.0 / max(vec2(cellWidth, cellHeight), 0.01);
 
-    // 5x5 Worley search with Circular Pruning (13 iterations vs 25)
-    // Corners are mathematically too far to be nearest neighbors, even with jitter.
+    // 5x5 Branchless Worley Search
+    float probMask = step(0.001, probDensity); // Handle 0 density edge case
+
     for (int y = -2; y <= 2; y++) {
         for (int x = -2; x <= 2; x++) {
-            if (x*x + y*y > 4) continue; // Skip 12 furthest corner cells
-            
             vec2 neighbor = vec2(float(x), float(y));
             vec2 cell = gv + neighbor;
 
-            // One robust hash mapped to multiple cheap derivations
+            // 2D hash — must use both x and y to avoid grid aliasing
             float baseHash = hash(cell, u_seed);
 
-            // Probability check: should a point exist in this cell?
-            if (baseHash > probDensity && probDensity < 0.99) continue;
-            
+            // Density Probability Mask: points only exist if hash <= density. 
+            // If they don't exist, we push them far away so they never win.
+            float exists = step(baseHash, probDensity) + step(0.99, probDensity);
+            float distBias = (1.0 - clamp(exists, 0.0, 1.0)) * 100.0;
+
             vec2 seed = vec2(baseHash, fract(baseHash * 43758.5453123));
 
-            // Morphic Jitter: fastSin replaces native sin/cos with Bhaskara approximation
-            // cos(x) = sin(x + π/2), so fastSin(x + 1.5708) gives cosine for free
+            // Morphic Jitter (Bhaskara Sine)
             vec2 wiggle = 0.5 + 0.5 * vec2(
                 fastSin(t + seed.x * 6.2831),
                 fastSin(t * 0.8 + seed.y * 6.2831 + 1.5708)
@@ -1148,12 +1148,12 @@ void main() {
             vec2 scaledDiff = diff * cellScaling;
             
             float dist = dot(scaledDiff, scaledDiff);
-            f1 = min(f1, dist);
+            f1 = min(f1, dist + distBias);
         }
     }
 
     f1 = sqrt(f1);
-    float intensity = smoothstep(1.0, 0.0, f1);
+    float intensity = smoothstep(1.0, 0.0, f1) * probMask;
 
     vec4 src = texture(u_image, v_texCoord);
     float alpha = blend * step(0.001, probDensity);
