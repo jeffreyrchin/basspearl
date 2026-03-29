@@ -78,7 +78,8 @@ export type MacroType =
   'PLANE_MESH' |
   'SPEED_TUNNEL' |
   'RINGS' |
-  'PLUME';
+  'PLUME' |
+  'CELL_MASS';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;

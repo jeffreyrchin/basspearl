@@ -432,5 +432,51 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         melded: false
       }
     ]
+  },
+  CELL_MASS: {
+    id: 'CELL_MASS',
+    label: 'Cell Mass',
+    effects: [
+      {
+        type: 'CELLULAR_NOISE',
+        params: [
+          o('Cell Width', { v: 100 }),
+          o('Cell Height', { v: 100 }),
+          o('X-Freq', { v: 50 }),
+          o('Y-Freq', { v: 50 }),
+          o('Density', { v: 100 }),
+          o('Jitter', { v: 100 }),
+          o('Speed', { v: 100, b: 'OFF' }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: true
+      },
+      {
+        type: 'ORGANIC_NOISE',
+        params: [
+          o('Scale', { v: 4, b: 'OFF' }),
+          o('Complexity', { v: 0, b: 'OFF' }),
+          o('Warp', { v: 9, b: 'OFF' }),
+          o('Speed', { v: 9, b: 'OFF' }),
+          o('Blend', { v: 88, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TERRAIN_SPHERE',
+        params: [
+          o('Extrusion', { v: 50, b: 'OFF' }),
+          o('Resolution', { v: 100, b: 'OFF' }),
+          o('Distance', { v: 30, b: 'OFF' }),
+          o('Offset X', { v: 0, b: 'OFF' }),
+          o('Offset Y', { v: 0, b: 'OFF' }),
+          o('Offset Z', { v: 0, b: 'OFF' }),
+          o('Spin Speed X', { v: 0, b: 'OFF' }),
+          o('Spin Speed Y', { v: 0, b: 'OFF' }),
+          o('Spin Speed Z', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
   }
 };
