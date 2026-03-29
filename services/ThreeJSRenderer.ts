@@ -81,7 +81,14 @@ export class ThreeJSRenderer {
         // 1. Synchronize Dimensions
         if (this.renderTarget.width !== width || this.renderTarget.height !== height) {
             this.renderTarget.setSize(width, height);
-            effect.camera.aspect = width / height;
+        }
+
+        // Ensure correct aspect ratio when adding a new 3D effect
+        const currentAspectRatio = width / height;
+        const cameraAspectRatio = effect.camera.aspect;
+
+        if (currentAspectRatio !== cameraAspectRatio) {
+            effect.camera.aspect = currentAspectRatio;
             effect.camera.updateProjectionMatrix();
         }
 

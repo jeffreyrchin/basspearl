@@ -79,7 +79,10 @@ export type MacroType =
   'SPEED_TUNNEL' |
   'RINGS' |
   'PLUME' |
-  'CELL_MASS';
+  'CELL_MASS' |
+  'SPIKY_WORLD' |
+  'CRYOGENIC_FLUID' |
+  'WATERCOLOR';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;

@@ -442,8 +442,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Cell Width', { v: 100 }),
           o('Cell Height', { v: 100 }),
-          o('X-Freq', { v: 50 }),
-          o('Y-Freq', { v: 50 }),
+          o('X-Freq', { v: 25 }),
+          o('Y-Freq', { v: 25 }),
           o('Density', { v: 100 }),
           o('Jitter', { v: 100 }),
           o('Speed', { v: 100, b: 'OFF' }),
@@ -454,26 +454,163 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 4, b: 'OFF' }),
+          o('Scale', { v: 10, b: 'OFF' }),
           o('Complexity', { v: 0, b: 'OFF' }),
-          o('Warp', { v: 9, b: 'OFF' }),
-          o('Speed', { v: 9, b: 'OFF' }),
-          o('Blend', { v: 88, b: 'OFF' }),
+          o('Warp', { v: 3, b: 'OFF' }),
+          o('Speed', { v: 25, b: 'OFF' }),
+          o('Blend', { v: 80, b: 'OFF' }),
         ],
         melded: true
       },
       {
         type: 'TERRAIN_SPHERE',
         params: [
-          o('Extrusion', { v: 50, b: 'OFF' }),
+          o('Extrusion', { v: 80, b: 'OFF' }),
+          o('Resolution', { v: 50, b: 'OFF' }),
+          o('Distance', { v: 0, b: 'OFF' }),
+          o('Offset X', { v: 0, b: 'OFF' }),
+          o('Offset Y', { v: 0, b: 'OFF' }),
+          o('Offset Z', { v: 0, b: 'OFF' }),
+          o('Spin Speed X', { v: 0, b: 'OFF' }),
+          o('Spin Speed Y', { v: 0, b: 'OFF' }),
+          o('Spin Speed Z', { v: 10, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'EDGE_MASK',
+        params: [
+          o('Sensitivity', { v: 0, b: 'OFF' }),
+          o('Thickness', { v: 5, b: 'OFF' }),
+          o('Invert', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  SPIKY_WORLD: {
+    id: 'SPIKY_WORLD',
+    label: 'Spiky World',
+    effects: [
+      {
+        type: 'CELLULAR_NOISE',
+        params: [
+          o('Cell Width', { v: 100 }),
+          o('Cell Height', { v: 100 }),
+          o('X-Freq', { v: 70 }),
+          o('Y-Freq', { v: 70 }),
+          o('Density', { v: 100 }),
+          o('Jitter', { v: 0 }),
+          o('Speed', { v: 100, b: 'OFF' }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: true
+      },
+      {
+        type: 'ORGANIC_NOISE',
+        params: [
+          o('Scale', { v: 4, b: 'OFF' }),
+          o('Complexity', { v: 0, b: 'OFF' }),
+          o('Warp', { v: 13, b: 'OFF' }),
+          o('Speed', { v: 8, b: 'OFF' }),
+          o('Blend', { v: 62, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'LUMINANCE_MASK',
+        params: [
+          o('Threshold', { v: 34, b: 'OFF' }),
+          o('Feather', { v: 64, b: 'OFF' }),
+          o('Invert', { v: 0, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TERRAIN_SPHERE',
+        params: [
+          o('Extrusion', { v: 47, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
-          o('Distance', { v: 30, b: 'OFF' }),
+          o('Distance', { v: 40, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
           o('Spin Speed X', { v: 0, b: 'OFF' }),
           o('Spin Speed Y', { v: 0, b: 'OFF' }),
           o('Spin Speed Z', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  CRYOGENIC_FLUID: {
+    id: 'CRYOGENIC_FLUID',
+    label: 'Cryogenic Fluid',
+    effects: [
+      {
+        type: 'SHAPE',
+        params: [
+          o('Side Count', { v: 100 }),
+          o('Pointiness', { v: 0 }),
+          o('Roundness', { v: 0 }),
+          o('Feather', { v: 35 }),
+          o('Blend', { v: 100 }),
+          o('Scale X', { v: 18, b: 'OFF' }),
+          o('Scale Y', { v: 36, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'ORGANIC_NOISE',
+        params: [
+          o('Scale', { v: 20, b: 'OFF' }),
+          o('Complexity', { v: 0, b: 'OFF' }),
+          o('Warp', { v: 4, b: 'OFF' }),
+          o('Speed', { v: 17, b: 'OFF' }),
+          o('Blend', { v: 60, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TERRAIN',
+        params: [
+          o('Scale', { v: 3, b: 'OFF' }),
+          o('Extrusion', { v: 50, b: 'OFF' }),
+          o('Speed', { v: 0, b: 'OFF' }),
+          o('Resolution', { v: 100, b: 'OFF' }),
+          o('Rotate X', { v: 0, b: 'OFF' }),
+          o('Rotate Y', { v: 0, b: 'OFF' }),
+          o('Rotate Z', { v: 0, b: 'OFF' }),
+          o('Elevation', { v: 47, b: 'OFF' }),
+          o('Distance', { v: 37, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  WATERCOLOR: {
+    id: 'WATERCOLOR',
+    label: 'Watercolor',
+    effects: [
+      {
+        type: 'ORGANIC_NOISE',
+        params: [
+          o('Scale', { v: 1, b: 'OFF' }),
+          o('Complexity', { v: 100, b: 'OFF' }),
+          o('Warp', { v: 5, b: 'OFF' }),
+          o('Speed', { v: 5, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'DEEP_FRY',
+        params: [
+          o('Heat', { v: 50, b: 'OFF' }),
+          o('Posterize', { v: 0, b: 'OFF' })
         ],
         melded: false
       }
