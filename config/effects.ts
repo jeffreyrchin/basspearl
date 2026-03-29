@@ -59,7 +59,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     ],
   },
   BIT_CRUSH: {
-    label: 'Crush',
+    label: 'Bitcrusher',
     icon: 'developer_board',
     category: 'Distort',
     params: [
@@ -91,7 +91,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     ],
   },
   COMPRESSION_HELL: {
-    label: 'Artifact',
+    label: 'Lossy',
     icon: 'compress',
     category: 'Distort',
     params: [
