@@ -355,6 +355,22 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Distance', { v: 50 }),
     ],
   },
+  TERRAIN_SPHERE: {
+    label: 'Terrain Sphere',
+    icon: 'public',
+    category: 'Spatial',
+    params: [
+      p('Extrusion', { v: 10 }),
+      p('Resolution', { v: 100 }),
+      p('Distance', { v: 75 }),
+      p('Offset X', { v: 0 }),
+      p('Offset Y', { v: 0 }),
+      p('Offset Z', { v: 25 }),
+      p('Spin Speed X', { v: 25 }),
+      p('Spin Speed Y', { v: 0 }),
+      p('Spin Speed Z', { v: 0 }),
+    ],
+  },
   CHECKERBOARD: {
     label: 'Checkerboard',
     icon: 'grid_view',

@@ -1487,6 +1487,7 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     SCROLL: { name: 'SCROLL', fragmentSource: SCROLL_SHADER, velocityParamIndices: [0, 1, 2, 3] },
     LUMINANCE_MAP: { name: 'LUMINANCE_MAP', fragmentSource: LUMINANCE_MAP_SHADER },
     TERRAIN: { name: 'TERRAIN', fragmentSource: '', velocityParamIndices: [2], is3D: true },
+    TERRAIN_SPHERE: { name: 'TERRAIN_SPHERE', fragmentSource: '', velocityParamIndices: [6, 7, 8], is3D: true },
     TRANSFORM: { name: 'TRANSFORM', fragmentSource: TRANSFORM_SHADER },
     CHECKERBOARD: { name: 'CHECKERBOARD', fragmentSource: CHECKERBOARD_SHADER },
     RGBA: { name: 'RGBA', fragmentSource: RGBA_SHADER },
