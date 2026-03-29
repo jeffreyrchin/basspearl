@@ -82,7 +82,8 @@ export type MacroType =
   'CELL_MASS' |
   'SPIKY_WORLD' |
   'CRYOGENIC_FLUID' |
-  'WATERCOLOR';
+  'WATERCOLOR' |
+  'DISCO_BALL';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;

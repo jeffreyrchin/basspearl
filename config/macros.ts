@@ -615,5 +615,58 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         melded: false
       }
     ]
+  },
+  DISCO_BALL: {
+    id: 'DISCO_BALL',
+    label: 'Disco Ball',
+    effects: [
+      {
+        type: 'GRAIN',
+        params: [
+          o('Width', { v: 69 }),
+          o('Height', { v: 64 }),
+          o('X-Freq', { v: 50 }),
+          o('Y-Freq', { v: 46 }),
+          o('Density', { v: 100, b: 'OFF' }),
+          o('Roundness', { v: 0 }),
+          o('Blend', { v: 100 }),
+          o('Scale X', { v: 57 }),
+          o('Scale Y', { v: 67 }),
+          o('Pan X', { v: 50 }),
+          o('Pan Y', { v: 50 }),
+          o('Rotation', { v: 0 }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TERRAIN_SPHERE',
+        params: [
+          o('Extrusion', { v: 0, b: 'OFF' }),
+          o('Resolution', { v: 100, b: 'OFF' }),
+          o('Distance', { v: 84, b: 'OFF' }),
+          o('Offset X', { v: 0, b: 'OFF' }),
+          o('Offset Y', { v: 0, b: 'OFF' }),
+          o('Offset Z', { v: 0, b: 'OFF' }),
+          o('Spin Speed X', { v: 18, b: 'OFF' }),
+          o('Spin Speed Y', { v: 18, b: 'OFF' }),
+          o('Spin Speed Z', { v: 18, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'SPECTRAL_MAP',
+        params: [
+          o('Resolution', { v: 10, b: 'OFF' }),
+          o('Phase Offset', { v: 0, b: 'OFF' }),
+          o('Speed', { v: 100, b: 'OFF' }),
+          o('Strength', { v: 100, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
   }
 };
