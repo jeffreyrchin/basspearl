@@ -3,11 +3,11 @@ import React from 'react';
 const AboutContent: React.FC = () => {
     return (
         <div className="max-w-4xl mx-auto space-y-12">
-            {/* What is GlitchBrain */}
+            {/* What is Muxels */}
             <section className="space-y-4">
                 <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">Audio-Reactive Effects Engine</h2>
                 <p className="text-white/70 text-base md:text-lg leading-relaxed">
-                    Glitchbrain is a high-performance visual synthesizer that combines images and audio to create audio-reactive visualizers. Your creations can be exported as MP4 files to share or use in any of your creative projects.
+                    Muxels is a high-performance visual synthesizer that combines images and audio to create audio-reactive visualizers. Your creations can be exported as MP4 files to share or use in any of your creative projects.
                 </p>
             </section>
 

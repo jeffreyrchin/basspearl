@@ -40,12 +40,12 @@ const LegalConsentModal = () => {
                 <div className="flex-1 overflow-y-auto p-6 space-y-8 text-white/80 text-sm leading-relaxed custom-scrollbar">
                     <section>
                         <h1 className="text-2xl font-bold text-white mb-2">Privacy Policy</h1>
-                        <p className="text-white/60 mb-6 text-xs">Last Updated: February 17, 2026</p>
+                        <p className="text-white/60 mb-6 text-xs">Last Updated: March 29, 2026</p>
 
                         <div className="space-y-6">
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">1. Introduction</h3>
-                                <p>Welcome to GlitchBrain.io. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you.</p>
+                                <p>Welcome to Muxels. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you.</p>
                             </div>
 
                             <div>
@@ -56,7 +56,7 @@ const LegalConsentModal = () => {
                                     <li><strong>Contact Data:</strong> Includes email address for account management.</li>
                                     <li><strong>Technical Data:</strong> Includes internet protocol (IP) address, your login data, browser type and version, time zone setting and location, browser plug-in types and versions, operating system and platform, and other technology on the devices you use to access this website.</li>
                                     <li><strong>Usage Data:</strong> Includes information about how you use our website, products and services.</li>
-                                    <li><strong>Media Data (Images and Audio):</strong> Images and audio files you upload are processed locally in your browser to generate high-performance audio-reactive visualizers. Audio files are analyzed to create deterministic reactivity maps—no raw media data leaves your device. We do not store your original files on our servers.</li>
+                                    <li><strong>Media Data (Images and Audio):</strong> Images and audio files you upload are processed locally in your browser to generate high-performance audio-reactive visualizers. Audio files are analyzed to create deterministic reactivity maps - no raw media data leaves your device. We do not store your original files on our servers.</li>
                                     <li><strong>Analytics Data:</strong> We collect refined telemetry using Google Analytics 4, including interaction timestamps, preset selections, effect toggles, and processing performance metrics. This data is anonymized and used exclusively to optimize the visual engine and identify performance bottlenecks.</li>
                                 </ul>
                             </div>
@@ -182,17 +182,17 @@ const LegalConsentModal = () => {
 
                     <section>
                         <h1 className="text-2xl font-bold text-white mb-2">Terms of Service</h1>
-                        <p className="text-white/60 mb-6 text-xs">Last Updated: February 17, 2026</p>
+                        <p className="text-white/60 mb-6 text-xs">Last Updated: March 29, 2026</p>
 
                         <div className="space-y-6">
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">1. Acceptance of Terms</h3>
-                                <p>By accessing or using the GlitchBrain.io website and services, you agree to be bound by these Terms. If you disagree with any part of the terms then you may not access the Service.</p>
+                                <p>By accessing or using the Muxels website and services, you agree to be bound by these Terms. If you disagree with any part of the terms then you may not access the Service.</p>
                             </div>
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">2. Description of Service</h3>
-                                <p>GlitchBrain.io provides a web-based graphics engine for generating audio-reactive visualizers and applying visual effects ("glitch effects") to user-uploaded images. The service allows for the real-time simulation and hardware-accelerated export of MP4 video files. All processing occurs client-side within your browser—no media files are uploaded to our servers.</p>
+                                <p>Muxels provides a web-based graphics engine for generating audio-reactive visualizers and applying visual effects to user-uploaded images. The service allows for the real-time simulation and hardware-accelerated export of MP4 video files. All processing occurs client-side within your browser - no media files are uploaded to our servers.</p>
                             </div>
 
                             <div>
@@ -202,7 +202,7 @@ const LegalConsentModal = () => {
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">4. User Content and Conduct</h3>
-                                <p>By uploading images or audio files, you represent and warrant that you own or have the necessary rights, licenses, consents, and permissions to use and authorize us to process such content. You retain full ownership of your uploaded content and any visualizer videos generated by the Service. By using the Service, you grant GlitchBrain.io a temporary, limited license to process your content locally in your browser solely to provide the requested visual effects. You are responsible for ensuring your use of generated content complies with third-party copyrights (e.g., music licensing).</p>
+                                <p>By uploading images or audio files, you represent and warrant that you own or have the necessary rights, licenses, consents, and permissions to use and authorize us to process such content. You retain full ownership of your uploaded content and any visualizer videos generated by the Service. By using the Service, you grant Muxels a temporary, limited license to process your content locally in your browser solely to provide the requested visual effects. You are responsible for ensuring your use of generated content complies with third-party copyrights (e.g., music licensing).</p>
                             </div>
 
                             <div>
@@ -212,7 +212,7 @@ const LegalConsentModal = () => {
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">6. Intellectual Property Rights</h3>
-                                <p>The Service and its original content (excluding Content provided by users), features and functionality are and will remain the exclusive property of GlitchBrain.io and its licensors.</p>
+                                <p>The Service and its original content (excluding Content provided by users), features and functionality are and will remain the exclusive property of Muxels and its licensors.</p>
                             </div>
 
                             <div>
@@ -222,7 +222,7 @@ const LegalConsentModal = () => {
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">8. Third-Party Services</h3>
-                                <p>The Service may use third-party services (such as Firebase) that declare their own Terms of Service. By using the Service, you acknowledge and agree that GlitchBrain.io is not responsible for the availability of such external sites or resources.</p>
+                                <p>The Service may use third-party services (such as Firebase) that declare their own Terms of Service. By using the Service, you acknowledge and agree that Muxels is not responsible for the availability of such external sites or resources.</p>
                             </div>
 
                             <div>
@@ -232,12 +232,12 @@ const LegalConsentModal = () => {
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">10. Limitation of Liability</h3>
-                                <p>In no event shall GlitchBrain.io, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses. In no event shall GlitchBrain.io's total liability to you for all damages, losses, and causes of action exceed the amount you have paid GlitchBrain.io in the last six (6) months, or, if greater, one hundred dollars ($100).</p>
+                                <p>In no event shall Muxels, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses. In no event shall Muxels' total liability to you for all damages, losses, and causes of action exceed the amount you have paid Muxels in the last six (6) months, or, if greater, one hundred dollars ($100).</p>
                             </div>
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">11. Indemnification</h3>
-                                <p>You agree to defend, indemnify and hold harmless GlitchBrain.io and its licensee and licensors, and their employees, contractors, agents, officers and directors, from and against any and all claims, damages, obligations, losses, liabilities, costs or debt, and expenses.</p>
+                                <p>You agree to defend, indemnify and hold harmless Muxels and its licensee and licensors, and their employees, contractors, agents, officers and directors, from and against any and all claims, damages, obligations, losses, liabilities, costs or debt, and expenses.</p>
                             </div>
 
                             <div>
@@ -252,12 +252,12 @@ const LegalConsentModal = () => {
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">14. Dispute Resolution</h3>
-                                <p>If you have any concern or dispute about the Service, you agree to first try to resolve the dispute informally by contacting GlitchBrain.io.</p>
+                                <p>If you have any concern or dispute about the Service, you agree to first try to resolve the dispute informally by contacting Muxels.</p>
                             </div>
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">15. Arbitration Agreement</h3>
-                                <p>For any dispute you have with GlitchBrain.io, you agree to first simply contact us and attempt to resolve the dispute with us informally. If GlitchBrain.io has not been able to resolve the dispute with you informally, we each agree to resolve any claim, dispute, or controversy via binding arbitration.</p>
+                                <p>For any dispute you have with Muxels, you agree to first simply contact us and attempt to resolve the dispute with us informally. If Muxels has not been able to resolve the dispute with you informally, we each agree to resolve any claim, dispute, or controversy via binding arbitration.</p>
                                 <p className="mt-2 text-white/60 text-xs bg-white/5 p-3 rounded">
                                     <strong>Opt-Out:</strong> You may opt-out of this Agreement to arbitrate by sending a written notice to jeffreyrchin.20@gmail.com within 30 days of first accepting these Terms. Your notice must include your name and address, the email address used to set up your account (if you have one), and an unequivocal statement that you want to opt-out of this arbitration agreement.
                                 </p>

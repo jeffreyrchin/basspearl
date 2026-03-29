@@ -126,21 +126,14 @@ const AuthModal = () => {
                 </button>
 
                 <div className="relative p-8 pt-12">
-                    {/* Logo */}
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                        <div className="size-10 text-primary active-glow">
-                            <span className="material-symbols-outlined text-[40px]">vibration</span>
-                        </div>
-                    </div>
-
                     {/* Title */}
                     <h2 className="text-3xl font-bold text-center tracking-tight uppercase mb-1">
-                        {authMode === 'login' ? 'Welcome Back' : 'Join GlitchBrain'}
+                        {authMode === 'login' ? 'Welcome Back' : 'Join Muxels'}
                     </h2>
                     <p className="text-white/40 text-center text-sm mb-8">
                         {authMode === 'login'
-                            ? 'Sign in for unlimited uploads'
-                            : 'Create an account for unlimited uploads'}
+                            ? 'Sign in for unlimited exports'
+                            : 'Create an account for unlimited exports'}
                     </p>
 
                     {/* Google Button */}
@@ -213,7 +206,7 @@ const AuthModal = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors pt-2"
                                 >
                                     <span className="material-symbols-outlined text-[20px]">
                                         {showPassword ? 'visibility_off' : 'visibility'}
@@ -231,14 +224,11 @@ const AuthModal = () => {
                                         id="terms-checkbox"
                                         checked={agreedToTerms}
                                         onChange={(e) => setAgreedToTerms(e.target.checked)}
-                                        className="peer size-5 appearance-none rounded-md border border-white/20 bg-white/5 checked:!bg-primary checked:!border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 accent-primary transition-all cursor-pointer"
+                                        className="peer size-5 appearance-none rounded-md border border-white/20 bg-white/5 checked:!bg-primary checked:!border-primary outline-none focus-visible:ring-2 focus-visible:ring-primary/50 accent-primary transition-all cursor-pointer"
                                     />
-                                    <span className="absolute inset-0 flex items-center justify-center text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity">
-                                        <span className="material-symbols-outlined text-[16px] font-bold leading-none">check</span>
-                                    </span>
                                 </div>
-                                <label htmlFor="terms-checkbox" className="text-xs text-white/60 cursor-pointer select-none leading-relaxed pt-0.5">
-                                    I agree to the GlitchBrain.io<span
+                                <label htmlFor="terms-checkbox" className="text-xs text-white/60 cursor-pointer select-none pt-[0.5px]">
+                                    I have read and agree to the<span
                                         role="button"
                                         tabIndex={0}
                                         onClick={(e) => { e.preventDefault(); openLegal(); }}
@@ -248,7 +238,7 @@ const AuthModal = () => {
                                                 openLegal();
                                             }
                                         }}
-                                        className="text-white hover:underline hover:text-primary transition-colors cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 rounded px-0.5"
+                                        className="text-white hover:text-primary transition-colors cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 rounded px-0.5"
                                     >Terms of Service and Privacy Policy</span>.
                                 </label>
                             </div>

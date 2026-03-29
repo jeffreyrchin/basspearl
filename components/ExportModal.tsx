@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface ExportModalProps {
     isOpen: boolean;
@@ -19,6 +21,8 @@ const ExportModal: React.FC<ExportModalProps> = ({
     exportProgress,
     exportResult
 }) => {
+    const { user } = useAuth();
+    const { openAuth } = useAuthStore();
     const [fps, setFps] = useState<number>(30);
     const [resolution, setResolution] = useState<number>(1920);
 
@@ -45,6 +49,8 @@ const ExportModal: React.FC<ExportModalProps> = ({
         { value: 1920, label: '1080p', desc: '1920x1080' },
         { value: 3840, label: '4K', desc: '3840x2160' }
     ];
+
+    const isLocked = resolution > 1280 && !user;
 
     return (
         <div className="fixed inset-0 z-modal flex items-center justify-center p-4">
@@ -111,7 +117,12 @@ const ExportModal: React.FC<ExportModalProps> = ({
                                             : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/10'
                                             } ${isExporting ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
-                                        <span>{option.label}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span>{option.label}</span>
+                                            {option.value > 1280 && !user && (
+                                                <span className="material-symbols-outlined !text-sm opacity-50">lock</span>
+                                            )}
+                                        </div>
                                         <span className={`text-[10px] font-medium text-white/60`}>
                                             {option.desc}
                                         </span>
@@ -157,10 +168,20 @@ const ExportModal: React.FC<ExportModalProps> = ({
                     ) : (
                         <div className="mt-10 pt-8 border-t border-white/10">
                             <button
-                                onClick={() => onExport({ fps, resolution })}
-                                className="w-full py-4 rounded border border-white/20 bg-white/10 text-white hover:bg-white/20 active:scale-[0.99] font-bold text-[10px] uppercase tracking-[0.2em] transition-all"
+                                onClick={() => isLocked ? openAuth('signup') : onExport({ fps, resolution })}
+                                className={`w-full py-4 rounded border font-bold text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${isLocked
+                                    ? 'border-primary/50 bg-primary/10 text-primary hover:bg-primary/20'
+                                    : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
+                                    }`}
                             >
-                                Export .MP4
+                                {isLocked ? (
+                                    <>
+                                        <span className="material-symbols-outlined !text-sm opacity-80 transition-opacity duration-300">lock</span>
+                                        <span>Sign in to Export {resolution === 1920 ? '1080p' : '4K'}</span>
+                                    </>
+                                ) : (
+                                    <span>Export .MP4</span>
+                                )}
                             </button>
                         </div>
                     )}
