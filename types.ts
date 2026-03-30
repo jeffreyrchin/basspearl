@@ -1,4 +1,4 @@
-export type EffectCategory = 'All' | 'Pattern' | 'Color' | 'Spatial' | 'Distort' | 'Macro';
+export type EffectCategory = 'Pattern' | 'Macro' | 'Modifier';
 
 export type GlitchEffectType =
   | 'PIXEL_SORT'
@@ -61,7 +61,6 @@ export interface EffectParamMetadata {
 
 export interface EffectMetadata {
   label: string;
-  icon: string;
   category: EffectCategory;
   params: EffectParamMetadata[];
   isColorable?: boolean;

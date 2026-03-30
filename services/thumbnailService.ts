@@ -34,14 +34,10 @@ const getThumbnailBackground = (effects: EffectConfig[]): string => {
         const effect = EFFECT_METADATA[effects[0].type];
         if (effect.category === 'Pattern') {
             return "./black.png";
-        } else if (effect.category === 'Color') {
-            return "./clocktower_square.png";
-        } else if (effect.category === 'Spatial') {
+        } else { // Modifier
             return "./sunset_square.jpeg";
-        } else if (effect.category === 'Distort') {
-            return "./girlvibe_square.jpeg";
         }
-    } else {
+    } else { // Macro
         return "./black.png";
     }
 };
