@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { mainAudioEngine } from '../services/audioEngine';
 import { analytics } from '../services/analytics';
-import { analyzeAudioFrame } from '../services/audioMath';
+import { analyzeAudioFrame, calculateDynamicFFTSize } from '../services/audioMath';
 import { computeIntegratedReactivity } from '../services/SpeedManager';
 import { ReactivityState } from '../services/calculateReactiveEffects';
 import { ChangeEvent } from 'react';
@@ -162,7 +162,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
         const sampleRate = buffer.sampleRate;
         const channelData = buffer.getChannelData(0); // Analyze mono
         const totalFrames = Math.ceil(buffer.duration * fps);
-        const fftSize = 2048;
+        const fftSize = calculateDynamicFFTSize(sampleRate);
 
         const map = {
             sub: new Float32Array(totalFrames),
@@ -278,7 +278,13 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     startMic: async () => {
         const { getAudioContext, stopMic, stopPlayback } = get();
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: false,
+                    noiseSuppression: false,
+                    autoGainControl: false
+                }
+            });
             stopMic();
             stopPlayback();
 
@@ -288,14 +294,14 @@ export const useAudioStore = create<AudioState>((set, get) => ({
             }
 
             const source = ctx.createMediaStreamSource(stream);
+            const fftSize = calculateDynamicFFTSize(ctx.sampleRate);
             const analyser = ctx.createAnalyser();
-            analyser.fftSize = 2048;
+            analyser.fftSize = fftSize;
             source.connect(analyser); // Do not connect to destination (no feedback)
 
             mainAudioEngine.analyser = analyser;
             mainAudioEngine.mediaStream = stream;
 
-            const fftSize = 2048;
             const windowArray = new Float32Array(fftSize);
             for (let i = 0; i < fftSize; i++) {
                 windowArray[i] = 0.5 * (1 - Math.cos(2 * Math.PI * i / (fftSize - 1)));
@@ -348,6 +354,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
         const analyser = mainAudioEngine.analyser;
         const buffers = mainAudioEngine.liveBuffers;
         const state = mainAudioEngine.liveState;
+        const fftSize = analyser.fftSize;
 
         // Perform analysis (using any cast to solve the SharedArrayBuffer mismatch)
         analyser.getFloatTimeDomainData(buffers.timeData as any);
@@ -362,9 +369,9 @@ export const useAudioStore = create<AudioState>((set, get) => ({
             buffers.windowArray,
             buffers.timeData,
             0,
-            2048,
+            fftSize,
             -100,
-            -15,
+            -20, // boost because live audio is often quieter than recorded audio
             sampleRate,
             state
         );

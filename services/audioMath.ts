@@ -4,6 +4,17 @@ import { calculateNextState, ReactivityState } from '@/services/calculateReactiv
  * Core Audio Analysis Logic
  * Extracts spectral data and maps it to reactivity bands (sub, bass, mid, treble)
  */
+
+export const calculateDynamicFFTSize = (sampleRate: number): number => {
+    // Aim for ~80Hz resolution (sampleRate / 80)
+    // Uses 2048 FFT size at <= 96kHz
+    // Uses 4096 FFT size at 192kHz (~21ms delay - virtually instantaneous)
+    const targetSize = sampleRate / 80;
+    // Find next power of 2, minimum 2048, maximum 16384 (for performance/memory safety)
+    const nextPowerOf2 = Math.pow(2, Math.ceil(Math.log2(targetSize)));
+    return Math.max(2048, Math.min(16384, nextPowerOf2));
+};
+
 export const analyzeAudioFrame = (
     re: Float32Array,
     im: Float32Array,
