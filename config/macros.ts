@@ -63,7 +63,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Pointiness', { v: 0, b: 'OFF' }),
           o('Roundness', { v: 0, b: 'OFF' }),
           o('Size', { v: 40, b: 'SUB' }),
-          o('Feather', { v: 15, b: 'OFF' }),
+          o('Feather', { v: 100, m: 20, b: 'TREBLE' }, { v: 50, m: 0, b: 'SUB' }),
           o('Blend', { v: 100, b: 'OFF' }),
         ],
         melded: true
@@ -99,26 +99,9 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'WAVE_DISTORTION',
         params: [
-          o('Amplitude', { v: 33, b: 'SUB' }),
+          o('Amplitude', { v: 75, m: 0, b: 'SUB' }, { v: 50, m: 0, b: 'SUB' }),
           o('Frequency', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 38, b: 'OFF' }),
-        ],
-        melded: true
-      },
-      {
-        type: 'ROTATE',
-        params: [
-          o('Rotation', { v: 25, b: 'OFF' }),
-          o('Speed', { v: 0, b: 'OFF' }),
-        ],
-        melded: true
-      },
-      {
-        type: 'WAVE_DISTORTION',
-        params: [
-          o('Amplitude', { v: 33, b: 'SUB' }),
-          o('Frequency', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 38, b: 'OFF' }),
+          o('Speed', { v: 75, m: 0, b: 'SUB' }, { v: 50, m: 0, b: 'SUB' }),
         ],
         melded: true
       },
@@ -202,7 +185,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'TERRAIN',
         params: [
           o('Scale', { v: 5, b: 'OFF' }),
-          o('Extrusion', { v: 34, b: 'OFF' }),
+          o('Extrusion', { v: 75, m: 25, b: 'SUB' }, { v: 34, b: 'OFF' }),
           o('Speed', { v: 17, b: 'OFF' }),
           o('Resolution', { v: 9, b: 'OFF' }),
           o('Rotate X', { v: 0, b: 'OFF' }),
@@ -238,7 +221,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Scale', { v: 3, b: 'OFF' }),
           o('Extrusion', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 5, b: 'OFF' }),
+          o('Speed', { v: 50, m: 0, b: 'TREBLE' }, { v: 5, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
           o('Rotate X', { v: 0, b: 'OFF' }),
           o('Rotate Y', { v: 0, b: 'OFF' }),
@@ -260,7 +243,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Scale', { v: 15, b: 'OFF' }),
           o('Complexity', { v: 2, b: 'OFF' }),
           o('Warp', { v: 3, b: 'OFF' }),
-          o('Speed', { v: 5, b: 'OFF' }),
+          o('Speed', { v: 75, m: 0, b: 'SUB' }, { v: 50, b: 'OFF' }),
           o('Blend', { v: 100, b: 'OFF' }),
         ],
         melded: true
@@ -269,7 +252,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'TERRAIN',
         params: [
           o('Scale', { v: 3, b: 'OFF' }),
-          o('Extrusion', { v: 28, b: 'OFF' }),
+          o('Extrusion', { v: 80, b: 'OFF' }),
           o('Speed', { v: 0, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
           o('Rotate X', { v: 0, b: 'OFF' }),
@@ -292,7 +275,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Scale', { v: 3, b: 'OFF' }),
           o('Complexity', { v: 43, b: 'OFF' }),
           o('Warp', { v: 5, b: 'OFF' }),
-          o('Speed', { v: 10, b: 'OFF' }),
+          o('Speed', { v: 60, m: 0, b: 'TREBLE' }, { v: 10, b: 'OFF' }),
           o('Blend', { v: 100, b: 'OFF' }),
         ],
         melded: true
@@ -357,7 +340,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'TUNNEL_WARP',
         params: [
           o('Scale', { v: 2, b: 'OFF' }),
-          o('Speed', { v: 20, b: 'OFF' }),
+          o('Speed', { v: 30, b: 'SUB' }, { v: 20, b: 'SUB' }),
           o('Twist', { v: 0, b: 'OFF' }),
         ],
         melded: false
@@ -373,7 +356,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Horizontal', { v: 0, b: 'OFF' }),
           o('Vertical', { v: 17, b: 'OFF' }),
-          o('Thickness', { v: 30, b: 'OFF' }),
+          o('Thickness', { v: 100, m: 0, b: 'SUB' }, { v: 30, b: 'OFF' }),
           o('Feather', { v: 25, b: 'OFF' }),
           o('Scale X', { v: 50, b: 'OFF' }),
           o('Scale Y', { v: 50, b: 'OFF' }),
@@ -426,7 +409,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'TUNNEL_WARP',
         params: [
           o('Scale', { v: 5, b: 'OFF' }),
-          o('Speed', { v: 52, b: 'OFF' }),
+          o('Speed', { v: 100, m: 0, b: 'SUB' }, { v: 52, b: 'OFF' }),
           o('Twist', { v: 0, b: 'OFF' }),
         ],
         melded: false
@@ -465,9 +448,9 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'TERRAIN_SPHERE',
         params: [
-          o('Extrusion', { v: 80, b: 'OFF' }),
+          o('Extrusion', { v: 100, m: 40, b: 'SUB' }, { v: 80, m: 0, b: 'OFF' }),
           o('Resolution', { v: 50, b: 'OFF' }),
-          o('Distance', { v: 0, b: 'OFF' }),
+          o('Distance', { v: 100, m: 40, b: 'TREBLE' }, { v: 0, m: 0, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
@@ -512,7 +495,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Scale', { v: 4, b: 'OFF' }),
           o('Complexity', { v: 0, b: 'OFF' }),
           o('Warp', { v: 13, b: 'OFF' }),
-          o('Speed', { v: 8, b: 'OFF' }),
+          o('Speed', { v: 35, b: 'SUB' }, { v: 8, b: 'OFF' }),
           o('Blend', { v: 62, b: 'OFF' }),
         ],
         melded: true
@@ -529,7 +512,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'TERRAIN_SPHERE',
         params: [
-          o('Extrusion', { v: 47, b: 'OFF' }),
+          o('Extrusion', { v: 90, m: 45, b: 'SUB' }, { v: 47, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
           o('Distance', { v: 40, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
@@ -578,7 +561,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'TERRAIN',
         params: [
           o('Scale', { v: 3, b: 'OFF' }),
-          o('Extrusion', { v: 50, b: 'OFF' }),
+          o('Extrusion', { v: 100, m: 30, b: 'SUB' }, { v: 50, m: 0, b: 'OFF' }),
           o('Speed', { v: 0, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
           o('Rotate X', { v: 0, b: 'OFF' }),
@@ -601,7 +584,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Scale', { v: 1, b: 'OFF' }),
           o('Complexity', { v: 100, b: 'OFF' }),
           o('Warp', { v: 5, b: 'OFF' }),
-          o('Speed', { v: 5, b: 'OFF' }),
+          o('Speed', { v: 50, b: 'SUB' }, { v: 25, b: 'OFF' }),
           o('Blend', { v: 100, b: 'OFF' }),
         ],
         melded: true
@@ -647,9 +630,9 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
-          o('Spin Speed X', { v: 18, b: 'OFF' }),
-          o('Spin Speed Y', { v: 18, b: 'OFF' }),
-          o('Spin Speed Z', { v: 18, b: 'OFF' }),
+          o('Spin Speed X', { v: 100, m: 0, b: 'TREBLE' }, { v: 18, b: 'OFF' }),
+          o('Spin Speed Y', { v: 100, m: 0, b: 'TREBLE' }, { v: 18, b: 'OFF' }),
+          o('Spin Speed Z', { v: 100, m: 0, b: 'TREBLE' }, { v: 18, b: 'OFF' }),
         ],
         melded: true
       },
