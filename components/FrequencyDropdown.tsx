@@ -96,7 +96,7 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
             role="listbox"
             style={menuStyle}
             data-dropdown-ignore="true"
-            className="bg-black border border-white/10 rounded-xl shadow-2xl overflow-y-auto custom-scrollbar"
+            className="bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-y-auto custom-scrollbar"
         >
             <div className="p-1.5 space-y-0.5">
                 {BANDS.map((band) => (
@@ -106,9 +106,9 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
                         aria-selected={value === band}
                         onClick={() => { onChange(band); setActiveDropdownId(null); }}
                         className={`w-full flex items-center px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors outline-none
-                            ${value === band ? 'bg-primary/20 text-primary' : 'text-white/60 hover:bg-white/5 focus:bg-white/20 hover:text-white'}`}
+                            ${value === band ? 'bg-primary/20 text-primary' : 'text-indigo-300 hover:text-white hover:bg-indigo-300/20 focus:text-white focus:bg-indigo-300/20'}`}
                     >
-                        {band === 'OFF' ? 'Manual' : band}
+                        {band}
                     </button>
                 ))}
             </div>
@@ -116,17 +116,18 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
     );
 
     return (
-        <div className="relative z-50" ref={dropdownRef} onKeyDown={handleKeyDown}>
+        <div className="relative z-50 flex items-center gap-2" ref={dropdownRef} onKeyDown={handleKeyDown}>
+            <span className={`material-symbols-outlined transition-colors ${value !== 'OFF' ? 'text-primary' : 'text-indigo-300'}`}>cadence</span>
             <button
                 data-dropdown-ignore="true"
                 onClick={() => setActiveDropdownId(isOpen ? null : id)}
                 aria-haspopup="listbox"
                 aria-expanded={isOpen}
                 aria-label={ariaLabel}
-                className={`flex items-center gap-1.5 pl-3 pr-1 rounded-lg border text-[10px] font-bold uppercase tracking-[0.1em] active:scale-95 hover:text-white transition-colors
-                    ${value !== 'OFF' ? 'bg-primary/10 text-primary border-primary/30' : 'bg-white/5 text-white/60 border-white/10'}`}
+                className={`flex items-center gap-0.5 pl-3 pr-1 rounded-lg border text-[10px] font-bold uppercase tracking-[0.1em] active:scale-95 hover:text-white transition-colors
+                    ${value !== 'OFF' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-indigo-300/5 text-indigo-300 border-indigo-300/10'}`}
             >
-                <span>{value === 'OFF' ? 'Manual' : value}</span>
+                <span>{value}</span>
                 <motion.span
                     key="frequency-dropdown-arrow"
                     initial={{ rotate: 0 }}
