@@ -227,7 +227,7 @@ void main() {
     float time     = u_integrated_values[1] * speed;
 
     hsv.x = fract(hsv.x + phase + time);
-    hsv.y = min(1.0, hsv.y * (1.0 + vibrance * 2.0));
+    hsv.y = clamp(hsv.y + vibrance, 0.0, 1.0);
     
     outColor = vec4(hsv2rgb(hsv), color.a);
 }
