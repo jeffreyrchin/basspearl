@@ -310,43 +310,50 @@ void main() {
     float threshold = (100.0 - u_params[1]) / 100.0;
     float triggerProb = u_params[0] / 100.0;
     
-    vec2 pixelSize = 1.0 / u_resolution;
-    
-    vec4 color = texture(u_image, v_texCoord);
+    // 1. Hardware-level "Nearest" Sampling via texelFetch
+    ivec2 pixelCoord = ivec2(
+        clamp(v_texCoord * u_resolution, vec2(0.0), u_resolution - 1.0)
+    );
+    vec4 color = texelFetch(u_image, pixelCoord, 0);
     float brightness = dot(color.rgb, vec3(0.333));
     
     // Consistent column sampling (1024 bands) ensures same patterns across resolutions
     float colID = floor(v_texCoord.x * 1024.0);
-    float colSeed = rand(vec2(colID, u_seed)) * 12345.0;
-    float colRand = fract(sin(colSeed) * 10000.0);
+    float colRand = rand(vec2(colID, u_seed));
     
-    // Early exit for performance (saves up to 300 texture lookups per pixel)
+    // Early exit for performance
     if (colRand > triggerProb || brightness < threshold) {
         outColor = color;
         return;
     }
 
-    // Proportional scan length: scans a fixed % of the screen height
-    float sortLengthUV = (u_params[0] / 100.0) * 0.4;
-    float stepUV = sortLengthUV / 300.0;
+    // 2. Dynamic Performance: Only loop as far as the user's streak length requires.
+    // maxSteps is capped at 300 for 4K safety, but scales down to 1 if streak is low.
+    const int MAX_STEPS = 300;
+    float streakPercent = u_params[0] / 100.0;
+    float maxSteps = max(1.0, streakPercent * float(MAX_STEPS));
+    float stepPixels = max(1.0, (streakPercent * 0.4 * u_resolution.y) / maxSteps);
     
-    vec2 pullCoord = v_texCoord;
+    ivec2 pullCoord = pixelCoord;
     
-    for(float i = 0.0; i < 300.0; i++) {
-        vec2 checkUV = v_texCoord - vec2(0.0, i * stepUV);
-        if(checkUV.y < 0.0) break;
+    for(int i = 0; i < MAX_STEPS; i++) {
+        if(float(i) >= maxSteps) break;
+
+        ivec2 checkCoord = pixelCoord - ivec2(0, int(float(i) * stepPixels));
+        if(checkCoord.y < 0) break;
         
-        // Snap to pixel centers locally to maintain sharpness without resolution bias
-        vec2 snappedUV = (floor(checkUV * u_resolution) + 0.5) / u_resolution;
-        float checkBrightness = dot(texture(u_image, snappedUV).rgb, vec3(0.333));
+        float checkBrightness = dot(
+            texelFetch(u_image, checkCoord, 0).rgb, 
+            vec3(0.333)
+        );
         
         if(checkBrightness < threshold) {
-            pullCoord = snappedUV;
+            pullCoord = checkCoord;
             break;
         }
     }
     
-    outColor = texture(u_image, pullCoord);
+    outColor = texelFetch(u_image, pullCoord, 0);
 }
 `;
 

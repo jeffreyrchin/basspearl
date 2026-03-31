@@ -23,7 +23,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     category: 'Modifier',
     params: [
       p('Streak Length', { v: 20 }, { v: 100, b: 'SUB' }),
-      p('Trigger Level', { v: 50 }, { v: 35 }),
+      p('Trigger Level', { v: 50 }, { v: 75 }),
     ],
   },
   CHANNEL_SHIFT: {
@@ -225,7 +225,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     label: 'Luminance Mask',
     category: 'Modifier',
     params: [
-      p('Threshold', { v: 50 }, { v: 80, m: 70, b: 'SUB' }),
+      p('Threshold', { v: 50 }, { v: 80, b: 'SUB' }),
       p('Feather', { v: 15 }, { v: 0 }),
       p('Invert', { v: 0 }),
     ],
