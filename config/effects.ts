@@ -371,7 +371,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     category: 'Modifier',
     params: [
       p('Red', { v: 100 }),
-      p('Green', { v: 100 }),
+      p('Green', { v: 100 }, { v: 50 }),
       p('Blue', { v: 100 }),
       p('Opacity', { v: 100 }),
     ],
