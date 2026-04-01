@@ -197,16 +197,12 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         melded: true
       },
       {
-        type: 'SPECTRAL_MAP',
+        type: 'RGBA',
         params: [
-          o('Resolution', { v: 10, b: 'OFF' }),
-          o('Phase Offset', { v: 15, b: 'OFF' }),
-          o('Speed', { v: 0, b: 'OFF' }),
-          o('Strength', { v: 100, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Red', { v: 0, b: 'OFF' }),
+          o('Green', { v: 100, b: 'OFF' }),
+          o('Blue', { v: 0, b: 'OFF' }),
+          o('Opacity', { v: 100, b: 'OFF' }),
         ],
         melded: false
       }
@@ -913,6 +909,59 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Phase Offset', { v: 10, b: 'OFF' }),
           o('Speed', { v: 25, b: 'OFF' }),
           o('Vibrance', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  INFINITE_DANCEFLOOR: {
+    id: 'INFINITE_DANCEFLOOR',
+    label: 'Infinite Dancefloor',
+    effects: [
+      {
+        type: 'GRAIN',
+        params: [
+          o('Width', { v: 100 }),
+          o('Height', { v: 100 }),
+          o('X-Freq', { v: 45 }),
+          o('Y-Freq', { v: 45 }),
+          o('Density', { v: 100, b: 'OFF' }),
+          o('Roundness', { v: 0 }),
+          o('Blend', { v: 100 }),
+          o('Scale X', { v: 50 }),
+          o('Scale Y', { v: 50 }),
+          o('Pan X', { v: 50 }),
+          o('Pan Y', { v: 50 }),
+          o('Rotation', { v: 0 }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TERRAIN',
+        params: [
+          o('Scale', { v: 3, b: 'OFF' }),
+          o('Extrusion', { v: 30, m: 0, b: 'TREBLE' }, { v: 15, m: 0, b: 'OFF' }),
+          o('Speed', { v: 30, m: 0, b: 'SUB' }, { v: 15, m: 0, b: 'OFF' }),
+          o('Resolution', { v: 100, b: 'OFF' }),
+          o('Rotate X', { v: 3, b: 'OFF' }),
+          o('Rotate Y', { v: 0, b: 'OFF' }),
+          o('Rotate Z', { v: 0, b: 'OFF' }),
+          o('Elevation', { v: 53, b: 'OFF' }),
+          o('Distance', { v: 37, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'SPECTRAL_MAP',
+        params: [
+          o('Resolution', { v: 10, b: 'OFF' }),
+          o('Phase Offset', { v: 0, b: 'OFF' }),
+          o('Speed', { v: 15, b: 'OFF' }),
+          o('Strength', { v: 50, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
         ],
         melded: false
       }
