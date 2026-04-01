@@ -134,7 +134,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     label: 'Starfield',
     category: 'Pattern',
     params: [
-      p('Density', { v: 40 }),
+      p('Density', { v: 50 }),
       p('Speed', { v: 40, b: 'SUB' }, { v: 5 }),
     ],
     isColorable: true

@@ -82,7 +82,10 @@ export type MacroType =
   'SPIKY_WORLD' |
   'CRYOGENIC_FLUID' |
   'WATERCOLOR' |
-  'DISCO_BALL';
+  'DISCO_BALL' |
+  'STREAKS' |
+  'BIT_RAIN' |
+  'PAINT_MORPH';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;

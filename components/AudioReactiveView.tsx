@@ -278,7 +278,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
                 {/* Sidebar: Effects Rack & Parameters */}
                 <aside
-                    className={`fixed inset-y-0 right-0 z-sidebar w-full sm:w-[380px] border-l border-white/5 bg-[#050B14] flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] will-change-transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                    className={`fixed inset-y-0 right-0 z-sidebar w-full sm:w-[360px] border-l border-white/5 bg-slate-900/90 flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] will-change-transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                     {/* Inner wrapper */}
                     <div data-section="sidebar" className="flex-1 flex flex-col min-h-0 relative">
                         <SidebarNavigation onClose={() => setIsSidebarOpen(false)} />
