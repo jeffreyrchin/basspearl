@@ -11,6 +11,8 @@ export type AnalyticsEvent =
     | 'audio_upload_started'
     | 'audio_upload_succeeded'
     | 'audio_upload_failed'
+    | 'audio_mic_started'
+    | 'audio_demo_started'
     | 'export_started'
     | 'export_succeeded'
     | 'export_failed'
@@ -45,21 +47,23 @@ export const trackEvent = (eventName: AnalyticsEvent, params: EventParams = {}) 
 
 export const analytics = {
     audio: {
-        started: (file: File) => trackEvent('audio_upload_started', {
+        upload_started: (file: File) => trackEvent('audio_upload_started', {
             file_size: file.size,
             file_type: file.type
         }),
-        succeeded: (file: File, duration: number) => trackEvent('audio_upload_succeeded', {
+        upload_succeeded: (file: File, duration: number) => trackEvent('audio_upload_succeeded', {
             file_size: file.size,
             file_type: file.type,
             duration
         }),
-        failed: (file: File, err: any) => trackEvent('audio_upload_failed', {
+        upload_failed: (file: File, err: any) => trackEvent('audio_upload_failed', {
             file_size: file.size,
             file_type: file.type,
             error_name: err?.name || 'Error',
             error_message: err?.message || 'Unknown'
         }),
+        mic_started: () => trackEvent('audio_mic_started'),
+        demo_started: () => trackEvent('audio_demo_started'),
     },
     image: {
         started: (file: File) => trackEvent('image_upload_started', {

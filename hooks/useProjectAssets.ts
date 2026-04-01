@@ -29,6 +29,7 @@ export const useProjectAssets = ({
 
         // 1. Handle Audio Option
         if (audioOption === 'demo') {
+            analytics.audio.demo_started();
             loadAudioFromUrl('/trip.mp3', 'Demo Track').catch(err => {
                 console.error('Failed to load demo track:', err);
             });

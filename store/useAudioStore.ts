@@ -217,7 +217,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     loadAudioFromFile: async (file) => {
         const { stopPlayback, resetAudioEngine, getAudioContext, precomputeReactivity } = get();
         stopPlayback(true);
-        analytics.audio.started(file);
+        analytics.audio.upload_started(file);
         resetAudioEngine();
 
         try {
@@ -233,9 +233,9 @@ export const useAudioStore = create<AudioState>((set, get) => ({
             await precomputeReactivity(audioBuffer);
 
             set({ audioFile: file });
-            analytics.audio.succeeded(file, audioBuffer.duration);
+            analytics.audio.upload_succeeded(file, audioBuffer.duration);
         } catch (err: any) {
-            analytics.audio.failed(file, err);
+            analytics.audio.upload_failed(file, err);
             console.error('Error processing uploaded audio:', err);
         } finally {
             set({ isProcessing: false });
@@ -325,6 +325,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
             mainAudioEngine.micStartTime = performance.now() / 1000;
 
             set({ isLiveMode: true });
+            analytics.audio.mic_started();
         } catch (err) {
             console.error("Microphone access denied or error:", err);
             alert("Could not access microphone.");
