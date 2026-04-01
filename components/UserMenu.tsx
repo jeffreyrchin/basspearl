@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAuthStore } from '@/store/useAuthStore';
+import { motion } from 'framer-motion';
 
 interface UserMenuProps {
 }
@@ -56,9 +57,13 @@ const UserMenu: React.FC<UserMenuProps> = () => {
         : user.email?.slice(0, 2).toUpperCase() || 'U';
 
     const menuContent = (
-        <div
+        <motion.div
             ref={menuRef}
-            className="fixed w-64 bg-black/90 rounded-xl overflow-hidden border border-white/10 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 z-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed w-64 bg-black/90 rounded-xl overflow-hidden border border-white/10 shadow-2xl z-overlay"
             style={{
                 top: triggerRef.current ? triggerRef.current.getBoundingClientRect().bottom + 8 : 0,
                 right: triggerRef.current ? window.innerWidth - triggerRef.current.getBoundingClientRect().right : 0
@@ -82,7 +87,7 @@ const UserMenu: React.FC<UserMenuProps> = () => {
                         <p className="text-sm font-bold truncate">
                             {user.displayName || 'Muxels User'}
                         </p>
-                        <p className="text-xs text-white/40 truncate">
+                        <p className="text-xs text-white/60 truncate">
                             {user.email}
                         </p>
                     </div>
@@ -90,12 +95,12 @@ const UserMenu: React.FC<UserMenuProps> = () => {
             </div>
 
             {/* Pro Badge */}
-            <div className="p-4 border-b border-white/5">
+            {/* <div className="p-4 border-b border-white/5">
                 <div className="flex items-center gap-2 text-primary">
                     <span className="material-symbols-outlined text-[18px]">all_inclusive</span>
                     <span className="text-xs font-bold uppercase tracking-widest">Unlimited Uploads</span>
                 </div>
-            </div>
+            </div> */}
 
             {/* Actions */}
             <div className="p-2">
@@ -110,7 +115,7 @@ const UserMenu: React.FC<UserMenuProps> = () => {
                     <span className="text-sm font-medium">Sign Out</span>
                 </button>
             </div>
-        </div>
+        </motion.div>
     );
 
     return (
@@ -131,9 +136,14 @@ const UserMenu: React.FC<UserMenuProps> = () => {
                         {initials}
                     </div>
                 )}
-                <span className="material-symbols-outlined text-white/40 group-hover:text-white/60 transition-colors text-[18px]">
-                    {isOpen ? 'expand_less' : 'expand_more'}
-                </span>
+
+                <motion.span
+                    initial={{ rotate: 0 }}
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="material-symbols-outlined text-white/60 group-hover:text-white transition-colors text-[18px]">
+                    expand_more
+                </motion.span>
             </button>
 
             {isOpen && createPortal(menuContent, document.body)}
