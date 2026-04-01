@@ -1106,7 +1106,7 @@ void main() {
     float cellHeight = u_params[1] / 100.0 * 2.0; // (requires 5x5 search when > 1)
     float probDensity = u_params[4] / 100.0;
     float jitter = u_params[5] / 100.0;
-    float speed = u_params[6] / 100.0 * 15.0;
+    float speed = u_params[6] / 100.0 * 50.0;
     float blend = u_params[7] / 100.0;
 
     // 2. Exponential frequency (consistent across resolutions using 1024px reference)

@@ -490,7 +490,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Y-Freq', { v: 25 }),
           o('Density', { v: 100 }),
           o('Jitter', { v: 100 }),
-          o('Speed', { v: 100, b: 'OFF' }),
+          o('Speed', { v: 30, b: 'OFF' }),
           o('Blend', { v: 100 }),
         ],
         melded: true
@@ -559,7 +559,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Y-Freq', { v: 70 }),
           o('Density', { v: 100 }),
           o('Jitter', { v: 0 }),
-          o('Speed', { v: 100, b: 'OFF' }),
+          o('Speed', { v: 30, b: 'OFF' }),
           o('Blend', { v: 100 }),
         ],
         melded: true
