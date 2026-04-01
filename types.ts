@@ -86,7 +86,9 @@ export type MacroType =
   'STREAKS' |
   'BIT_RAIN' |
   'PAINT_MORPH' |
-  'INFINITE_DANCEFLOOR';
+  'INFINITE_DANCEFLOOR' |
+  'CLUSTER' |
+  'GLOBE';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;

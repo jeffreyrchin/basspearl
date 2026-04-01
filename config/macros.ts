@@ -62,9 +62,13 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Side Count', { v: 100, b: 'OFF' }),
           o('Pointiness', { v: 0, b: 'OFF' }),
           o('Roundness', { v: 0, b: 'OFF' }),
-          o('Size', { v: 40, b: 'SUB' }),
           o('Feather', { v: 100, m: 20, b: 'TREBLE' }, { v: 50, m: 0, b: 'SUB' }),
           o('Blend', { v: 100, b: 'OFF' }),
+          o('Scale X', { v: 25, b: 'OFF' }),
+          o('Scale Y', { v: 25, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
         ],
         melded: true
       },
@@ -962,6 +966,116 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Scale Y', { v: 50, b: 'OFF' }),
           o('Pan X', { v: 50, b: 'OFF' }),
           o('Pan Y', { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  CLUSTER: {
+    id: 'CLUSTER',
+    label: 'Cluster',
+    effects: [
+      {
+        type: 'CELLULAR_NOISE',
+        params: [
+          o('Width', { v: 40 }),
+          o('Height', { v: 64 }),
+          o('X-Freq', { v: 35 }),
+          o('Y-Freq', { v: 35 }),
+          o('Density', { v: 100 }),
+          o('Jitter', { v: 100 }),
+          o('Speed', { v: 80, b: 'SUB' }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TERRAIN_SPHERE',
+        params: [
+          o('Extrusion', { v: 50, b: 'SUB' }),
+          o('Resolution', { v: 20, b: 'OFF' }),
+          o('Distance', { v: 66, b: 'OFF' }),
+          o('Offset X', { v: 0, b: 'OFF' }),
+          o('Offset Y', { v: 0, b: 'OFF' }),
+          o('Offset Z', { v: 0, b: 'OFF' }),
+          o('Spin Speed X', { v: 0, b: 'OFF' }),
+          o('Spin Speed Y', { v: 0, b: 'OFF' }),
+          o('Spin Speed Z', { v: 0, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'HUE_ROTATION',
+        params: [
+          o('Phase Offset', { v: 10, b: 'OFF' }),
+          o('Speed', { v: 25, b: 'OFF' }),
+          o('Vibrance', { v: 73, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  GLOBE: {
+    id: 'GLOBE',
+    label: 'Globe',
+    effects: [
+      {
+        type: 'SHAPE',
+        params: [
+          o('Side Count', { v: 4, b: 'OFF' }),
+          o('Pointiness', { v: 0, b: 'OFF' }),
+          o('Roundness', { v: 0, b: 'OFF' }),
+          o('Feather', { v: 0, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'ORGANIC_NOISE',
+        params: [
+          o('Scale', { v: 15, b: 'OFF' }),
+          o('Complexity', { v: 100, b: 'OFF' }),
+          o('Warp', { v: 3, b: 'OFF' }),
+          o('Speed', { v: 100, m: 0, b: 'SUB' }),
+          o('Blend', { v: 60, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'LUMINANCE_MASK',
+        params: [
+          o('Threshold', { v: 65, b: 'OFF' }),
+          o('Feather', { v: 10, b: 'OFF' }),
+          o('Invert', { v: 0, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TERRAIN_SPHERE',
+        params: [
+          o('Extrusion', { v: 50, b: 'SUB' }),
+          o('Resolution', { v: 100, b: 'OFF' }),
+          o('Distance', { v: 75, b: 'OFF' }),
+          o('Offset X', { v: 0, b: 'OFF' }),
+          o('Offset Y', { v: 0, b: 'OFF' }),
+          o('Offset Z', { v: 0, b: 'OFF' }),
+          o('Spin Speed X', { v: 0, b: 'OFF' }),
+          o('Spin Speed Y', { v: 0, b: 'OFF' }),
+          o('Spin Speed Z', { v: 0, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'HUE_ROTATION',
+        params: [
+          o('Phase Offset', { v: 10, b: 'OFF' }),
+          o('Speed', { v: 25, b: 'OFF' }),
+          o('Vibrance', { v: 75, b: 'OFF' }),
         ],
         melded: false
       }
