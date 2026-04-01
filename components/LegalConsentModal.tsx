@@ -40,7 +40,7 @@ const LegalConsentModal = () => {
                 <div className="flex-1 overflow-y-auto p-6 space-y-8 text-white/80 text-sm leading-relaxed custom-scrollbar">
                     <section>
                         <h1 className="text-2xl font-bold text-white mb-2">Privacy Policy</h1>
-                        <p className="text-white/60 mb-6 text-xs">Last Updated: March 29, 2026</p>
+                        <p className="text-white/60 mb-6 text-xs">Last Updated: April 1, 2026</p>
 
                         <div className="space-y-6">
                             <div>
@@ -58,6 +58,7 @@ const LegalConsentModal = () => {
                                     <li><strong>Usage Data:</strong> Includes information about how you use our website, products and services.</li>
                                     <li><strong>Media Data (Images and Audio):</strong> Images and audio files you upload are processed locally in your browser to generate high-performance audio-reactive visualizers. Audio files are analyzed to create deterministic reactivity maps - no raw media data leaves your device. We do not store your original files on our servers.</li>
                                     <li><strong>Analytics Data:</strong> We collect refined telemetry using Google Analytics 4, including interaction timestamps, preset selections, effect toggles, and processing performance metrics. This data is anonymized and used exclusively to optimize the visual engine and identify performance bottlenecks.</li>
+                                    <li><strong>Real-Time Audio (Microphone):</strong> If you grant microphone permission, we process live audio streams locally in your browser to drive real-time visuals. This data is processed in volatile memory (RAM), is never recorded, and never leaves your device.</li>
                                 </ul>
                             </div>
 
@@ -74,7 +75,7 @@ const LegalConsentModal = () => {
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">4. How We Use Information</h3>
                                 <p>We will only use your personal data when the law allows us to. Most commonly, we will use your personal data in the following circumstances:</p>
                                 <ul className="list-disc pl-5 mt-2 space-y-1 text-white/60">
-                                    <li>To provide the glitch art generation service.</li>
+                                    <li>To provide the audio visualizer service.</li>
                                     <li>To manage your account and authentication via Firebase.</li>
                                     <li>To improve our website, products/services, marketing or customer relationships.</li>
                                 </ul>
@@ -182,7 +183,7 @@ const LegalConsentModal = () => {
 
                     <section>
                         <h1 className="text-2xl font-bold text-white mb-2">Terms of Service</h1>
-                        <p className="text-white/60 mb-6 text-xs">Last Updated: March 29, 2026</p>
+                        <p className="text-white/60 mb-6 text-xs">Last Updated: April 1, 2026</p>
 
                         <div className="space-y-6">
                             <div>
@@ -192,7 +193,7 @@ const LegalConsentModal = () => {
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">2. Description of Service</h3>
-                                <p>Muxels provides a web-based graphics engine for generating audio-reactive visualizers and applying visual effects to user-uploaded images. The service allows for the real-time simulation and hardware-accelerated export of MP4 video files. All processing occurs client-side within your browser - no media files are uploaded to our servers.</p>
+                                <p>Muxels provides a web-based graphics engine for generating audio-reactive visualizers and applying visual effects to user-uploaded images. The service allows for real-time reactivity using both uploaded files and live audio inputs (e.g., microphone or virtual audio drivers), as well as hardware-accelerated export of MP4 video files (when not in live mode). You are responsible for ensuring you have the right to use any live audio processed through the service. All processing occurs client-side within your browser - no media files are uploaded to our servers.</p>
                             </div>
 
                             <div>

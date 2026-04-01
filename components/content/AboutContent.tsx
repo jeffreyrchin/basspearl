@@ -7,7 +7,7 @@ const AboutContent: React.FC = () => {
             <section className="space-y-4">
                 <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">Audio-Reactive Effects Engine</h2>
                 <p className="text-white/70 text-base md:text-lg leading-relaxed">
-                    Muxels is a high-performance visual synthesizer that combines images and audio to create audio-reactive visualizers. Your creations can be exported as MP4 files to share or use in any of your creative projects.
+                    Muxels is a versatile visual synthesizer that combines images and audio to create audio-reactive visualizers. Your creations can be exported as MP4 files to share or use in any of your creative projects.
                 </p>
             </section>
 
@@ -41,7 +41,7 @@ const AboutContent: React.FC = () => {
                             <div>
                                 <h3 className="text-base font-bold uppercase tracking-wider text-white mb-1">Load Assets</h3>
                                 <p className="text-white/60 text-sm leading-relaxed">
-                                    Upload your own image and audio files, or choose a preset located above the viewport. Audio is analyzed locally to create high-fidelity reactivity maps.
+                                    Upload your own image and audio files, or select the microphone to use a live audio source. Audio is analyzed locally in your browser.
                                 </p>
                             </div>
                         </div>
@@ -54,7 +54,7 @@ const AboutContent: React.FC = () => {
                             <div>
                                 <h3 className="text-base font-bold uppercase tracking-wider text-white mb-1">Build your effects</h3>
                                 <p className="text-white/60 text-sm leading-relaxed">
-                                    Activate effects such as Pixel Sort, RGB Shift, and Wave Distortion. Click on an effect to open its controls.
+                                    Add effects from the library, and open the inspector to view and adjust effect parameters.
                                 </p>
                             </div>
                         </div>
@@ -67,7 +67,7 @@ const AboutContent: React.FC = () => {
                             <div>
                                 <h3 className="text-base font-bold uppercase tracking-wider text-white mb-1">Export your video</h3>
                                 <p className="text-white/60 text-sm leading-relaxed">
-                                    Click the Export button below the viewport to download your creation as an MP4 video, ready for social media or live performance.
+                                    Click the Export button below the viewport to download your creation as an MP4 video, ready for social media or live performances.
                                 </p>
                             </div>
                         </div>

@@ -9,7 +9,7 @@ const HelpContent: React.FC = () => {
                 <div className="space-y-8">
                     <div className="space-y-3">
                         <p className="text-white/70 text-base leading-relaxed">
-                            <span className="font-bold text-white">1. Load assets:</span> In the main toolbar above the viewport, click the media buttons to upload image/audio files or select the microphone button to enable live mode.
+                            <span className="font-bold text-white">1. Load assets:</span> In the main toolbar above the viewport, click the media buttons to upload image/audio files or select the microphone button to use a live audio source. If you have a virtual audio driver installed such as BlackHole or Voicemeeter, you can route audio to Muxels from any application on your device, including your DAW.
                         </p>
                         <p className="text-white/70 text-base leading-relaxed">
                             <span className="font-bold text-white">2. Add effects:</span> To add visual effects, click the "plus" button in the main toolbar to open the library. Click on an effect to add it to your visualizer.
