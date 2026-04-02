@@ -67,15 +67,7 @@ const SortableGroupItem = ({
                         if (e.shiftKey) {
                             selectRange(effect.id);
                         } else {
-                            if (selectedIds.has(effect.id)) { // On double-click
-                                if (focusStack.includes('inspector')) { // If inspector is already open, clicking again should switch focus to pipeline
-                                    pushFocus('pipeline');
-                                } else { // On double-click, only switch focus to inspector if it's not already open
-                                    pushFocus('inspector');
-                                }
-                            } else {
-                                toggleSelected(effect.id, isInSelectMode || e.metaKey || e.ctrlKey);
-                            }
+                            toggleSelected(effect.id, isInSelectMode || e.metaKey || e.ctrlKey);
                         }
                     };
 
@@ -101,15 +93,7 @@ const SortableGroupItem = ({
                             if (e.shiftKey) {
                                 selectRange(effect.id);
                             } else {
-                                if (selectedIds.has(effect.id)) {  // On double-press
-                                    if (focusStack.includes('inspector')) { // If inspector is already open, pressing again should switch focus to pipeline
-                                        pushFocus('pipeline');
-                                    } else { // Only switch focus to inspector if it's not already open
-                                        pushFocus('inspector');
-                                    }
-                                } else {
-                                    toggleSelected(effect.id, isInSelectMode || e.metaKey || e.ctrlKey);
-                                }
+                                toggleSelected(effect.id, isInSelectMode || e.metaKey || e.ctrlKey);
                             }
                         }
                     };
@@ -128,6 +112,7 @@ const SortableGroupItem = ({
                             >
                                 <button
                                     onClick={handleClick}
+                                    onDoubleClick={() => pushFocus('inspector')}
                                     onMouseDown={(e) => e.preventDefault()} // Prevent browser from synthesizing a click event (prevents focus ring from appearing on shift key down)
                                     onKeyDown={handleKeyDown}
                                     data-effect-card
