@@ -47,7 +47,9 @@ const getThumbnailBackground = (effects: EffectConfig[]): string => {
  * Resolves immediately if cached, otherwise queues a background render.
  */
 export const getThumbnailDataUrl = (effects: EffectConfig[]): Promise<string> => {
-    const cacheKey = effects.map(e => e.type).sort().join('|');
+    const cacheKey = effects.map(e => (
+        `${e.type}:${e.params.map(p => p.value).join(',')}`
+    )).join('|'); // the "blueprint"
     const cached = THUMBNAIL_CACHE.get(cacheKey);
     if (cached) return Promise.resolve(cached);
 

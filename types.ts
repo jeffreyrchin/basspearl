@@ -75,11 +75,11 @@ export type MacroType =
   'GRID_PLANE' |
   'LIQUID' |
   'PLANE_MESH' |
-  'SPEED_TUNNEL' |
+  'RODS' |
   'RINGS' |
   'PLUME' |
-  'CELL_MASS' |
-  'SPIKY_WORLD' |
+  'CELL_MESH' |
+  'SPIKY_BALL' |
   'CRYOGENIC_FLUID' |
   'WATERCOLOR' |
   'DISCO_BALL' |
@@ -88,7 +88,11 @@ export type MacroType =
   'PAINT_MORPH' |
   'INFINITE_DANCEFLOOR' |
   'CLUSTER' |
-  'GLOBE';
+  'GLOBE' |
+  'SHARDS' |
+  'ARCS' |
+  'SQUARE_TUNNEL' |
+  'LIGHT_TUNNEL';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;

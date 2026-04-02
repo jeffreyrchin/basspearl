@@ -346,9 +346,9 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       }
     ]
   },
-  SPEED_TUNNEL: {
-    id: 'SPEED_TUNNEL',
-    label: 'Speed Tunnel',
+  RODS: {
+    id: 'RODS',
+    label: 'Rods',
     effects: [
       {
         type: 'GRAIN',
@@ -372,7 +372,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'TUNNEL_WARP',
         params: [
           o('Scale', { v: 2, b: 'OFF' }),
-          o('Speed', { v: 30, b: 'SUB' }, { v: 20, b: 'SUB' }),
+          o('Speed', { v: 30, b: 'SUB' }, { v: 10, b: 'SUB' }),
           o('Twist', { v: 0, b: 'OFF' }),
         ],
         melded: true
@@ -481,9 +481,9 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       }
     ]
   },
-  CELL_MASS: {
-    id: 'CELL_MASS',
-    label: 'Cell Mass',
+  CELL_MESH: {
+    id: 'CELL_MESH',
+    label: 'Cell Mesh',
     effects: [
       {
         type: 'CELLULAR_NOISE',
@@ -550,9 +550,9 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       }
     ]
   },
-  SPIKY_WORLD: {
-    id: 'SPIKY_WORLD',
-    label: 'Spiky World',
+  SPIKY_BALL: {
+    id: 'SPIKY_BALL',
+    label: 'Spiky Ball',
     effects: [
       {
         type: 'CELLULAR_NOISE',
@@ -1080,5 +1080,169 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         melded: false
       }
     ]
-  }
+  },
+  SHARDS: {
+    id: 'SHARDS',
+    label: 'Shards',
+    effects: [
+      {
+        type: 'GRAIN',
+        params: [
+          o('Width', { v: 75 }),
+          o('Height', { v: 75 }),
+          o('X-Freq', { v: 50 }),
+          o('Y-Freq', { v: 50 }),
+          o('Density', { v: 36, b: 'OFF' }),
+          o('Roundness', { v: 0 }),
+          o('Blend', { v: 100 }),
+          o('Scale X', { v: 50 }),
+          o('Scale Y', { v: 50 }),
+          o('Pan X', { v: 50 }),
+          o('Pan Y', { v: 50 }),
+          o('Rotation', { v: 0 }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TUNNEL_WARP',
+        params: [
+          o('Scale', { v: 5, b: 'OFF' }),
+          o('Speed', { v: 75, m: 0, b: 'MID' }, { v: 15, b: 'OFF' }),
+          o('Twist', { v: 12, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'HUE_ROTATION',
+        params: [
+          o('Phase Offset', { v: 0, b: 'OFF' }),
+          o('Speed', { v: 25, b: 'OFF' }),
+          o('Vibrance', { v: 73, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  ARCS: {
+    id: 'ARCS',
+    label: 'Arcs',
+    effects: [
+      {
+        type: 'GRAIN',
+        params: [
+          o('Width', { v: 100 }),
+          o('Height', { v: 100 }),
+          o('X-Freq', { v: 28 }),
+          o('Y-Freq', { v: 74 }),
+          o('Density', { v: 24, b: 'OFF' }),
+          o('Roundness', { v: 0 }),
+          o('Blend', { v: 100 }),
+          o('Scale X', { v: 50 }),
+          o('Scale Y', { v: 50 }),
+          o('Pan X', { v: 50 }),
+          o('Pan Y', { v: 50 }),
+          o('Rotation', { v: 0 }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TUNNEL_WARP',
+        params: [
+          o('Scale', { v: 3, b: 'OFF' }),
+          o('Speed', { v: 75, m: 0, b: 'MID' }, { v: 10, b: 'OFF' }),
+          o('Twist', { v: 0, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'HUE_ROTATION',
+        params: [
+          o('Phase Offset', { v: 0, b: 'OFF' }),
+          o('Speed', { v: 25, b: 'OFF' }),
+          o('Vibrance', { v: 73, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  SQUARE_TUNNEL: {
+    id: 'SQUARE_TUNNEL',
+    label: 'Square Tunnel',
+    effects: [
+      {
+        type: 'GRAIN',
+        params: [
+          o('Width', { v: 90 }),
+          o('Height', { v: 90 }),
+          o('X-Freq', { v: 70 }),
+          o('Y-Freq', { v: 70 }),
+          o('Density', { v: 100, b: 'OFF' }),
+          o('Roundness', { v: 0 }),
+          o('Blend', { v: 100 }),
+          o('Scale X', { v: 50 }),
+          o('Scale Y', { v: 50 }),
+          o('Pan X', { v: 50 }),
+          o('Pan Y', { v: 50 }),
+          o('Rotation', { v: 0 }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TUNNEL_WARP',
+        params: [
+          o('Scale', { v: 10, b: 'OFF' }),
+          o('Speed', { v: 75, m: 0, b: 'MID' }, { v: 15, b: 'OFF' }),
+          o('Twist', { v: 0, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'HUE_ROTATION',
+        params: [
+          o('Phase Offset', { v: 0, b: 'OFF' }),
+          o('Speed', { v: 25, b: 'OFF' }),
+          o('Vibrance', { v: 73, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  LIGHT_TUNNEL: {
+    id: 'LIGHT_TUNNEL',
+    label: 'Light Tunnel',
+    effects: [
+      {
+        type: 'CELLULAR_NOISE',
+        params: [
+          o('Cell Width', { v: 48 }),
+          o('Cell Height', { v: 100 }),
+          o('X-Freq', { v: 88 }),
+          o('Y-Freq', { v: 55 }),
+          o('Density', { v: 24 }),
+          o('Jitter', { v: 0 }),
+          o('Speed', { v: 0, b: 'OFF' }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TUNNEL_WARP',
+        params: [
+          o('Scale', { v: 1, b: 'OFF' }),
+          o('Speed', { v: 30, m: 0, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Twist', { v: 0, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'HUE_ROTATION',
+        params: [
+          o('Phase Offset', { v: 10, b: 'OFF' }),
+          o('Speed', { v: 25, b: 'OFF' }),
+          o('Vibrance', { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
 };
