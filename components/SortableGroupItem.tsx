@@ -49,10 +49,10 @@ const SortableGroupItem = ({
                 {...(isOverlay ? {} : { ...attributes, ...listeners })}
                 onKeyDown={isOverlay ? undefined : (e) => onGripKeyDown(e, groupIndex)}
                 onClick={(e) => e.stopPropagation()}
-                className="group w-8 flex-shrink-0 flex flex-col items-center justify-center hover:bg-white/10 focus-visible:bg-primary/20 focus-visible:border-primary/50 outline-none rounded-l-md touch-none transition-colors cursor-grab active:cursor-grabbing"
+                className="group w-8 flex-shrink-0 flex flex-col items-center justify-center outline-none rounded-l-md touch-none transition-colors cursor-grab active:cursor-grabbing"
                 title="Drag to Reorder"
             >
-                <span className="material-symbols-outlined text-white/60 group-hover:text-white transition-colors text-[18px]">drag_indicator</span>
+                <span className="material-symbols-outlined text-white/60 group-hover:text-white group-focus-visible:text-white transition-colors text-[18px]">drag_indicator</span>
             </button>
 
             {/* Effect Cards */}
@@ -122,7 +122,7 @@ const SortableGroupItem = ({
                             )}
 
                             <div
-                                className={`flex items-center h-16 md:h-10 overflow-hidden
+                                className={`flex items-center h-16 md:h-10 rounded-md transition-colors overflow-hidden
                                     ${isSelected ? 'bg-white/10' : 'hover:bg-white/[0.04]'}
                                 `}
                             >
@@ -131,7 +131,7 @@ const SortableGroupItem = ({
                                     onMouseDown={(e) => e.preventDefault()} // Prevent browser from synthesizing a click event (prevents focus ring from appearing on shift key down)
                                     onKeyDown={handleKeyDown}
                                     data-effect-card
-                                    className={`flex-1 px-3 h-full flex items-center text-left truncate text-[10px] font-bold uppercase tracking-widest outline-none focus-visible:bg-white/10 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/20 transition-colors
+                                    className={`flex-1 px-3 h-full flex items-center text-left truncate text-[10px] font-bold uppercase tracking-widest outline-none focus-visible:bg-white/10 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/20 focus-visible:rounded-md transition-colors
                                         ${effect.isActive ? 'text-white/80' : 'text-white/20'}
                                         ${isSelected ? '!text-white' : ''}
                                     `}
@@ -144,7 +144,7 @@ const SortableGroupItem = ({
                                     <div className="flex h-full items-center" onClick={(e) => e.stopPropagation()}>
                                         <button
                                             onClick={() => toggleSolo(effect.id)}
-                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/20 transition-colors ${effect.soloed ? 'bg-white text-black' : 'text-white/30 hover:bg-white/10 hover:text-white'}`}
+                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors ${effect.soloed ? 'bg-white text-black' : 'text-white/30 hover:bg-white/10 hover:text-white'}`}
                                             title="Toggle Solo"
                                         >
                                             <span className="material-symbols-outlined text-[18px]">egg</span>
@@ -152,7 +152,7 @@ const SortableGroupItem = ({
                                         <div className="w-[1px] h-8 md:h-5 bg-white/10"></div>
                                         <button
                                             onClick={() => toggleMute(effect.id)}
-                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/20 transition-colors ${effect.muted ? 'bg-indigo-500 text-white' : 'text-white/30 hover:bg-white/10 hover:text-white'}`}
+                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors ${effect.muted ? 'bg-indigo-500 text-white' : 'text-white/30 hover:bg-white/10 hover:text-white'}`}
                                             title="Toggle Visibility"
                                         >
                                             <span className="material-symbols-outlined text-[18px]">{effect.muted ? 'visibility_off' : 'visibility'}</span>
