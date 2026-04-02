@@ -106,7 +106,7 @@ const SortableGroupItem = ({
                             )}
 
                             <div
-                                className={`flex items-center h-16 md:h-10 rounded-md transition-colors overflow-hidden
+                                className={`flex items-center h-16 md:h-10 rounded-md overflow-hidden
                                     ${isSelected ? 'bg-white/10' : 'hover:bg-white/[0.04]'}
                                 `}
                             >
