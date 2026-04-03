@@ -85,7 +85,6 @@ export type MacroType =
   'WATERCOLOR' |
   'DISCO_BALL' |
   'STREAKS' |
-  'BIT_RAIN' |
   'PAINT_MORPH' |
   'INFINITE_DANCEFLOOR' |
   'CLUSTER' |
@@ -93,7 +92,13 @@ export type MacroType =
   'SHARDS' |
   'ARCS' |
   'SQUARE_TUNNEL' |
-  'LIGHT_TUNNEL';
+  'LIGHT_TUNNEL' |
+  'CLOUDS' |
+  'QUAD_FRACTAL' |
+  'ATOMS' |
+  'CELLULAR_MATRIX' |
+  'SMOKE' |
+  'CRUSHED_RAIN';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;
