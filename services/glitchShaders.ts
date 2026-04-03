@@ -1500,4 +1500,5 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     RGBA: { name: 'RGBA', fragmentSource: RGBA_SHADER },
     LINEAR_GRADIENT: { name: 'LINEAR_GRADIENT', fragmentSource: LINEAR_GRADIENT_SHADER },
     RADIAL_GRADIENT: { name: 'RADIAL_GRADIENT', fragmentSource: RADIAL_GRADIENT_SHADER, velocityParamIndices: [2] },
+    INFINITE_ZOOM: { name: 'INFINITE_ZOOM', fragmentSource: '', velocityParamIndices: [0], is3D: true },
 };

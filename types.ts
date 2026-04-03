@@ -35,7 +35,8 @@ export type GlitchEffectType =
   | 'CHECKERBOARD'
   | 'RGBA'
   | 'LINEAR_GRADIENT'
-  | 'RADIAL_GRADIENT';
+  | 'RADIAL_GRADIENT'
+  | 'INFINITE_ZOOM';
 
 export type FrequencyBand = 'OFF' | 'SUB' | 'BASS' | 'MID' | 'TREBLE';
 

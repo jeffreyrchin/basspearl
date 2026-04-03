@@ -401,5 +401,163 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 scene.clear();
             }
         };
+    },
+    INFINITE_ZOOM: () => {
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 10000);
+        camera.position.set(0, 0, 0);
+        camera.lookAt(0, 0, -1);
+
+        // Plane geometry — large enough to overfill the FOV at any spacing.
+        // Uses standard PlaneGeometry in XY space (facing +Z) so it sits
+        // perpendicular to the camera flight path.
+        const PLANE_W = 300;
+        const PLANE_H = 300;
+        const geometry = new THREE.PlaneGeometry(PLANE_W, PLANE_H, 1, 1);
+        // PlaneGeometry is in XY, facing +Z by default — camera looks toward -Z,
+        // so the planes are face-on when placed ahead at negative Z. Good.
+
+        const material = new THREE.ShaderMaterial({
+            glslVersion: THREE.GLSL3,
+            transparent: true,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+            uniforms: {
+                u_image: { value: null },
+                u_feather: { value: 0.3 },
+                u_alpha: { value: 1.0 },
+            },
+            vertexShader: `
+                uniform sampler2D u_image;
+                out vec2 vUv;
+                flat out vec4 vColor;
+
+                void main() {
+                    vUv = uv;
+                    vColor = texture(u_image, uv);
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                precision highp float;
+                uniform sampler2D u_image;
+                uniform float u_feather;
+                uniform float u_alpha;
+                in vec2 vUv;
+                flat in vec4 vColor;
+                out vec4 outColor;
+
+                void main() {
+                    vec4 col = texture(u_image, vUv);
+
+                    // Edge feather: fade out as UV approaches the plane border
+                    vec2 d = abs(vUv - 0.5);          // 0 at centre, 0.5 at edge
+                    float inner = 0.5 - max(u_feather * 0.5, 0.001);
+                    float ax = 1.0 - smoothstep(inner, 0.5, d.x);
+                    float ay = 1.0 - smoothstep(inner, 0.5, d.y);
+
+                    outColor = vec4(col.rgb, col.a * ax * ay * u_alpha);
+                }
+            `,
+        });
+
+        // N-plane leap-frog tunnel
+        const NUM_PLANES = 10;
+        const materials: THREE.ShaderMaterial[] = [];
+        const meshes: THREE.Mesh[] = [];
+
+        const tunnelGroup = new THREE.Group();
+        for (let i = 0; i < NUM_PLANES; i++) {
+            const mat = i === 0 ? material : material.clone();
+            materials.push(mat);
+            const mesh = new THREE.Mesh(geometry, mat);
+            mesh.frustumCulled = false;
+            mesh.renderOrder = 1;
+            tunnelGroup.add(mesh);
+            meshes.push(mesh);
+        }
+        scene.add(tunnelGroup);
+
+        // Stabilizer phantom
+        const cube = new THREE.Mesh(
+            new THREE.SphereGeometry(1.5, 32, 32),
+            new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.0, depthWrite: false, depthTest: false })
+        );
+        scene.add(cube);
+
+        return {
+            scene,
+            camera,
+            material,
+            update: (params, texture) => {
+                const p = params.params;
+                if (p && p.length >= 5) {
+                    // p[0] Speed    0-100
+                    // p[1] Depth    0-100
+                    // p[2] Density  0-100 → segment length 100-600 world units
+                    // p[3] Edge Feather  0-100 → 0.0-0.5 UV fade width
+                    // p[4] Fade Buffer 0-100 → 0.0-1.0 segment fade zone
+
+                    const speed = (p[0] / 100.0) * 10.0;
+                    const fov = 30.0 + (p[1] / 100.0) * 90.0;
+                    const segLen = 600.0 - (p[2] / 100.0) * 500.0;
+                    const feather = p[3] / 100.0;
+                    const fade = Math.max(p[4] / 100.0, 0.01);
+
+                    const width = params.width;
+                    const height = params.height;
+                    const aspect = width / height;
+
+                    if (camera.fov !== fov) {
+                        camera.fov = fov;
+                        camera.updateProjectionMatrix();
+                    }
+
+                    // Travel distance
+                    const rawTravel = (params.integratedValues && params.integratedValues.length >= 3)
+                        ? params.integratedValues[0]
+                        : (params.time || 0.0);
+
+                    const travelZ = rawTravel * speed * segLen;
+
+                    // Camera drifts forward along -Z
+                    camera.position.set(0, 0, 0);
+                    camera.lookAt(0, 0, -1);
+
+                    const totalLength = segLen * NUM_PLANES;
+
+                    // LEAP-FROG: NUM_PLANES planes cycle every totalLength
+                    meshes.forEach((m, idx) => {
+                        const mat = m.material as THREE.ShaderMaterial;
+
+                        let z = travelZ - (idx * segLen);
+                        let wrappedZ = ((z % totalLength) + totalLength) % totalLength;
+
+                        m.scale.set(aspect, 1.0, 1.0);
+
+                        m.position.z = -(totalLength - wrappedZ);
+                        m.renderOrder = Math.round(m.position.z);
+
+                        // Fade in from the far end, fade out as they approach camera
+                        const distFromCam = Math.abs(m.position.z);
+                        const fadeBuffer = segLen * fade;
+
+                        const fadeIn = Math.min(1.0, (totalLength - distFromCam) / fadeBuffer);
+                        const fadeOut = Math.min(1.0, distFromCam / fadeBuffer);
+
+                        mat.uniforms.u_image.value = texture;
+                        mat.uniforms.u_feather.value = feather;
+                        mat.uniforms.u_alpha.value = fadeIn * fadeOut;
+                    });
+                }
+
+                cube.rotation.y += 0.01;
+            },
+            dispose: () => {
+                geometry.dispose();
+                materials.forEach(mat => mat.dispose());
+                scene.clear();
+            }
+        };
     }
 };

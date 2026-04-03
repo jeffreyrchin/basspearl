@@ -396,4 +396,15 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Pan Y', { v: 50 }),
     ],
   },
+  INFINITE_ZOOM: {
+    label: 'Infinite Zoom',
+    category: 'Modifier',
+    params: [
+      p('Speed', { v: 50, m: 0, b: 'SUB' }, { v: 10 }),
+      p('Depth', { v: 25 }),
+      p('Density', { v: 90 }),
+      p('Edge Feather', { v: 30 }),
+      p('Fade Buffer', { v: 100 }),
+    ],
+  },
 };
