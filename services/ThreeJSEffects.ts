@@ -404,7 +404,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
     },
     INFINITE_ZOOM: () => {
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 10000);
+        const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 100000);
         camera.position.set(0, 0, 0);
         camera.lookAt(0, 0, -1);
 
@@ -461,18 +461,21 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
             `,
         });
 
-        // N-plane leap-frog tunnel
-        const NUM_PLANES = 10;
+        // Pre-allocate a fixed pool of MAX_PLANES planes.
+        // The Plane Count parameter controls how many are visible each frame
+        // via mesh.visible — no geometry is created or destroyed at runtime.
+        const MAX_PLANES = 100;
         const materials: THREE.ShaderMaterial[] = [];
         const meshes: THREE.Mesh[] = [];
 
         const tunnelGroup = new THREE.Group();
-        for (let i = 0; i < NUM_PLANES; i++) {
+        for (let i = 0; i < MAX_PLANES; i++) {
             const mat = i === 0 ? material : material.clone();
             materials.push(mat);
             const mesh = new THREE.Mesh(geometry, mat);
             mesh.frustumCulled = false;
             mesh.renderOrder = 1;
+            mesh.visible = false; // hidden until enabled by Plane Count
             tunnelGroup.add(mesh);
             meshes.push(mesh);
         }
@@ -491,18 +494,20 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
             material,
             update: (params, texture) => {
                 const p = params.params;
-                if (p && p.length >= 5) {
-                    // p[0] Speed    0-100
-                    // p[1] Depth    0-100
-                    // p[2] Density  0-100 → segment length 100-600 world units
-                    // p[3] Edge Feather  0-100 → 0.0-0.5 UV fade width
-                    // p[4] Fade Buffer 0-100 → 0.0-1.0 segment fade zone
+                if (p && p.length >= 6) {
+                    // p[0] Speed       0-100
+                    // p[1] Depth       0-100 → 10-150 FOV
+                    // p[2] Spacing     0-100 → segment length 5-600 world units
+                    // p[3] Plane Count 0-100 → 1-100 active planes
+                    // p[4] Edge Feather 0-100 → 0.0-0.5 UV fade width
+                    // p[5] Fade Buffer 0-100 → 0.0-1.0 segment fade zone
 
                     const speed = (p[0] / 100.0) * 10.0;
-                    const fov = 30.0 + (p[1] / 100.0) * 90.0;
-                    const segLen = 600.0 - (p[2] / 100.0) * 500.0;
-                    const feather = p[3] / 100.0;
-                    const fade = Math.max(p[4] / 100.0, 0.01);
+                    const fov = 10.0 + (p[1] / 100.0) * 140.0;
+                    const segLen = (p[2] / 100.0) * 595.0 + 5.0;
+                    const activePlanes = Math.max(1, Math.round(p[3]));
+                    const feather = p[4] / 100.0;
+                    const fade = Math.max(p[5] / 100.0, 0.01);
 
                     const width = params.width;
                     const height = params.height;
@@ -514,7 +519,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                     }
 
                     // Travel distance
-                    const rawTravel = (params.integratedValues && params.integratedValues.length >= 3)
+                    const rawTravel = (params.integratedValues && params.integratedValues.length >= 1)
                         ? params.integratedValues[0]
                         : (params.time || 0.0);
 
@@ -524,10 +529,16 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                     camera.position.set(0, 0, 0);
                     camera.lookAt(0, 0, -1);
 
-                    const totalLength = segLen * NUM_PLANES;
+                    const totalLength = segLen * activePlanes;
 
-                    // LEAP-FROG: NUM_PLANES planes cycle every totalLength
+                    // Show only the active planes; hide the rest.
+                    // Active planes are leap-frogged through the tunnel every totalLength.
                     meshes.forEach((m, idx) => {
+                        if (idx >= activePlanes) {
+                            m.visible = false;
+                            return;
+                        }
+                        m.visible = true;
                         const mat = m.material as THREE.ShaderMaterial;
 
                         let z = travelZ - (idx * segLen);

@@ -1215,7 +1215,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Speed', { v: 20, b: 'SUB' }),
           o('Depth', { v: 50, b: 'OFF' }),
-          o('Density', { v: 100, b: 'OFF' }),
+          o('Spacing', { v: 15, b: 'OFF' }),
+          o('Plane Count', { v: 20, b: 'OFF' }),
           o('Edge Feather', { v: 30, b: 'OFF' }),
           o('Fade Buffer', { v: 100, m: 50, b: 'SUB' }),
         ],
@@ -1263,7 +1264,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Speed', { v: 50, b: 'SUB' }, { v: 5, b: 'OFF' }),
           o('Depth', { v: 0, b: 'OFF' }),
-          o('Density', { v: 90, b: 'OFF' }),
+          o('Spacing', { v: 90, b: 'OFF' }),
+          o('Plane Count', { v: 20, b: 'OFF' }),
           o('Edge Feather', { v: 0, b: 'OFF' }),
           o('Fade Buffer', { v: 100, b: 'OFF' }),
         ],
@@ -1312,7 +1314,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Speed', { v: 70, b: 'SUB' }, { v: 15, b: 'OFF' }),
           o('Depth', { v: 10, b: 'OFF' }),
-          o('Density', { v: 80, b: 'OFF' }),
+          o('Spacing', { v: 80, b: 'OFF' }),
+          o('Plane Count', { v: 20, b: 'OFF' }),
           o('Edge Feather', { v: 50, b: 'OFF' }),
           o('Fade Buffer', { v: 80, b: 'OFF' }),
         ],
@@ -1366,7 +1369,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Speed', { v: 50, b: 'SUB' }, { v: 15, b: 'OFF' }),
           o('Depth', { v: 0, b: 'OFF' }),
-          o('Density', { v: 70, b: 'OFF' }),
+          o('Spacing', { v: 70, b: 'OFF' }),
+          o('Plane Count', { v: 20, b: 'OFF' }),
           o('Edge Feather', { v: 50, b: 'OFF' }),
           o('Fade Buffer', { v: 100, b: 'OFF' }),
         ],
@@ -1403,7 +1407,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Speed', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
           o('Depth', { v: 50, b: 'OFF' }),
-          o('Density', { v: 100, b: 'OFF' }),
+          o('Spacing', { v: 15, b: 'OFF' }),
+          o('Plane Count', { v: 20, b: 'OFF' }),
           o('Edge Feather', { v: 15, b: 'OFF' }),
           o('Fade Buffer', { v: 30, b: 'OFF' }),
         ],
@@ -1460,7 +1465,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Speed', { v: 0, b: 'OFF' }),
           o('Depth', { v: 50, b: 'OFF' }),
-          o('Density', { v: 100, b: 'OFF' }),
+          o('Spacing', { v: 15, b: 'OFF' }),
+          o('Plane Count', { v: 20, b: 'OFF' }),
           o('Edge Feather', { v: 90, b: 'OFF' }),
           o('Fade Buffer', { v: 100, b: 'OFF' }),
         ],
