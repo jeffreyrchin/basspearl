@@ -24,10 +24,10 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 4, b: 'OFF' }),
-          o('Complexity', { v: 97, b: 'OFF' }),
-          o('Warp', { v: 3, b: 'OFF' }),
-          o('Speed', { v: 100, b: 'SUB' }, { v: 50, b: 'OFF' }),
+          o('Scale', { v: 1, b: 'OFF' }),
+          o('Complexity', { v: 100, b: 'OFF' }),
+          o('Warp', { v: 2, b: 'OFF' }),
+          o('Speed', { v: 50, b: 'SUB' }, { v: 25, b: 'OFF' }),
           o('Blend', { v: 100, b: 'OFF' }),
         ],
         melded: true
@@ -35,8 +35,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'LUMINANCE_MASK',
         params: [
-          o('Threshold', { v: 60, b: 'OFF' }),
-          o('Feather', { v: 10, b: 'OFF' }),
+          o('Threshold', { v: 50, b: 'OFF' }),
+          o('Feather', { v: 30, b: 'OFF' }),
           o('Invert', { v: 0, b: 'OFF' }),
         ],
         melded: true
@@ -44,8 +44,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'TUNNEL_WARP',
         params: [
-          o('Scale', { v: 20, b: 'OFF' }),
-          o('Speed', { v: 100, b: 'SUB' }, { v: 50, b: 'OFF' }),
+          o('Scale', { v: 10, b: 'OFF' }),
+          o('Speed', { v: 100, b: 'SUB' }, { v: 70, b: 'OFF' }),
           o('Twist', { v: 10, b: 'OFF' }),
         ],
         melded: false
@@ -1179,8 +1179,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'CELLULAR_NOISE',
         params: [
-          o('Cell Width', { v: 100 }),
-          o('Cell Height', { v: 80 }),
+          o('Cell Width', { v: 46 }),
+          o('Cell Height', { v: 76 }),
           o('X-Freq', { v: 20 }),
           o('Y-Freq', { v: 32 }),
           o('Density', { v: 100 }),
@@ -1197,15 +1197,15 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Complexity', { v: 100, b: 'OFF' }),
           o('Warp', { v: 0, b: 'OFF' }),
           o('Speed', { v: 0, b: 'OFF' }),
-          o('Blend', { v: 40, b: 'OFF' }),
+          o('Blend', { v: 50, b: 'OFF' }),
         ],
         melded: true
       },
       {
         type: 'LUMINANCE_MASK',
         params: [
-          o('Threshold', { v: 50, b: 'OFF' }),
-          o('Feather', { v: 20, b: 'OFF' }),
+          o('Threshold', { v: 30, b: 'OFF' }),
+          o('Feather', { v: 30, b: 'OFF' }),
           o('Invert', { v: 0, b: 'OFF' }),
         ],
         melded: true
@@ -1213,12 +1213,12 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'INFINITE_ZOOM',
         params: [
-          o('Speed', { v: 20, b: 'SUB' }),
-          o('Depth', { v: 50, b: 'OFF' }),
-          o('Spacing', { v: 15, b: 'OFF' }),
-          o('Plane Count', { v: 20, b: 'OFF' }),
-          o('Edge Feather', { v: 30, b: 'OFF' }),
-          o('Fade Buffer', { v: 100, m: 50, b: 'SUB' }),
+          o('Speed', { v: 40, m: 0, b: 'SUB' }, { v: 5, m: 0, b: 'OFF' }),
+          o('Depth', { v: 40, b: 'OFF' }),
+          o('Spacing', { v: 25, b: 'OFF' }),
+          o('Plane Count', { v: 3, b: 'OFF' }),
+          o('Edge Feather', { v: 70, b: 'OFF' }),
+          o('Fade Buffer', { v: 50, b: 'OFF' }),
         ],
         melded: false
       }
@@ -1513,8 +1513,18 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Elevation', { v: 50, b: 'OFF' }),
           o('Distance', { v: 40, b: 'OFF' }),
         ],
+        melded: true
+      },
+      {
+        type: 'RGBA',
+        params: [
+          o('Red', { v: 50, b: 'OFF' }),
+          o('Green', { v: 90, b: 'OFF' }),
+          o('Blue', { v: 100, b: 'OFF' }),
+          o('Opacity', { v: 100, b: 'OFF' }),
+        ],
         melded: false
-      }
+      },
     ]
   },
   SPINNING_CORRIDOR: {
