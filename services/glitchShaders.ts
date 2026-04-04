@@ -1429,7 +1429,7 @@ out vec4 outColor;
 void main() {
     float feather = max(u_params[0] / 100.0 * 10.0, 0.0001);
     float frequency = u_params[1] / 10.0;
-    float speed = u_params[2] / 100.0 * 10.0;
+    float speed = u_params[2] / 100.0 * 30.0;
     vec2 pan = vec2(u_params[3] / 100.0, u_params[4] / 100.0);
 
     float aspect = u_resolution.x / u_resolution.y;

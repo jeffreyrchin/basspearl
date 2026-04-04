@@ -391,7 +391,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     params: [
       p('Feather', { v: 50 }),
       p('Frequency', { v: 25 }),
-      p('Speed', { v: 100, b: 'TREBLE' }, { v: 50 }),
+      p('Speed', { v: 100, b: 'TREBLE' }, { v: 30 }),
       p('Pan X', { v: 50 }),
       p('Pan Y', { v: 50 }),
     ],

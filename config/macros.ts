@@ -1473,5 +1473,106 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         melded: false
       }
     ]
+  },
+  RIPPLES: {
+    id: 'RIPPLES',
+    label: 'Ripples',
+    effects: [
+      {
+        type: 'RADIAL_GRADIENT',
+        params: [
+          o('Feather', { v: 30 }),
+          o('Frequency', { v: 30 }),
+          o('Speed', { v: 100, b: 'SUB' }, { v: 15, b: 'OFF' }),
+          o('Pan X', { v: 50 }),
+          o('Pan Y', { v: 50 }),
+        ],
+        melded: true
+      },
+      {
+        type: 'ORGANIC_NOISE',
+        params: [
+          o('Scale', { v: 15 }),
+          o('Complexity', { v: 10 }),
+          o('Warp', { v: 8 }),
+          o('Speed', { v: 50, b: 'SUB' }),
+          o('Blend', { v: 50 }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TERRAIN',
+        params: [
+          o('Scale', { v: 3, b: 'OFF' }),
+          o('Extrusion', { v: 30, m: 10, b: 'SUB' }),
+          o('Speed', { v: 0, b: 'OFF' }),
+          o('Resolution', { v: 100, b: 'OFF' }),
+          o('Rotate X', { v: 0, b: 'OFF' }),
+          o('Rotate Y', { v: 0, b: 'OFF' }),
+          o('Rotate Z', { v: 0, b: 'OFF' }),
+          o('Elevation', { v: 50, b: 'OFF' }),
+          o('Distance', { v: 40, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  SPINNING_CORRIDOR: {
+    id: 'SPINNING_CORRIDOR',
+    label: 'Spinning Corridor',
+    effects: [
+      {
+        type: 'SHAPE',
+        params: [
+          o('Side Count', { v: 4, b: 'OFF' }),
+          o('Pointiness', { v: 0, b: 'OFF' }),
+          o('Roundness', { v: 0, b: 'OFF' }),
+          o('Feather', { v: 0, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 30, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 70, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'SHAPE',
+        params: [
+          o('Side Count', { v: 4, b: 'OFF' }),
+          o('Pointiness', { v: 0, b: 'OFF' }),
+          o('Roundness', { v: 0, b: 'OFF' }),
+          o('Feather', { v: 0, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 30, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 30, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'ROTATE',
+        params: [
+          o('Rotation', { v: 0, b: 'OFF' }),
+          o('Speed', { v: 5, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'INFINITE_ZOOM',
+        params: [
+          o('Speed', { v: 100, b: 'SUB' }, { v: 50, b: 'OFF' }),
+          o('Depth', { v: 45 }),
+          o('Spacing', { v: 11 }),
+          o('Plane Count', { v: 100 }),
+          o('Edge Feather', { v: 100 }),
+          o('Fade Buffer', { v: 100 }),
+        ],
+        melded: false
+      }
+    ]
   }
 };

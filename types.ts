@@ -98,7 +98,9 @@ export type MacroType =
   'ATOMS' |
   'CELLULAR_MATRIX' |
   'SMOKE' |
-  'CRUSHED_RAIN';
+  'CRUSHED_RAIN' |
+  'RIPPLES' |
+  'SPINNING_CORRIDOR';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;
