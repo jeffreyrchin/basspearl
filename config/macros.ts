@@ -911,7 +911,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Y-Freq', { v: 35 }),
           o('Density', { v: 100 }),
           o('Jitter', { v: 100 }),
-          o('Speed', { v: 80, b: 'SUB' }),
+          o('Speed', { v: 80, b: 'SUB' }, { v: 50, b: 'OFF' }),
           o('Blend', { v: 100 }),
         ],
         melded: true
@@ -919,7 +919,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'TERRAIN_SPHERE',
         params: [
-          o('Extrusion', { v: 50, b: 'SUB' }),
+          o('Extrusion', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
           o('Resolution', { v: 20, b: 'OFF' }),
           o('Distance', { v: 66, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
@@ -968,7 +968,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Scale', { v: 15, b: 'OFF' }),
           o('Complexity', { v: 100, b: 'OFF' }),
           o('Warp', { v: 3, b: 'OFF' }),
-          o('Speed', { v: 100, m: 0, b: 'SUB' }),
+          o('Speed', { v: 100, m: 0, b: 'SUB' }, { v: 40, b: 'OFF' }),
           o('Blend', { v: 60, b: 'OFF' }),
         ],
         melded: true
@@ -985,9 +985,9 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'TERRAIN_SPHERE',
         params: [
-          o('Extrusion', { v: 50, b: 'SUB' }),
+          o('Extrusion', { v: 50, b: 'SUB' }, { v: 0, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
-          o('Distance', { v: 75, b: 'OFF' }),
+          o('Distance', { v: 75, b: 'OFF' }, { v: 83, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
@@ -1000,7 +1000,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'HUE_ROTATION',
         params: [
-          o('Phase Offset', { v: 10, b: 'OFF' }),
+          o('Phase Offset', { v: 0, b: 'OFF' }),
           o('Speed', { v: 25, b: 'OFF' }),
           o('Vibrance', { v: 75, b: 'OFF' }),
         ],
