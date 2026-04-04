@@ -35,7 +35,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
 
     return (
         <button
-            className="w-full aspect-square relative group transition-all duration-500 overflow-hidden cursor-pointer"
+            className="w-full aspect-square relative group transition-all duration-500 overflow-hidden cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-white/60"
             onClick={onClick}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={onHoverEnd}
@@ -59,10 +59,24 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
                 </span>
             </div>
 
+            {/* Pattern Category Indicator */}
+            {effectType && EFFECT_METADATA[effectType].category === 'Pattern' && (
+                <div className="absolute top-2 left-2 z-30 w-5 h-5 rounded-sm bg-red-500/80 pointer-events-none flex items-center justify-center">
+                    <span className="material-symbols-outlined text-white transition-colors !text-[14px]">category</span>
+                </div>
+            )}
+
+            {/* Modifier Category Indicator */}
+            {effectType && EFFECT_METADATA[effectType].category === 'Modifier' && (
+                <div className="absolute top-2 left-2 z-30 w-5 h-5 rounded-sm bg-indigo-500/80 pointer-events-none flex items-center justify-center">
+                    <span className="material-symbols-outlined text-white transition-colors !text-[14px]">water_drop</span>
+                </div>
+            )}
+
             {/* Macro Indicator */}
             {macroType && (
-                <div className="absolute top-2 left-2 z-30 w-5 h-5 rounded-sm bg-indigo-500/80 border border-indigo-400/30 pointer-events-none flex items-center justify-center">
-                    <span className="text-[10px] font-medium text-indigo-100 uppercase leading-none">M</span>
+                <div className="absolute top-2 left-2 z-30 w-5 h-5 rounded-full bg-purple-500/80 pointer-events-none flex items-center justify-center">
+                    <span className="material-symbols-outlined text-white transition-colors !text-[14px]">group_work</span>
                 </div>
             )}
 

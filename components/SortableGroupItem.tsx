@@ -25,7 +25,6 @@ const SortableGroupItem = ({
     const selectRange = useEffectStore(s => s.selectRange);
     const isInSelectMode = useEffectStore(s => s.isInSelectMode);
     const pushFocus = useEffectStore(s => s.pushFocus);
-    const focusStack = useEffectStore(s => s.focusStack);
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: group.id,
@@ -122,7 +121,10 @@ const SortableGroupItem = ({
                                     `}
                                     title={`Select ${EFFECT_METADATA[effect.type]?.label}`}
                                 >
-                                    {EFFECT_METADATA[effect.type]?.label}
+                                    <div className="flex items-center gap-3">
+                                        {EFFECT_METADATA[effect.type]?.category === 'Pattern' ? <span className="material-symbols-outlined text-red-400 transition-colors">category</span> : <span className="material-symbols-outlined text-indigo-400 transition-colors">water_drop</span>}
+                                        {EFFECT_METADATA[effect.type]?.label}
+                                    </div>
                                 </button>
 
                                 {!isOverlay && (
@@ -132,7 +134,7 @@ const SortableGroupItem = ({
                                             className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors ${effect.soloed ? 'bg-white text-black' : 'text-white/30 hover:bg-white/10 hover:text-white'}`}
                                             title="Toggle Solo"
                                         >
-                                            <span className="material-symbols-outlined text-[18px]">egg</span>
+                                            <span className="material-symbols-outlined text-[18px]">pill</span>
                                         </button>
                                         <div className="w-[1px] h-8 md:h-5 bg-white/10"></div>
                                         <button

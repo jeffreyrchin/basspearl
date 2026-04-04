@@ -37,7 +37,7 @@ const HelpContent: React.FC = () => {
                         <li className="relative pl-6 space-y-1 before:content-[''] before:absolute before:left-0 before:top-1.5 before:w-1.5 before:h-1.5 before:bg-primary before:rounded-full">
                             <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-white">Effect card buttons:</h3>
                             <p className="text-white/70 text-sm leading-relaxed">
-                                In each effect card, toggle the "egg" icon to solo/unsolo an effect, and click the "eye" icon to show/hide an effect. Clicking a selected effect opens the inspector.
+                                In each effect card, toggle the "pill" icon to solo/unsolo an effect, and toggle the "eye" icon to show/hide an effect. Double-clicking an effect card opens the inspector.
                             </p>
                         </li>
 
