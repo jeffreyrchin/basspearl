@@ -36,7 +36,8 @@ export type GlitchEffectType =
   | 'RGBA'
   | 'LINEAR_GRADIENT'
   | 'RADIAL_GRADIENT'
-  | 'INFINITE_ZOOM';
+  | 'INFINITE_ZOOM'
+  | 'BLUR';
 
 export type FrequencyBand = 'OFF' | 'SUB' | 'BASS' | 'MID' | 'TREBLE';
 

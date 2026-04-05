@@ -314,7 +314,11 @@ export class GlitchEngine {
       u_time: currentTime
     };
 
-    this.pipeline.applyPass(type, uniforms, !!meta.is3D);
+    if (type === 'BLUR') {
+      this.pipeline.applyIterativeBlur(uniforms);
+    } else {
+      this.pipeline.applyPass(type, uniforms, !!meta.is3D);
+    }
   }
 
   public dispose() {

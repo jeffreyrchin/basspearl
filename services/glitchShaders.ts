@@ -1457,6 +1457,54 @@ void main() {
 }
 `;
 
+export const BOX_BLUR_H_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[2]; // [intensity, blend]
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    float step = u_params[0];
+    float blend = u_params[1];
+
+    vec4 center = texture(u_image, v_texCoord);
+    vec4 sum = center;
+    sum += texture(u_image, v_texCoord + vec2(step,       0.0));
+    sum += texture(u_image, v_texCoord - vec2(step,       0.0));
+    sum += texture(u_image, v_texCoord + vec2(2.0 * step, 0.0));
+    sum += texture(u_image, v_texCoord - vec2(2.0 * step, 0.0));
+    sum += texture(u_image, v_texCoord + vec2(3.0 * step, 0.0));
+    sum += texture(u_image, v_texCoord - vec2(3.0 * step, 0.0));
+
+    outColor = mix(center, sum * (1.0 / 7.0), blend);
+}
+`;
+
+export const BOX_BLUR_V_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[2]; // [intensity, blend]
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    float step = u_params[0];
+    float blend = u_params[1];
+
+    vec4 center = texture(u_image, v_texCoord);
+    vec4 sum = center;
+    sum += texture(u_image, v_texCoord + vec2(0.0, step));
+    sum += texture(u_image, v_texCoord - vec2(0.0, step));
+    sum += texture(u_image, v_texCoord + vec2(0.0, 2.0 * step));
+    sum += texture(u_image, v_texCoord - vec2(0.0, 2.0 * step));
+    sum += texture(u_image, v_texCoord + vec2(0.0, 3.0 * step));
+    sum += texture(u_image, v_texCoord - vec2(0.0, 3.0 * step));
+
+    outColor = mix(center, sum * (1.0 / 7.0), blend);
+}
+`;
+
 export interface ShaderDefinition {
     name: string;
     fragmentSource: string;
@@ -1501,4 +1549,7 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     LINEAR_GRADIENT: { name: 'LINEAR_GRADIENT', fragmentSource: LINEAR_GRADIENT_SHADER },
     RADIAL_GRADIENT: { name: 'RADIAL_GRADIENT', fragmentSource: RADIAL_GRADIENT_SHADER, velocityParamIndices: [2] },
     INFINITE_ZOOM: { name: 'INFINITE_ZOOM', fragmentSource: '', velocityParamIndices: [0], is3D: true },
+    BLUR: { name: 'BLUR', fragmentSource: '', is3D: true },
+    BOX_BLUR_H: { name: 'BOX_BLUR_H', fragmentSource: BOX_BLUR_H_SHADER },
+    BOX_BLUR_V: { name: 'BOX_BLUR_V', fragmentSource: BOX_BLUR_V_SHADER },
 };

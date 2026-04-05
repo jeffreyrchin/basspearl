@@ -202,6 +202,34 @@ export class EffectPipeline {
         }
     }
 
+    public applyIterativeBlur(uniforms: Record<string, any>) {
+        const originalIntensity = uniforms.u_params[0];
+        const originalBlend = uniforms.u_params[1];
+        const res = uniforms.u_resolution;
+        const unit = uniforms.u_unit;
+
+        // Radii multipliers for the staggered sequence
+        const multipliers = [0.5, 1.0, 2.0];
+
+        uniforms.u_params[1] = originalBlend / 100.0;
+
+        for (const m of multipliers) {
+            const baseStep = (m * originalIntensity / 100.0) * unit / 3.2;
+
+            // Pass X-step for horizontal pass
+            uniforms.u_params[0] = baseStep / res[0];
+            this.applyPass('BOX_BLUR_H', uniforms, false);
+
+            // Pass Y-step for vertical pass
+            uniforms.u_params[0] = baseStep / res[1];
+            this.applyPass('BOX_BLUR_V', uniforms, false);
+        }
+
+        // Restore original values for subsequent effects in the loop
+        uniforms.u_params[0] = originalIntensity;
+        uniforms.u_params[1] = originalBlend;
+    }
+
     private renderThreeJS(type: string, inputTexture: WebGLTexture, destFB: WebGLFramebuffer, uniforms: Record<string, any>) {
         const gl = this.gl;
 
