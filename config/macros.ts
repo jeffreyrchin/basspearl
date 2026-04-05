@@ -127,8 +127,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'GRAIN',
         params: [
-          o('Width', { v: 69, b: 'OFF' }),
-          o('Height', { v: 66, b: 'OFF' }),
+          o('Width', { v: 75, b: 'OFF' }),
+          o('Height', { v: 75, b: 'OFF' }),
           o('X-Freq', { v: 50, b: 'OFF' }),
           o('Y-Freq', { v: 46, b: 'OFF' }),
           o('Density', { v: 100, b: 'OFF' }),
@@ -141,23 +141,14 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'TERRAIN',
         params: [
           o('Scale', { v: 3, b: 'OFF' }),
-          o('Extrusion', { v: 75, m: 43, b: 'SUB' }, { v: 67, m: 0, b: 'OFF' }),
+          o('Extrusion', { v: 100, m: 60, b: 'SUB' }, { v: 75, m: 0, b: 'OFF' }),
           o('Speed', { v: 5, b: 'OFF' }),
-          o('Resolution', { v: 99, b: 'OFF' }),
+          o('Resolution', { v: 100, b: 'OFF' }),
           o('Rotate X', { v: 0, b: 'OFF' }),
           o('Rotate Y', { v: 0, b: 'OFF' }),
           o('Rotate Z', { v: 0, b: 'OFF' }),
-          o('Elevation', { v: 47, b: 'OFF' }),
+          o('Elevation', { v: 45, b: 'OFF' }),
           o('Distance', { v: 50, b: 'OFF' }),
-        ],
-        melded: true
-      },
-      {
-        type: 'EDGE_MASK',
-        params: [
-          o('Sensitivity', { v: 0, b: 'OFF' }),
-          o('Thickness', { v: 5, b: 'OFF' }, { v: 10 }),
-          o('Invert', { v: 0, b: 'OFF' }),
         ],
         melded: false
       }
@@ -170,8 +161,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'GRAIN',
         params: [
-          o('Width', { v: 69, b: 'OFF' }),
-          o('Height', { v: 64, b: 'OFF' }),
+          o('Width', { v: 100, b: 'OFF' }),
+          o('Height', { v: 100, b: 'OFF' }),
           o('X-Freq', { v: 50, b: 'OFF' }),
           o('Y-Freq', { v: 46, b: 'OFF' }),
           o('Density', { v: 100, b: 'OFF' }),
@@ -188,10 +179,10 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'TERRAIN',
         params: [
-          o('Scale', { v: 5, b: 'OFF' }),
-          o('Extrusion', { v: 75, m: 25, b: 'SUB' }, { v: 34, b: 'OFF' }),
-          o('Speed', { v: 17, b: 'OFF' }),
-          o('Resolution', { v: 9, b: 'OFF' }),
+          o('Scale', { v: 3, b: 'OFF' }),
+          o('Extrusion', { v: 30, m: 10, b: 'TREBLE' }, { v: 15, b: 'OFF' }),
+          o('Speed', { v: 60, m: 10, b: 'SUB' }, { v: 20, b: 'OFF' }),
+          o('Resolution', { v: 5, b: 'OFF' }),
           o('Rotate X', { v: 0, b: 'OFF' }),
           o('Rotate Y', { v: 0, b: 'OFF' }),
           o('Rotate Z', { v: 0, b: 'OFF' }),
@@ -205,7 +196,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Red', { v: 0, b: 'OFF' }),
           o('Green', { v: 100, b: 'OFF' }),
-          o('Blue', { v: 0, b: 'OFF' }),
+          o('Blue', { v: 50, b: 'OFF' }),
           o('Opacity', { v: 100, b: 'OFF' }),
         ],
         melded: false
@@ -219,10 +210,10 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'GRID',
         params: [
-          o('Horizontal', { v: 30, b: 'OFF' }),
-          o('Vertical', { v: 30, b: 'OFF' }),
-          o('Thickness', { v: 20, b: 'OFF' }),
-          o('Feather', { v: 25, b: 'OFF' }),
+          o('Horizontal', { v: 40, b: 'OFF' }),
+          o('Vertical', { v: 40, b: 'OFF' }),
+          o('Thickness', { v: 15, b: 'OFF' }),
+          o('Feather', { v: 15, b: 'OFF' }),
           o('Scale X', { v: 50, b: 'OFF' }),
           o('Scale Y', { v: 50, b: 'OFF' }),
           o('Pan X', { v: 50, b: 'OFF' }),
@@ -233,7 +224,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'TERRAIN',
         params: [
-          o('Scale', { v: 3, b: 'OFF' }),
+          o('Scale', { v: 2, b: 'OFF' }),
           o('Extrusion', { v: 0, b: 'OFF' }),
           o('Speed', { v: 50, m: 0, b: 'TREBLE' }, { v: 5, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
@@ -283,64 +274,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Phase Offset', { v: 0, b: 'OFF' }),
           o('Speed', { v: 25, b: 'OFF' }),
           o('Vibrance', { v: 50, b: 'OFF' }),
-        ],
-        melded: false
-      }
-    ]
-  },
-  PLANE_MESH: {
-    id: 'PLANE_MESH',
-    label: 'Plane Mesh',
-    effects: [
-      {
-        type: 'ORGANIC_NOISE',
-        params: [
-          o('Scale', { v: 3, b: 'OFF' }),
-          o('Complexity', { v: 43, b: 'OFF' }),
-          o('Warp', { v: 5, b: 'OFF' }),
-          o('Speed', { v: 60, m: 0, b: 'TREBLE' }, { v: 10, b: 'OFF' }),
-          o('Blend', { v: 100, b: 'OFF' }),
-        ],
-        melded: true
-      },
-      {
-        type: 'DEEP_FRY',
-        params: [
-          o('Heat', { v: 19, b: 'OFF' }),
-          o('Posterize', { v: 0, b: 'OFF' }),
-        ],
-        melded: true
-      },
-      {
-        type: 'TERRAIN',
-        params: [
-          o('Scale', { v: 2, b: 'OFF' }),
-          o('Extrusion', { v: 50, b: 'OFF' }),
-          o('Speed', { v: 0, b: 'OFF' }),
-          o('Resolution', { v: 27, b: 'OFF' }),
-          o('Rotate X', { v: 0, b: 'OFF' }),
-          o('Rotate Y', { v: 0, b: 'OFF' }),
-          o('Rotate Z', { v: 0, b: 'OFF' }),
-          o('Elevation', { v: 46, b: 'OFF' }),
-          o('Distance', { v: 50, b: 'OFF' }),
-        ],
-        melded: true
-      },
-      {
-        type: 'EDGE_MASK',
-        params: [
-          o('Sensitivity', { v: 0, b: 'OFF' }),
-          o('Thickness', { v: 3, b: 'OFF' }),
-          o('Invert', { v: 0, b: 'OFF' }),
-        ],
-        melded: true
-      },
-      {
-        type: 'HUE_ROTATION',
-        params: [
-          o('Phase Offset', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 25, b: 'OFF' }),
-          o('Vibrance', { v: 100, b: 'OFF' }),
         ],
         melded: false
       }
@@ -653,7 +586,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'TERRAIN',
         params: [
-          o('Scale', { v: 3, b: 'OFF' }),
+          o('Scale', { v: 2, b: 'OFF' }),
           o('Extrusion', { v: 100, m: 30, b: 'SUB' }, { v: 50, m: 0, b: 'OFF' }),
           o('Speed', { v: 0, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
@@ -661,7 +594,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Rotate Y', { v: 0, b: 'OFF' }),
           o('Rotate Z', { v: 0, b: 'OFF' }),
           o('Elevation', { v: 47, b: 'OFF' }),
-          o('Distance', { v: 37, b: 'OFF' }),
+          o('Distance', { v: 53, b: 'OFF' }),
         ],
         melded: false
       }
@@ -870,8 +803,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'TERRAIN',
         params: [
-          o('Scale', { v: 3, b: 'OFF' }),
-          o('Extrusion', { v: 30, m: 0, b: 'TREBLE' }, { v: 15, m: 0, b: 'OFF' }),
+          o('Scale', { v: 2, b: 'OFF' }),
+          o('Extrusion', { v: 30, m: 5, b: 'TREBLE' }, { v: 15, m: 0, b: 'OFF' }),
           o('Speed', { v: 30, m: 0, b: 'SUB' }, { v: 15, m: 0, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
           o('Rotate X', { v: 3, b: 'OFF' }),
@@ -1495,7 +1428,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Scale', { v: 15 }),
           o('Complexity', { v: 10 }),
           o('Warp', { v: 8 }),
-          o('Speed', { v: 50, b: 'SUB' }),
+          o('Speed', { v: 25, b: 'SUB' }),
           o('Blend', { v: 50 }),
         ],
         melded: true
@@ -1503,15 +1436,15 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'TERRAIN',
         params: [
-          o('Scale', { v: 3, b: 'OFF' }),
-          o('Extrusion', { v: 30, m: 10, b: 'SUB' }),
+          o('Scale', { v: 2, b: 'OFF' }),
+          o('Extrusion', { v: 30, m: 10, b: 'SUB' }, { v: 30, b: 'OFF' }),
           o('Speed', { v: 0, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
           o('Rotate X', { v: 0, b: 'OFF' }),
           o('Rotate Y', { v: 0, b: 'OFF' }),
           o('Rotate Z', { v: 0, b: 'OFF' }),
-          o('Elevation', { v: 50, b: 'OFF' }),
-          o('Distance', { v: 40, b: 'OFF' }),
+          o('Elevation', { v: 49, b: 'OFF' }),
+          o('Distance', { v: 55, b: 'OFF' }),
         ],
         melded: true
       },
@@ -1583,6 +1516,60 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         ],
         melded: false
       }
+    ]
+  },
+  SQUARE_RIPPLES: {
+    id: 'SQUARE_RIPPLES',
+    label: 'Square Ripples',
+    effects: [
+      {
+        type: 'RADIAL_GRADIENT',
+        params: [
+          o('Feather', { v: 30 }),
+          o('Frequency', { v: 30 }),
+          o('Speed', { v: 100, b: 'SUB' }, { v: 15, b: 'OFF' }),
+          o('Pan X', { v: 50 }),
+          o('Pan Y', { v: 50 }),
+        ],
+        melded: true
+      },
+      {
+        type: 'BIT_CRUSH',
+        params: [
+          o('Quantize', { v: 0, b: 'OFF' }),
+          o('Resample', { v: 40, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'TERRAIN',
+        params: [
+          o('Scale', { v: 2, b: 'OFF' }),
+          o('Extrusion', { v: 15, b: 'OFF' }, { v: 20, b: 'OFF' }),
+          o('Speed', { v: 0, b: 'OFF' }),
+          o('Resolution', { v: 100, b: 'OFF' }),
+          o('Rotate X', { v: 0, b: 'OFF' }),
+          o('Rotate Y', { v: 0, b: 'OFF' }),
+          o('Rotate Z', { v: 0, b: 'OFF' }),
+          o('Elevation', { v: 47, b: 'OFF' }),
+          o('Distance', { v: 55, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'RGBA',
+        params: [
+          o('Red', { v: 50, b: 'OFF' }),
+          o('Green', { v: 90, b: 'OFF' }),
+          o('Blue', { v: 100, b: 'OFF' }),
+          o('Opacity', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
     ]
   }
 };

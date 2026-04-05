@@ -315,8 +315,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     label: 'Terrain',
     category: 'Modifier',
     params: [
-      p('Scale', { v: 3 }),
-      p('Extrusion', { v: 75 }),
+      p('Scale', { v: 2 }),
+      p('Extrusion', { v: 25 }, { v: 50 }),
       p('Speed', { v: 12 }),
       p('Resolution', { v: 100 }),
       p('Rotate X', { v: 0 }),

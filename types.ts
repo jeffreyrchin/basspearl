@@ -75,7 +75,6 @@ export type MacroType =
   'LANDSCAPE' |
   'GRID_PLANE' |
   'LIQUID' |
-  'PLANE_MESH' |
   'RODS' |
   'RINGS' |
   'PLUME' |
@@ -100,7 +99,8 @@ export type MacroType =
   'SMOKE' |
   'CRUSHED_RAIN' |
   'RIPPLES' |
-  'SPINNING_CORRIDOR';
+  'SPINNING_CORRIDOR' |
+  'SQUARE_RIPPLES';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;

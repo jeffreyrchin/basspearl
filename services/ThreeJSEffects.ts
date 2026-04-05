@@ -16,16 +16,12 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
         camera.position.set(0, 30, 60);
         camera.lookAt(0, 0, 0);
 
-        /**
-         * HYBRID VOXEL ARCHITECTURE:
-         * We use a fixed high-resolution mesh (256+ segments) and handle 'Voxels' purely in the 
-         * vertex shader. This eliminates CPU bottlenecks and geometry recreation jank when 
-         * dragging the resolution slider. To maintain perfectly square blocks across the 
-         * entire landscape, we scale the segment count to match the plane's aspect ratio.
-         */
-        const meshResX = 256;
-        const meshResY = Math.floor(meshResX * (500.0 / 300.0));
-        let geometry = new THREE.PlaneGeometry(300, 500, meshResX, meshResY);
+        // Simple 512x512 plane:
+        const width = 300; // Width of 300: X range is -150 to 150
+        const height = 500; // Height of 500: Z range is -250 to 250
+        const meshResX = 512;
+        const meshResY = Math.floor(meshResX * (height / width));
+        const geometry = new THREE.PlaneGeometry(width, height, meshResX, meshResY);
         geometry.rotateX(-Math.PI / 2);
 
         const material = new THREE.ShaderMaterial({
@@ -35,85 +31,76 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 u_image: { value: null },
                 u_scale: { value: 1.0 },
                 u_extrusion: { value: 0.0 },
-                u_uv_offset: { value: 0.0 },
-                u_is_max_res: { value: 0.0 },
-                u_res: { value: 1.0 },
+                u_res: { value: 100.0 },
                 u_mesh_z: { value: 0.0 },
             },
             vertexShader: `
                 uniform sampler2D u_image;
                 uniform float u_scale;
                 uniform float u_extrusion;
-                uniform float u_uv_offset;
-                uniform float u_is_max_res;
                 uniform float u_res;
                 uniform float u_mesh_z;
                 out vec2 vUv;
-                flat out vec4 vColorFlat;
-                out vec2 vLocalPos;
+                out vec4 vTexColor;
+                out float vVisibility;
 
                 void main() {
-                    // Block size defines the 'Visual Resolution' snapped in world units
-                    float blockSize = 300.0 / clamp(u_res, 1.0, 256.0);
+                    // ── DYNAMIC VOXEL RESOLUTION ───────────────────────────
+                    float gridRes = clamp(u_res, 1.0, 512.0);
+                    float blockSize = 300.0 / gridRes;
                     
-                    // Step 1: Snap physical vertex positions to the virtual voxel grid
-                    vec3 snappedPos = position;
-                    snappedPos.x = floor(position.x / blockSize + 0.5) * blockSize;
-                    snappedPos.z = floor(position.z / blockSize + 0.5) * blockSize;
+                    vec3 pos = position;
+                    // Snapped Local Coordinates
+                    float snappedX = floor(pos.x / blockSize + 0.5) * blockSize;
+                    float snappedZ = floor(pos.z / blockSize + 0.5) * blockSize;
                     
-                    // Step 2: Interpolate between the snapped grid and raw high-res geometry
-                    vec3 pos = mix(snappedPos, position, u_is_max_res);
+                    // If extrusion is 0, turn off snapping (show full-res image)
+                    float isFlat = step(u_extrusion, 0.01); // 1 if extrusion <= 0.01 (flat), 0 if extrusion > 0.01
+                    pos.x = mix(snappedX, pos.x, isFlat);
+                    pos.z = mix(snappedZ, pos.z, isFlat);
                     
-                    // Step 3: Map world coordinates to scrolling texture UVs
-                    vUv = vec2(pos.x / 300.0 + 0.5, 1.0 - ((pos.z / 20.0) * (u_scale / 50.0) + u_uv_offset));
+                    // ── SAMPLING & HEIGHT ────────────────────────────────
+                    vUv = vec2(uv.x, uv.y * u_scale);
                     
-                    vec3 luminanceWeights = vec3(0.333);
-                    vec4 tex = texture(u_image, vUv);
-                    float luminance = dot(tex.rgb, luminanceWeights);
-                    float h = luminance * (u_extrusion / 1.0);
+                    // HEIGHT SNAP: Align UV sample exactly with physical columns
+                    // Map the resulting physical position back into 0-1 UV space.
+                    vec2 hUv = vec2((pos.x / 300.0) + 0.5, 0.5 - (pos.z / 500.0));
+                    vec2 samplingUv = mix(hUv, uv, isFlat);
                     
-                    // Step 4: Right-side face color fix
-                    // We sample the neighbor to the left to ensure right-facing mountain 
-                    // slopes are colored with the peak color rather than the ground.
-                    vec3 leftPos = pos - vec3(blockSize, 0.0, 0.0);
-                    vec2 leftUv = vec2(leftPos.x / 300.0 + 0.5, 1.0 - ((leftPos.z / 20.0) * (u_scale / 50.0) + u_uv_offset));
-                    vec4 leftTex = texture(u_image, leftUv);
-                    float hL = dot(leftTex.rgb, luminanceWeights);
-                    vColorFlat = mix(tex, leftTex, clamp((hL - luminance) * 10.0, 0.0, 1.0)); // Prevent flickering colors
+                    vTexColor = texture(u_image, vec2(samplingUv.x, samplingUv.y * u_scale));
+                    float heightVal = dot(vTexColor.rgb, vec3(0.333));
                     
-                    pos.y += h;
-                    vLocalPos = vec2(position.x, position.z + u_mesh_z);
+                    // ── ALPHA & FOG ───────────────────────
+                    // Side fade (X)
+                    float sideFade = smoothstep(150.0, 147.0, abs(pos.x)); 
+                    // Depth fog (Z)
+                    float zFog = smoothstep(150.0, 250.0, abs(pos.z + u_mesh_z));
+                    // Visibility combines height threshold, side fade, and depth fog
+                    vVisibility = step(0.01, heightVal) * sideFade * (1.0 - zFog);
 
-                    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-                    gl_Position = projectionMatrix * mvPosition;
+                    pos.y += heightVal * u_extrusion * sideFade;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
                 }
             `,
             fragmentShader: `
                 precision highp float;
                 uniform sampler2D u_image;
-                uniform float u_is_max_res;
+                uniform float u_extrusion;
                 in vec2 vUv;
-                flat in vec4 vColorFlat;
-                in vec2 vLocalPos;
+                in vec4 vTexColor;
+                in float vVisibility;
                 out vec4 outColor;
 
                 void main() {
-                    // Voxel: Solid color per triangle face using the vertex peak color
-                    // Full-res: Smooth per-pixel sampling
-                    vec4 smoothColor = texture(u_image, vUv);
-                    vec4 finalColor = mix(vColorFlat, smoothColor, u_is_max_res);
+                    // Use full-res texture when extrusion is 0
+                    float isFlat = step(u_extrusion, 0.01);
+                    vec4 flatColor = texture(u_image, vUv);
+                    vec4 finalColor = mix(vTexColor, flatColor, isFlat);
 
-                    // Object-Space Edge Fog
-                    // Fades out the physical boundaries of the local terrain geometry
-                    // so it perfectly rotates along with the mesh!
-                    float zFog = smoothstep(150.0, 300.0, abs(vLocalPos.y));
-                    float xFog = smoothstep(120.0, 150.0, abs(vLocalPos.x));
-                    float edgeAlpha = 1.0 - max(zFog, xFog);
-                    
-                    outColor = finalColor * edgeAlpha;
+                    outColor = vec4(finalColor.rgb, finalColor.a * vVisibility);
                 }
             `,
-            side: THREE.FrontSide
+            side: THREE.DoubleSide
         });
 
         const matA = material;
@@ -126,8 +113,8 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
         meshA.renderOrder = 1;
         meshB.renderOrder = 1;
 
-        meshA.frustumCulled = false;
-        meshB.frustumCulled = false;
+        meshA.frustumCulled = true;
+        meshB.frustumCulled = true;
 
         // Wrap both meshes in a group so we can rotate the whole terrain as a unit
         const terrainGroup = new THREE.Group();
@@ -150,76 +137,58 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
             material,
             update: (params, texture) => {
                 const p = params.params;
+                const scale = p ? p[0] : 1;
+                const extrusion = p ? p[1] : 0;
+                const speed = p ? p[2] * 5 : 0;
+                const resolution = p ? p[3] : 100;
 
-                if (p && p.length >= 4) {
-                    const scale = p[0];
-                    const extrusion = p[1];
-                    const speed = (p[2] / 100.0 * 50.0);
-                    // Map 0-100 slider to 4-256 resolution range 
-                    // Lower sliders use Voxels; 100 triggers full-res cinematic mode
-                    const resolution = Math.max(1, p[3]);
-                    const isMaxRes = resolution >= 100.0 ? 1.0 : 0.0;
+                // Threshold: Map 0..100 (UI) to 2..512 (Shader)
+                let targetRes = Math.max(2, Math.floor(2 + (resolution / 100.0) * 510.0));
 
-                    // Rotation angles (0–100 slider maps to 0–2π radians = full 360°)
-                    const toRad = (v: number) => (v / 100.0) * Math.PI * 2.0;
-                    terrainGroup.rotation.x = toRad(p[4] ?? 0);
-                    terrainGroup.rotation.y = toRad(p[5] ?? 0);
-                    terrainGroup.rotation.z = toRad(p[6] ?? 0);
+                /**
+                 * GRID ALIGNMENT: To prevent artifacts at the edges of the meshes, 
+                 * we ensure the voxel size (blockSize) is a perfect divisor of the plane length (500).
+                 * blockSize = 300 / u_res. We want K (number of voxels) = 500 / blockSize to be an even integer:
+                 * K = 500 / (300 / u_res) = 500 * (u_res / 300) = 5/3 * u_res
+                 * u_res = K * (3/5)
+                 * Multiply K by 2 to force it to be an even integer:
+                 * targetRes = K * 2 * (3/5) = K * 1.2
+                 */
+                targetRes = Math.round(targetRes / 1.2) * 1.2; // Snap targetRes to the nearest multiple of 1.2
 
-                    // Elevation: Map 0-100 to -500 to +500 world units. 50 = default (0)
-                    terrainGroup.position.y = ((p[7] ?? 50) - 50) * 10.0;
+                // Rotation angles (0–100 slider maps to 0–2π radians = full 360°)
+                const toRad = (v: number) => (v / 100.0) * Math.PI * 2.0;
+                terrainGroup.rotation.x = toRad(p[4] ?? 0);
+                terrainGroup.rotation.y = toRad(p[5] ?? 0);
+                terrainGroup.rotation.z = toRad(p[6] ?? 0);
 
-                    // Distance offset
-                    const zOffset = ((p[8] ?? 50) - 50) * 10.0;
-                    terrainGroup.position.z = zOffset;
+                // Elevation: Map 0-100 to -500 to +500 world units. 50 = default (0)
+                terrainGroup.position.y = ((p[7] ?? 50) - 50) * 10.0;
 
-                    // The 'Grid' we snap to in the shader
-                    // RESOLUTION CEILING: 256 max identifies smaller squares
-                    const virtualRes = Math.max(2, Math.floor(4 + resolution * 2.54));
+                // Distance offset
+                const zOffset = ((p[8] ?? 50) - 50) * 10.0;
+                terrainGroup.position.z = zOffset;
 
-                    // Physical length for tiling calculation
-                    const segmentLen = 500.0;
-                    const wrapDistInShader = 20.0; // Shader tiles every 20 units
-                    const scaleFactor = (scale / 50.0 || 1.0);
-                    const unitsPerSegment = (segmentLen / wrapDistInShader) * scaleFactor;
+                // Travel distance in world units
+                const rawTravel = (params.integratedValues && params.integratedValues.length >= 3)
+                    ? params.integratedValues[2]
+                    : (params.time || 0.0);
+                const travelZ = rawTravel * speed;
 
-                    // Travel distance
-                    const rawTravel = (params.integratedValues && params.integratedValues.length >= 3)
-                        ? params.integratedValues[2]
-                        : (params.time || 0.0);
+                // Two planes 500 units apart, looping
+                meshes[0].position.z = ((travelZ) % 1000.0) - 500.0;
+                meshes[1].position.z = ((travelZ + 500.0) % 1000.0) - 500.0;
 
-                    const worldTravelZ = rawTravel * speed * 20.0;
+                meshes.forEach(m => {
+                    const mat = m.material as THREE.ShaderMaterial;
+                    mat.uniforms.u_image.value = texture;
+                    mat.uniforms.u_scale.value = scale;
+                    mat.uniforms.u_extrusion.value = extrusion;
+                    mat.uniforms.u_res.value = targetRes;
 
-                    /**
-                     * LEAP-FROG SCROLLING:
-                     * Two 1000-unit mesh segments cycle through the scene to create an infinite
-                     * landscape. We sync the UV offsets to the physical position so the 
-                     * texture patterns never 'jump' as the segments wrap around.
-                     */
-                    meshes.forEach((m, idx) => {
-                        const mat = m.material as THREE.ShaderMaterial;
-                        mat.uniforms.u_image.value = texture;
-                        mat.uniforms.u_is_max_res.value = isMaxRes;
-                        mat.uniforms.u_scale.value = scale;
-                        mat.uniforms.u_extrusion.value = extrusion;
-                        mat.uniforms.u_res.value = virtualRes;
-
-                        // Leap-frog: each mesh moves by worldTravelZ
-                        let z = worldTravelZ - (idx * segmentLen);
-                        let cycle = Math.floor(z / (segmentLen * 2.0));
-                        let wrappedZ = ((z % (segmentLen * 2.0)) + (segmentLen * 2.0)) % (segmentLen * 2.0);
-
-                        // Reposition mesh
-                        m.position.z = wrappedZ - segmentLen;
-
-                        // Pass local z-offset to shader for bounds-checking
-                        mat.uniforms.u_mesh_z.value = m.position.z;
-
-                        // Calculate unique UV offset per segment to maintain texture continuity.
-                        // This ensures the mountains are identical every time they scroll in.
-                        mat.uniforms.u_uv_offset.value = -(cycle * 2.0 + idx) * unitsPerSegment;
-                    });
-                }
+                    // Pass local z-offset to shader for bounds-checking
+                    mat.uniforms.u_mesh_z.value = m.position.z;
+                });
 
                 cube.rotation.y += 0.01;
 
