@@ -316,6 +316,8 @@ export class GlitchEngine {
 
     if (type === 'BLUR') {
       this.pipeline.applyIterativeBlur(uniforms);
+    } else if (type === 'GLOW') {
+      this.pipeline.applyGlow(uniforms);
     } else {
       this.pipeline.applyPass(type, uniforms, !!meta.is3D);
     }

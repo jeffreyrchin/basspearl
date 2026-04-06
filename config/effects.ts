@@ -416,4 +416,13 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Blend', { v: 100 }),
     ],
   },
+  GLOW: {
+    label: 'Glow',
+    category: 'Modifier',
+    params: [
+      p('Sensitivity', { v: 0 }),
+      p('Distance', { v: 5 }),
+      p('Strength', { v: 100 }, { v: 100, b: 'SUB' }),
+    ],
+  },
 };

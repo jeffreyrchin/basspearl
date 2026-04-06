@@ -1457,6 +1457,28 @@ void main() {
 }
 `;
 
+// Bright-pass extraction for the Glow effect.
+// Isolates pixels brighter than the threshold (sensitivity); blacks out everything else.
+// The glow radius is then applied by running the standard Gaussian on the output.
+export const GLOW_EXTRACT_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[3]; // [sensitivity, radius, strength]
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    vec4 src = texture(u_image, v_texCoord);
+    float luma = dot(src.rgb, vec3(0.333));
+
+    // Fixed-width feather keeps the extraction smooth (no hard cuts around highlights)
+    float sensitivity = u_params[0] / 100.0;
+    float mask = smoothstep(sensitivity - 0.08, sensitivity + 0.08, luma);
+
+    outColor = src * mask;
+}
+`;
+
 // 7-tap separable Gaussian blur (sigma = 1.5).
 // Weights: center=0.2707, ±1=0.2168, ±2=0.1113, ±3=0.0366 (sum = 1.0)
 export const GAUSSIAN_BLUR_H_SHADER = `#version 300 es
@@ -1558,4 +1580,6 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     BLUR: { name: 'BLUR', fragmentSource: '', is3D: true },
     GAUSSIAN_BLUR_H: { name: 'GAUSSIAN_BLUR_H', fragmentSource: GAUSSIAN_BLUR_H_SHADER },
     GAUSSIAN_BLUR_V: { name: 'GAUSSIAN_BLUR_V', fragmentSource: GAUSSIAN_BLUR_V_SHADER },
+    GLOW: { name: 'GLOW', fragmentSource: '', is3D: true },
+    GLOW_EXTRACT: { name: 'GLOW_EXTRACT', fragmentSource: GLOW_EXTRACT_SHADER },
 };

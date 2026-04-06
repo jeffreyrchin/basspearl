@@ -301,6 +301,78 @@ export class EffectPipeline {
         uniforms.u_params[1] = originalBlend;
     }
 
+    /**
+     * Glow (Bloom) effect.
+     * Extracts pixels above a brightness threshold, blurs them on the low-res
+     * workbench, then additively composites the soft light on top of the original.
+     * u_params layout: [sensitivity, radius, strength]
+     */
+    public applyGlow(uniforms: Record<string, any>) {
+        const gl = this.gl;
+        const originalSensitivity = uniforms.u_params[0];
+        const originalRadius = uniforms.u_params[1];
+        const originalStrength = uniforms.u_params[2];
+        const normalizedRadius = originalRadius / 100.0;
+        const normalizedStrength = originalStrength / 100.0;
+        const res = uniforms.u_resolution as Float32Array;
+        const fullW = res[0];
+        const fullH = res[1];
+
+        // Resolve the active stack's current input and output
+        const input = this.inSubStack
+            ? this.subTextures[this.currentSubFBIndex]
+            : this.pingPongTextures[this.currentFBIndex];
+        const outputFB = this.inSubStack
+            ? this.subFBs[1 - this.currentSubFBIndex]
+            : this.pingPongFBs[1 - this.currentFBIndex];
+
+        // ── Step 1: Bright-pass extraction ───────────────────────────────────────
+        // Downsample AND isolate bright pixels in one pass. Pixels below the
+        // threshold are zeroed out; only the "light bulbs" survive.
+        gl.viewport(0, 0, this.blurWidth, this.blurHeight);
+        this.draw('GLOW_EXTRACT', this.blurFBs[0], [{ name: 'u_image', texture: input }], uniforms, false, true);
+
+        // ── Step 2: Multi-pass Gaussian on the small buffer ──────────────────────
+        // Reuses the same shared helper as the Blur effect — no duplication.
+        const baseStep = normalizedRadius * (uniforms.u_unit / 3.2);
+        uniforms.u_params[1] = 1.0; // temporarily set blend slot to 1.0 for internal Gaussian
+
+        for (const m of [0.5, 1.0, 2.0]) {
+            this.applyGaussianPassOnSmallBuffer(
+                (m * baseStep) / this.blurWidth,
+                (m * baseStep) / this.blurHeight,
+                uniforms
+            );
+        }
+
+        // ── Step 3: Additive composite back to full res ──────────────────────────
+        // Draw the original sharp image to the output first (clear),
+        // then ADD the blurred bright-pass on top — pixels can only get brighter,
+        // producing the classic "light bleeding from bright edges" glow look.
+        gl.viewport(0, 0, fullW, fullH);
+        this.draw('pass-through', outputFB, [{ name: 'u_image', texture: input }], {}, false, true);
+
+        if (normalizedStrength > 0.0) {
+            gl.enable(gl.BLEND);
+            gl.blendColor(0, 0, 0, normalizedStrength);
+            gl.blendFunc(gl.CONSTANT_ALPHA, gl.ONE); // additive: glow light is added on top
+            this.draw('pass-through', outputFB, [{ name: 'u_image', texture: this.blurTextures[0] }], {}, false, false);
+            gl.disable(gl.BLEND);
+        }
+
+        // Advance the active stack index
+        if (this.inSubStack) {
+            this.currentSubFBIndex = 1 - this.currentSubFBIndex;
+        } else {
+            this.currentFBIndex = 1 - this.currentFBIndex;
+        }
+
+        // Restore u_params for subsequent effects in the pipeline
+        uniforms.u_params[0] = originalSensitivity;
+        uniforms.u_params[1] = originalRadius;
+        uniforms.u_params[2] = originalStrength;
+    }
+
     private renderThreeJS(type: string, inputTexture: WebGLTexture, destFB: WebGLFramebuffer, uniforms: Record<string, any>) {
         const gl = this.gl;
 
