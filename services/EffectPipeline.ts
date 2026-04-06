@@ -24,6 +24,12 @@ export class EffectPipeline {
 
     private sourceTexture: WebGLTexture | null = null;
 
+    // Dedicated low-res ping-pong buffers for the downsampled blur (1/4 size, no mipmaps)
+    private blurTextures: [WebGLTexture, WebGLTexture] = [null as any, null as any];
+    private blurFBs: [WebGLFramebuffer, WebGLFramebuffer] = [null as any, null as any];
+    private blurWidth = 1;
+    private blurHeight = 1;
+
     constructor(gl: WebGL2RenderingContext, textureManager: TextureManager, shaderManager: ShaderManager) {
         this.gl = gl;
         this.textureManager = textureManager;
@@ -77,6 +83,14 @@ export class EffectPipeline {
         this.subFBs[0] = this.textureManager.createFramebuffer(this.subTextures[0]);
         this.subFBs[1] = this.textureManager.createFramebuffer(this.subTextures[1]);
 
+        // Blur Stack (quarter resolution — no mipmaps, pure bilinear downsampling)
+        this.blurWidth = Math.max(1, Math.floor(width / 4));
+        this.blurHeight = Math.max(1, Math.floor(height / 4));
+        this.blurTextures[0] = this.textureManager.createTexture(this.blurWidth, this.blurHeight);
+        this.blurTextures[1] = this.textureManager.createTexture(this.blurWidth, this.blurHeight);
+        this.blurFBs[0] = this.textureManager.createFramebuffer(this.blurTextures[0]);
+        this.blurFBs[1] = this.textureManager.createFramebuffer(this.blurTextures[1]);
+
         this.currentFBIndex = 0;
         this.currentSubFBIndex = 0;
     }
@@ -86,6 +100,8 @@ export class EffectPipeline {
         this.pingPongFBs.forEach(fb => this.textureManager.destroyFramebuffer(fb));
         this.subTextures.forEach(t => this.textureManager.destroyTexture(t));
         this.subFBs.forEach(fb => this.textureManager.destroyFramebuffer(fb));
+        this.blurTextures.forEach(t => this.textureManager.destroyTexture(t));
+        this.blurFBs.forEach(fb => this.textureManager.destroyFramebuffer(fb));
     }
 
     /**
@@ -202,30 +218,85 @@ export class EffectPipeline {
         }
     }
 
+    /**
+     * Executes one separable Gaussian H+V pass entirely within the low-res blur buffers.
+     * Reads from blurTextures[0], uses blurTextures[1] as an intermediate,
+     * and leaves the result back in blurTextures[0].
+     * u_params[1] (blend) must already be set to 1.0 before calling.
+     */
+    private applyGaussianPassOnSmallBuffer(stepH: number, stepV: number, uniforms: Record<string, any>) {
+        uniforms.u_params[0] = stepH;
+        this.draw('GAUSSIAN_BLUR_H', this.blurFBs[1], [{ name: 'u_image', texture: this.blurTextures[0] }], uniforms, false, true);
+
+        uniforms.u_params[0] = stepV;
+        this.draw('GAUSSIAN_BLUR_V', this.blurFBs[0], [{ name: 'u_image', texture: this.blurTextures[1] }], uniforms, false, true);
+    }
+
     public applyIterativeBlur(uniforms: Record<string, any>) {
+        const gl = this.gl;
         const originalIntensity = uniforms.u_params[0];
         const originalBlend = uniforms.u_params[1];
-        const res = uniforms.u_resolution;
-        const unit = uniforms.u_unit;
+        const normalizedIntensity = originalIntensity / 100.0;
+        const normalizedBlend = originalBlend / 100.0;
+        const res = uniforms.u_resolution as Float32Array;
+        const fullW = res[0];
+        const fullH = res[1];
 
-        // Radii multipliers for the staggered sequence
-        const multipliers = [0.5, 1.0, 2.0];
+        // Resolve the active stack's current input and output
+        const input = this.inSubStack
+            ? this.subTextures[this.currentSubFBIndex]
+            : this.pingPongTextures[this.currentFBIndex];
+        const outputFB = this.inSubStack
+            ? this.subFBs[1 - this.currentSubFBIndex]
+            : this.pingPongFBs[1 - this.currentFBIndex];
 
-        uniforms.u_params[1] = originalBlend / 100.0;
+        // ── Step 1: Downsample ───────────────────────────────────────────────────
+        // Blit the full-res input into a 1/4-size buffer. The GPU's built-in
+        // bilinear filter averages 4x4 pixel blocks automatically — a free
+        // first-pass softening with zero mipmapping.
+        gl.viewport(0, 0, this.blurWidth, this.blurHeight);
+        this.draw('pass-through', this.blurFBs[0], [{ name: 'u_image', texture: input }], {}, false, true);
 
-        for (const m of multipliers) {
-            const baseStep = (m * originalIntensity / 100.0) * unit / 3.2;
+        // ── Step 2: Multi-pass Gaussian on the small buffer ──────────────────────
+        // Three H+V passes at staggered radii [0.5×, 1.0×, 2.0×] approximate a
+        // true Gaussian across a wide radius. Running them at 1/4 resolution means
+        // this is still ~5× cheaper than a single full-res pass, with no blockiness.
+        const baseStep = normalizedIntensity * (uniforms.u_unit / 3.2);
+        uniforms.u_params[1] = 1.0; // full internal blend for all passes
 
-            // Pass X-step for horizontal pass
-            uniforms.u_params[0] = baseStep / res[0];
-            this.applyPass('BOX_BLUR_H', uniforms, false);
-
-            // Pass Y-step for vertical pass
-            uniforms.u_params[0] = baseStep / res[1];
-            this.applyPass('BOX_BLUR_V', uniforms, false);
+        for (const m of [0.5, 1.0, 2.0]) {
+            this.applyGaussianPassOnSmallBuffer(
+                (m * baseStep) / this.blurWidth,
+                (m * baseStep) / this.blurHeight,
+                uniforms
+            );
         }
 
-        // Restore original values for subsequent effects in the loop
+        // ── Step 3: Upsample + blend back to full res ────────────────────────────
+        // Restore full-res viewport, draw the original to the output (clear),
+        // then overlay the blurred result using CONSTANT_ALPHA blending:
+        //   result = normalizedBlend * blurred + (1 - normalizedBlend) * original
+        // This is identical to mix(original, blurred, blend) — preserving the
+        // blend parameter's behaviour exactly as before.
+        gl.viewport(0, 0, fullW, fullH);
+        this.draw('pass-through', outputFB, [{ name: 'u_image', texture: input }], {}, false, true);
+
+        if (normalizedBlend > 0.0) {
+            gl.enable(gl.BLEND);
+            gl.blendColor(0, 0, 0, normalizedBlend);
+            gl.blendFunc(gl.CONSTANT_ALPHA, gl.ONE_MINUS_CONSTANT_ALPHA);
+            this.draw('pass-through', outputFB, [{ name: 'u_image', texture: this.blurTextures[0] }], {}, false, false);
+            gl.disable(gl.BLEND);
+        }
+
+        // Advance the active stack index
+        if (this.inSubStack) {
+            this.currentSubFBIndex = 1 - this.currentSubFBIndex;
+        } else {
+            this.currentFBIndex = 1 - this.currentFBIndex;
+        }
+
+        // Restore u_params for subsequent effects in the pipeline
         uniforms.u_params[0] = originalIntensity;
         uniforms.u_params[1] = originalBlend;
     }

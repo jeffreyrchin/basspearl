@@ -412,7 +412,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     label: 'Blur',
     category: 'Modifier',
     params: [
-      p('Intensity', { v: 50 }, { v: 100, m: 0, b: 'SUB' }),
+      p('Intensity', { v: 50 }, { v: 50, m: 0, b: 'SUB' }),
       p('Blend', { v: 100 }),
     ],
   },

@@ -1457,7 +1457,9 @@ void main() {
 }
 `;
 
-export const BOX_BLUR_H_SHADER = `#version 300 es
+// 7-tap separable Gaussian blur (sigma = 1.5).
+// Weights: center=0.2707, ±1=0.2168, ±2=0.1113, ±3=0.0366 (sum = 1.0)
+export const GAUSSIAN_BLUR_H_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[2]; // [intensity, blend]
@@ -1465,23 +1467,25 @@ in vec2 v_texCoord;
 out vec4 outColor;
 
 void main() {
-    float step = u_params[0];
+    float step  = u_params[0];
     float blend = u_params[1];
 
     vec4 center = texture(u_image, v_texCoord);
-    vec4 sum = center;
-    sum += texture(u_image, v_texCoord + vec2(step,       0.0));
-    sum += texture(u_image, v_texCoord - vec2(step,       0.0));
-    sum += texture(u_image, v_texCoord + vec2(2.0 * step, 0.0));
-    sum += texture(u_image, v_texCoord - vec2(2.0 * step, 0.0));
-    sum += texture(u_image, v_texCoord + vec2(3.0 * step, 0.0));
-    sum += texture(u_image, v_texCoord - vec2(3.0 * step, 0.0));
 
-    outColor = mix(center, sum * (1.0 / 7.0), blend);
+    // Gaussian-weighted horizontal accumulation (sigma = 1.5)
+    vec4 sum = center * 0.2707;
+    sum += (texture(u_image, v_texCoord + vec2(step,        0.0)) +
+            texture(u_image, v_texCoord - vec2(step,        0.0))) * 0.2168;
+    sum += (texture(u_image, v_texCoord + vec2(2.0 * step,  0.0)) +
+            texture(u_image, v_texCoord - vec2(2.0 * step,  0.0))) * 0.1113;
+    sum += (texture(u_image, v_texCoord + vec2(3.0 * step,  0.0)) +
+            texture(u_image, v_texCoord - vec2(3.0 * step,  0.0))) * 0.0366;
+
+    outColor = mix(center, sum, blend);
 }
 `;
 
-export const BOX_BLUR_V_SHADER = `#version 300 es
+export const GAUSSIAN_BLUR_V_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[2]; // [intensity, blend]
@@ -1489,19 +1493,21 @@ in vec2 v_texCoord;
 out vec4 outColor;
 
 void main() {
-    float step = u_params[0];
+    float step  = u_params[0];
     float blend = u_params[1];
 
     vec4 center = texture(u_image, v_texCoord);
-    vec4 sum = center;
-    sum += texture(u_image, v_texCoord + vec2(0.0, step));
-    sum += texture(u_image, v_texCoord - vec2(0.0, step));
-    sum += texture(u_image, v_texCoord + vec2(0.0, 2.0 * step));
-    sum += texture(u_image, v_texCoord - vec2(0.0, 2.0 * step));
-    sum += texture(u_image, v_texCoord + vec2(0.0, 3.0 * step));
-    sum += texture(u_image, v_texCoord - vec2(0.0, 3.0 * step));
 
-    outColor = mix(center, sum * (1.0 / 7.0), blend);
+    // Gaussian-weighted vertical accumulation (sigma = 1.5)
+    vec4 sum = center * 0.2707;
+    sum += (texture(u_image, v_texCoord + vec2(0.0, step       )) +
+            texture(u_image, v_texCoord - vec2(0.0, step       ))) * 0.2168;
+    sum += (texture(u_image, v_texCoord + vec2(0.0, 2.0 * step)) +
+            texture(u_image, v_texCoord - vec2(0.0, 2.0 * step))) * 0.1113;
+    sum += (texture(u_image, v_texCoord + vec2(0.0, 3.0 * step)) +
+            texture(u_image, v_texCoord - vec2(0.0, 3.0 * step))) * 0.0366;
+
+    outColor = mix(center, sum, blend);
 }
 `;
 
@@ -1550,6 +1556,6 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     RADIAL_GRADIENT: { name: 'RADIAL_GRADIENT', fragmentSource: RADIAL_GRADIENT_SHADER, velocityParamIndices: [2] },
     INFINITE_ZOOM: { name: 'INFINITE_ZOOM', fragmentSource: '', velocityParamIndices: [0], is3D: true },
     BLUR: { name: 'BLUR', fragmentSource: '', is3D: true },
-    BOX_BLUR_H: { name: 'BOX_BLUR_H', fragmentSource: BOX_BLUR_H_SHADER },
-    BOX_BLUR_V: { name: 'BOX_BLUR_V', fragmentSource: BOX_BLUR_V_SHADER },
+    GAUSSIAN_BLUR_H: { name: 'GAUSSIAN_BLUR_H', fragmentSource: GAUSSIAN_BLUR_H_SHADER },
+    GAUSSIAN_BLUR_V: { name: 'GAUSSIAN_BLUR_V', fragmentSource: GAUSSIAN_BLUR_V_SHADER },
 };
