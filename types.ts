@@ -38,7 +38,9 @@ export type GlitchEffectType =
   | 'RADIAL_GRADIENT'
   | 'INFINITE_ZOOM'
   | 'BLUR'
-  | 'GLOW';
+  | 'GLOW'
+  | 'TRI_CRUSH'
+  | 'HEX_CRUSH';
 
 export type FrequencyBand = 'OFF' | 'SUB' | 'BASS' | 'MID' | 'TREBLE';
 

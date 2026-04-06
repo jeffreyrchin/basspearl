@@ -425,4 +425,31 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Strength', { v: 100 }, { v: 100, b: 'SUB' }),
     ],
   },
+  TRI_CRUSH: {
+    label: 'Tritile',
+    category: 'Modifier',
+    params: [
+      p('Width', { v: 20 }, { v: 100, b: 'SUB' }),
+      p('Height', { v: 20 }, { v: 100, b: 'SUB' }),
+      p('Shape', { v: 50 }),
+      p('Quantize', { v: 0 }),
+      p('Scale X', { v: 50 }),
+      p('Scale Y', { v: 50 }),
+      p('Pan X', { v: 50 }),
+      p('Pan Y', { v: 50 }),
+    ],
+  },
+  HEX_CRUSH: {
+    label: 'Hextile',
+    category: 'Modifier',
+    params: [
+      p('Width', { v: 100 }, { v: 100, b: 'SUB' }),
+      p('Height', { v: 60 }, { v: 60, b: 'SUB' }),
+      p('Quantize', { v: 0 }),
+      p('Scale X', { v: 50 }),
+      p('Scale Y', { v: 50 }),
+      p('Pan X', { v: 50 }),
+      p('Pan Y', { v: 50 }),
+    ],
+  },
 };

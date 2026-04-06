@@ -1533,6 +1533,106 @@ void main() {
 }
 `;
 
+export const TRI_CRUSH_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[8]; // [width, height, shape, quantize, scaleX, scaleY, panX, panY]
+uniform float u_unit;
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+${GLSL_TRANSFORM}
+
+void main() {
+    TR tr = getTransform_(v_texCoord, u_params[4], u_params[5], u_params[6], u_params[7]);
+    float cellW   = max(1.0, (u_params[0] * 0.1) * u_unit);
+    float cellH   = max(1.0, (u_params[1] * 0.1) * u_unit);
+    float shape   = (u_params[2] / 100.0) * 3.0 - 1.0;
+    float qFactor = floor(pow(u_params[3] * 0.1, 2.2)) + 1.0;
+
+    vec2 res      = u_resolution;
+    vec2 pixelPos = v_texCoord * res;
+
+    // Continuous shear based on Y
+    // u = x/w - (y/h) * shape
+    // v = y/h
+    float v = pixelPos.y / cellH;
+    float u = pixelPos.x / cellW - v * shape;
+
+    float gridU = floor(u);
+    float gridV = floor(v);
+    float fU    = fract(u);
+    float fV    = fract(v);
+
+    // Diagonal split in the sheared space: upper-left vs lower-right
+    // Centroid of a right triangle is at (1/3, 1/3) or (2/3, 2/3) from its bounds.
+    vec2 centroidUV;
+    float isLowerRight = step(1.0, fU + fV);
+    centroidUV = vec2(gridU + (1.0 + isLowerRight) / 3.0, gridV + (1.0 + isLowerRight) / 3.0);
+
+    // Convert centroid back to cartesian pixel space
+    // x = (u + v * shape) * w
+    // y = v * h
+    vec2 samplePx = vec2(
+        (centroidUV.x + centroidUV.y * shape) * cellW,
+        centroidUV.y * cellH
+    );
+
+    vec2 sampleUV = clamp(samplePx / res, 0.0, 1.0);
+
+    vec4 src     = texture(u_image, v_texCoord);
+    vec4 crushed = texture(u_image, sampleUV);
+
+    vec3 quant = floor(crushed.rgb * 255.0 / qFactor) * qFactor / 255.0;
+
+    outColor = mix(src, vec4(quant, crushed.a), tr.mask);
+}
+`;
+
+export const HEX_CRUSH_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[7]; // [width, height, quantize, scaleX, scaleY, panX, panY]
+uniform float u_unit;
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+${GLSL_TRANSFORM}
+
+// Dual-grid nearest-hex-center search.
+// Grid A is the standard snapped grid; Grid B is offset by half a cell on both
+// axes. Together they tile the plane such that the nearest center of the two
+// is always the correct hex cell center — no skewed coordinates needed.
+vec2 hexCenter(vec2 uv, vec2 cellSize) {
+    vec2 gA = floor(uv / cellSize + 0.5) * cellSize;
+    vec2 gB = floor((uv - cellSize * 0.5) / cellSize + 0.5) * cellSize + cellSize * 0.5;
+    float dA = dot(uv - gA, uv - gA);
+    float dB = dot(uv - gB, uv - gB);
+    return (dA < dB) ? gA : gB;
+}
+
+void main() {
+    TR tr = getTransform_(v_texCoord, u_params[3], u_params[4], u_params[5], u_params[6]);
+    float cellW   = max(1.0, (u_params[0] * 0.1) * u_unit);
+    float cellH   = max(1.0, (u_params[1] * 0.1) * u_unit);
+    float qFactor = floor(pow(u_params[2] * 0.1, 2.2)) + 1.0;
+
+    vec2 res      = u_resolution;
+    // Work in pixel space; width and height are independent so no aspect hack needed.
+    vec2 pixelUV  = v_texCoord * res;
+
+    vec2 center   = hexCenter(pixelUV, vec2(cellW, cellH));
+    vec2 sampleUV = clamp(center / res, 0.0, 1.0);
+
+    vec4 src     = texture(u_image, v_texCoord);
+    vec4 crushed = texture(u_image, sampleUV);
+
+    vec3 quant = floor(crushed.rgb * 255.0 / qFactor) * qFactor / 255.0;
+
+    outColor = mix(src, vec4(quant, crushed.a), tr.mask);
+}
+`;
+
 export interface ShaderDefinition {
     name: string;
     fragmentSource: string;
@@ -1582,4 +1682,6 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     GAUSSIAN_BLUR_V: { name: 'GAUSSIAN_BLUR_V', fragmentSource: GAUSSIAN_BLUR_V_SHADER },
     GLOW: { name: 'GLOW', fragmentSource: '', is3D: true },
     GLOW_EXTRACT: { name: 'GLOW_EXTRACT', fragmentSource: GLOW_EXTRACT_SHADER },
+    TRI_CRUSH: { name: 'TRI_CRUSH', fragmentSource: TRI_CRUSH_SHADER },
+    HEX_CRUSH: { name: 'HEX_CRUSH', fragmentSource: HEX_CRUSH_SHADER },
 };
