@@ -207,14 +207,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
         camera.position.set(0, 0, 120);
         camera.lookAt(0, 0, 0);
 
-        /**
-         * TERRAIN SPHERE ARCHITECTURE:
-         * A UV sphere with enough segments to support fine voxel snapping.
-         * The vertex shader snaps longitude/latitude to a virtual voxel grid,
-         * then displaces each vertex along its geometric normal by luminance.
-         * Resolution controls the granularity of the voxel snap.
-         */
-        const meshRes = 256; // Fixed high-res base geometry
+        const meshRes = 512; // Fixed high-res base geometry
         const geometry = new THREE.SphereGeometry(30, meshRes, meshRes);
 
         const material = new THREE.ShaderMaterial({
@@ -231,61 +224,39 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 uniform float u_res;
 
                 out vec2 vUv;
-                flat out vec4 vColorFlat;
+                out vec4 vTexColor;
                 out float vFaceAlpha;
 
                 void main() {
-                    // ── Step 1: Snap UVs to the voxel grid ─────────────────────
-                    // u_res drives how many cells cover the sphere surface.
-                    // At max res (256+) we pass UV straight through for smooth mode.
-                    float gridRes = clamp(u_res, 2.0, 256.0);
+                    // ── DYNAMIC VOXEL RESOLUTION ──────────────────────────────
+                    float gridRes = clamp(u_res, 2.0, 512.0);
+
+                    // HEIGHT SNAP: Snap UVs to the voxel grid center,
+                    // so the sample point aligns with the displaced column — same
+                    // technique as the terrain hUv remap.
+                    // If extrusion is 0, bypass snapping (show full-res image).
+                    float isFlat = step(u_extrusion, 0.01);
                     vec2 snappedUv = floor(uv * gridRes + 0.5) / gridRes;
-                    vec2 finalUv   = mix(snappedUv, uv, step(256.0, u_res));
+                    vec2 samplingUv = mix(snappedUv, uv, isFlat);
 
-                    // ── Step 2: Sample luminance at the snapped UV ──────────────
-                    vec4 tex = texture(u_image, finalUv);
-                    vec3 luminanceWeights = vec3(0.333);
-                    float luma = dot(tex.rgb, luminanceWeights);
+                    // ── SAMPLING & HEIGHT ─────────────────────────────────────
+                    vTexColor = texture(u_image, samplingUv);
+                    float heightVal = dot(vTexColor.rgb, vec3(0.333));
 
-                    // ── Step 3: Displace along the sphere normal ────────────────
-                    // The geometric normal of a unit sphere IS the normalized position.
-                    vec3 norm  = normalize(normal);
-                    float disp = luma * u_extrusion;
-                    vec3 pos   = position + norm * disp;
+                    // ── DISPLACE ALONG SPHERE NORMAL ──────────────────────────
+                    // For a unit sphere the geometric normal == normalized position.
+                    vec3 norm = normalize(normal);
+                    vec3 pos  = position + norm * (heightVal * u_extrusion);
 
-                    // ── Step 4: Omnidirectional ridge color fix ─────────────────
-                    // Sample all four cardinal neighbors with fract() wrapping so the
-                    // UV seam is handled correctly and slopes in every direction are fixed.
-                    // We pick the brightest (highest) neighbor and blend toward it so that
-                    // a face belonging to a peak is always colored like the peak, not the valley.
-                    float du = 1.0 / gridRes;
-                    vec4 nL = texture(u_image, fract(finalUv - vec2(du,  0.0)));
-                    vec4 nR = texture(u_image, fract(finalUv + vec2(du,  0.0)));
-                    vec4 nD = texture(u_image, fract(finalUv - vec2(0.0, du)));
-                    vec4 nU = texture(u_image, fract(finalUv + vec2(0.0, du)));
-
-                    float lL = dot(nL.rgb, luminanceWeights);
-                    float lR = dot(nR.rgb, luminanceWeights);
-                    float lD = dot(nD.rgb, luminanceWeights);
-                    float lU = dot(nU.rgb, luminanceWeights);
-
-                    // Find the brightest neighbor and blend toward it proportionally
-                    float maxNeighborLuma = max(max(lL, lR), max(lD, lU));
-                    vec4 brightestNeighbor = (maxNeighborLuma == lL) ? nL
-                                           : (maxNeighborLuma == lR) ? nR
-                                           : (maxNeighborLuma == lD) ? nD : nU;
-                    vColorFlat = mix(tex, brightestNeighbor, clamp((maxNeighborLuma - luma) * 10.0, 0.0, 1.0));
-
-                    // ── Step 5: Backface fade ───────────────────────────────────
-                    // Vertices whose normals point away from the camera fade to 0 alpha.
-                    // This creates a clean horizon without needing two-sided rendering.
-                    vec3 viewDir = normalize(vec3(0.0, 0.0, 1.0)); // camera looks along -Z in view space
+                    // ── BACKFACE FADE ─────────────────────────────────────────
+                    // Vertices whose normals point away from the camera fade out,
+                    // creating a clean horizon without two-sided rendering.
                     vec3 worldNorm = normalize((modelMatrix * vec4(norm, 0.0)).xyz);
-                    vec3 camDir = normalize(cameraPosition - (modelMatrix * vec4(position, 1.0)).xyz);
-                    float facing = dot(worldNorm, camDir);
+                    vec3 camDir    = normalize(cameraPosition - (modelMatrix * vec4(position, 1.0)).xyz);
+                    float facing   = dot(worldNorm, camDir);
                     vFaceAlpha = smoothstep(-0.15, 0.25, facing);
 
-                    vUv = finalUv;
+                    vUv = samplingUv;
 
                     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
                 }
@@ -293,26 +264,26 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
             fragmentShader: `
                 precision highp float;
                 uniform sampler2D u_image;
-                uniform float u_res;
+                uniform float u_extrusion;
                 in vec2 vUv;
-                flat in vec4 vColorFlat;
+                in vec4 vTexColor;
                 in float vFaceAlpha;
                 out vec4 outColor;
 
                 void main() {
-                    // Smooth mode at max resolution, voxel/flat otherwise
-                    float smoothMode = step(256.0, u_res);
-                    vec4 smoothColor = texture(u_image, vUv);
-                    vec4 finalColor  = mix(vColorFlat, smoothColor, smoothMode);
+                    // Use full-res texture when extrusion is 0
+                    float isFlat = step(u_extrusion, 0.01);
+                    vec4 flatColor  = texture(u_image, vUv);
+                    vec4 finalColor = mix(vTexColor, flatColor, isFlat);
 
                     outColor = vec4(finalColor.rgb, finalColor.a * vFaceAlpha);
                 }
             `,
-            side: THREE.FrontSide,
+            side: THREE.DoubleSide,
         });
 
         const mesh = new THREE.Mesh(geometry, material);
-        mesh.frustumCulled = false;
+        mesh.frustumCulled = true;
 
         const sphereGroup = new THREE.Group();
         sphereGroup.add(mesh);
@@ -333,11 +304,11 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 const p = params.params;
                 if (p && p.length >= 9) {
                     const extrusion = p[0]; // 0-100 → world units
-                    const resolution = p[1]; // 0-100 → 2-256 voxel cells
+                    const resolution = p[1]; // 0-100 → 2-512 voxel cells
                     const distance = p[2]; // 0-100 → camera distance
 
-                    // Resolution: map 0-100 → 2-256 voxel cells, 100 becomes smooth (>256 threshold)
-                    const virtualRes = Math.max(2, Math.floor(2 + resolution * 2.54));
+                    // Resolution: map 0-100 → 2-512 voxel cells
+                    const virtualRes = Math.max(2, Math.floor(2 + (resolution / 100.0) * 510.0));
 
                     // Distance: 0 = very far (200 units), 100 = very close (50 units)
                     camera.position.z = 200 - (distance / 100.0) * 150.0;

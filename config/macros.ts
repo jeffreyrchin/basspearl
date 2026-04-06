@@ -446,51 +446,37 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
     label: 'Cell Mesh',
     effects: [
       {
-        type: 'CELLULAR_NOISE',
-        params: [
-          o('Cell Width', { v: 100 }),
-          o('Cell Height', { v: 100 }),
-          o('X-Freq', { v: 25 }),
-          o('Y-Freq', { v: 25 }),
-          o('Density', { v: 100 }),
-          o('Jitter', { v: 100 }),
-          o('Speed', { v: 30, b: 'OFF' }),
-          o('Blend', { v: 100 }),
-        ],
-        melded: true
-      },
-      {
         type: 'ORGANIC_NOISE',
         params: [
           o('Scale', { v: 10, b: 'OFF' }),
           o('Complexity', { v: 0, b: 'OFF' }),
           o('Warp', { v: 3, b: 'OFF' }),
-          o('Speed', { v: 25, b: 'OFF' }),
+          o('Speed', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
           o('Blend', { v: 80, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 45, b: 'OFF' }),
+          o('Distance', { v: 0, b: 'OFF' }),
+          o('Strength', { v: 100, b: 'OFF' }),
         ],
         melded: true
       },
       {
         type: 'TERRAIN_SPHERE',
         params: [
-          o('Extrusion', { v: 100, m: 40, b: 'SUB' }, { v: 80, m: 0, b: 'OFF' }),
-          o('Resolution', { v: 50, b: 'OFF' }),
-          o('Distance', { v: 100, m: 40, b: 'TREBLE' }, { v: 0, m: 0, b: 'OFF' }),
+          o('Extrusion', { v: 80, m: 0, b: 'SUB' }, { v: 40, b: 'OFF' }),
+          o('Resolution', { v: 10, b: 'OFF' }),
+          o('Distance', { v: 62, m: 2, b: 'TREBLE' }, { v: 30, m: 0, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
           o('Spin Speed X', { v: 0, b: 'OFF' }),
           o('Spin Speed Y', { v: 0, b: 'OFF' }),
           o('Spin Speed Z', { v: 10, b: 'OFF' }),
-        ],
-        melded: true
-      },
-      {
-        type: 'EDGE_MASK',
-        params: [
-          o('Sensitivity', { v: 0, b: 'OFF' }),
-          o('Thickness', { v: 10, b: 'OFF' }),
-          o('Invert', { v: 0, b: 'OFF' }),
         ],
         melded: true
       },
@@ -505,6 +491,15 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Scale Y', { v: 50, b: 'OFF' }),
           o('Pan X', { v: 50, b: 'OFF' }),
           o('Pan Y', { v: 50, b: 'OFF' }),
+        ],
+        melded: true
+      },
+      {
+        type: 'EDGE_MASK',
+        params: [
+          o('Sensitivity', { v: 0, b: 'OFF' }),
+          o('Thickness', { v: 3, b: 'OFF' }, { v: 10, b: 'OFF' }),
+          o('Invert', { v: 0, b: 'OFF' }),
         ],
         melded: false
       }
