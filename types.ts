@@ -40,7 +40,8 @@ export type GlitchEffectType =
   | 'BLUR'
   | 'GLOW'
   | 'TRI_CRUSH'
-  | 'HEX_CRUSH';
+  | 'HEX_CRUSH'
+  | 'SPIRAL_GRADIENT';
 
 export type FrequencyBand = 'OFF' | 'SUB' | 'BASS' | 'MID' | 'TREBLE';
 

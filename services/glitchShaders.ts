@@ -1457,6 +1457,55 @@ void main() {
 }
 `;
 
+export const SPIRAL_GRADIENT_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[6]; // [feather, frequency, twist, speed, panX, panY]
+uniform float u_integrated_values[8];
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    float feather = max(u_params[0] / 100.0 * 10.0, 0.0001);
+    float frequency = max(1.0, u_params[1]);
+    float twist = u_params[2] / 100.0;
+    float speed = u_params[3] / 100.0 * 30.0;
+    vec2 pan = vec2(u_params[4] / 100.0, u_params[5] / 100.0);
+
+    float tau = 6.28318;
+
+    float aspect = u_resolution.x / u_resolution.y;
+    vec2 uv = v_texCoord - pan;
+    uv.x *= aspect;
+
+    float d = length(uv);
+    float angle = atan(uv.y, uv.x);
+    
+    // Wave phase using integrated speed
+    float phase = u_integrated_values[3] * speed;
+    
+    // Total number of lines
+    float count = floor(max(1.0, frequency));
+    
+    // Line bend/curvature
+    float spiral = log(max(d, 0.0001)) * twist + (angle / tau);
+    
+    float wave = sin(spiral * count * tau - phase);
+    
+    // Normalize wave [-1, 1] to [0, 1] and apply feathering
+    float halfFeather = feather * 0.5;
+    float alpha = smoothstep(-halfFeather, halfFeather, wave);
+
+    vec4 src = texture(u_image, v_texCoord);
+    
+    // Premultiplied Mix
+    vec3 finalRGB = mix(src.rgb, vec3(1.0), alpha);
+    float finalAlpha = mix(src.a, 1.0, alpha);
+    outColor = vec4(finalRGB, finalAlpha);
+}
+`;
+
 // Bright-pass extraction for the Glow effect.
 // Isolates pixels brighter than the threshold (sensitivity); blacks out everything else.
 // The glow radius is then applied by running the standard Gaussian on the output.
@@ -1676,6 +1725,7 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     RGBA: { name: 'RGBA', fragmentSource: RGBA_SHADER },
     LINEAR_GRADIENT: { name: 'LINEAR_GRADIENT', fragmentSource: LINEAR_GRADIENT_SHADER },
     RADIAL_GRADIENT: { name: 'RADIAL_GRADIENT', fragmentSource: RADIAL_GRADIENT_SHADER, velocityParamIndices: [2] },
+    SPIRAL_GRADIENT: { name: 'SPIRAL_GRADIENT', fragmentSource: SPIRAL_GRADIENT_SHADER, velocityParamIndices: [3] },
     INFINITE_ZOOM: { name: 'INFINITE_ZOOM', fragmentSource: '', velocityParamIndices: [0], is3D: true },
     BLUR: { name: 'BLUR', fragmentSource: '', is3D: true },
     GAUSSIAN_BLUR_H: { name: 'GAUSSIAN_BLUR_H', fragmentSource: GAUSSIAN_BLUR_H_SHADER },

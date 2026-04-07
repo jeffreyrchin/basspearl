@@ -396,6 +396,18 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Pan Y', { v: 50 }),
     ],
   },
+  SPIRAL_GRADIENT: {
+    label: 'Spiral Gradient',
+    category: 'Pattern',
+    params: [
+      p('Feather', { v: 50 }),
+      p('Frequency', { v: 3 }),
+      p('Twist', { v: 25 }),
+      p('Speed', { v: 10 }),
+      p('Pan X', { v: 50 }),
+      p('Pan Y', { v: 50 }),
+    ],
+  },
   INFINITE_ZOOM: {
     label: 'Infinite Zoom',
     category: 'Modifier',
