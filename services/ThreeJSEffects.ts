@@ -366,6 +366,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 u_image: { value: null },
                 u_feather: { value: 0.3 },
                 u_alpha: { value: 1.0 },
+                u_blur_lod: { value: 0.0 },
             },
             vertexShader: `
                 uniform sampler2D u_image;
@@ -383,12 +384,13 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 uniform sampler2D u_image;
                 uniform float u_feather;
                 uniform float u_alpha;
+                uniform float u_blur_lod;
                 in vec2 vUv;
                 flat in vec4 vColor;
                 out vec4 outColor;
 
                 void main() {
-                    vec4 col = texture(u_image, vUv);
+                    vec4 col = textureLod(u_image, vUv, u_blur_lod);
 
                     // Edge feather: fade out as UV approaches the plane border
                     vec2 d = abs(vUv - 0.5);          // 0 at centre, 0.5 at edge
@@ -447,7 +449,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                     const segLen = (p[2] / 100.0) * 595.0 + 5.0;
                     const activePlanes = Math.max(1, Math.round(p[3]));
                     const feather = p[4] / 100.0;
-                    const fade = Math.max(p[5] / 100.0, 0.01);
+                    const fade = Math.max((p[5] / 100.0) * 2.0, 0.01);
 
                     const width = params.width;
                     const height = params.height;
@@ -496,9 +498,15 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                         const fadeIn = Math.min(1.0, (totalLength - distFromCam) / fadeBuffer);
                         const fadeOut = Math.min(1.0, distFromCam / fadeBuffer);
 
+                        // Mipmap Blur (Depth of Field). Increase blur as plane enters the near-fade zone.
+                        // 0.75: wait until image is 75% faded out before applying blur (reduces crunchy artifacts)
+                        // 2.0: max mipmap blur level
+                        const nearLod = Math.max(0, 1.0 - (distFromCam / (fadeBuffer * 0.75))) * 2.0;
+
                         mat.uniforms.u_image.value = texture;
                         mat.uniforms.u_feather.value = feather;
                         mat.uniforms.u_alpha.value = fadeIn * fadeOut;
+                        mat.uniforms.u_blur_lod.value = nearLod;
                     });
                 }
 

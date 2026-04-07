@@ -303,7 +303,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     label: 'Scroll',
     category: 'Modifier',
     params: [
-      p('Left Speed', { v: 100 }),
+      p('Left Speed', { v: 25 }),
       p('Right Speed', { v: 0 }),
       p('Up Speed', { v: 0 }),
       p('Down Speed', { v: 0 }),
@@ -404,7 +404,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Depth', { v: 25 }),
       p('Spacing', { v: 30 }),
       p('Plane Count', { v: 20 }),
-      p('Edge Feather', { v: 10 }),
+      p('Edge Feather', { v: 70 }),
       p('Fade Buffer', { v: 100 }),
     ],
   },

@@ -1237,8 +1237,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'CELLULAR_NOISE',
         params: [
-          o('Cell Width', { v: 50, m: 1, b: 'SUB' }, { v: 35, m: 5, b: 'SUB' }),
-          o('Cell Height', { v: 50, m: 1, b: 'SUB' }, { v: 35, m: 5, b: 'SUB' }),
+          o('Cell Width', { v: 50, m: 1, b: 'SUB' }, { v: 35, b: 'OFF' }),
+          o('Cell Height', { v: 50, m: 1, b: 'SUB' }, { v: 35, b: 'OFF' }),
           o('X-Freq', { v: 45 }, { v: 30 }),
           o('Y-Freq', { v: 37 }, { v: 30 }),
           o('Density', { v: 100 }),
@@ -1269,12 +1269,12 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'INFINITE_ZOOM',
         params: [
-          o('Speed', { v: 70, b: 'SUB' }, { v: 15, b: 'OFF' }),
+          o('Speed', { v: 70, b: 'SUB' }, { v: 5, b: 'OFF' }),
           o('Depth', { v: 10, b: 'OFF' }),
           o('Spacing', { v: 80, b: 'OFF' }),
           o('Plane Count', { v: 20, b: 'OFF' }),
-          o('Edge Feather', { v: 50, b: 'OFF' }),
-          o('Fade Buffer', { v: 80, b: 'OFF' }),
+          o('Edge Feather', { v: 75, b: 'OFF' }),
+          o('Fade Buffer', { v: 50, b: 'OFF' }),
         ],
         melded: false
       }
@@ -1425,7 +1425,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Spacing', { v: 15, b: 'OFF' }),
           o('Plane Count', { v: 20, b: 'OFF' }),
           o('Edge Feather', { v: 90, b: 'OFF' }),
-          o('Fade Buffer', { v: 100, b: 'OFF' }),
+          o('Fade Buffer', { v: 0, b: 'OFF' }),
         ],
         melded: false
       }
@@ -1531,12 +1531,12 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'INFINITE_ZOOM',
         params: [
-          o('Speed', { v: 100, b: 'SUB' }, { v: 50, b: 'OFF' }),
+          o('Speed', { v: 50, b: 'SUB' }, { v: 25, b: 'OFF' }),
           o('Depth', { v: 45 }),
           o('Spacing', { v: 11 }),
           o('Plane Count', { v: 100 }),
           o('Edge Feather', { v: 100 }),
-          o('Fade Buffer', { v: 100 }),
+          o('Fade Buffer', { v: 0 }),
         ],
         melded: false
       }
