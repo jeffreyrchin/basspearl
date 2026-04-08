@@ -100,7 +100,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ type: 'spring', damping: 50, stiffness: 1000 }}
                 data-section="modal"
-                className="relative w-full max-w-xl bg-[#0a0a1a] rounded-2xl border border-white/5 max-h-xl overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+                className="relative w-full max-w-xl bg-[#0a0a1a] rounded-2xl border border-white/5 max-h-[90vh] overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
             >
                 {/* Close Button */}
                 <button
@@ -156,9 +156,19 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
                     </div>
 
                     {/* Disclaimer */}
-                    <div className="mt-8 flex flex-col items-center gap-4">
-                        <p className="text-[12px] text-white/60 uppercase tracking-[0.2em] leading-relaxed text-center max-w-md">
-                            This site may produce flashing or strobing effects. By continuing, you acknowledge that you have the rights to your media sources and agree to our <button onClick={openLegal} className="text-white hover:text-indigo-300 uppercase transition-colors">Privacy & Terms</button>
+                    <div className="mt-8 flex flex-col items-center gap-3 w-full">
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 w-full max-w-md flex flex-col items-center gap-1.5 shadow-lg">
+                            <div className="flex items-center gap-1.5 text-red-400">
+                                <span className="material-symbols-outlined text-[16px]">warning</span>
+                                <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Photosensitivity Warning</span>
+                            </div>
+                            <p className="text-[11px] text-red-300/80 uppercase tracking-[0.1em] leading-relaxed text-center">
+                                This application can produce rapid flashing, strobing, and high-contrast effects that may trigger seizures.
+                            </p>
+                        </div>
+
+                        <p className="text-[11px] text-white/90 uppercase tracking-[0.15em] leading-relaxed text-center max-w-sm mt-1">
+                            By continuing, you acknowledge that you have the rights to your media and agree to our <button onClick={openLegal} className="text-indigo-300 hover:text-white font-bold uppercase cursor-pointer transition-colors">Privacy & Terms.</button>
                         </p>
                     </div>
                 </div>

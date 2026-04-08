@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useLegalStore } from '../store/useLegalStore';
+import { CONTACT_EMAIL } from '../constants';
 
 const LegalConsentModal = () => {
     const { isLegalOpen, closeLegal } = useLegalStore();
@@ -28,8 +29,7 @@ const LegalConsentModal = () => {
                 {/* Header */}
                 <div className="p-6 border-b border-white/10 shrink-0 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <span className="material-symbols-outlined text-primary text-[24px]">gavel</span>
-                        <h2 className="text-xl font-bold uppercase tracking-wider">Privacy & Terms</h2>
+                        <h2 className="text-2xl font-bold uppercase tracking-wider bg-gradient-to-r from-indigo-300 to-indigo-200 bg-clip-text text-transparent">Privacy & Terms</h2>
                     </div>
                     <button onClick={closeLegal} className="text-white/40 hover:text-white transition-colors">
                         <span className="material-symbols-outlined">close</span>
@@ -50,7 +50,7 @@ const LegalConsentModal = () => {
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">2. Information We Collect</h3>
-                                <p>We may collect, use, store and transfer different kinds of personal data about you which we have grouped together follows:</p>
+                                <p>We may collect, use, store and transfer different kinds of personal data about you which we have grouped together as follows:</p>
                                 <ul className="list-disc pl-5 mt-2 space-y-1 text-white/60">
                                     <li><strong>Identity Data:</strong> Includes username or similar identifier if you register an account.</li>
                                     <li><strong>Contact Data:</strong> Includes email address for account management.</li>
@@ -114,7 +114,7 @@ const LegalConsentModal = () => {
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">8. Your Privacy Rights</h3>
                                 <p>You have rights under data protection laws in relation to your personal data, including the right to request access, correction, erasure, restriction, transfer, to object to processing, to portability of data and (where the lawful ground of processing is consent) to withdraw consent.</p>
                                 <p className="mt-2 text-white/60 text-xs bg-white/5 p-3 rounded">
-                                    <strong>How to Exercise:</strong> To exercise any of these rights, please contact us at <span className="text-primary">jeffreyrchin.20@gmail.com</span> with the subject line "Privacy Rights Request". We will respond to your request within 30 days.
+                                    <strong>How to Exercise:</strong> To exercise any of these rights, please contact us at <a href={`mailto:${CONTACT_EMAIL}`}><span className="text-primary">{CONTACT_EMAIL}</span></a> with the subject line "Privacy Rights Request". We will respond to your request within 30 days.
                                 </p>
                             </div>
 
@@ -174,7 +174,7 @@ const LegalConsentModal = () => {
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">18. Contact Us</h3>
-                                <p>If you have any questions about this Privacy Policy, please contact us at: jeffreyrchin.20@gmail.com</p>
+                                <p>If you have any questions about this Privacy Policy, please contact us at: <a href={`mailto:${CONTACT_EMAIL}`}><span className="text-primary">{CONTACT_EMAIL}</span></a></p>
                             </div>
                         </div>
                     </section>
@@ -183,9 +183,22 @@ const LegalConsentModal = () => {
 
                     <section>
                         <h1 className="text-2xl font-bold text-white mb-2">Terms of Service</h1>
-                        <p className="text-white/60 mb-6 text-xs">Last Updated: April 1, 2026</p>
+                        <p className="text-white/60 mb-6 text-xs">Last Updated: April 8, 2026</p>
 
                         <div className="space-y-6">
+                            <div className="bg-[#ff4444]/10 border border-[#ff4444]/20 rounded-lg p-4">
+                                <h3 className="text-[#ff4444] font-bold uppercase tracking-widest mb-2 text-xs flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[16px]">warning</span>
+                                    Photosensitivity & Seizure Warning
+                                </h3>
+                                <p className="text-[#ff4444]/80 text-sm mb-2">
+                                    A very small percentage of individuals may experience epileptic seizures or blackouts when exposed to certain light patterns or flashing lights. <strong>This application is an art generator that can produce rapid flashing, strobing, high-contrast patterns, and intense visual effects.</strong>
+                                </p>
+                                <p className="text-[#ff4444]/80 text-sm">
+                                    <strong>IMMEDIATELY DISCONTINUE USE</strong> and consult a physician if you experience dizziness, altered vision, eye or muscle twitches, loss of awareness, disorientation, or any involuntary movement or convulsion. If you or anyone in your family has an epileptic condition or has had seizures of any kind, consult your physician prior to using this application.
+                                </p>
+                            </div>
+
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">1. Acceptance of Terms</h3>
                                 <p>By accessing or using the Muxels website and services, you agree to be bound by these Terms. If you disagree with any part of the terms then you may not access the Service.</p>
@@ -260,7 +273,7 @@ const LegalConsentModal = () => {
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">15. Arbitration Agreement</h3>
                                 <p>For any dispute you have with Muxels, you agree to first simply contact us and attempt to resolve the dispute with us informally. If Muxels has not been able to resolve the dispute with you informally, we each agree to resolve any claim, dispute, or controversy via binding arbitration.</p>
                                 <p className="mt-2 text-white/60 text-xs bg-white/5 p-3 rounded">
-                                    <strong>Opt-Out:</strong> You may opt-out of this Agreement to arbitrate by sending a written notice to jeffreyrchin.20@gmail.com within 30 days of first accepting these Terms. Your notice must include your name and address, the email address used to set up your account (if you have one), and an unequivocal statement that you want to opt-out of this arbitration agreement.
+                                    <strong>Opt-Out:</strong> You may opt-out of this Agreement to arbitrate by sending a written notice to <a href={`mailto:${CONTACT_EMAIL}`}><span className="text-primary">{CONTACT_EMAIL}</span></a> with the subject line "Arbitration Opt-Out". We will respond to your request within 30 days. Your notice must include your name and address, the email address used to set up your account (if you have one), and an unequivocal statement that you want to opt-out of this arbitration agreement.
                                 </p>
                             </div>
 
@@ -286,7 +299,7 @@ const LegalConsentModal = () => {
 
                             <div>
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">20. Contact Information</h3>
-                                <p>If you have any questions about these Terms, please contact us at jeffreyrchin.20@gmail.com</p>
+                                <p>If you have any questions about these Terms, please contact us at <a href={`mailto:${CONTACT_EMAIL}`}><span className="text-primary">{CONTACT_EMAIL}</span></a>.</p>
                             </div>
                         </div>
                     </section>
