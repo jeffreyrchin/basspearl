@@ -1614,25 +1614,24 @@ void main() {
     float fV    = fract(v);
 
     // Diagonal split in the sheared space: upper-left vs lower-right
-    // Centroid of a right triangle is at (1/3, 1/3) or (2/3, 2/3) from its bounds.
-    vec2 centroidUV;
-    float isLowerRight = step(1.0, fU + fV);
-    centroidUV = vec2(gridU + (1.0 + isLowerRight) / 3.0, gridV + (1.0 + isLowerRight) / 3.0);
+    float diag = fU + fV;
 
-    // Convert centroid back to cartesian pixel space
-    // x = (u + v * shape) * w
-    // y = v * h
-    vec2 samplePx = vec2(
-        (centroidUV.x + centroidUV.y * shape) * cellW,
-        centroidUV.y * cellH
-    );
+    // Sample both triangle centroids (1/3 and 2/3 points)
+    vec2 p1 = vec2((gridU + 1.0/3.0 + (gridV + 1.0/3.0) * shape) * cellW, (gridV + 1.0/3.0) * cellH);
+    vec2 p2 = vec2((gridU + 2.0/3.0 + (gridV + 2.0/3.0) * shape) * cellW, (gridV + 2.0/3.0) * cellH);
 
-    vec2 sampleUV = clamp(samplePx / res, 0.0, 1.0);
-
-    vec4 src     = texture(u_image, v_texCoord);
-    vec4 crushed = texture(u_image, sampleUV);
+    // Use textureLod with fully clamped UVs to guarantee no edge bleeding or wrap-around noise
+    vec4 crushed1 = textureLod(u_image, clamp(p1 / res, vec2(0.0), vec2(1.0)), 0.0);
+    vec4 crushed2 = textureLod(u_image, clamp(p2 / res, vec2(0.0), vec2(1.0)), 0.0);
+    
+    // Analytic Anti-Aliasing
+    // The gradient of (u+v) gives us the exact pixel-width of the line.
+    float blur = length(vec2(1.0 / cellW, (1.0 - shape) / cellH)) * 0.75;
+    float m = smoothstep(1.0 - blur, 1.0 + blur, diag);
+    vec4 crushed  = mix(crushed1, crushed2, m);
 
     vec3 quant = floor(crushed.rgb * 255.0 / qFactor) * qFactor / 255.0;
+    vec4 src   = texture(u_image, v_texCoord);
 
     outColor = mix(src, vec4(quant, crushed.a), tr.mask);
 }
@@ -1664,19 +1663,33 @@ void main() {
     TR tr = getTransform_(v_texCoord, u_params[3], u_params[4], u_params[5], u_params[6]);
     float cellW   = max(1.0, (u_params[0] * 0.1) * u_unit);
     float cellH   = max(1.0, (u_params[1] * 0.1) * u_unit);
+    vec2 cellSize = vec2(cellW, cellH);
     float qFactor = floor(pow(u_params[2] * 0.1, 2.2)) + 1.0;
 
     vec2 res      = u_resolution;
-    // Work in pixel space; width and height are independent so no aspect hack needed.
     vec2 pixelUV  = v_texCoord * res;
 
-    vec2 center   = hexCenter(pixelUV, vec2(cellW, cellH));
-    vec2 sampleUV = clamp(center / res, 0.0, 1.0);
+    // Dual-grid nearest search with anti-aliasing
+    vec2 gA = floor(pixelUV / cellSize + 0.5) * cellSize;
+    vec2 gB = floor((pixelUV - cellSize * 0.5) / cellSize + 0.5) * cellSize + cellSize * 0.5;
+    
+    float dA = dot(pixelUV - gA, pixelUV - gA);
+    float dB = dot(pixelUV - gB, pixelUV - gB);
+    
+    // Analytic Anti-Aliasing
+    // The gradient of (dB - dA) is exactly 2.0 * (gA - gB).
+    // So for a 1-pixel blend, the threshold is the length of (gA - gB).
+    float distDiff = dB - dA;
+    float blur = max(length(gA - gB) * 1.0, 0.001);
+    float m = smoothstep(-blur, blur, distDiff);
 
-    vec4 src     = texture(u_image, v_texCoord);
-    vec4 crushed = texture(u_image, sampleUV);
+    vec4 crushedA = textureLod(u_image, clamp(gA / res, vec2(0.0), vec2(1.0)), 0.0);
+    vec4 crushedB = textureLod(u_image, clamp(gB / res, vec2(0.0), vec2(1.0)), 0.0);
+    vec4 crushed  = mix(crushedB, crushedA, m);
 
     vec3 quant = floor(crushed.rgb * 255.0 / qFactor) * qFactor / 255.0;
+
+    vec4 src = texture(u_image, v_texCoord);
 
     outColor = mix(src, vec4(quant, crushed.a), tr.mask);
 }
