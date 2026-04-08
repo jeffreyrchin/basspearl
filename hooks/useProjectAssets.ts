@@ -20,6 +20,7 @@ export const useProjectAssets = ({
 
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
     const imageFileRef = React.useRef<string | null>(null);
+    const imageAspectRatioRef = React.useRef<number | null>(null);
 
     const [isLandingOpen, setIsLandingOpen] = useState(effects.length === 0 && audioFile === null);
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -59,6 +60,7 @@ export const useProjectAssets = ({
             img.decode()
                 .then(() => {
                     // Success!
+                    imageAspectRatioRef.current = img.naturalWidth / img.naturalHeight;
                     if (canvasRef.current) {
                         mainGlitchEngine.renderToCanvas(
                             canvasRef.current,
@@ -86,6 +88,7 @@ export const useProjectAssets = ({
         handleLandingStart,
         handleImageUpload,
         canvasRef,
-        imageFileRef
+        imageFileRef,
+        imageAspectRatioRef
     };
 };

@@ -29,9 +29,34 @@ export interface ExportOptions {
     duration: number;
     fps?: number;
     maxSize?: number;
+    aspectRatio?: number;
     onProgress?: (progress: number) => void;
     signal?: AbortSignal;
 }
+
+/**
+ * Calculates standardized export dimensions that fit within a 16:9 or 9:16 'resolution class' box.
+ */
+export const calculateExportDimensions = (aspectRatio: number, maxSize: number): { width: number, height: number } => {
+    // 1. Determine the standard "Box" for this resolution (e.g., 1080p -> 1920x1080 or 1080x1920)
+    const boxW = aspectRatio >= 1 ? maxSize : Math.floor(maxSize * (9 / 16));
+    const boxH = aspectRatio >= 1 ? Math.floor(maxSize * (9 / 16)) : maxSize;
+
+    // 2. Scale our custom aspect ratio to fit inside that box
+    const scale = Math.min(boxW / aspectRatio, boxH);
+    let w = Math.floor(aspectRatio * scale) & ~1;
+    let h = Math.floor(scale) & ~1;
+
+    // 3. Absolute safety cap to prevent hardware encoder crashes (Total pixel area limit)
+    const pixels = w * h;
+    if (pixels > MAX_PIXELS) {
+        const areaScale = Math.sqrt(MAX_PIXELS / pixels);
+        w = Math.floor(w * areaScale) & ~1; // Force even for H.264 support
+        h = Math.floor(h * areaScale) & ~1; // Force even for H.264 support
+    }
+
+    return { width: w, height: h };
+};
 
 /**
  * Service to export the glitch art to a video file using WebCodecs via Mediabunny.
@@ -46,50 +71,27 @@ export const exportVideo = async (options: ExportOptions): Promise<{ fileUrl: st
         duration,
         fps = 60,
         maxSize = 1920,
+        aspectRatio = 16 / 9,
         onProgress
     } = options;
 
     if (!reactivityMap) throw new Error("Reactivity map is required for export");
+    if (!audioBuffer) throw new Error("Audio buffer is required for export");
 
-    let outWidth = maxSize;
-    let outHeight = Math.floor(maxSize * (9 / 16));
+    let targetRatio = aspectRatio;
 
     if (imageSrc) {
-        // Must decode image to get dimensions (new calculations needed for maxSize, which may be different from preview maxSize of 1920)
+        // Must decode image to get dimensions
         const img = await new Promise<HTMLImageElement>((resolve, reject) => {
             const i = new Image();
             i.onload = () => resolve(i);
             i.onerror = (e) => reject(new Error("Failed to load image for export"));
             i.src = imageSrc;
         });
-
-        outWidth = img.naturalWidth;
-        outHeight = img.naturalHeight;
+        targetRatio = img.naturalWidth / img.naturalHeight;
     }
 
-    // Apply maxSize as the absolute longest edge target for images
-    if (imageSrc) {
-        // Find the ratio needed to make the longest edge equal to maxSize
-        const ratio = maxSize / Math.max(outWidth, outHeight);
-        outWidth = Math.floor(outWidth * ratio);
-        outHeight = Math.floor(outHeight * ratio);
-
-        // Hardware H.264 encoders (avc1) typically cap out around 4K UHD area (3840x2160 = 8.3M pixels).
-        // If the resulting scale exceeds this (e.g. 3840x3840 = 14.7M pixels for a square image), 
-        // Chrome/Safari will immediately throw an encoder config error.
-        // Fix: Safely scale down any over-budget dimensions by their total pixel area.
-        const currentPixels = outWidth * outHeight;
-
-        if (currentPixels > MAX_PIXELS) {
-            const areaScale = Math.sqrt(MAX_PIXELS / currentPixels);
-            outWidth = Math.floor(outWidth * areaScale);
-            outHeight = Math.floor(outHeight * areaScale);
-        }
-    }
-
-    // Force even for H.264 support
-    outWidth = outWidth & ~1;
-    outHeight = outHeight & ~1;
+    const { width: outWidth, height: outHeight } = calculateExportDimensions(targetRatio, maxSize);
 
     console.log(`Initializing output at ${outWidth}x${outHeight}...`);
 

@@ -11,9 +11,9 @@ const Navbar = () => {
 
     return (
         <>
-            <header className="flex items-center justify-between px-4 md:px-8 py-4 z-navbar border-b border-white/10 bg-white/5 sticky top-0">
+            <header className="flex items-center justify-between px-4 md:px-8 py-4 z-navbar bg-transparent w-full">
                 {/* Left: Logo */}
-                <Link to="/" className="flex items-center gap-2 group">
+                <Link to="/" className="flex items-center gap-2 group pointer-events-auto">
                     <h1 className="text-xl font-bold tracking-normal uppercase bg-gradient-to-r from-indigo-300 to-indigo-200 bg-clip-text text-transparent">
                         muxels
                     </h1>
@@ -21,7 +21,7 @@ const Navbar = () => {
                 </Link>
 
                 {/* Right: Navigation Links and User Menu */}
-                <div className="flex items-center gap-3 md:gap-6">
+                <div className="flex items-center gap-3 md:gap-6 pointer-events-auto">
                     {/* Navigation Links */}
                     <nav className="flex items-center gap-2">
                         {navLinks.map(link => {

@@ -72,7 +72,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         handleLandingStart,
         handleImageUpload,
         canvasRef,
-        imageFileRef
+        imageFileRef,
+        imageAspectRatioRef
     } = useProjectAssets({
         audioFile,
         startMic,
@@ -164,7 +165,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
     const handleCanvasPointerDown = useCanvasSelection(canvasRef);
 
-    const handleActualExport = async (options: { fps: number; resolution: number }) => {
+    const handleActualExport = async (options: { fps: number; resolution: number, aspectRatio?: number }) => {
         await startExport({
             options,
             audioBuffer: audioBufferRef.current,
@@ -178,10 +179,42 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
     return (
         <div
-            className="text-white flex flex-col overflow-hidden font-display leading-relaxed relative"
+            className="text-white overflow-hidden font-display leading-relaxed relative w-full"
             style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
         >
-            <Navbar />
+            {/* Viewport Background */}
+            <div data-section="viewport" className="absolute inset-0 z-0">
+                <div
+                    className="relative w-full h-full overflow-hidden bg-black flex items-center justify-center group"
+                    style={{ transform: 'translateZ(0)' }}
+                    onPointerDown={clearSelection}
+                >
+                    <canvas
+                        ref={canvasRef}
+                        className="max-w-full max-h-full object-contain"
+                        onPointerDown={(e) => {
+                            e.stopPropagation();
+                            handleCanvasPointerDown(e);
+                        }}
+                    />
+                    <TransformGizmoLayer canvasRef={canvasRef} />
+                    {isProcessing && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-processing bg-black/80">
+                            <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                            <div className="flex flex-col items-center gap-1">
+                                <h3 className="text-xs font-bold tracking-widest text-white uppercase">Analyzing Audio</h3>
+                                <p className="text-[10px] text-white uppercase tracking-[0.2em]">{processingProgress}%</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Top UI Overlay */}
+            <div className="absolute top-0 left-0 right-0 z-navbar pointer-events-none bg-gradient-to-b from-black via-black/60 to-transparent pb-3">
+                <Navbar />
+            </div>
+
             <MainToolbar
                 imageInputRef={imageInputRef}
                 audioInputRef={audioInputRef}
@@ -195,45 +228,15 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 isPlaying={isPlaying}
                 isProcessing={isProcessing}
                 onScrub={handleScrub}
+                openExportModal={openExportModal}
+                isExporting={isExporting}
             />
-            <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
-                {/* Main Content Area */}
-                <main className="flex-1 flex flex-col min-h-0 min-w-0">
-                    {/* Viewport */}
-                    <div data-section="viewport" className="flex-1 flex items-center justify-center min-h-0 relative group">
-                        <div
-                            className="relative w-full h-full overflow-hidden bg-black flex items-center justify-center"
-                            style={{ transform: 'translateZ(0)' }}
-                            onPointerDown={clearSelection}
-                        >
-                            <canvas
-                                ref={canvasRef}
-                                className="max-w-full max-h-full object-contain"
-                                style={{
-                                    WebkitMaskImage: 'linear-gradient(to right, transparent, black 3%, black 97%, transparent)',
-                                    maskImage: 'linear-gradient(to right, transparent, black 3%, black 97%, transparent)'
-                                }}
-                                onPointerDown={(e) => {
-                                    e.stopPropagation();
-                                    handleCanvasPointerDown(e);
-                                }}
-                            />
-                            <TransformGizmoLayer canvasRef={canvasRef} />
-                            {isProcessing && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-processing bg-black/80">
-                                    <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-                                    <div className="flex flex-col items-center gap-1">
-                                        <h3 className="text-xs font-bold tracking-widest text-white uppercase">Analyzing Audio</h3>
-                                        <p className="text-[10px] text-white uppercase tracking-[0.2em]">{processingProgress}%</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
 
-                    {/* Bottom Bar: Playback & Export */}
+            {/* Bottom UI Overlay */}
+            <div className="absolute bottom-0 left-0 right-0 z-footer flex flex-col pointer-events-none bg-gradient-to-t from-black via-black/80 to-transparent pt-3">
+                <div className="w-full">
                     {!isLiveMode ? (
-                        <div className="h-14 bg-white/5 border-t border-white/5 flex items-center pr-3 sm:pr-6 shrink-0 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="h-14 bg-transparent flex items-center shrink-0 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <PlaybackBar
                                 audioFile={audioFile}
                                 isProcessing={isProcessing}
@@ -251,49 +254,37 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                     });
                                 }}
                             />
-
-                            {/* Export Button */}
-                            <div className="flex items-center border-l pl-3 sm:pl-5 border-white/10 shrink-0">
-                                <button
-                                    onClick={openExportModal}
-                                    disabled={!audioFile || isExporting || isProcessing || isLiveMode}
-                                    className={`h-9 px-3 sm:px-4 rounded-xl flex items-center transition-all border disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none bg-white/5 border-white/5 text-white hover:bg-white/10 hover:border-white/20 shadow-[0_0_15px_rgba(251,0,251,0.1)]`}
-                                    title="Export"
-                                    aria-label="Export">
-                                    <span className="material-symbols-outlined text-[18px]">
-                                        download
-                                    </span>
-                                </button>
-                            </div>
                         </div>
                     ) : (
-                        <div className="h-14 bg-red-500/5 border-t border-red-500/20 flex items-center justify-center shrink-0 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="h-14 bg-transparent flex items-center justify-center shrink-0 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <div className="flex items-center gap-3 text-red-500">
                                 <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
                                 <span className="text-xs font-medium tracking-widest uppercase">Live Audio</span>
                             </div>
                         </div>
                     )}
-                </main>
-
-                {/* Sidebar: Effects Rack & Parameters */}
-                <aside
-                    className={`fixed inset-y-0 right-0 z-sidebar w-full sm:w-[360px] bg-slate-900/90 flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] will-change-transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                    {/* Inner wrapper */}
-                    <div data-section="sidebar" className="flex-1 flex flex-col min-h-0 relative">
-                        <SidebarNavigation onClose={() => setIsSidebarOpen(false)} />
-                    </div>
-                </aside>
-
-                {/* Mobile Backdrop */}
-                {isSidebarOpen && (
-                    <div
-                        onClick={() => setIsSidebarOpen(false)}
-                        className="fixed inset-0 bg-black/80 z-mobilebackdrop lg:hidden animate-in fade-in duration-300"
-                    />
-                )}
+                </div>
+                <div className="w-full">
+                    <Footer />
+                </div>
             </div>
-            <Footer />
+
+            {/* Sidebar: Effects Rack & Parameters */}
+            <aside
+                className={`fixed inset-y-0 right-0 z-sidebar w-full sm:w-[360px] bg-slate-900/90 flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] will-change-transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                {/* Inner wrapper */}
+                <div data-section="sidebar" className="flex-1 flex flex-col min-h-0 relative">
+                    <SidebarNavigation onClose={() => setIsSidebarOpen(false)} />
+                </div>
+            </aside>
+
+            {/* Mobile Backdrop */}
+            {isSidebarOpen && (
+                <div
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="fixed inset-0 bg-black/80 z-mobilebackdrop lg:hidden animate-in fade-in duration-300"
+                />
+            )}
             <AnimatePresence>
                 {isLandingOpen && (
                     <LandingModal
@@ -310,6 +301,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 isExporting={isExporting}
                 exportProgress={exportProgress}
                 exportResult={exportResult}
+                aspectRatio={imageAspectRatioRef.current || (window.innerWidth / window.innerHeight)}
             />
             <InspectorWindow />
             <LibraryWindow />

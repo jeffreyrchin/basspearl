@@ -27,6 +27,13 @@ export const useRenderLoop = ({
     isDraggingScrubberRef
 }: UseRenderLoopProps) => {
     const effects = useEffectStore(s => s.effects);
+    const viewportRef = useRef({
+        width: typeof window !== 'undefined' ? window.innerWidth : 1920,
+        height: typeof window !== 'undefined' ? window.innerHeight : 1080,
+        aspectRatio: typeof window !== 'undefined' ? window.innerWidth / window.innerHeight : 16 / 9,
+        dpr: typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1
+    });
+
     const audioStore = useAudioStore();
     const { isLiveMode, getLiveReactivity } = useLiveAudio();
 
@@ -49,7 +56,6 @@ export const useRenderLoop = ({
     // Track the "current time" in a ref so the drag render callback can use it
     // without needing React state (which would cause a re-render).
     const currentRenderTimeRef = useRef(0);
-
 
     const renderFrame = useCallback(async (time: number) => {
         if (!canvasRef.current) return;
@@ -107,12 +113,17 @@ export const useRenderLoop = ({
             SHARED_AUDIO_STATE[3] = smoothed.treble;
         }
 
+        // Dynamic resolution based on window size
+        const { width, height } = viewportRef.current;
+
         await mainGlitchEngine.renderToCanvas(
             canvasRef.current,
             imageFileRef.current,
             effectsRef.current,
             {
                 maxSize: 1920,
+                imagelessWidth: width,
+                imagelessHeight: height,
                 reactivity: smoothed,
                 integratedReactivity: frameIntegrated,
                 currentTime: time
@@ -127,6 +138,36 @@ export const useRenderLoop = ({
             renderFrame(currentRenderTimeRef.current);
         };
         return () => { dragOverride.requestRender = null; };
+    }, [renderFrame]);
+
+    // Update viewport on resize with requestAnimationFrame throttle
+    useEffect(() => {
+        let frameId: number | null = null;
+        
+        const handleResize = () => {
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            viewportRef.current = {
+                width: window.innerWidth * dpr,
+                height: window.innerHeight * dpr,
+                aspectRatio: window.innerWidth / window.innerHeight,
+                dpr
+            };
+            
+            // Throttle rendering to wait for the next screen refresh cycle (prevents CPU stutter)
+            if (frameId === null) {
+                frameId = requestAnimationFrame(() => {
+                    renderFrame(currentRenderTimeRef.current);
+                    frameId = null;
+                });
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        handleResize(); // Initial set
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            if (frameId !== null) cancelAnimationFrame(frameId);
+        };
     }, [renderFrame]);
 
     const scrubberPercent = useCallback((time: number, duration: number) => {

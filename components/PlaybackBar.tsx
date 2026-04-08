@@ -46,7 +46,7 @@ const PlaybackBar: React.FC<PlaybackBarProps> = ({
                 disabled={!audioFile || isProcessing}
                 title="Seek"
                 aria-label="Seek"
-                className={`flex-1 h-10 min-w-0 bg-transparent rounded-full cursor-pointer scrubber-slider focus:outline-none transition-all ${isProcessing ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`} />
+                className={`flex-1 h-10 min-w-0 bg-transparent rounded-full cursor-pointer pointer-events-auto scrubber-slider focus:outline-none transition-all ${isProcessing ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`} />
 
             {/* Duration */}
             <span className="text-[9px] sm:text-[10px] font-mono text-white/60 shrink-0" aria-label="Total duration">

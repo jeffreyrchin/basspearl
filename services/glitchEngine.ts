@@ -4,7 +4,7 @@ import { TextureManager } from './TextureManager';
 import { ShaderManager, BASE_VERTEX_SHADER, PASS_THROUGH_FRAGMENT_SHADER } from './ShaderManager';
 import { EffectPipeline } from './EffectPipeline';
 import { SHADER_REGISTRY } from './glitchShaders';
-import { MAX_PIXELS } from '../constants';
+import { calculateExportDimensions } from './exportService';
 
 export interface GlitchRenderOptions {
   maxSize?: number;
@@ -138,38 +138,17 @@ export class GlitchEngine {
   ): void {
     const { maxSize, integratedReactivity, currentTime, imagelessWidth, imagelessHeight } = options;
 
-    let width: number;
-    let height: number;
+    let targetRatio = 16 / 9;
 
     if (img) {
-      width = img.width;
-      height = img.height;
-    } else {
-      // If no image uploaded, prioritize explicit dimensions, then default to a 16:9 cinematic aspect ratio
-      width = imagelessWidth || maxSize || 1920;
-      height = imagelessHeight || Math.floor(width * 9 / 16);
+      targetRatio = img.width / img.height;
+    } else if (imagelessWidth && imagelessHeight) {
+      targetRatio = imagelessWidth / imagelessHeight;
     }
 
-    if (maxSize && img) {
-      // Scale to exact longest edge target (both up and down) so selected resolution is always honored
-      const ratio = maxSize / Math.max(width, height);
-      width = Math.floor(width * ratio);
-      height = Math.floor(height * ratio);
-
-      // Hardware encoders typically cap out at 4K UHD area (3840x2160 = 8.3 million pixels)
-      // Scale down any resulting resolution that breaks this limit to avoid encoder crashes
-      const currentPixels = width * height;
-
-      if (currentPixels > MAX_PIXELS) {
-        const areaScale = Math.sqrt(MAX_PIXELS / currentPixels);
-        width = Math.floor(width * areaScale);
-        height = Math.floor(height * areaScale);
-      }
-    }
-
-    // Force even dimensions (round down) for WebCodecs H.264 (avc) support (ensures preview exactly matches export)
-    width = width & ~1;
-    height = height & ~1;
+    const dims = calculateExportDimensions(targetRatio, maxSize || 1920);
+    const width = dims.width;
+    const height = dims.height;
 
     // Detect if we shifted from a Blob URL to a new one
     if (this.currentImageSrc && this.currentImageSrc.startsWith('blob:') && this.currentImageSrc !== imageSrc) {

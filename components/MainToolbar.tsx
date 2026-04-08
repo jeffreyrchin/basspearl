@@ -15,6 +15,8 @@ interface MainToolbarProps {
     isPlaying: boolean;
     isProcessing: boolean;
     onScrub: (delta: number) => void;
+    openExportModal: () => void;
+    isExporting: boolean;
 }
 
 const ToolbarButton: React.FC<{
@@ -71,7 +73,9 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     onPlayPause,
     isPlaying,
     isProcessing,
-    onScrub
+    onScrub,
+    openExportModal,
+    isExporting
 }) => {
     const focusStack = useEffectStore(s => s.focusStack);
     const pushFocus = useEffectStore(s => s.pushFocus);
@@ -85,7 +89,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 
     return (
         <div className="absolute inset-0 z-toolbar pointer-events-none overflow-hidden" ref={constraintsRef}>
-            <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center p-20">
+            <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center p-5">
                 <motion.div
                     drag
                     dragConstraints={constraintsRef}
@@ -232,6 +236,15 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             activeBg="bg-white/10"
                             activeBorder="border-white/30"
                             className="hidden lg:flex px-3"
+                        />
+
+                        {/* Export */}
+                        <ToolbarButton
+                            onClick={openExportModal}
+                            disabled={!audioFile || isExporting || isProcessing || isLiveMode}
+                            icon="download"
+                            title="Export"
+                            className="px-3"
                         />
                     </div>
                 </motion.div>

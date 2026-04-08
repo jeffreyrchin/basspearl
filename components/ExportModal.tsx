@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useAuthStore } from '../store/useAuthStore';
+import { calculateExportDimensions } from '@/services/exportService';
 
 interface ExportModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onExport: (options: { fps: number; resolution: number }) => void;
+    onExport: (options: { fps: number; resolution: number, aspectRatio?: number }) => void;
     onCancelExport?: () => void;
     isExporting: boolean;
     exportProgress: number; // 0 to 100
     exportResult?: { fileUrl: string, fileName: string } | null;
+    aspectRatio?: number;
 }
 
 const ExportModal: React.FC<ExportModalProps> = ({
@@ -19,7 +21,8 @@ const ExportModal: React.FC<ExportModalProps> = ({
     onCancelExport,
     isExporting,
     exportProgress,
-    exportResult
+    exportResult,
+    aspectRatio
 }) => {
     const { user } = useAuth();
     const { openAuth } = useAuthStore();
@@ -44,10 +47,16 @@ const ExportModal: React.FC<ExportModalProps> = ({
         { value: 60, label: '60 FPS', desc: 'High' }
     ];
 
+    const currentRatio = aspectRatio || (16 / 9);
+    const getResDesc = (val: number) => {
+        const { width, height } = calculateExportDimensions(currentRatio, val);
+        return `${width}x${height}`;
+    };
+
     const resolutionOptions = [
-        { value: 1280, label: '720p', desc: '1280x720' },
-        { value: 1920, label: '1080p', desc: '1920x1080' },
-        { value: 3840, label: '4K', desc: '3840x2160' }
+        { value: 1280, label: '720p', desc: getResDesc(1280) },
+        { value: 1920, label: '1080p', desc: getResDesc(1920) },
+        { value: 3840, label: '4K', desc: getResDesc(3840) }
     ];
 
     const isLocked = resolution > 1280 && !user;
@@ -168,7 +177,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
                     ) : (
                         <div className="mt-10 pt-8 border-t border-white/10">
                             <button
-                                onClick={() => isLocked ? openAuth('signup') : onExport({ fps, resolution })}
+                                onClick={() => isLocked ? openAuth('signup') : onExport({ fps, resolution, aspectRatio })}
                                 className={`w-full py-4 rounded border font-bold text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${isLocked
                                     ? 'border-primary/50 bg-primary/10 text-primary hover:bg-primary/20'
                                     : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
