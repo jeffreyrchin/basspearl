@@ -89,7 +89,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 
     return (
         <div className="absolute inset-0 z-toolbar pointer-events-none overflow-hidden" ref={constraintsRef}>
-            <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center p-5">
+            <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center p-15">
                 <motion.div
                     drag
                     dragConstraints={constraintsRef}
@@ -238,13 +238,13 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             className="hidden lg:flex px-3"
                         />
 
-                        {/* Export */}
+                        {/* Export (Desktop only) */}
                         <ToolbarButton
                             onClick={openExportModal}
                             disabled={!audioFile || isExporting || isProcessing || isLiveMode}
                             icon="download"
                             title="Export"
-                            className="px-3"
+                            className="px-3 hidden lg:flex"
                         />
                     </div>
                 </motion.div>
