@@ -205,12 +205,11 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
         camera.position.set(0, 30, 60);
         camera.lookAt(0, 0, 0);
 
-        // Simple 512x512 plane:
-        const width = 300; // Width of 300: X range is -150 to 150
-        const height = 500; // Height of 500: Z range is -250 to 250
-        const meshResX = 512;
-        const meshResY = Math.floor(meshResX * (height / width));
-        const geometry = new THREE.PlaneGeometry(width, height, meshResX, meshResY);
+        // Single large plane
+        const PLANE_W = 3000;
+        const PLANE_H = 3000;
+        const MESH_RES = 1024;
+        const geometry = new THREE.PlaneGeometry(PLANE_W, PLANE_H, MESH_RES, MESH_RES);
         geometry.rotateX(-Math.PI / 2);
 
         const material = new THREE.ShaderMaterial({
@@ -218,107 +217,108 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
             transparent: true,
             uniforms: {
                 u_image: { value: null },
-                u_scale: { value: 1.0 },
                 u_extrusion: { value: 0.0 },
                 u_res: { value: 100.0 },
+                u_tileW: { value: 100.0 }, // world units per tile (X)
+                u_tileH: { value: 100.0 }, // world units per tile (Z)
+                u_tileBlend: { value: 0.5 },   // 0 = hard seams, 1 = full seamless blend
+                u_mesh_x: { value: 0.0 },
                 u_mesh_z: { value: 0.0 },
             },
             vertexShader: `
                 uniform sampler2D u_image;
-                uniform float u_scale;
                 uniform float u_extrusion;
                 uniform float u_res;
+                uniform float u_tileW;
+                uniform float u_tileH;
+                uniform float u_tileBlend;
+                uniform float u_mesh_x;
                 uniform float u_mesh_z;
-                out vec2 vUv;
+
+                out vec2 vSampleUv;
                 out vec4 vTexColor;
                 out float vVisibility;
 
                 void main() {
-                    // ── DYNAMIC VOXEL RESOLUTION ───────────────────────────
-                    float gridRes = clamp(u_res, 1.0, 512.0);
-                    float blockSize = 300.0 / gridRes;
-                    
+                    float gridRes = clamp(u_res, 1.0, 1024.0);
+
+                    // Block size scales with tile size so voxels stay consistent per tile
+                    float blockSizeX = u_tileW / gridRes;
+                    float blockSizeZ = u_tileH / gridRes;
+
                     vec3 pos = position;
-                    // Snapped Local Coordinates
-                    float snappedX = floor(pos.x / blockSize + 0.5) * blockSize;
-                    float snappedZ = floor(pos.z / blockSize + 0.5) * blockSize;
-                    
-                    // If extrusion is 0, turn off snapping (show full-res image)
-                    float isFlat = step(u_extrusion, 0.01); // 1 if extrusion <= 0.01 (flat), 0 if extrusion > 0.01
+
+                    // Snap vertices to voxel grid centers
+                    float snappedX = floor(pos.x / blockSizeX + 0.5) * blockSizeX;
+                    float snappedZ = floor(pos.z / blockSizeZ + 0.5) * blockSizeZ;
+
+                    // Bypass snapping when flat (extrusion = 0)
+                    float isFlat = step(u_extrusion, 0.01);
                     pos.x = mix(snappedX, pos.x, isFlat);
                     pos.z = mix(snappedZ, pos.z, isFlat);
-                    
-                    // ── SAMPLING & HEIGHT ────────────────────────────────
-                    vUv = vec2(uv.x, uv.y * u_scale);
-                    
-                    // HEIGHT SNAP: Align UV sample exactly with physical columns
-                    // Map the resulting physical position back into 0-1 UV space.
-                    vec2 hUv = vec2((pos.x / 300.0) + 0.5, 0.5 - (pos.z / 500.0));
-                    vec2 samplingUv = mix(hUv, uv, isFlat);
-                    
-                    vTexColor = texture(u_image, vec2(samplingUv.x, samplingUv.y * u_scale));
+
+                    // Tiling UV: position / tile size → naturally repeats via GL_REPEAT
+                    vSampleUv = vec2((pos.x / u_tileW) + 0.5, 0.5 - (pos.z / u_tileH));
+
+                    // ── TILE EDGE BLENDING ─────
+                    vec2 tileFrac = fract(vSampleUv);
+                    vec2 ghostUv  = vSampleUv + 0.5;
+
+                    // Weight: 0 in center of tile, 1 at seam
+                    float wx = (u_tileBlend < 1.0) ? smoothstep(u_tileBlend, 1.0, abs(tileFrac.x - 0.5) * 2.0) : 0.0;
+                    float wy = (u_tileBlend < 1.0) ? smoothstep(u_tileBlend, 1.0, abs(tileFrac.y - 0.5) * 2.0) : 0.0;
+
+                    // Sample 4 tiles. textureLod is used as derivatives aren't in VS.
+                    vec4 c1 = textureLod(u_image, vSampleUv,                    0.0);
+                    vec4 c2 = textureLod(u_image, vec2(ghostUv.x, vSampleUv.y), 0.0);
+                    vec4 c3 = textureLod(u_image, vec2(vSampleUv.x, ghostUv.y), 0.0);
+                    vec4 c4 = textureLod(u_image, ghostUv,                      0.0);
+
+                    vTexColor = mix(mix(c1, c2, wx), mix(c3, c4, wx), wy);
                     float heightVal = dot(vTexColor.rgb, vec3(0.333));
-                    
-                    // ── ALPHA & FOG ───────────────────────
-                    // Side fade (X)
-                    float sideFade = smoothstep(150.0, 147.0, abs(pos.x)); 
-                    // Depth fog (Z)
-                    float zFog = smoothstep(150.0, 250.0, abs(pos.z + u_mesh_z));
-                    // Visibility combines height threshold, side fade, and depth fog
+
+                    // Fog: world-space so it stays fixed as the mesh physically scrolls.
+                    // pos.x/z is local; adding u_mesh_x/z converts to world space.
+                    float worldX = pos.x + u_mesh_x;
+                    float worldZ = pos.z + u_mesh_z;
+                    float sideFade = smoothstep(500.0, 400.0, abs(worldX));
+                    float zFog     = smoothstep(400.0, 500.0, abs(worldZ));
                     vVisibility = step(0.01, heightVal) * sideFade * (1.0 - zFog);
 
-                    pos.y += heightVal * u_extrusion * sideFade;
+                    pos.y += heightVal * u_extrusion;
                     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
                 }
             `,
             fragmentShader: `
                 precision highp float;
-                uniform sampler2D u_image;
-                uniform float u_extrusion;
-                in vec2 vUv;
+                in vec2 vSampleUv;
                 in vec4 vTexColor;
                 in float vVisibility;
                 out vec4 outColor;
 
                 void main() {
-                    // Use full-res texture when extrusion is 0
-                    float isFlat = step(u_extrusion, 0.01);
-                    vec4 flatColor = texture(u_image, vUv);
-                    vec4 finalColor = mix(vTexColor, flatColor, isFlat);
-
-                    outColor = vec4(finalColor.rgb, finalColor.a * vVisibility);
+                    // Use the color pre-blended and passed from the vertex shader.
+                    // This ensures geometry heights and visual colors are perfectly synced.
+                    outColor = vec4(vTexColor.rgb, vTexColor.a * vVisibility);
                 }
             `,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
         });
 
-        const matA = material;
-        const matB = material.clone();
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.renderOrder = 1;
+        mesh.frustumCulled = false;
 
-        const meshA = new THREE.Mesh(geometry, matA);
-        const meshB = new THREE.Mesh(geometry, matB);
-
-        // Draw both terrain segments after the sky is drawn (fixes terrain being depth masked by the sky)
-        meshA.renderOrder = 1;
-        meshB.renderOrder = 1;
-
-        meshA.frustumCulled = true;
-        meshB.frustumCulled = true;
-
-        // Wrap both meshes in a group so we can rotate the whole terrain as a unit
         const terrainGroup = new THREE.Group();
-        terrainGroup.add(meshA);
-        terrainGroup.add(meshB);
+        terrainGroup.add(mesh);
         scene.add(terrainGroup);
 
-        const meshes = [meshA, meshB];
-
-        // STABILIZER: Phantom mesh to keep engine initialized
-        const cube = new THREE.Mesh(
+        // Stabilizer phantom — keeps the engine alive every frame
+        const phantom = new THREE.Mesh(
             new THREE.SphereGeometry(1.5, 32, 32),
             new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.0, depthWrite: false, depthTest: false })
         );
-        scene.add(cube);
+        scene.add(phantom);
 
         return {
             scene,
@@ -326,66 +326,74 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
             material,
             update: (params, texture) => {
                 const p = params.params;
-                const scale = p ? p[0] : 1;
-                const extrusion = p ? p[1] : 0;
-                const speed = p ? p[2] * 5 : 0;
-                const resolution = p ? p[3] : 100;
 
-                // Threshold: Map 0..100 (UI) to 2..512 (Shader)
-                let targetRes = Math.max(2, Math.floor(2 + (resolution / 100.0) * 510.0));
+                const extrusion = p ? p[0] * 10 : 0;  // Extrusion   0-100
+                const resolution = p ? p[1] : 100;    // Resolution  0-100 → 2-1024 voxel columns
+                const tileW = p ? p[2] : 100;         // Tile Width  0-100 → 10-1000 world units per tile (X)
+                const tileH = p ? p[3] : 100;         // Tile Height 0-100 → 10-1000 world units per tile (Z)
+                const rotateX = p ? p[4] : 0;         // Rotate X    0-100 → 0-2π
+                const rotateY = p ? p[5] : 0;         // Rotate Y    0-100 → 0-2π
+                const rotateZ = p ? p[6] : 0;         // Rotate Z    0-100 → 0-2π
+                const elevation = p ? p[7] : 50;      // Elevation   0-100 → -500 to +500 world units
+                const distance = p ? p[8] : 50;       // Distance    0-100 → -1000 to +1000 world units
+                const tileBlend = p ? p[9] : 50;      // Tile Blend  0-100 → hard seams → full seamless blend
+                const speedX = p ? p[10] * 10 : 0;    // Speed X     0-100 → UV/s leftward → rightward
+                const speedY = p ? p[11] * 10 : 0;    // Speed Y     0-100 → UV/s forward → backward
 
-                /**
-                 * GRID ALIGNMENT: To prevent artifacts at the edges of the meshes, 
-                 * we ensure the voxel size (blockSize) is a perfect divisor of the plane length (500).
-                 * blockSize = 300 / u_res. We want K (number of voxels) = 500 / blockSize to be an even integer:
-                 * K = 500 / (300 / u_res) = 500 * (u_res / 300) = 5/3 * u_res
-                 * u_res = K * (3/5)
-                 * Multiply K by 2 to force it to be an even integer:
-                 * targetRes = K * 2 * (3/5) = K * 1.2
-                 */
-                targetRes = Math.round(targetRes / 1.2) * 1.2; // Snap targetRes to the nearest multiple of 1.2
+                // Map 0-100 → 2-1024 voxel columns
+                const targetRes = Math.max(2, Math.floor(2 + (resolution / 100.0) * 1022.0));
 
-                // Rotation angles (0–100 slider maps to 0–2π radians = full 360°)
+                // Map 0-100 → 10-1000 world units per tile
+                const tileWWorld = 10.0 + (tileW / 100.0) * 990.0;
+                const tileHWorld = 10.0 + (tileH / 100.0) * 990.0;
+
                 const toRad = (v: number) => (v / 100.0) * Math.PI * 2.0;
-                terrainGroup.rotation.x = toRad(p[4] ?? 0);
-                terrainGroup.rotation.y = toRad(p[5] ?? 0);
-                terrainGroup.rotation.z = toRad(p[6] ?? 0);
+                terrainGroup.rotation.x = toRad(rotateX);
+                terrainGroup.rotation.y = toRad(rotateY);
+                terrainGroup.rotation.z = toRad(rotateZ);
 
-                // Elevation: Map 0-100 to -500 to +500 world units. 50 = default (0)
-                terrainGroup.position.y = ((p[7] ?? 50) - 50) * 10.0;
+                // Elevation: 0 = -500, 100 = +500, 50 = ground level (y=0)
+                terrainGroup.position.y = (elevation - 50.0) * 10.0;
 
-                // Distance offset
-                const zOffset = ((p[8] ?? 50) - 50) * 10.0;
-                terrainGroup.position.z = zOffset;
+                // Distance: 0 = 1000, 100 = -1000, 50 = 0
+                terrainGroup.position.z = (50.0 - distance) * 20.0;
 
-                // Travel distance in world units
-                const rawTravel = (params.integratedValues && params.integratedValues.length >= 3)
-                    ? params.integratedValues[2]
-                    : (params.time || 0.0);
-                const travelZ = rawTravel * speed;
+                material.uniforms.u_image.value = texture;
+                material.uniforms.u_extrusion.value = extrusion;
+                material.uniforms.u_res.value = targetRes;
+                material.uniforms.u_tileW.value = tileWWorld;
+                material.uniforms.u_tileH.value = tileHWorld;
+                // Map 0-100 → 1.0 (no blend) → 0.0 (full seamless blend), clamped just below 1.0
+                material.uniforms.u_tileBlend.value = 1.0 - Math.min(tileBlend / 100.0, 0.999);
 
-                // Two planes 500 units apart, looping
-                meshes[0].position.z = ((travelZ) % 1000.0) - 500.0;
-                meshes[1].position.z = ((travelZ + 500.0) % 1000.0) - 500.0;
+                // Scroll logic: The plane physically translates continuously.
+                // To create an infinite illusion with a single bounded plane, it wraps
+                // backwards exactly when it reaches the width of ONE TEXTURE TILE.
+                // Since the texture natively repeats exactly at the tile size, the snap
+                // is completely mathematically invisible, eliminating all UV shifting complexity.
+                const iv = params.integratedValues;
+                const time = params.time || 0.0;
+                const rawTx = (iv && iv.length > 10) ? iv[10] : time;
+                const rawTy = (iv && iv.length > 11) ? iv[11] : time;
 
-                meshes.forEach(m => {
-                    const mat = m.material as THREE.ShaderMaterial;
-                    mat.uniforms.u_image.value = texture;
-                    mat.uniforms.u_scale.value = scale;
-                    mat.uniforms.u_extrusion.value = extrusion;
-                    mat.uniforms.u_res.value = targetRes;
+                // Max speed 100 units/s per axis
+                const distX = rawTx * (speedX / 100.0) * 100.0;
+                const distZ = rawTy * (speedY / 100.0) * 100.0;
 
-                    // Pass local z-offset to shader for bounds-checking
-                    mat.uniforms.u_mesh_z.value = m.position.z;
-                });
+                const mod = (n: number, m: number) => ((n % m) + m) % m;
 
-                cube.rotation.y += 0.01;
+                // Move in physical space, wrapping exactly at the full tile repeat boundary
+                mesh.position.x = -mod(distX, tileWWorld);
+                mesh.position.z = mod(distZ, tileHWorld);
 
+                material.uniforms.u_mesh_x.value = mesh.position.x;
+                material.uniforms.u_mesh_z.value = mesh.position.z;
+
+                phantom.rotation.y += 0.01;
             },
             dispose: () => {
                 geometry.dispose();
                 material.dispose();
-                matB.dispose();
                 scene.clear();
             }
         };
