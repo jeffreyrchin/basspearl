@@ -1747,4 +1747,5 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     GLOW_EXTRACT: { name: 'GLOW_EXTRACT', fragmentSource: GLOW_EXTRACT_SHADER },
     TRI_CRUSH: { name: 'TRI_CRUSH', fragmentSource: TRI_CRUSH_SHADER },
     HEX_CRUSH: { name: 'HEX_CRUSH', fragmentSource: HEX_CRUSH_SHADER },
+    TERRAIN_RING: { name: 'TERRAIN_RING', fragmentSource: '', velocityParamIndices: [6, 7, 8], is3D: true },
 };

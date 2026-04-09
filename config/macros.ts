@@ -470,7 +470,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Extrusion', { v: 80, m: 0, b: 'SUB' }, { v: 40, b: 'OFF' }),
           o('Resolution', { v: 10, b: 'OFF' }),
-          o('Distance', { v: 62, m: 2, b: 'TREBLE' }, { v: 30, m: 0, b: 'OFF' }),
+          o('Size', { v: 75, m: 10, b: 'TREBLE' }, { v: 25, m: 0, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
@@ -548,7 +548,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Extrusion', { v: 90, m: 45, b: 'SUB' }, { v: 47, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
-          o('Distance', { v: 40, b: 'OFF' }),
+          o('Size', { v: 28, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
@@ -674,7 +674,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Extrusion', { v: 0, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
-          o('Distance', { v: 84, b: 'OFF' }),
+          o('Size', { v: 58, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
@@ -885,7 +885,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Extrusion', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
           o('Resolution', { v: 20, b: 'OFF' }),
-          o('Distance', { v: 66, b: 'OFF' }),
+          o('Size', { v: 40, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
@@ -926,7 +926,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Extrusion', { v: 50, b: 'SUB' }, { v: 0, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
-          o('Distance', { v: 75, b: 'OFF' }, { v: 83, b: 'OFF' }),
+          o('Size', { v: 75, b: 'OFF' }, { v: 57, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),

@@ -9,6 +9,195 @@ export interface IThreeJSEffect {
     dispose: () => void;
 }
 
+const TERRAIN_SPHERE_VERT = `
+    uniform sampler2D u_image;
+    uniform float u_extrusion;
+    uniform float u_res;
+
+    out vec2 vUv;
+    out vec4 vTexColor;
+    out float vFaceAlpha;
+
+    void main() {
+        // ── DYNAMIC VOXEL RESOLUTION ──────────────────────────────
+        float gridRes = clamp(u_res, 2.0, 512.0);
+
+        // HEIGHT SNAP: Snap UVs to the voxel grid center,
+        // so the sample point aligns with the displaced column — same
+        // technique as the terrain hUv remap.
+        // If extrusion is 0, bypass snapping (show full-res image).
+        float isFlat = step(u_extrusion, 0.01);
+        vec2 snappedUv = floor(uv * gridRes + 0.5) / gridRes;
+        vec2 samplingUv = mix(snappedUv, uv, isFlat);
+
+        // ── SAMPLING & HEIGHT ─────────────────────────────────────
+        vTexColor = texture(u_image, samplingUv);
+        float heightVal = dot(vTexColor.rgb, vec3(0.333));
+
+        // ── DISPLACE ALONG NORMAL ──────────────────────────────
+        vec3 norm = normalize(normal);
+        vec3 pos  = position + norm * (heightVal * u_extrusion);
+
+        // ── BACKFACE FADE ─────────────────────────────────────────
+        // Vertices whose normals point away from the camera fade out,
+        // creating a clean horizon without two-sided rendering.
+        vec3 worldNorm = normalize((modelMatrix * vec4(norm, 0.0)).xyz);
+        vec3 camDir    = normalize(cameraPosition - (modelMatrix * vec4(position, 1.0)).xyz);
+        float facing   = dot(worldNorm, camDir);
+        vFaceAlpha = smoothstep(-0.15, 0.25, facing);
+
+        vUv = samplingUv;
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+    }
+`;
+
+const TERRAIN_RING_VERT = `
+    uniform sampler2D u_image;
+    uniform float u_extrusion;
+    uniform float u_res;
+    uniform float u_thickness;
+
+    out vec2 vUv;
+    out vec4 vTexColor;
+    out float vFaceAlpha;
+
+    void main() {
+        // ── DYNAMIC VOXEL RESOLUTION ──────────────────────────────
+        float gridRes = clamp(u_res, 2.0, 512.0);
+
+        float isFlat = step(u_extrusion, 0.01);
+        vec2 snappedUv = floor(uv * gridRes + 0.5) / gridRes;
+        vec2 samplingUv = mix(snappedUv, uv, isFlat);
+
+        // ── SAMPLING & HEIGHT ─────────────────────────────────────
+        vTexColor = texture(u_image, samplingUv);
+        float heightVal = dot(vTexColor.rgb, vec3(0.333));
+
+        // ── DISPLACE ALONG NORMAL ──────────────────────────────
+        vec3 norm = normalize(normal);
+        
+        // Add u_thickness displacement to expand the tube, then add extrusion
+        vec3 pos  = position + norm * (u_thickness + (heightVal * u_extrusion));
+
+        // ── BACKFACE FADE ─────────────────────────────────────────
+        vec3 worldNorm = normalize((modelMatrix * vec4(norm, 0.0)).xyz);
+        vec3 camDir    = normalize(cameraPosition - (modelMatrix * vec4(position, 1.0)).xyz);
+        float facing   = dot(worldNorm, camDir);
+        vFaceAlpha = smoothstep(-0.15, 0.25, facing);
+
+        vUv = samplingUv;
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+    }
+`;
+
+const createDisplacedShapeEffect = (
+    geometry: THREE.BufferGeometry,
+    vertexShader: string,
+    setupUniforms: Record<string, any> = {},
+    customUpdater: (params: ThreeRenderParams, material: THREE.ShaderMaterial, group: THREE.Group) => void = () => { }
+): IThreeJSEffect => {
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 5000);
+    camera.position.set(0, 0, 120);
+    camera.lookAt(0, 0, 0);
+
+    const material = new THREE.ShaderMaterial({
+        glslVersion: THREE.GLSL3,
+        transparent: true,
+        uniforms: {
+            u_image: { value: null },
+            u_extrusion: { value: 0.0 },
+            u_res: { value: 100.0 },
+            ...setupUniforms
+        },
+        vertexShader: vertexShader,
+        fragmentShader: `
+            precision highp float;
+            uniform sampler2D u_image;
+            uniform float u_extrusion;
+            in vec2 vUv;
+            in vec4 vTexColor;
+            in float vFaceAlpha;
+            out vec4 outColor;
+
+            void main() {
+                // Use full-res texture when extrusion is 0
+                float isFlat = step(u_extrusion, 0.01);
+                vec4 flatColor  = texture(u_image, vUv);
+                vec4 finalColor = mix(vTexColor, flatColor, isFlat);
+
+                outColor = vec4(finalColor.rgb, finalColor.a * vFaceAlpha);
+            }
+        `,
+        side: THREE.DoubleSide,
+    });
+
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.frustumCulled = true;
+
+    const group = new THREE.Group();
+    group.add(mesh);
+    scene.add(group);
+
+    // Stabilizer phantom (keeps engine alive)
+    const phantom = new THREE.Mesh(
+        new THREE.SphereGeometry(0.5, 8, 8),
+        new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.0, depthWrite: false, depthTest: false })
+    );
+    scene.add(phantom);
+
+    return {
+        scene,
+        camera,
+        material,
+        update: (params, texture) => {
+            const p = params.params;
+            if (p && p.length >= 9) {
+                const extrusion = p[0]; // 0-100 → world units
+                const resolution = p[1]; // 0-100 → 2-512 voxel cells
+                const size = p[2]; // 0-100 → radius
+
+                // Resolution: map 0-100 → 2-512 voxel cells
+                const virtualRes = Math.max(2, Math.floor(2 + (resolution / 100.0) * 510.0));
+
+                // Size: 0 = invisible (0 units), 100 = very large (300 units)
+                group.scale.setScalar((size / 100.0) * 3.0);
+
+                // Speed: continuous spin driven by the engine's integrated time accumulator
+                const integratedSpinX = params.integratedValues[6];
+                const integratedSpinY = params.integratedValues[7];
+                const integratedSpinZ = params.integratedValues[8];
+
+                const toRad = (v: number) => (v / 100.0) * Math.PI * 2.0;
+                const speedMultiplier = 10.0;
+                mesh.rotation.x = integratedSpinX * (p[6] / 100.0) * speedMultiplier;
+                mesh.rotation.y = integratedSpinY * (p[7] / 100.0) * speedMultiplier;
+                mesh.rotation.z = integratedSpinZ * (p[8] / 100.0) * speedMultiplier;
+
+                // Static starting position
+                group.rotation.x = toRad(p[3] ?? 0);
+                group.rotation.y = toRad(p[4] ?? 0);
+                group.rotation.z = toRad(p[5] ?? 0);
+
+                material.uniforms.u_image.value = texture;
+                material.uniforms.u_extrusion.value = extrusion;
+                material.uniforms.u_res.value = virtualRes;
+
+                // Run custom updater
+                customUpdater(params, material, group);
+            }
+            phantom.rotation.y += 0.01;
+        },
+        dispose: () => {
+            geometry.dispose();
+            material.dispose();
+            scene.clear();
+        }
+    };
+};
+
 export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
     TERRAIN: () => {
         const scene = new THREE.Scene();
@@ -201,147 +390,24 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
             }
         };
     },
-    TERRAIN_SPHERE: () => {
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 5000);
-        camera.position.set(0, 0, 120);
-        camera.lookAt(0, 0, 0);
-
-        const meshRes = 512; // Fixed high-res base geometry
-        const geometry = new THREE.SphereGeometry(30, meshRes, meshRes);
-
-        const material = new THREE.ShaderMaterial({
-            glslVersion: THREE.GLSL3,
-            transparent: true,
-            uniforms: {
-                u_image: { value: null },
-                u_extrusion: { value: 0.0 },
-                u_res: { value: 100.0 },
-            },
-            vertexShader: `
-                uniform sampler2D u_image;
-                uniform float u_extrusion;
-                uniform float u_res;
-
-                out vec2 vUv;
-                out vec4 vTexColor;
-                out float vFaceAlpha;
-
-                void main() {
-                    // ── DYNAMIC VOXEL RESOLUTION ──────────────────────────────
-                    float gridRes = clamp(u_res, 2.0, 512.0);
-
-                    // HEIGHT SNAP: Snap UVs to the voxel grid center,
-                    // so the sample point aligns with the displaced column — same
-                    // technique as the terrain hUv remap.
-                    // If extrusion is 0, bypass snapping (show full-res image).
-                    float isFlat = step(u_extrusion, 0.01);
-                    vec2 snappedUv = floor(uv * gridRes + 0.5) / gridRes;
-                    vec2 samplingUv = mix(snappedUv, uv, isFlat);
-
-                    // ── SAMPLING & HEIGHT ─────────────────────────────────────
-                    vTexColor = texture(u_image, samplingUv);
-                    float heightVal = dot(vTexColor.rgb, vec3(0.333));
-
-                    // ── DISPLACE ALONG SPHERE NORMAL ──────────────────────────
-                    // For a unit sphere the geometric normal == normalized position.
-                    vec3 norm = normalize(normal);
-                    vec3 pos  = position + norm * (heightVal * u_extrusion);
-
-                    // ── BACKFACE FADE ─────────────────────────────────────────
-                    // Vertices whose normals point away from the camera fade out,
-                    // creating a clean horizon without two-sided rendering.
-                    vec3 worldNorm = normalize((modelMatrix * vec4(norm, 0.0)).xyz);
-                    vec3 camDir    = normalize(cameraPosition - (modelMatrix * vec4(position, 1.0)).xyz);
-                    float facing   = dot(worldNorm, camDir);
-                    vFaceAlpha = smoothstep(-0.15, 0.25, facing);
-
-                    vUv = samplingUv;
-
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-                }
-            `,
-            fragmentShader: `
-                precision highp float;
-                uniform sampler2D u_image;
-                uniform float u_extrusion;
-                in vec2 vUv;
-                in vec4 vTexColor;
-                in float vFaceAlpha;
-                out vec4 outColor;
-
-                void main() {
-                    // Use full-res texture when extrusion is 0
-                    float isFlat = step(u_extrusion, 0.01);
-                    vec4 flatColor  = texture(u_image, vUv);
-                    vec4 finalColor = mix(vTexColor, flatColor, isFlat);
-
-                    outColor = vec4(finalColor.rgb, finalColor.a * vFaceAlpha);
-                }
-            `,
-            side: THREE.DoubleSide,
-        });
-
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.frustumCulled = true;
-
-        const sphereGroup = new THREE.Group();
-        sphereGroup.add(mesh);
-        scene.add(sphereGroup);
-
-        // Stabilizer phantom (keeps engine alive)
-        const phantom = new THREE.Mesh(
-            new THREE.SphereGeometry(0.5, 8, 8),
-            new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.0, depthWrite: false, depthTest: false })
-        );
-        scene.add(phantom);
-
-        return {
-            scene,
-            camera,
-            material,
-            update: (params, texture) => {
-                const p = params.params;
-                if (p && p.length >= 9) {
-                    const extrusion = p[0]; // 0-100 → world units
-                    const resolution = p[1]; // 0-100 → 2-512 voxel cells
-                    const distance = p[2]; // 0-100 → camera distance
-
-                    // Resolution: map 0-100 → 2-512 voxel cells
-                    const virtualRes = Math.max(2, Math.floor(2 + (resolution / 100.0) * 510.0));
-
-                    // Distance: 0 = very far (200 units), 100 = very close (50 units)
-                    camera.position.z = 200 - (distance / 100.0) * 150.0;
-
-                    // Speed: continuous spin driven by the engine's integrated time accumulator
-                    const integratedSpinX = params.integratedValues[6];
-                    const integratedSpinY = params.integratedValues[7];
-                    const integratedSpinZ = params.integratedValues[8];
-
-                    const toRad = (v: number) => (v / 100.0) * Math.PI * 2.0;
-                    const speedMultiplier = 10.0;
-                    mesh.rotation.x = integratedSpinX * (p[6] / 100.0) * speedMultiplier;
-                    mesh.rotation.y = integratedSpinY * (p[7] / 100.0) * speedMultiplier;
-                    mesh.rotation.z = integratedSpinZ * (p[8] / 100.0) * speedMultiplier;
-
-                    // Static starting position
-                    sphereGroup.rotation.x = toRad(p[3] ?? 0);
-                    sphereGroup.rotation.y = toRad(p[4] ?? 0);
-                    sphereGroup.rotation.z = toRad(p[5] ?? 0);
-
-                    material.uniforms.u_image.value = texture;
-                    material.uniforms.u_extrusion.value = extrusion;
-                    material.uniforms.u_res.value = virtualRes;
-                }
-                phantom.rotation.y += 0.01;
-            },
-            dispose: () => {
-                geometry.dispose();
-                material.dispose();
-                scene.clear();
+    TERRAIN_SPHERE: () => createDisplacedShapeEffect(
+        new THREE.SphereGeometry(30, 512, 512),
+        TERRAIN_SPHERE_VERT
+    ),
+    TERRAIN_RING: () => createDisplacedShapeEffect(
+        new THREE.TorusGeometry(30, 0.1, 512, 512), // Start with a thin base tube
+        TERRAIN_RING_VERT,
+        { u_thickness: { value: 0.0 } },
+        (params, material) => {
+            const p = params.params;
+            if (p.length >= 10) {
+                // Tube Width
+                // p[9] = 0 -> 0, p[9] = 100 -> +29.9 (0.1 + 29.9 = 30.0)
+                const thickness = (p[9] / 100.0) * 29.9;
+                material.uniforms.u_thickness.value = thickness;
             }
-        };
-    },
+        }
+    ),
     INFINITE_ZOOM: () => {
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 100000);
