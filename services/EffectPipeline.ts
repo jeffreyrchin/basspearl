@@ -194,7 +194,7 @@ export class EffectPipeline {
         gl.clear(gl.COLOR_BUFFER_BIT);
     }
 
-    public applyPass(programName: string, uniforms: Record<string, any>, is3D?: boolean) {
+    public applyPass(programName: string, uniforms: Record<string, any>, is3D?: boolean, secondaryTexture?: WebGLTexture | null) {
         if (this.inSubStack) {
             const input = this.subTextures[this.currentSubFBIndex];
             const outputFB = this.subFBs[1 - this.currentSubFBIndex];
@@ -202,7 +202,9 @@ export class EffectPipeline {
             if (is3D) {
                 this.renderThreeJS(programName, input, outputFB, uniforms);
             } else {
-                this.draw(programName, outputFB, [{ name: 'u_image', texture: input }], uniforms, false, true);
+                const inputs = [{ name: 'u_image', texture: input }];
+                if (secondaryTexture) inputs.push({ name: 'u_overlay', texture: secondaryTexture });
+                this.draw(programName, outputFB, inputs, uniforms, false, true);
             }
             this.currentSubFBIndex = 1 - this.currentSubFBIndex;
         } else {
@@ -212,7 +214,9 @@ export class EffectPipeline {
             if (is3D) {
                 this.renderThreeJS(programName, input, outputFB, uniforms);
             } else {
-                this.draw(programName, outputFB, [{ name: 'u_image', texture: input }], uniforms, false, true);
+                const inputs = [{ name: 'u_image', texture: input }];
+                if (secondaryTexture) inputs.push({ name: 'u_overlay', texture: secondaryTexture });
+                this.draw(programName, outputFB, inputs, uniforms, false, true);
             }
             this.currentFBIndex = 1 - this.currentFBIndex;
         }

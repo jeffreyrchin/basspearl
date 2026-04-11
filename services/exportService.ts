@@ -24,7 +24,6 @@ export interface ExportOptions {
         mid: Float32Array;
         treble: Float32Array;
     } | null;
-    imageSrc: string | null;
     effects: EffectConfig[];
     duration: number;
     fps?: number;
@@ -66,7 +65,6 @@ export const exportVideo = async (options: ExportOptions): Promise<{ fileUrl: st
         audioBuffer,
         reactivityMap,
         integratedReactivity,
-        imageSrc,
         effects,
         duration,
         fps = 60,
@@ -79,17 +77,6 @@ export const exportVideo = async (options: ExportOptions): Promise<{ fileUrl: st
     if (!audioBuffer) throw new Error("Audio buffer is required for export");
 
     let targetRatio = aspectRatio;
-
-    if (imageSrc) {
-        // Must decode image to get dimensions
-        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-            const i = new Image();
-            i.onload = () => resolve(i);
-            i.onerror = (e) => reject(new Error("Failed to load image for export"));
-            i.src = imageSrc;
-        });
-        targetRatio = img.naturalWidth / img.naturalHeight;
-    }
 
     const { width: outWidth, height: outHeight } = calculateExportDimensions(targetRatio, maxSize);
 
@@ -193,7 +180,7 @@ export const exportVideo = async (options: ExportOptions): Promise<{ fileUrl: st
             }
 
             // Render glitch to our hidden canvas
-            await exportEngine.renderToCanvas(renderCanvas, imageSrc, effects, {
+            await exportEngine.renderToCanvas(renderCanvas, effects, {
                 maxSize,
                 reactivity: frameData,
                 integratedReactivity: frameIntegrated,

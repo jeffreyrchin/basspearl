@@ -37,7 +37,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const isDraggingScrubberRef = useRef(false);
     const frameCounterRef = useRef(0);
     const audioInputRef = useRef<HTMLInputElement>(null);
-    const imageInputRef = useRef<HTMLInputElement>(null);
 
     const {
         audioFile,
@@ -68,12 +67,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const {
         isLandingOpen,
         setIsLandingOpen,
-        imageFile,
         handleLandingStart,
-        handleImageUpload,
         canvasRef,
-        imageFileRef,
-        imageAspectRatioRef
     } = useProjectAssets({
         audioFile,
         startMic,
@@ -102,7 +97,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         scrubberRef,
         requestRef,
         frameCounterRef,
-        imageFileRef,
         isDraggingScrubberRef
     });
 
@@ -145,7 +139,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             renderFrame(currentTime);
             updateScrubberUI(currentTime);
         }
-    }, [effects, imageFile, currentTime, isPlaying, audioFile, isLiveMode]);
+    }, [effects, currentTime, isPlaying, audioFile, isLiveMode]);
 
     // Sync effectsRef for export
     useEffect(() => {
@@ -171,7 +165,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             audioBuffer: audioBufferRef.current,
             reactivityMap: reactivityMapRef.current,
             integratedReactivity: integratedReactivityMapRef.current,
-            imageSrc: imageFileRef.current,
             effects: effectsRef.current,
             duration: duration
         });
@@ -216,11 +209,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             </div>
 
             <MainToolbar
-                imageInputRef={imageInputRef}
                 audioInputRef={audioInputRef}
-                imageFile={imageFile}
                 audioFile={audioFile}
-                handleImageUpload={handleImageUpload}
                 handleAudioUpload={handleAudioUpload}
                 isLiveMode={isLiveMode}
                 startMic={handleMicClick}
@@ -301,7 +291,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 isExporting={isExporting}
                 exportProgress={exportProgress}
                 exportResult={exportResult}
-                aspectRatio={imageAspectRatioRef.current || (window.innerWidth / window.innerHeight)}
+                aspectRatio={window.innerWidth / window.innerHeight}
             />
             <InspectorWindow />
             <LibraryWindow />

@@ -22,8 +22,8 @@ export class GlitchEngine {
   private shaderManager: ShaderManager;
   private pipeline: EffectPipeline;
 
-  private currentImageSrc: string | null = null;
   private inputTexture: WebGLTexture | null = null;
+  private assetTextures: Map<string, WebGLTexture> = new Map();
 
   // Reusable buffers: 0 allocations per frame
   private uParamsBuffer = new Float32Array(16);
@@ -62,25 +62,26 @@ export class GlitchEngine {
 
   public async renderToCanvas(
     targetCanvas: HTMLCanvasElement,
-    imageSrc: string | null,
     effects: EffectConfig[],
     options: GlitchRenderOptions = {}
   ): Promise<void> {
-    // 1. Resolve image (Sync if cached, Async if new)
-    let img: HTMLImageElement | null = null;
-    if (imageSrc) {
-      const cached = GlitchEngine.imageCache.get(imageSrc);
-      if (cached) {
-        img = cached;
-      } else {
-        // Only do the expensive async path if the image is truly new
-        await this.ensureImageLoaded(imageSrc);
-        img = GlitchEngine.imageCache.get(imageSrc) || null;
+    // 1. Preload any images/assets (Sync if cached, Async if new)
+    const urlsToLoad = new Set<string>();
+    effects.forEach(e => { if (e.assetUrl) urlsToLoad.add(e.assetUrl); });
+
+    const loadPromises: Promise<void>[] = [];
+    urlsToLoad.forEach(url => {
+      if (!GlitchEngine.imageCache.has(url)) {
+        loadPromises.push(this.ensureImageLoaded(url));
       }
+    });
+
+    if (loadPromises.length > 0) {
+      await Promise.all(loadPromises);
     }
 
     // 2. Process
-    this.processSync(img, imageSrc, effects, options);
+    this.processSync(effects, options);
 
     // 3. Copy internal canvas to target canvas
     // Optimization: Only resize if dimensions actually changed to avoid Safari context resets
@@ -106,7 +107,7 @@ export class GlitchEngine {
   private static imageCache: Map<string, HTMLImageElement> = new Map();
 
   /**
-   * Orchestrates the image loading. Handles URL revocation of old blobs.
+   * Orchestrates the image loading.
    */
   private async ensureImageLoaded(imageSrc: string): Promise<void> {
     if (GlitchEngine.imageCache.has(imageSrc)) return;
@@ -115,9 +116,6 @@ export class GlitchEngine {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
-        // If we previously loaded a blob URL that isn't this one, we could revoke it here,
-        // but it's cleaner to handle revocation at the source of the blob creation.
-        // For now, we just ensure the image is baked into the cache.
         GlitchEngine.imageCache.set(imageSrc, img);
         resolve();
       };
@@ -131,29 +129,19 @@ export class GlitchEngine {
    * from promise/closure allocations in the animation loop.
    */
   private processSync(
-    img: HTMLImageElement | null,
-    imageSrc: string | null,
     effects: EffectConfig[],
     options: GlitchRenderOptions = {}
   ): void {
     const { maxSize, integratedReactivity, currentTime, imagelessWidth, imagelessHeight } = options;
 
     let targetRatio = 16 / 9;
-
-    if (img) {
-      targetRatio = img.width / img.height;
-    } else if (imagelessWidth && imagelessHeight) {
+    if (imagelessWidth && imagelessHeight) {
       targetRatio = imagelessWidth / imagelessHeight;
     }
 
     const dims = calculateExportDimensions(targetRatio, maxSize || 1920);
     const width = dims.width;
     const height = dims.height;
-
-    // Detect if we shifted from a Blob URL to a new one
-    if (this.currentImageSrc && this.currentImageSrc.startsWith('blob:') && this.currentImageSrc !== imageSrc) {
-      URL.revokeObjectURL(this.currentImageSrc);
-    }
 
     if (this.canvas.width !== width || this.canvas.height !== height) {
       this.canvas.width = width;
@@ -162,21 +150,35 @@ export class GlitchEngine {
       this.pipeline.resize(width, height);
 
       if (this.inputTexture) this.textureManager.destroyTexture(this.inputTexture);
-      this.inputTexture = this.textureManager.createTexture(width, height, img);
-      this.pipeline.setInputTexture(this.inputTexture!);
-    } else if (this.currentImageSrc !== imageSrc) {
-      // If switching to imageless mode (null imageSrc), we recreate the texture as null
-      if (!img) {
-        if (this.inputTexture) this.textureManager.destroyTexture(this.inputTexture);
-        this.inputTexture = this.textureManager.createTexture(width, height, null);
-      } else {
-        this.textureManager.updateTexture(this.inputTexture!, img);
-      }
+      this.inputTexture = this.textureManager.createTexture(width, height, null);
+
+      this.assetTextures.forEach(t => this.textureManager.destroyTexture(t));
+      this.assetTextures.clear();
+
       this.pipeline.setInputTexture(this.inputTexture!);
     }
 
-    this.currentImageSrc = imageSrc; // update this.currentImageSrc so that texture is updated (previous block) only when imageSrc changes
     const UNIT = Math.min(width, height) / 100;
+
+    // Refresh supplementary asset textures
+    const currentAssetUrls = new Set(effects.map(e => e.assetUrl).filter(Boolean) as string[]);
+
+    currentAssetUrls.forEach(url => {
+      if (!this.assetTextures.has(url)) {
+        const cachedImg = GlitchEngine.imageCache.get(url);
+        if (cachedImg) {
+          this.assetTextures.set(url, this.textureManager.createTexture(width, height, cachedImg));
+        }
+      }
+    });
+
+    Array.from(this.assetTextures.keys()).forEach(url => {
+      if (!currentAssetUrls.has(url)) {
+        const t = this.assetTextures.get(url);
+        if (t) this.textureManager.destroyTexture(t);
+        this.assetTextures.delete(url);
+      }
+    });
 
     this.pipeline.setInputTexture(this.inputTexture!);
     this.pipeline.resetStack();
@@ -195,7 +197,11 @@ export class GlitchEngine {
       }
 
       if (isActive) {
-        this.applyEffect(effect, UNIT, width, height, options.reactivity, options.integratedReactivity, currentTime);
+        let secondaryTexture: WebGLTexture | null = null;
+        if (effect.assetUrl && this.assetTextures.has(effect.assetUrl)) {
+          secondaryTexture = this.assetTextures.get(effect.assetUrl) || null;
+        }
+        this.applyEffect(effect, UNIT, width, height, options.reactivity, options.integratedReactivity, currentTime, secondaryTexture);
       }
 
       // If this is the end of a melded group (or end of array), merge back to main stack
@@ -221,7 +227,8 @@ export class GlitchEngine {
     height: number,
     reactivity?: { sub: number, bass: number, mid: number, treble: number },
     integratedReactivity?: { sub: number, bass: number, mid: number, treble: number },
-    currentTime?: number
+    currentTime?: number,
+    secondaryTexture?: WebGLTexture | null
   ) {
     const { type, params, seed } = effect;
     const meta = SHADER_REGISTRY[type];
@@ -298,7 +305,7 @@ export class GlitchEngine {
     } else if (type === 'GLOW') {
       this.pipeline.applyGlow(uniforms);
     } else {
-      this.pipeline.applyPass(type, uniforms, !!meta.is3D);
+      this.pipeline.applyPass(type, uniforms, !!meta.is3D, secondaryTexture);
     }
   }
 
@@ -320,6 +327,7 @@ export class GlitchEngine {
     this.canvas.width = 1;
     this.canvas.height = 1;
     this.gl = null as any;
+    this.assetTextures.clear();
   }
 }
 

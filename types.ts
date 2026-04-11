@@ -42,7 +42,8 @@ export type GlitchEffectType =
   | 'GLOW'
   | 'TRI_CRUSH'
   | 'HEX_CRUSH'
-  | 'SPIRAL_GRADIENT';
+  | 'SPIRAL_GRADIENT'
+  | 'IMAGE_OVERLAY';
 
 export type FrequencyBand = 'OFF' | 'SUB' | 'BASS' | 'MID' | 'TREBLE';
 
@@ -54,6 +55,8 @@ export interface EffectConfig {
   soloed?: boolean;
   melded?: boolean;
   seed?: number;
+  assetUrl?: string;
+  assetName?: string;
 }
 
 export interface EffectParamMetadata {

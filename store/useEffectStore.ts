@@ -49,6 +49,7 @@ interface EffectState {
     updateMultipleParameters: (effectId: string, updates: { paramIndex: number, update: Partial<EffectConfig['params'][0]> }[]) => void;
 
     addColor: () => void;
+    setEffectAssetUrl: (effectId: string, assetUrl: string | undefined, assetName?: string) => void;
 }
 
 export const useEffectStore = create<EffectState>((set, get) => ({
@@ -347,6 +348,12 @@ export const useEffectStore = create<EffectState>((set, get) => ({
                 });
                 return { ...e, params: newParams };
             }),
+        }));
+    },
+
+    setEffectAssetUrl: (effectId, assetUrl, assetName) => {
+        set((state) => ({
+            effects: state.effects.map(e => e.id === effectId ? { ...e, assetUrl, assetName } : e)
         }));
     },
 }));

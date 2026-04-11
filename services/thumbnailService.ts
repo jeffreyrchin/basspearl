@@ -29,17 +29,39 @@ const getEngine = (): GlitchEngine => {
     return engine;
 };
 
-const getThumbnailBackground = (effects: EffectConfig[]): string => {
+const getThumbnailBackgroundUrl = (effects: EffectConfig[]): string | null => {
     if (effects.length === 1) {
         const effect = EFFECT_METADATA[effects[0].type];
-        if (effect.category === 'Pattern') {
-            return "./black.png";
-        } else { // Modifier
+        if (effect.category === 'Modifier') {
             return "./sunset_square.jpeg";
         }
-    } else { // Macro
-        return "./black.png";
     }
+    return null;
+};
+
+// Helper to inject background image into the effect stack
+const prepareThumbnailEffects = (effects: EffectConfig[]): EffectConfig[] => {
+    const bgUrl = getThumbnailBackgroundUrl(effects);
+    if (!bgUrl) return effects;
+
+    // Create a mock IMAGE_OVERLAY effect
+    const bgEffect: EffectConfig = {
+        id: "thumb_bg",
+        type: "IMAGE_OVERLAY",
+        params: EFFECT_METADATA["IMAGE_OVERLAY"].params.map(p => ({
+            param: p.name,
+            value: p.defaultValue,
+            min: p.defaultMin ?? 0,
+            frequencyBand: p.defaultBand
+        })),
+        muted: false,
+        soloed: false,
+        melded: false,
+        seed: 1,
+        assetUrl: bgUrl
+    };
+
+    return [bgEffect, ...effects];
 };
 
 /**
@@ -61,10 +83,10 @@ export const getThumbnailDataUrl = (effects: EffectConfig[]): Promise<string> =>
         const eng = getEngine();
         const canvas = getScratchCanvas();
 
-        const imageSrc = getThumbnailBackground(effects);
+        const renderEffects = prepareThumbnailEffects(effects);
 
         // Use a static frame (time=10.0) for the cached poster
-        await eng.renderToCanvas(canvas, imageSrc, effects, {
+        await eng.renderToCanvas(canvas, renderEffects, {
             maxSize: THUMBNAIL_SIZE,
             currentTime: 10.0,
             reactivity: { sub: 0.9, bass: 0.9, mid: 0.9, treble: 0.9 },
@@ -90,7 +112,7 @@ export const renderThumbnail = (
     const task = queue.then(async () => {
         const eng = getEngine();
 
-        const imageSrc = getThumbnailBackground(effects);
+        const renderEffects = prepareThumbnailEffects(effects);
 
         // Generate Synthetic Reactivity for thumbnail animation
         const beat = Math.pow(Math.abs(Math.sin(currentTime * 2)), 0.5);
@@ -102,7 +124,7 @@ export const renderThumbnail = (
         };
 
         // Render directly using the zero-allocation reactivity path
-        await eng.renderToCanvas(targetCanvas, imageSrc, effects, {
+        await eng.renderToCanvas(targetCanvas, renderEffects, {
             maxSize: THUMBNAIL_SIZE,
             currentTime,
             reactivity: syntheticSmoothed,

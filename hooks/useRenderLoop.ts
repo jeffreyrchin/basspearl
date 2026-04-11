@@ -13,7 +13,6 @@ export interface UseRenderLoopProps {
     scrubberRef: React.RefObject<HTMLInputElement>;
     requestRef: React.MutableRefObject<number | undefined>;
     frameCounterRef: React.MutableRefObject<number>;
-    imageFileRef: React.MutableRefObject<string | null>;
     isDraggingScrubberRef: React.MutableRefObject<boolean>;
 }
 
@@ -23,7 +22,6 @@ export const useRenderLoop = ({
     scrubberRef,
     requestRef,
     frameCounterRef,
-    imageFileRef,
     isDraggingScrubberRef
 }: UseRenderLoopProps) => {
     const effects = useEffectStore(s => s.effects);
@@ -118,7 +116,6 @@ export const useRenderLoop = ({
 
         await mainGlitchEngine.renderToCanvas(
             canvasRef.current,
-            imageFileRef.current,
             effectsRef.current,
             {
                 maxSize: 1920,
@@ -129,7 +126,7 @@ export const useRenderLoop = ({
                 currentTime: time
             }
         );
-    }, [isLiveMode, getLiveReactivity, canvasRef, imageFileRef]);
+    }, [isLiveMode, getLiveReactivity, canvasRef]);
 
     // Register a direct render callback into dragOverride so setDragOverride()
     // can kick a frame render without going through React state at all.

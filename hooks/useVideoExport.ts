@@ -12,7 +12,6 @@ export interface VideoExportParams {
     audioBuffer: AudioBuffer | null;
     reactivityMap: any | null; // using any to avoid wide imports, exportVideo handles typing
     integratedReactivity: any | null;
-    imageSrc: string | null;
     effects: EffectConfig[];
     duration: number;
 }
@@ -42,7 +41,6 @@ export const useVideoExport = () => {
         audioBuffer,
         reactivityMap,
         integratedReactivity,
-        imageSrc,
         effects,
         duration
     }: VideoExportParams) => {
@@ -61,7 +59,6 @@ export const useVideoExport = () => {
                 audioBuffer: audioBuffer,
                 reactivityMap: reactivityMap,
                 integratedReactivity: integratedReactivity,
-                imageSrc: imageSrc,
                 effects: effects,
                 duration: duration,
                 fps: options.fps,

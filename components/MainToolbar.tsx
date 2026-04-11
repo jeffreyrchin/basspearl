@@ -3,11 +3,8 @@ import { motion } from 'framer-motion';
 import { useEffectStore } from '../store/useEffectStore';
 
 interface MainToolbarProps {
-    imageInputRef: React.RefObject<HTMLInputElement>;
     audioInputRef: React.RefObject<HTMLInputElement>;
-    imageFile: File | null;
     audioFile: File | null;
-    handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleAudioUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
     isLiveMode: boolean;
     startMic: () => void;
@@ -62,11 +59,8 @@ const ToolbarButton: React.FC<{
 };
 
 const MainToolbar: React.FC<MainToolbarProps> = ({
-    imageInputRef,
     audioInputRef,
-    imageFile,
     audioFile,
-    handleImageUpload,
     handleAudioUpload,
     isLiveMode,
     startMic,
@@ -105,29 +99,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                     </div>
 
                     {/* Toolbar Buttons */}
-                    <div className="flex items-center gap-3 shrink-0">
-                        {/* Choose Image */}
-                        <input
-                            ref={imageInputRef}
-                            type="file"
-                            accept="image/*, .jpg, .jpeg, .png, .webp, .heic"
-                            onChange={handleImageUpload}
-                            title="Choose Image"
-                            className="sr-only"
-                        />
-                        <ToolbarButton
-                            onClick={() => imageInputRef.current && (imageInputRef.current.value = '', imageInputRef.current.click())} // Clear input so onChange always fires
-                            icon="image"
-                            title="Choose Image"
-                            isActive={!!imageFile}
-                            colorHex="#00F0FF"
-                            activeBg="bg-[#00F0FF]/5 hover:bg-[#00F0FF]/10"
-                            activeBorder="border-[#00F0FF]/30 hover:border-[#00F0FF]/50"
-                            showDot={!!imageFile}
-                            className="px-3"
-                        />
-
-                        {/* Choose Audio */}
+                    <div className="flex items-center gap-3 shrink-0">                        {/* Choose Audio */}
                         <input
                             ref={audioInputRef}
                             type="file"

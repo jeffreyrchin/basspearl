@@ -1702,6 +1702,33 @@ void main() {
 }
 `;
 
+export const IMAGE_OVERLAY_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform sampler2D u_overlay;
+uniform float u_params[6]; // [opacity, scaleX, scaleY, panX, panY, rotation]
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+${GLSL_TRANSFORM}
+
+void main() {
+    float opacity = u_params[0] / 100.0;
+    TR tr = getTransform_(v_texCoord, u_params[1], u_params[2], u_params[3], u_params[4], u_params[5], u_resolution);
+    
+    vec4 bg = texture(u_image, v_texCoord);
+    vec4 fg = texture(u_overlay, tr.localUV) * tr.mask;
+    
+    // Normal alpha blending
+    vec4 blended = mix(bg, fg, fg.a * opacity);
+    
+    // Premultiplied alpha calculation for the final output alpha
+    float finalAlpha = mix(bg.a, 1.0, fg.a * opacity);
+    
+    outColor = vec4(blended.rgb, finalAlpha);
+}
+`;
+
 export interface ShaderDefinition {
     name: string;
     fragmentSource: string;
@@ -1755,4 +1782,5 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     TRI_CRUSH: { name: 'TRI_CRUSH', fragmentSource: TRI_CRUSH_SHADER },
     HEX_CRUSH: { name: 'HEX_CRUSH', fragmentSource: HEX_CRUSH_SHADER },
     TERRAIN_RING: { name: 'TERRAIN_RING', fragmentSource: '', velocityParamIndices: [6, 7, 8], is3D: true },
+    IMAGE_OVERLAY: { name: 'IMAGE_OVERLAY', fragmentSource: IMAGE_OVERLAY_SHADER },
 };
