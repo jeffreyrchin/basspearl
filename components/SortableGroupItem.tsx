@@ -41,7 +41,7 @@ const SortableGroupItem = ({
         <div
             ref={isOverlay ? undefined : setNodeRef}
             style={style}
-            className={`flex flex-row w-full border border-white/5 rounded-md overflow-hidden ${isOverlay ? 'bg-black shadow-2xl ring-1 ring-white/10' : 'bg-slate-700/50'}`}
+            className={`flex flex-row w-full border border-white/5 rounded-md overflow-hidden ${isOverlay ? 'bg-black shadow-2xl ring-1 ring-white/10' : 'bg-white/10'}`}
         >
             {/* Grip Handle */}
             <button
@@ -106,7 +106,7 @@ const SortableGroupItem = ({
 
                             <div
                                 className={`flex items-center h-16 md:h-10 rounded-md overflow-hidden
-                                    ${isSelected ? 'bg-white/10' : 'hover:bg-white/[0.04]'}
+                                    ${isSelected ? 'bg-white/10' : 'hover:bg-white/5'}
                                 `}
                             >
                                 <button
