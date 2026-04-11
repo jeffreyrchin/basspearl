@@ -182,7 +182,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             className="px-3"
                         />
 
-                        {/* Library Toggle (Desktop only) */}
+                        {/* Library Toggle */}
                         <ToolbarButton
                             onPointerDown={() => {
                                 if (isLibraryOpen) removeFocus('library');
@@ -193,7 +193,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             isActive={isLibraryOpen}
                             activeBg="bg-white/10"
                             activeBorder="border-white/30"
-                            className="hidden lg:flex px-3"
+                            className="px-3"
                         />
 
                         {/* Inspector Toggle (Desktop only) */}
