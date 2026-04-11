@@ -1226,6 +1226,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Freq X', { v: 10, b: 'OFF' }),
           o('Freq Y', { v: 10, b: 'OFF' }),
+          o('Feather', { v: 0, b: 'OFF' }),
           o('Scale X', { v: 50 }),
           o('Scale Y', { v: 50 }),
           o('Pan X', { v: 50 }),

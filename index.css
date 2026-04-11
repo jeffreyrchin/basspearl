@@ -243,8 +243,8 @@ textarea {
   -webkit-appearance: none;
   height: 24px;
   width: 24px;
-  /* Visual circle via gradient: 12px radius = 24px diameter */
-  background: radial-gradient(circle at center, lightgray 12px, transparent 12px);
+  /* Visual circle via gradient: white with gray border; 12px radius = 24px diameter */
+  background: radial-gradient(circle at center, white 11px, #d1d5db 11px, #d1d5db 12px, transparent 12.5px);
   background-clip: content-box;
   /* Expands vertical hit area to 44px */
   border-top: 10px solid transparent;
@@ -275,8 +275,8 @@ textarea {
 .scrubber-slider::-moz-range-thumb {
   height: 24px;
   width: 24px;
-  /* Visual circle via gradient: 12px radius = 24px diameter */
-  background: radial-gradient(circle at center, lightgray 12px, transparent 12px);
+  /* Visual circle via gradient: white with gray border; 12px radius = 24px diameter */
+  background: radial-gradient(circle at center, white 11px, #d1d5db 11px, #d1d5db 12px, transparent 12.5px);
   background-clip: content-box;
   /* Expands vertical hit area to 44px */
   border-top: 10px solid transparent;

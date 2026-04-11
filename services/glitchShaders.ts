@@ -1343,21 +1343,28 @@ void main() {
 export const CHECKERBOARD_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[7]; // [freqX, freqY, scaleX, scaleY, panX, panY, rotation]
+uniform float u_params[8]; // [freqX, freqY, feather, scaleX, scaleY, panX, panY, rotation]
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
 ${GLSL_TRANSFORM}
 
 void main() {
-    TR tr = getTransform_(v_texCoord, u_params[2], u_params[3], u_params[4], u_params[5], u_params[6], u_resolution);
+    TR tr = getTransform_(v_texCoord, u_params[3], u_params[4], u_params[5], u_params[6], u_params[7], u_resolution);
 
     vec4 src = texture(u_image, v_texCoord);
 
-    vec2 grid = floor(tr.localUV * max(vec2(1.0), vec2(u_params[0], u_params[1])));
+    vec2 uv = tr.localUV * max(vec2(1.0), vec2(u_params[0], u_params[1]));
+    float feather = max(u_params[2] / 100.0, 0.0001);
     
-    // Calculate the grid value [0.0 or 1.0]
-    float val = mod(grid.x + grid.y, 2.0);
+    // Wave-based checkerboard with feathering
+    // wx * wy is positive in diagonally alternating squares [0..1] and negative in others [-1..0]
+    float wx = sin(uv.x * 3.14159265);
+    float wy = sin(uv.y * 3.14159265);
+    float combined = wx * wy;
+
+    // Smooth transition between -feather and +feather
+    float val = smoothstep(-feather, feather, combined);
 
     // Premultiplied Mix
     float factor = val * tr.mask;
