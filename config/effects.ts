@@ -154,8 +154,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     params: [
       p('Width', { v: 100 }),
       p('Height', { v: 100 }),
-      p('X-Freq', { v: 50 }),
-      p('Y-Freq', { v: 50 }),
+      p('Freq X', { v: 50 }),
+      p('Freq Y', { v: 50 }),
       p('Density', { v: 100 }, { v: 100, b: 'SUB' }),
       p('Roundness', { v: 0 }),
       p('Blend', { v: 100 }),
@@ -212,8 +212,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     params: [
       p('Cell Width', { v: 59 }, { v: 65 }),
       p('Cell Height', { v: 100 }, { v: 65 }),
-      p('X-Freq', { v: 35 }),
-      p('Y-Freq', { v: 35 }),
+      p('Freq X', { v: 35 }),
+      p('Freq Y', { v: 35 }),
       p('Density', { v: 100 }),
       p('Jitter', { v: 100 }),
       p('Speed', { v: 30, b: 'BASS' }, { v: 20, b: 'BASS' }),

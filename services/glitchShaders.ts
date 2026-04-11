@@ -687,7 +687,7 @@ void main() {
 export const GRAIN_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[12]; // [width, height, x-freq, y-freq, density, roundness, blend, scaleX, scaleY, panX, panY, rotation]
+uniform float u_params[12]; // [width, height, freq-x, freq-y, density, roundness, blend, scaleX, scaleY, panX, panY, rotation]
 uniform vec2 u_resolution;
 uniform float u_seed;
 in vec2 v_texCoord;
@@ -1077,7 +1077,7 @@ export const CELLULAR_NOISE_SHADER = `#version 300 es
 precision highp float;
 
 uniform sampler2D u_image;
-uniform float u_params[8]; // [cell width, cell height, x-freq, y-freq, density, jitter, speed, blend]
+uniform float u_params[8]; // [cell width, cell height, freq-x, freq-y, density, jitter, speed, blend]
 uniform float u_integrated_values[8];
 uniform float u_seed;
 uniform vec2 u_resolution;
