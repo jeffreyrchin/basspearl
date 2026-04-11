@@ -88,12 +88,12 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
     );
 }
 
-const CATEGORIES = ['All', 'Sources', 'Effects'];
+const CATEGORIES = ['All', 'Patterns', 'Effects', 'Presets'];
 
 const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
     const addEffect = useEffectStore(s => s.addEffect);
     const addMacro = useEffectStore(s => s.addMacro);
-    const [selectedCategory, setSelectedCategory] = useState<string>('Sources');
+    const [selectedCategory, setSelectedCategory] = useState<string>('Patterns');
 
     // === Shared Hover Canvas State ===
     // Only one (element, blueprint) pair is active at a time.
@@ -130,8 +130,9 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
         return items
             .filter((item) => {
                 if (selectedCategory === 'All') return true;
-                if (selectedCategory === 'Sources') return item.category === 'Pattern' || item.category === 'Macro';
+                if (selectedCategory === 'Patterns') return item.category === 'Pattern';
                 if (selectedCategory === 'Effects') return item.category === 'Modifier';
+                if (selectedCategory === 'Presets') return item.category === 'Macro';
                 return false;
             })
             .sort((a, b) => a.label.localeCompare(b.label));

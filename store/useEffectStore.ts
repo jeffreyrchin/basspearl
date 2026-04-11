@@ -210,7 +210,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         get().commitHistory();
         analytics.effect.added(`MACRO_${macroType}` as any);
         set((state) => ({
-            effects: [...state.effects, ...newEffects],
+            effects: newEffects,
             isSidebarOpen: true,
             selectedIds: new Set(newEffects.map(e => e.id)),
             focusStack: [...state.focusStack.filter(z => z !== 'pipeline'), 'pipeline'] as ('pipeline' | 'inspector' | 'library')[]

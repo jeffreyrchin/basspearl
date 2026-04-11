@@ -35,6 +35,9 @@ const getThumbnailBackgroundUrl = (effects: EffectConfig[]): string | null => {
         if (effect.category === 'Modifier') {
             return "./sunset_square.jpeg";
         }
+        if (effect.label === 'Image Overlay') {
+            return "./landscape.png";
+        }
     }
     return null;
 };
