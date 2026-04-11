@@ -689,13 +689,13 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Extrusion', { v: 0, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
-          o('Size', { v: 58, b: 'OFF' }),
+          o('Size', { v: 50, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
-          o('Spin Speed X', { v: 100, m: 0, b: 'TREBLE' }, { v: 18, b: 'OFF' }),
-          o('Spin Speed Y', { v: 100, m: 0, b: 'TREBLE' }, { v: 18, b: 'OFF' }),
-          o('Spin Speed Z', { v: 100, m: 0, b: 'TREBLE' }, { v: 18, b: 'OFF' }),
+          o('Spin Speed X', { v: 3, m: 0, b: 'SUB' }, { v: 18, b: 'OFF' }),
+          o('Spin Speed Y', { v: 50, m: 0, b: 'SUB' }, { v: 18, b: 'OFF' }),
+          o('Spin Speed Z', { v: 0, m: 0, b: 'OFF' }, { v: 18, b: 'OFF' }),
         ],
         melded: true
       },
@@ -942,15 +942,15 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'TERRAIN_SPHERE',
         params: [
-          o('Extrusion', { v: 50, b: 'SUB' }, { v: 0, b: 'OFF' }),
+          o('Extrusion', { v: 0, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
-          o('Size', { v: 75, b: 'OFF' }, { v: 57, b: 'OFF' }),
+          o('Size', { v: 50, b: 'OFF' }, { v: 57, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
           o('Spin Speed X', { v: 0, b: 'OFF' }),
           o('Spin Speed Y', { v: 0, b: 'OFF' }),
-          o('Spin Speed Z', { v: 5, b: 'OFF' }),
+          o('Spin Speed Z', { v: 30, m: 0, b: 'SUB' }, { v: 5, b: 'OFF' }),
         ],
         melded: true
       },
