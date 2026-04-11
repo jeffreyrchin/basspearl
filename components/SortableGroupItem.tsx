@@ -41,7 +41,7 @@ const SortableGroupItem = ({
         <div
             ref={isOverlay ? undefined : setNodeRef}
             style={style}
-            className={`flex flex-row w-full border border-white/5 rounded-md overflow-hidden ${isOverlay ? 'bg-black shadow-2xl ring-1 ring-white/10' : 'bg-white/5'}`}
+            className={`flex flex-row w-full border border-white/5 rounded-md overflow-hidden ${isOverlay ? 'bg-black shadow-2xl ring-1 ring-white/10' : 'bg-slate-700/50'}`}
         >
             {/* Grip Handle */}
             <button
@@ -131,7 +131,7 @@ const SortableGroupItem = ({
                                     <div className="flex h-full items-center" onClick={(e) => e.stopPropagation()}>
                                         <button
                                             onClick={() => toggleSolo(effect.id)}
-                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors ${effect.soloed ? 'bg-white text-black' : 'text-white/30 hover:bg-white/10 hover:text-white'}`}
+                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors ${effect.soloed ? 'bg-white text-black' : 'text-white/50 hover:bg-white/10 hover:text-white'}`}
                                             title="Toggle Solo"
                                         >
                                             <span className="material-symbols-outlined text-[18px]">pill</span>
@@ -139,7 +139,7 @@ const SortableGroupItem = ({
                                         <div className="w-[1px] h-8 md:h-5 bg-white/10"></div>
                                         <button
                                             onClick={() => toggleMute(effect.id)}
-                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors ${effect.muted ? 'bg-indigo-500 text-white' : 'text-white/30 hover:bg-white/10 hover:text-white'}`}
+                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors ${effect.muted ? 'bg-indigo-500 text-white' : 'text-white/50 hover:bg-white/10 hover:text-white'}`}
                                             title="Toggle Visibility"
                                         >
                                             <span className="material-symbols-outlined text-[18px]">{effect.muted ? 'visibility_off' : 'visibility'}</span>

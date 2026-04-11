@@ -108,7 +108,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     );
 
     return (
-        <div data-section="pipeline" key="view-main" className="flex-1 flex flex-col min-h-0 pt-1 animate-in fade-in slide-in-from-right-4 duration-300 bg-white/5 relative">
+        <div data-section="pipeline" key="view-main" className="flex-1 flex flex-col min-h-0 pt-1 animate-in fade-in slide-in-from-right-4 duration-300 bg-slate-900/50 relative">
             {/* Header Bar */}
             <div className="h-14 border-b border-white/5 bg-slate-800 flex items-center justify-between px-6 shrink-0 relative">
                 {/* Add Effect Button */}

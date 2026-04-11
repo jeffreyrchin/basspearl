@@ -183,7 +183,6 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         set((state) => ({
             effects: [...state.effects, newEffect],
             isSidebarOpen: true,
-            selectedIds: new Set([newEffect.id]),
             focusStack: [...state.focusStack.filter(z => z !== 'pipeline'), 'pipeline'] as ('pipeline' | 'inspector' | 'library')[]
         }));
     },
@@ -212,7 +211,6 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         set((state) => ({
             effects: newEffects,
             isSidebarOpen: true,
-            selectedIds: new Set(newEffects.map(e => e.id)),
             focusStack: [...state.focusStack.filter(z => z !== 'pipeline'), 'pipeline'] as ('pipeline' | 'inspector' | 'library')[]
         }));
     },
