@@ -78,7 +78,6 @@ export interface EffectMetadata {
 
 export type MacroType =
   'FOG_VORTEX' |
-  'RAINBOW_DOT' |
   'RUBBER_BAND' |
   'METRO' |
   'LANDSCAPE' |
@@ -109,7 +108,12 @@ export type MacroType =
   'CRUSHED_RAIN' |
   'RIPPLES' |
   'SPINNING_CORRIDOR' |
-  'SQUARE_RIPPLES';
+  'SQUARE_RIPPLES' |
+  'ANGULAR_EXPANSION' |
+  'SEARCHLIGHTS' |
+  'WAXY_STARS' |
+  'SPIRAL_GLOW' |
+  'RUSH_HOUR';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;
