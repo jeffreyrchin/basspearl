@@ -5,9 +5,6 @@ export type AnalyticsEvent =
     | 'playback_toggled'
     | 'effect_added'
     | 'effect_removed'
-    | 'image_upload_started'
-    | 'image_upload_succeeded'
-    | 'image_upload_failed'
     | 'audio_upload_started'
     | 'audio_upload_succeeded'
     | 'audio_upload_failed'
@@ -66,23 +63,6 @@ export const analytics = {
         mic_started: () => trackEvent('audio_mic_started'),
         tab_started: () => trackEvent('audio_tab_started'),
         demo_started: () => trackEvent('audio_demo_started'),
-    },
-    image: {
-        started: (file: File) => trackEvent('image_upload_started', {
-            file_size: file.size,
-            file_type: file.type
-        }),
-        succeeded: (file: File, width: number, height: number) => trackEvent('image_upload_succeeded', {
-            file_size: file.size,
-            file_type: file.type,
-            image_width: width,
-            image_height: height
-        }),
-        failed: (file: File, err?: any) => trackEvent('image_upload_failed', {
-            file_size: file.size,
-            file_type: file.type,
-            error_message: err?.message || "Browser failed to decode image source"
-        }),
     },
     export: {
         started: () => trackEvent('export_started'),
