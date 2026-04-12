@@ -122,7 +122,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ type: 'spring', damping: 50, stiffness: 1000 }}
                 data-section="modal"
-                className="relative w-[70vw] bg-[#0a0a1a] rounded-2xl border border-white/5 max-h-[90vh] overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+                className="relative w-[95vw] max-w-4xl bg-[#0a0a1a] rounded-2xl border border-white/5 max-h-[90vh] overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
             >
                 {/* Close Button */}
                 <button
@@ -188,7 +188,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                     {/* Disclaimer */}
                     <div className="mt-8 flex flex-col items-center gap-3 w-full">
                         <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 w-full max-w-lg flex flex-col items-center gap-1.5 shadow-lg">
-                            <div className="flex items-center gap-1.5 text-red-400">
+                            <div className="flex flex-col sm:flex-row text-center items-center gap-1.5 text-red-400">
                                 <span className="material-symbols-outlined text-[16px]">warning</span>
                                 <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Photosensitivity Warning</span>
                             </div>

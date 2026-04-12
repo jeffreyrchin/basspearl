@@ -254,7 +254,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             </div>
 
             {/* Main UI Layer */}
-            <div className={`absolute inset-0 z-10 pointer-events-none transition-opacity duration-300 ${isUiHidden ? 'opacity-0 invisible' : 'opacity-100 visible'}`}>
+            <div inert={isUiHidden} className={`absolute inset-0 z-10 pointer-events-none transition-opacity duration-300 ${isUiHidden ? 'opacity-0 invisible' : 'opacity-100 visible'}`}>
                 {/* Top UI Overlay */}
                 <div className="absolute top-0 left-0 right-0 z-navbar pointer-events-none bg-gradient-to-b from-black via-black/60 to-transparent pb-3">
                     <Navbar />
@@ -316,6 +316,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
                 {/* Sidebar: Effects Rack & Parameters */}
                 <aside
+                    inert={!isSidebarOpen}
                     className={`pointer-events-auto fixed inset-y-0 right-0 z-sidebar w-full sm:w-[360px] bg-slate-900/90 flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] will-change-transform ${isSidebarOpen ? 'translate-x-0 visible' : 'translate-x-full invisible'}`}
                 >
                     {/* Inner wrapper */}
