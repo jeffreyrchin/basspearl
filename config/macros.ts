@@ -1842,6 +1842,15 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         melded: false
       },
       {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 0, b: 'OFF' }),
+          o('Distance', { v: 20, b: 'OFF' }),
+          o('Strength', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
         type: 'SCROLL',
         params: [
           o('Left Speed', { v: 0, b: 'OFF' }),
@@ -1850,15 +1859,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Down Speed', { v: 0, b: 'OFF' }),
           o('Ghost X', { v: 0, b: 'OFF' }),
           o('Ghost Y', { v: 0, b: 'OFF' }),
-        ],
-        melded: false
-      },
-      {
-        type: 'GLOW',
-        params: [
-          o('Sensitivity', { v: 0, b: 'OFF' }),
-          o('Distance', { v: 20, b: 'OFF' }),
-          o('Strength', { v: 100, b: 'OFF' }),
         ],
         melded: false
       },
