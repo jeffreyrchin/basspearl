@@ -113,7 +113,12 @@ export type MacroType =
   'SEARCHLIGHTS' |
   'WAXY_STARS' |
   'SPIRAL_GLOW' |
-  'RUSH_HOUR';
+  'RUSH_HOUR' |
+  'STEEL_LATTICE' |
+  'CRYSTAL_RAIN' |
+  'STORM' |
+  'GHOSTS' |
+  'HEXAGON_TUNNEL';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;

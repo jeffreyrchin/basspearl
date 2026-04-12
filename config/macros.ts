@@ -477,8 +477,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'EDGE_MASK',
         params: [
-          o('Sensitivity', { v: 0, b: 'OFF' }),
-          o('Thickness', { v: 3, b: 'OFF' }, { v: 10, b: 'OFF' }),
+          o('Sensitivity', { v: 3, b: 'OFF' }),
+          o('Thickness', { v: 3, b: 'OFF' }),
           o('Invert', { v: 0, b: 'OFF' }),
         ],
         melded: false
@@ -1283,48 +1283,50 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'CELLULAR_NOISE',
         params: [
-          o('Cell Width', { v: 59 }),
-          o('Cell Height', { v: 100 }),
-          o('Freq X', { v: 42 }, { v: 34 }),
-          o('Freq Y', { v: 42 }),
+          o('Cell Width', { v: 42 }, { v: 54, b: 'OFF' }),
+          o('Cell Height', { v: 54 }, { v: 54, b: 'OFF' }),
+          o('Freq X', { v: 50 }, { v: 42, b: 'OFF' }),
+          o('Freq Y', { v: 42 }, { v: 42, b: 'OFF' }),
           o('Density', { v: 100 }),
           o('Jitter', { v: 100 }),
           o('Speed', { v: 30, b: 'SUB' }, { v: 15, b: 'OFF' }),
           o('Blend', { v: 100 }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'EDGE_MASK',
         params: [
-          o('Sensitivity', { v: 2, b: 'OFF' }),
-          o('Thickness', { v: 15, b: 'OFF' }),
-          o('Invert', { v: 0, b: 'OFF' }),
+          o('Sensitivity', { v: 5, b: 'OFF' }),
+          o('Thickness', { v: 0, b: 'OFF' }),
+          o('Invert', { v: 100, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
-        type: 'SPECTRAL_MAP',
+        type: 'INVERT',
         params: [
-          o('Resolution', { v: 10, b: 'OFF' }),
-          o('Phase Offset', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 25, b: 'OFF' }),
-          o('Strength', { v: 100, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Inversion', { v: 100, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
+      },
+      {
+        type: 'HUE_ROTATION',
+        params: [
+          o('Phase Offset', { v: 10, b: 'OFF' }),
+          o('Speed', { v: 10, b: 'OFF' }),
+          o('Vibrance', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
       },
       {
         type: 'INFINITE_ZOOM',
         params: [
-          o('Speed', { v: 50, b: 'SUB' }, { v: 15, b: 'OFF' }),
-          o('Depth', { v: 0, b: 'OFF' }),
-          o('Spacing', { v: 70, b: 'OFF' }),
-          o('Plane Count', { v: 20, b: 'OFF' }),
-          o('Edge Feather', { v: 50, b: 'OFF' }),
+          o('Speed', { v: 20, b: 'SUB' }, { v: 15, b: 'OFF' }),
+          o('Depth', { v: 8, b: 'OFF' }),
+          o('Spacing', { v: 40, b: 'OFF' }),
+          o('Plane Count', { v: 100, b: 'OFF' }),
+          o('Edge Feather', { v: 70, b: 'OFF' }),
           o('Fade Buffer', { v: 100, b: 'OFF' }),
         ],
         melded: false
@@ -1873,5 +1875,294 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         melded: false
       }
     ]
-  }
+  },
+  STEEL_LATTICE: {
+    id: 'STEEL_LATTICE',
+    label: 'Steel Lattice',
+    effects: [
+      {
+        type: 'CELLULAR_NOISE',
+        params: [
+          o('Cell Width', { v: 58 }),
+          o('Cell Height', { v: 45 }),
+          o('Freq X', { v: 35 }),
+          o('Freq Y', { v: 35 }),
+          o('Density', { v: 100 }),
+          o('Jitter', { v: 100 }),
+          o('Speed', { v: 0, b: 'OFF' }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'CHANNEL_SHIFT',
+        params: [
+          o('Offset', { v: 15, b: 'OFF' }),
+          o('Vertical Tear', { v: 15, b: 'OFF' }),
+          o('Scale X', { v: 50 }),
+          o('Scale Y', { v: 50 }),
+          o('Pan X', { v: 50 }),
+          o('Pan Y', { v: 50 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'TRI_CRUSH',
+        params: [
+          o('Width', { v: 48, b: 'OFF' }),
+          o('Height', { v: 37, b: 'OFF' }),
+          o('Shape', { v: 50, b: 'OFF' }),
+          o('Quantize', { v: 0, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'EDGE_MASK',
+        params: [
+          o('Sensitivity', { v: 5, b: 'OFF' }),
+          o('Thickness', { v: 3, b: 'OFF' }),
+          o('Invert', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'INFINITE_ZOOM',
+        params: [
+          o('Speed', { v: 20, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Depth', { v: 0, b: 'OFF' }),
+          o('Spacing', { v: 100, b: 'OFF' }),
+          o('Plane Count', { v: 100, b: 'OFF' }),
+          o('Edge Feather', { v: 30, b: 'OFF' }),
+          o('Fade Buffer', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  CRYSTAL_RAIN: {
+    id: 'CRYSTAL_RAIN',
+    label: 'Crystal Rain',
+    effects: [
+      {
+        type: 'CELLULAR_NOISE',
+        params: [
+          o('Cell Width', { v: 60 }),
+          o('Cell Height', { v: 100 }),
+          o('Freq X', { v: 70 }, { v: 50 }),
+          o('Freq Y', { v: 60 }, { v: 50 }),
+          o('Density', { v: 38 }),
+          o('Jitter', { v: 100 }),
+          o('Speed', { v: 0, b: 'OFF' }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'TRI_CRUSH',
+        params: [
+          o('Width', { v: 8, b: 'OFF' }, { v: 20, b: 'OFF' }),
+          o('Height', { v: 8, b: 'OFF' }, { v: 20, b: 'OFF' }),
+          o('Shape', { v: 50, b: 'OFF' }),
+          o('Quantize', { v: 0, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'SCROLL',
+        params: [
+          o('Left Speed', { v: 0, b: 'OFF' }),
+          o('Right Speed', { v: 0, b: 'OFF' }),
+          o('Up Speed', { v: 0, b: 'OFF' }),
+          o('Down Speed', { v: 20, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Ghost X', { v: 0, b: 'OFF' }),
+          o('Ghost Y', { v: 10, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'INFINITE_ZOOM',
+        params: [
+          o('Speed', { v: 0, b: 'OFF' }),
+          o('Depth', { v: 0, b: 'OFF' }),
+          o('Spacing', { v: 100, b: 'OFF' }),
+          o('Plane Count', { v: 100, b: 'OFF' }),
+          o('Edge Feather', { v: 0, b: 'OFF' }),
+          o('Fade Buffer', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 70, b: 'OFF' }),
+          o('Distance', { v: 50, b: 'OFF' }),
+          o('Strength', { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      },
+    ]
+  },
+  STORM: {
+    id: 'STORM',
+    label: 'Storm',
+    effects: [
+      {
+        type: 'ORGANIC_NOISE',
+        params: [
+          o('Scale', { v: 9 }),
+          o('Complexity', { v: 100 }),
+          o('Warp', { v: 10 }),
+          o('Speed', { v: 60, m: 10, b: 'SUB' }, { v: 25, b: 'OFF' }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'SPIRAL_GRADIENT',
+        params: [
+          o('Feather', { v: 50 }),
+          o('Frequency', { v: 3 }),
+          o('Twist', { v: 50, b: 'OFF' }),
+          o('Speed', { v: 63, m: 20, b: 'SUB' }, { v: 30, b: 'OFF' }),
+          o('Pan X', { v: 50 }),
+          o('Pan Y', { v: 50 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'TERRAIN',
+        params: [
+          o('Extrusion', { v: 7, m: 3, b: 'SUB' }, { v: 5, b: 'OFF' }),
+          o('Resolution', { v: 100, b: 'OFF' }),
+          o('Tile Width', { v: 100, b: 'OFF' }),
+          o('Tile Height', { v: 100, b: 'OFF' }),
+          o('Rotate X', { v: 98, b: 'OFF' }),
+          o('Rotate Y', { v: 0, b: 'OFF' }),
+          o('Rotate Z', { v: 0, b: 'OFF' }),
+          o('Elevation', { v: 38, b: 'OFF' }),
+          o('Distance', { v: 64, b: 'OFF' }),
+          o('Tile Blend', { v: 0, b: 'OFF' }),
+          o('Speed X', { v: 0, b: 'OFF' }),
+          o('Speed Y', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      },
+    ]
+  },
+  GHOSTS: {
+    id: 'GHOSTS',
+    label: 'Ghosts',
+    effects: [
+      {
+        type: 'CELLULAR_NOISE',
+        params: [
+          o('Cell Width', { v: 30 }),
+          o('Cell Height', { v: 30 }),
+          o('Freq X', { v: 30 }),
+          o('Freq Y', { v: 30 }),
+          o('Density', { v: 100 }),
+          o('Jitter', { v: 100 }),
+          o('Speed', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'TERRAIN',
+        params: [
+          o('Extrusion', { v: 12, m: 1, b: 'SUB' }),
+          o('Resolution', { v: 100, b: 'OFF' }),
+          o('Tile Width', { v: 100, b: 'OFF' }),
+          o('Tile Height', { v: 100, b: 'OFF' }),
+          o('Rotate X', { v: 0, b: 'OFF' }),
+          o('Rotate Y', { v: 0, b: 'OFF' }),
+          o('Rotate Z', { v: 0, b: 'OFF' }),
+          o('Elevation', { v: 40, b: 'OFF' }),
+          o('Distance', { v: 70, b: 'OFF' }),
+          o('Tile Blend', { v: 0, b: 'OFF' }),
+          o('Speed X', { v: 0, b: 'OFF' }),
+          o('Speed Y', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      },
+    ]
+  },
+  HEXAGON_TUNNEL: {
+    id: 'HEXAGON_TUNNEL',
+    label: 'Hexagon Tunnel',
+    effects: [
+      {
+        type: 'GRAIN',
+        params: [
+          o('Width', { v: 100 }),
+          o('Height', { v: 100 }),
+          o('Freq X', { v: 50 }),
+          o('Freq Y', { v: 50 }),
+          o('Density', { v: 100, b: 'OFF' }),
+          o('Roundness', { v: 0 }),
+          o('Blend', { v: 100 }),
+          o('Scale X', { v: 50 }),
+          o('Scale Y', { v: 50 }),
+          o('Pan X', { v: 50 }),
+          o('Pan Y', { v: 50 }),
+          o('Rotation', { v: 0 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'HEX_CRUSH',
+        params: [
+          o('Width', { v: 96, b: 'OFF' }),
+          o('Height', { v: 59, b: 'OFF' }),
+          o('Quantize', { v: 0 }),
+          o('Scale X', { v: 79 }),
+          o('Scale Y', { v: 79 }),
+          o('Pan X', { v: 50 }),
+          o('Pan Y', { v: 50 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'SPECTRAL_MAP',
+        params: [
+          o('Resolution', { v: 6, b: 'OFF' }),
+          o('Phase Offset', { v: 0, b: 'OFF' }),
+          o('Speed', { v: 10, b: 'OFF' }),
+          o('Strength', { v: 100, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      },
+
+      {
+        type: 'TUNNEL_WARP',
+        params: [
+          o('Scale', { v: 20, b: 'OFF' }),
+          o('Speed', { v: 100, m: 0, b: 'SUB' }, { v: 50, b: 'OFF' }),
+          o('Twist', { v: 5, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 0, b: 'OFF' }),
+          o('Distance', { v: 37, b: 'OFF' }),
+          o('Strength', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+    ]
+  },
 };

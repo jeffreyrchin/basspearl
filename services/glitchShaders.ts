@@ -1194,7 +1194,6 @@ void main() {
     vec3 luma = vec3(0.299, 0.587, 0.114);
 
     // Sample 8-neighbor luminance
-    float c = dot(texture(u_image, v_texCoord).rgb, luma);
     float l = dot(texture(u_image, v_texCoord + vec2(-texel.x, 0.0)).rgb, luma);
     float r = dot(texture(u_image, v_texCoord + vec2(texel.x, 0.0)).rgb, luma);
     float t = dot(texture(u_image, v_texCoord + vec2(0.0, texel.y)).rgb, luma);
@@ -1204,14 +1203,16 @@ void main() {
     float bl = dot(texture(u_image, v_texCoord + vec2(-texel.x, -texel.y)).rgb, luma);
     float br = dot(texture(u_image, v_texCoord + vec2(texel.x, -texel.y)).rgb, luma);
 
-    // Standard Laplacian
-    float laplacian = 8.0 * c - (l + r + t + b + tl + tr + bl + br);
+    // Sobel operator for first-order gradient magnitude
+    float gx = (tr + 2.0 * r + br) - (tl + 2.0 * l + bl);
+    float gy = (tl + 2.0 * t + tr) - (bl + 2.0 * b + br);
+    float magnitude = length(vec2(gx, gy));
 
-    // Normalize Laplacian to roughly 0–1
-    float lapNorm = abs(laplacian) / 8.0;
+    // Normalize to roughly 0–1
+    float magNorm = magnitude / 4.0;
 
-    // Apply sensitivity linearly
-    float mask = smoothstep(0.0, sensitivity, lapNorm);
+    // Apply sensitivity
+    float mask = smoothstep(0.0, sensitivity, magNorm);
 
     // Inversion
     mask = mix(mask, 1.0 - mask, invert);
