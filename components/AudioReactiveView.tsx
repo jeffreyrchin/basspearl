@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { EffectConfig } from '../types';
 import SidebarNavigation from './SidebarNavigation';
 import PlaybackBar from './PlaybackBar';
@@ -8,6 +8,7 @@ import ExportModal from './ExportModal';
 import LandingModal from './LandingModal';
 import InspectorWindow from './InspectorWindow';
 import LibraryWindow from './LibraryWindow';
+import TabAudioUnsupportedModal from './TabAudioUnsupportedModal';
 import { Footer } from './Footer';
 import { analytics } from '@/services/analytics';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
@@ -29,6 +30,12 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
     const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
     const clearSelection = useEffectStore(s => s.clearSelection);
+
+    const [isTabAudioUnsupportedModalOpen, setIsTabAudioUnsupportedModalOpen] = useState(false);
+    const isTabAudioUnsupported = typeof navigator !== 'undefined' && (
+        !navigator.mediaDevices?.getDisplayMedia || // Browser can't share screen at all
+        !(navigator.mediaDevices.getSupportedConstraints() as any).suppressLocalAudioPlayback // Browser can't route tab audio
+    );
 
     const requestRef = useRef<number>();
     const currentTimeLabelRef = useRef<HTMLSpanElement>(null);
@@ -60,7 +67,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
     const {
         isLiveMode,
+        liveSourceType,
         startMic,
+        startTabAudio,
         stopMic
     } = useLiveAudio();
 
@@ -72,6 +81,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     } = useProjectAssets({
         audioFile,
         startMic,
+        startTabAudio,
         loadAudioFromUrl,
         loadAudioFromFile
     });
@@ -154,7 +164,15 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     }, [isLiveMode, animate]);
 
     const handleMicClick = () => {
-        isLiveMode ? stopMic() : (stopPlayback(), startMic());
+        isLiveMode && liveSourceType === 'mic' ? stopMic() : (stopPlayback(), startMic());
+    };
+
+    const handleTabAudioClick = () => {
+        if (isTabAudioUnsupported) {
+            setIsTabAudioUnsupportedModalOpen(true);
+            return;
+        }
+        isLiveMode && liveSourceType === 'tab' ? stopMic() : (stopPlayback(), startTabAudio());
     };
 
     const handleCanvasPointerDown = useCanvasSelection(canvasRef);
@@ -213,7 +231,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 audioFile={audioFile}
                 handleAudioUpload={handleAudioUpload}
                 isLiveMode={isLiveMode}
+                liveSourceType={liveSourceType}
+                isTabAudioUnsupported={isTabAudioUnsupported}
                 startMic={handleMicClick}
+                startTabAudio={handleTabAudioClick}
                 onPlayPause={handleTogglePlay}
                 isPlaying={isPlaying}
                 isProcessing={isProcessing}
@@ -280,9 +301,15 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     <LandingModal
                         onStart={handleLandingStart}
                         onClose={() => setIsLandingOpen(false)}
+                        isTabAudioUnsupported={isTabAudioUnsupported}
+                        openTabAudioUnsupportedModal={() => setIsTabAudioUnsupportedModalOpen(true)}
                     />
                 )}
             </AnimatePresence>
+            <TabAudioUnsupportedModal
+                isOpen={isTabAudioUnsupportedModalOpen}
+                onClose={() => setIsTabAudioUnsupportedModalOpen(false)}
+            />
             <ExportModal
                 isOpen={isExportModalOpen}
                 onClose={closeExportModal}

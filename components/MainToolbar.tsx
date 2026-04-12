@@ -7,7 +7,10 @@ interface MainToolbarProps {
     audioFile: File | null;
     handleAudioUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
     isLiveMode: boolean;
+    liveSourceType: 'mic' | 'tab' | null;
+    isTabAudioUnsupported: boolean;
     startMic: () => void;
+    startTabAudio: () => void;
     onPlayPause: () => void;
     isPlaying: boolean;
     isProcessing: boolean;
@@ -37,7 +40,7 @@ const ToolbarButton: React.FC<{
         <button
             type="button"
             onClick={() => onClick?.()}
-            onPointerDown={(e) => { e.stopPropagation(); onPointerDown?.() }}
+            onPointerDownCapture={(e) => { e.stopPropagation(); onPointerDown?.() }}
             disabled={disabled}
             className={`${baseClass} ${activeStyles} ${className}`}
             title={title}
@@ -63,7 +66,10 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     audioFile,
     handleAudioUpload,
     isLiveMode,
+    liveSourceType,
+    isTabAudioUnsupported,
     startMic,
+    startTabAudio,
     onPlayPause,
     isPlaying,
     isProcessing,
@@ -99,19 +105,20 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                     </div>
 
                     {/* Toolbar Buttons */}
-                    <div className="flex items-center gap-3 shrink-0">                        {/* Choose Audio */}
+                    <div className="flex items-center gap-3 shrink-0">
+                        {/* Audio File */}
                         <input
                             ref={audioInputRef}
                             type="file"
                             accept="audio/*, .mp3, .wav, .m4a, .aac, .ogg"
                             onChange={handleAudioUpload}
-                            title="Choose Audio"
+                            title="Audio File"
                             className="sr-only"
                         />
                         <ToolbarButton
                             onClick={() => audioInputRef.current && (audioInputRef.current.value = '', audioInputRef.current.click())}
                             icon="graphic_eq"
-                            title="Choose Audio"
+                            title="Audio File"
                             isActive={!!audioFile}
                             colorHex="#3B82F6"
                             activeBg="bg-[#3B82F6]/5 hover:bg-[#3B82F6]/10"
@@ -120,17 +127,30 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             className="px-3"
                         />
 
-                        {/* Microphone Input */}
+                        {/* Microphone */}
                         <ToolbarButton
                             onPointerDown={startMic}
                             icon="mic"
-                            title="Live Audio"
-                            isActive={isLiveMode}
+                            title="Microphone"
+                            isActive={isLiveMode && liveSourceType === 'mic'}
                             colorHex="#FF0055"
                             activeBg="bg-[#FF0055]/5 hover:bg-[#FF0055]/10"
                             activeBorder="border-[#FF0055]/30 hover:border-[#FF0055]/50"
-                            showDot={isLiveMode}
+                            showDot={isLiveMode && liveSourceType === 'mic'}
                             className="px-3"
+                        />
+
+                        {/* Tab Audio (Desktop only) */}
+                        <ToolbarButton
+                            onPointerDown={startTabAudio}
+                            icon="present_to_all"
+                            title={isTabAudioUnsupported ? "Tab Audio (Unsupported Browser)" : "Tab Audio"}
+                            isActive={isLiveMode && liveSourceType === 'tab'}
+                            colorHex={isTabAudioUnsupported ? "#666" : "#A855F7"}
+                            activeBg="bg-[#A855F7]/5 hover:bg-[#A855F7]/10"
+                            activeBorder="border-[#A855F7]/30 hover:border-[#A855F7]/50"
+                            showDot={isLiveMode && liveSourceType === 'tab'}
+                            className="px-3 hidden lg:flex"
                         />
 
                         {/* Seek Backward (Desktop only) */}

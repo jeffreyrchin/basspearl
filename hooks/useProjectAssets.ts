@@ -5,6 +5,7 @@ import { useEffectStore } from '../store/useEffectStore';
 export interface UseProjectAssetsProps {
     audioFile: File | null;
     startMic: () => Promise<void>;
+    startTabAudio: () => Promise<void>;
     loadAudioFromUrl: (url: string, title: string) => Promise<void>;
     loadAudioFromFile: (file: File) => Promise<void>;
 }
@@ -12,6 +13,7 @@ export interface UseProjectAssetsProps {
 export const useProjectAssets = ({
     audioFile,
     startMic,
+    startTabAudio,
     loadAudioFromUrl,
     loadAudioFromFile
 }: UseProjectAssetsProps) => {
@@ -21,7 +23,7 @@ export const useProjectAssets = ({
 
     const [isLandingOpen, setIsLandingOpen] = useState(effects.length === 0 && audioFile === null);
 
-    const handleLandingStart = useCallback((audioOption: 'upload' | 'live' | 'demo', selectedAudioFile?: File) => {
+    const handleLandingStart = useCallback((audioOption: 'upload' | 'mic' | 'demo' | 'tab', selectedAudioFile?: File) => {
         setIsLandingOpen(false);
 
         // 1. Handle Audio Option
@@ -34,12 +36,16 @@ export const useProjectAssets = ({
             loadAudioFromFile(selectedAudioFile).catch(err => {
                 console.error('Failed to load uploaded audio:', err);
             });
-        } else if (audioOption === 'live') {
+        } else if (audioOption === 'mic') {
             startMic().catch(err => {
                 console.error('Failed to start mic:', err);
             });
+        } else if (audioOption === 'tab') {
+            startTabAudio().catch(err => {
+                console.error('Failed to start tab audio:', err);
+            });
         }
-    }, [loadAudioFromUrl, loadAudioFromFile, startMic]);
+    }, [loadAudioFromUrl, loadAudioFromFile, startMic, startTabAudio]);
 
     return {
         isLandingOpen,

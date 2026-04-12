@@ -10,6 +10,7 @@ export interface AudioState {
     audioFile: File | null;
     isPlaying: boolean;
     isLiveMode: boolean;
+    liveSourceType: 'mic' | 'tab' | null;
     currentTime: number;
     duration: number;
     isProcessing: boolean;
@@ -38,7 +39,9 @@ export interface AudioState {
     formatTime: (s: number) => string;
 
     // Live Mode
+    startMediaStream: (stream: MediaStream) => Promise<void>;
     startMic: () => Promise<void>;
+    startTabAudio: () => Promise<void>;
     stopMic: () => void;
     getLiveReactivity: () => { smoothed: any, integrated: any } | null;
 }
@@ -47,6 +50,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     audioFile: null,
     isPlaying: false,
     isLiveMode: false,
+    liveSourceType: null,
     currentTime: 0,
     duration: 0,
     isProcessing: false,
@@ -275,8 +279,50 @@ export const useAudioStore = create<AudioState>((set, get) => ({
         return `${m}:${sec.toString().padStart(2, '0')}`;
     },
 
-    startMic: async () => {
+    startMediaStream: async (stream: MediaStream) => {
         const { getAudioContext, stopMic, stopPlayback } = get();
+
+        stopMic();
+        stopPlayback();
+
+        const ctx = getAudioContext();
+        if (ctx.state === 'suspended') {
+            await ctx.resume();
+        }
+
+        const source = ctx.createMediaStreamSource(stream);
+        const fftSize = calculateDynamicFFTSize(ctx.sampleRate);
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = fftSize;
+        source.connect(analyser); // Do not connect to destination (no feedback)
+
+        mainAudioEngine.analyser = analyser;
+        mainAudioEngine.mediaStream = stream;
+
+        const windowArray = new Float32Array(fftSize);
+        for (let i = 0; i < fftSize; i++) {
+            windowArray[i] = 0.5 * (1 - Math.cos(2 * Math.PI * i / (fftSize - 1)));
+        }
+
+        mainAudioEngine.liveBuffers = {
+            re: new Float32Array(fftSize),
+            im: new Float32Array(fftSize),
+            magnitudes: new Float32Array(fftSize / 2),
+            windowArray,
+            timeData: new Float32Array(fftSize)
+        };
+
+        mainAudioEngine.liveState = {
+            baselines: { sub: null, bass: null, mid: null, treble: null },
+            smoothed: { sub: 0, bass: 0, mid: 0, treble: 0 },
+            prevBins: new Float32Array(fftSize / 2).fill(0)
+        };
+        mainAudioEngine.liveIntegrated = { sub: 0, bass: 0, mid: 0, treble: 0 };
+        mainAudioEngine.lastLiveTime = performance.now();
+        mainAudioEngine.micStartTime = performance.now() / 1000;
+    },
+
+    startMic: async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
@@ -285,50 +331,44 @@ export const useAudioStore = create<AudioState>((set, get) => ({
                     autoGainControl: false
                 }
             });
-            stopMic();
-            stopPlayback();
-
-            const ctx = getAudioContext();
-            if (ctx.state === 'suspended') {
-                await ctx.resume();
-            }
-
-            const source = ctx.createMediaStreamSource(stream);
-            const fftSize = calculateDynamicFFTSize(ctx.sampleRate);
-            const analyser = ctx.createAnalyser();
-            analyser.fftSize = fftSize;
-            source.connect(analyser); // Do not connect to destination (no feedback)
-
-            mainAudioEngine.analyser = analyser;
-            mainAudioEngine.mediaStream = stream;
-
-            const windowArray = new Float32Array(fftSize);
-            for (let i = 0; i < fftSize; i++) {
-                windowArray[i] = 0.5 * (1 - Math.cos(2 * Math.PI * i / (fftSize - 1)));
-            }
-
-            mainAudioEngine.liveBuffers = {
-                re: new Float32Array(fftSize),
-                im: new Float32Array(fftSize),
-                magnitudes: new Float32Array(fftSize / 2),
-                windowArray,
-                timeData: new Float32Array(fftSize)
-            };
-
-            mainAudioEngine.liveState = {
-                baselines: { sub: null, bass: null, mid: null, treble: null },
-                smoothed: { sub: 0, bass: 0, mid: 0, treble: 0 },
-                prevBins: new Float32Array(fftSize / 2).fill(0)
-            };
-            mainAudioEngine.liveIntegrated = { sub: 0, bass: 0, mid: 0, treble: 0 };
-            mainAudioEngine.lastLiveTime = performance.now();
-            mainAudioEngine.micStartTime = performance.now() / 1000;
-
-            set({ isLiveMode: true });
-            analytics.audio.mic_started();
+            await get().startMediaStream(stream);
+            set({ isLiveMode: true, liveSourceType: 'mic' });
+            if (analytics.audio.mic_started) analytics.audio.mic_started();
         } catch (err) {
             console.error("Microphone access denied or error:", err);
             alert("Could not access microphone.");
+        }
+    },
+
+    startTabAudio: async () => {
+        try {
+            const stream = await navigator.mediaDevices.getDisplayMedia({
+                audio: {
+                    echoCancellation: false,
+                    noiseSuppression: false,
+                    autoGainControl: false
+                },
+                video: true
+            });
+
+            if (stream.getAudioTracks().length === 0) {
+                stream.getTracks().forEach(t => t.stop());
+                alert("No audio track selected. Please make sure to check 'Share tab audio' in the prompt.");
+                return;
+            }
+
+            await get().startMediaStream(stream);
+
+            stream.getVideoTracks().forEach(track => {
+                track.onended = () => {
+                    get().stopMic();
+                };
+            });
+
+            set({ isLiveMode: true, liveSourceType: 'tab' });
+            if (analytics.audio.tab_started) analytics.audio.tab_started();
+        } catch (err) {
+            console.error("Tab audio access denied or error:", err);
         }
     },
 
@@ -341,7 +381,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
             mainAudioEngine.analyser.disconnect();
             mainAudioEngine.analyser = null;
         }
-        set({ isLiveMode: false });
+        set({ isLiveMode: false, liveSourceType: null });
     },
 
     getLiveReactivity: () => {

@@ -12,6 +12,7 @@ export type AnalyticsEvent =
     | 'audio_upload_succeeded'
     | 'audio_upload_failed'
     | 'audio_mic_started'
+    | 'audio_tab_started'
     | 'audio_demo_started'
     | 'export_started'
     | 'export_succeeded'
@@ -63,6 +64,7 @@ export const analytics = {
             error_message: err?.message || 'Unknown'
         }),
         mic_started: () => trackEvent('audio_mic_started'),
+        tab_started: () => trackEvent('audio_tab_started'),
         demo_started: () => trackEvent('audio_demo_started'),
     },
     image: {

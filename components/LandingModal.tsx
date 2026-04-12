@@ -4,11 +4,13 @@ import { useLegalStore } from '../store/useLegalStore';
 import { useEffectStore } from '@/store/useEffectStore';
 
 interface LandingModalProps {
-    onStart: (audioOption: 'demo' | 'upload' | 'live', audioFile?: File) => void;
+    onStart: (audioOption: 'demo' | 'upload' | 'mic' | 'tab', audioFile?: File) => void;
     onClose: () => void;
+    isTabAudioUnsupported?: boolean;
+    openTabAudioUnsupportedModal?: () => void;
 }
 
-const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
+const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudioUnsupported, openTabAudioUnsupportedModal }) => {
     const audioInputRef = useRef<HTMLInputElement>(null);
 
     const openLegal = useLegalStore(e => e.openLegal);
@@ -35,7 +37,16 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
     };
 
     const handleExternalSource = () => {
-        onStart('live');
+        onStart('mic');
+        pushFocus('library');
+    };
+
+    const handleTabAudio = () => {
+        if (isTabAudioUnsupported && openTabAudioUnsupportedModal) {
+            openTabAudioUnsupportedModal();
+            return;
+        }
+        onStart('tab');
         pushFocus('library');
     };
 
@@ -43,8 +54,9 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
         onClick: () => void;
         icon: string;
         label: string;
-        color: 'cyan' | 'red' | 'pink';
-    }> = ({ onClick, icon, label, color }) => {
+        color: 'cyan' | 'red' | 'pink' | 'purple';
+        badge?: string;
+    }> = ({ onClick, icon, label, color, badge }) => {
         const theme = {
             cyan: {
                 border: 'border-accent-blue/30 hover:border-accent-blue/60',
@@ -60,6 +72,11 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
                 border: 'border-primary/30 hover:border-primary/60',
                 bg: 'bg-primary/5 hover:bg-primary/10',
                 text: 'text-primary'
+            },
+            purple: {
+                border: 'border-purple-500/30 hover:border-purple-500/60',
+                bg: 'bg-purple-500/5 hover:bg-purple-500/10',
+                text: 'text-purple-400'
             }
         }[color];
 
@@ -77,6 +94,11 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
                     <span className="text-[11px] sm:text-[12px] font-medium uppercase tracking-[0.1em] sm:tracking-[0.2em] text-white/90 group-hover:text-white transition-colors">
                         {label}
                     </span>
+                    {badge && (
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-[#A855F7] mt-1 bg-[#A855F7]/10 px-2 py-0.5 rounded border border-[#A855F7]/20 group-hover:bg-[#A855F7]/20 transition-all">
+                            {badge}
+                        </span>
+                    )}
                 </div>
             </button>
         );
@@ -100,7 +122,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ type: 'spring', damping: 50, stiffness: 1000 }}
                 data-section="modal"
-                className="relative w-full max-w-xl bg-[#0a0a1a] rounded-2xl border border-white/5 max-h-[90vh] overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+                className="relative w-[70vw] bg-[#0a0a1a] rounded-2xl border border-white/5 max-h-[90vh] overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
             >
                 {/* Close Button */}
                 <button
@@ -124,7 +146,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
 
                 {/* Body Section */}
                 <div className="w-full p-8 pt-4">
-                    <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
                         <input
                             ref={audioInputRef}
                             type="file"
@@ -143,8 +165,16 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
                         <LandingCard
                             onClick={handleExternalSource}
                             icon="mic"
-                            label="Live Source"
+                            label="Microphone"
                             color="red"
+                        />
+
+                        <LandingCard
+                            onClick={handleTabAudio}
+                            icon="present_to_all"
+                            label="Tab Audio"
+                            color="purple"
+                            badge={isTabAudioUnsupported ? 'Unsupported Browser' : undefined}
                         />
 
                         <LandingCard
@@ -157,7 +187,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
 
                     {/* Disclaimer */}
                     <div className="mt-8 flex flex-col items-center gap-3 w-full">
-                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 w-full max-w-md flex flex-col items-center gap-1.5 shadow-lg">
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 w-full max-w-lg flex flex-col items-center gap-1.5 shadow-lg">
                             <div className="flex items-center gap-1.5 text-red-400">
                                 <span className="material-symbols-outlined text-[16px]">warning</span>
                                 <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Photosensitivity Warning</span>
@@ -167,7 +197,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose }) => {
                             </p>
                         </div>
 
-                        <p className="text-[11px] text-white/90 uppercase tracking-[0.15em] leading-relaxed text-center max-w-sm mt-1">
+                        <p className="text-[11px] text-white/90 uppercase tracking-[0.15em] leading-relaxed text-center max-w-lg mt-1">
                             By continuing, you acknowledge that you have the rights to your media and agree to our <button onClick={openLegal} className="text-indigo-300 hover:text-white font-bold uppercase cursor-pointer transition-colors">Privacy & Terms.</button>
                         </p>
                     </div>
