@@ -161,7 +161,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Distance', { v: 70, b: 'OFF' }),
           o('Tile Blend', { v: 0, b: 'OFF' }),
           o('Speed X', { v: 0, b: 'OFF' }),
-          o('Speed Y', { v: 100, b: 'SUB' }),
+          o('Speed Y', { v: 100, b: 'SUB' }, { v: 30, b: 'OFF' }),
         ],
         melded: true
       },
@@ -871,7 +871,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Extrusion', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
           o('Resolution', { v: 20, b: 'OFF' }),
-          o('Size', { v: 30, b: 'OFF' }),
+          o('Size', { v: 30, b: 'OFF' }, { v: 40, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
