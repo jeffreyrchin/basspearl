@@ -19,7 +19,7 @@ import { useProjectAssets } from '@/hooks/useProjectAssets';
 import { useRenderLoop } from '@/hooks/useRenderLoop';
 import { useCanvasSelection } from '@/hooks/useCanvasSelection';
 import { useEffectStore } from '../store/useEffectStore';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import TransformGizmoLayer from './TransformGizmoLayer';
 
 interface AudioReactiveViewProps {
@@ -30,6 +30,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
     const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
     const clearSelection = useEffectStore(s => s.clearSelection);
+    const isUiHidden = useEffectStore(s => s.isUiHidden);
+    const setIsUiHidden = useEffectStore(s => s.setIsUiHidden);
+    const [isMouseIdle, setIsMouseIdle] = useState(false);
 
     const [isTabAudioUnsupportedModalOpen, setIsTabAudioUnsupportedModalOpen] = useState(false);
     const isTabAudioUnsupported = typeof navigator !== 'undefined' && (
@@ -163,6 +166,35 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         }
     }, [isLiveMode, animate]);
 
+    // Handle auto-hiding the Show UI button when UI is hidden
+    useEffect(() => {
+        if (!isUiHidden) {
+            setIsMouseIdle(false);
+            return;
+        }
+
+        let timeoutId: number;
+
+        const wakeUp = () => {
+            setIsMouseIdle(false);
+            window.clearTimeout(timeoutId);
+            timeoutId = window.setTimeout(() => setIsMouseIdle(true), 2000);
+        };
+
+        wakeUp();
+
+        window.addEventListener('mousemove', wakeUp);
+        window.addEventListener('pointerdown', wakeUp);
+        window.addEventListener('keydown', wakeUp);
+
+        return () => {
+            window.removeEventListener('mousemove', wakeUp);
+            window.removeEventListener('pointerdown', wakeUp);
+            window.removeEventListener('keydown', wakeUp);
+            window.clearTimeout(timeoutId);
+        };
+    }, [isUiHidden]);
+
     const handleMicClick = () => {
         isLiveMode && liveSourceType === 'mic' ? stopMic() : (stopPlayback(), startMic());
     };
@@ -208,7 +240,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             handleCanvasPointerDown(e);
                         }}
                     />
-                    <TransformGizmoLayer canvasRef={canvasRef} />
+                    {!isUiHidden && <TransformGizmoLayer canvasRef={canvasRef} />}
                     {isProcessing && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-processing bg-black/80">
                             <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -221,81 +253,89 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 </div>
             </div>
 
-            {/* Top UI Overlay */}
-            <div className="absolute top-0 left-0 right-0 z-navbar pointer-events-none bg-gradient-to-b from-black via-black/60 to-transparent pb-3">
-                <Navbar />
-            </div>
-
-            <MainToolbar
-                audioInputRef={audioInputRef}
-                audioFile={audioFile}
-                handleAudioUpload={handleAudioUpload}
-                isLiveMode={isLiveMode}
-                liveSourceType={liveSourceType}
-                isTabAudioUnsupported={isTabAudioUnsupported}
-                startMic={handleMicClick}
-                startTabAudio={handleTabAudioClick}
-                onPlayPause={handleTogglePlay}
-                isPlaying={isPlaying}
-                isProcessing={isProcessing}
-                onScrub={handleScrub}
-                openExportModal={openExportModal}
-                isExporting={isExporting}
-            />
-
-            {/* Bottom UI Overlay */}
-            <div className="absolute bottom-0 left-0 right-0 z-footer flex flex-col pointer-events-none bg-gradient-to-t from-black via-black/80 to-transparent pt-3">
-                <div className="w-full">
-                    {!isLiveMode ? (
-                        <div className="h-14 bg-transparent flex items-center shrink-0 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <PlaybackBar
-                                audioFile={audioFile}
-                                isProcessing={isProcessing}
-                                formatTime={formatTime}
-                                currentTime={currentTime}
-                                duration={duration}
-                                currentTimeLabelRef={currentTimeLabelRef}
-                                scrubberRef={scrubberRef}
-                                isDraggingScrubberRef={isDraggingScrubberRef}
-                                onScrubberChange={(e) => {
-                                    const val = parseFloat(e.target.value);
-                                    updateScrubberUI(val);
-                                    handleSeek(e, () => {
-                                        !requestRef.current && (requestRef.current = requestAnimationFrame(animate));
-                                    });
-                                }}
-                            />
-                        </div>
-                    ) : (
-                        <div className="h-14 bg-transparent flex items-center justify-center shrink-0 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <div className="flex items-center gap-3 text-red-500">
-                                <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                                <span className="text-xs font-medium tracking-widest uppercase">Live Audio</span>
-                            </div>
-                        </div>
-                    )}
+            {/* Main UI Layer */}
+            <div className={`absolute inset-0 z-10 pointer-events-none transition-opacity duration-300 ${isUiHidden ? 'opacity-0 invisible' : 'opacity-100 visible'}`}>
+                {/* Top UI Overlay */}
+                <div className="absolute top-0 left-0 right-0 z-navbar pointer-events-none bg-gradient-to-b from-black via-black/60 to-transparent pb-3">
+                    <Navbar />
                 </div>
-                <div className="w-full">
-                    <Footer />
-                </div>
-            </div>
 
-            {/* Sidebar: Effects Rack & Parameters */}
-            <aside
-                className={`fixed inset-y-0 right-0 z-sidebar w-full sm:w-[360px] bg-slate-900/90 flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] will-change-transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                {/* Inner wrapper */}
-                <div data-section="sidebar" className="flex-1 flex flex-col min-h-0 relative">
-                    <SidebarNavigation onClose={() => setIsSidebarOpen(false)} />
-                </div>
-            </aside>
-
-            {/* Mobile Backdrop */}
-            {isSidebarOpen && (
-                <div
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="fixed inset-0 bg-black/80 z-mobilebackdrop lg:hidden animate-in fade-in duration-300"
+                <MainToolbar
+                    audioInputRef={audioInputRef}
+                    audioFile={audioFile}
+                    handleAudioUpload={handleAudioUpload}
+                    isLiveMode={isLiveMode}
+                    liveSourceType={liveSourceType}
+                    isTabAudioUnsupported={isTabAudioUnsupported}
+                    startMic={handleMicClick}
+                    startTabAudio={handleTabAudioClick}
+                    onPlayPause={handleTogglePlay}
+                    isPlaying={isPlaying}
+                    isProcessing={isProcessing}
+                    onScrub={handleScrub}
+                    openExportModal={openExportModal}
+                    isExporting={isExporting}
                 />
-            )}
+
+                {/* Bottom UI Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 z-footer flex flex-col pointer-events-none bg-gradient-to-t from-black via-black/80 to-transparent pt-3">
+                    <div className="w-full">
+                        {!isLiveMode ? (
+                            <div className="h-14 bg-transparent flex items-center shrink-0 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <PlaybackBar
+                                    audioFile={audioFile}
+                                    isProcessing={isProcessing}
+                                    formatTime={formatTime}
+                                    currentTime={currentTime}
+                                    duration={duration}
+                                    currentTimeLabelRef={currentTimeLabelRef}
+                                    scrubberRef={scrubberRef}
+                                    isDraggingScrubberRef={isDraggingScrubberRef}
+                                    onScrubberChange={(e) => {
+                                        const val = parseFloat(e.target.value);
+                                        updateScrubberUI(val);
+                                        handleSeek(e, () => {
+                                            !requestRef.current && (requestRef.current = requestAnimationFrame(animate));
+                                        });
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <div className="h-14 bg-transparent flex items-center justify-center shrink-0 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <div className="flex items-center gap-3 text-red-500">
+                                    <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                                    <span className="text-xs font-medium tracking-widest uppercase">Live Audio</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <div className="w-full">
+                        <Footer />
+                    </div>
+                </div>
+
+                {/* Sidebar: Effects Rack & Parameters */}
+                <aside
+                    className={`pointer-events-auto fixed inset-y-0 right-0 z-sidebar w-full sm:w-[360px] bg-slate-900/90 flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] will-change-transform ${isSidebarOpen ? 'translate-x-0 visible' : 'translate-x-full invisible'}`}
+                >
+                    {/* Inner wrapper */}
+                    <div data-section="sidebar" className="flex-1 flex flex-col min-h-0 relative">
+                        <SidebarNavigation onClose={() => setIsSidebarOpen(false)} />
+                    </div>
+                </aside>
+
+                {/* Mobile Backdrop */}
+                {isSidebarOpen && (
+                    <div
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="pointer-events-auto fixed inset-0 bg-black/80 z-mobilebackdrop lg:hidden animate-in fade-in duration-300"
+                    />
+                )}
+
+                <InspectorWindow />
+                <LibraryWindow />
+            </div>
+
             <AnimatePresence>
                 {isLandingOpen && (
                     <LandingModal
@@ -320,8 +360,24 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 exportResult={exportResult}
                 aspectRatio={window.innerWidth / window.innerHeight}
             />
-            <InspectorWindow />
-            <LibraryWindow />
+
+            <AnimatePresence>
+                {(isUiHidden && !isMouseIdle) && (
+                    <motion.button
+                        id="show-ui-btn"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        onClick={() => setIsUiHidden(false)}
+                        tabIndex={0}
+                        className="fixed top-4 right-4 z-fab p-3 bg-slate-900/90 text-white/80 hover:text-white rounded-xl border border-white/5 transition-all duration-300 cursor-pointer flex items-center justify-center group shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                        title="Show UI (H, Tab, or Esc)"
+                    >
+                        <span className="material-symbols-outlined text-xl group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">visibility</span>
+                    </motion.button>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

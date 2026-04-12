@@ -21,7 +21,6 @@ interface MainToolbarProps {
 
 const ToolbarButton: React.FC<{
     onClick?: () => void;
-    onPointerDown?: () => void;
     icon: string;
     title: string;
     isActive?: boolean;
@@ -31,7 +30,7 @@ const ToolbarButton: React.FC<{
     showDot?: boolean;
     className?: string;
     disabled?: boolean;
-}> = ({ onClick, onPointerDown, icon, title, isActive, activeBg, activeBorder, colorHex, showDot, className = "w-12", disabled }) => {
+}> = ({ onClick, icon, title, isActive, activeBg, activeBorder, colorHex, showDot, className = "w-12", disabled }) => {
     const baseClass = "h-9 flex items-center justify-center rounded-xl border transition-all duration-200 outline-none focus-visible:ring-2 disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none";
     const idleClass = "border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10 text-white";
     const activeStyles = isActive ? `${activeBg} ${activeBorder}` : idleClass;
@@ -40,7 +39,7 @@ const ToolbarButton: React.FC<{
         <button
             type="button"
             onClick={() => onClick?.()}
-            onPointerDownCapture={(e) => { e.stopPropagation(); onPointerDown?.() }}
+            onPointerDownCapture={(e) => { e.stopPropagation(); }}
             disabled={disabled}
             className={`${baseClass} ${activeStyles} ${className}`}
             title={title}
@@ -84,6 +83,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     const isInspectorOpen = focusStack.includes('inspector');
     const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
     const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
+    const setIsUiHidden = useEffectStore(s => s.setIsUiHidden);
 
     const constraintsRef = useRef(null);
 
@@ -129,7 +129,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 
                         {/* Microphone */}
                         <ToolbarButton
-                            onPointerDown={startMic}
+                            onClick={startMic}
                             icon="mic"
                             title="Microphone"
                             isActive={isLiveMode && liveSourceType === 'mic'}
@@ -142,7 +142,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 
                         {/* Tab Audio (Desktop only) */}
                         <ToolbarButton
-                            onPointerDown={startTabAudio}
+                            onClick={startTabAudio}
                             icon="present_to_all"
                             title={isTabAudioUnsupported ? "Tab Audio (Unsupported Browser)" : "Tab Audio"}
                             isActive={isLiveMode && liveSourceType === 'tab'}
@@ -155,7 +155,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 
                         {/* Seek Backward (Desktop only) */}
                         <ToolbarButton
-                            onPointerDown={() => onScrub(-5)}
+                            onClick={() => onScrub(-5)}
                             disabled={!audioFile || isProcessing || isLiveMode}
                             title="Seek Backward"
                             aria-label="Seek Backward"
@@ -166,7 +166,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 
                         {/* Play/Pause */}
                         <ToolbarButton
-                            onPointerDown={onPlayPause}
+                            onClick={onPlayPause}
                             disabled={!audioFile || isProcessing || isLiveMode}
                             title={isPlaying ? "Pause" : "Play"}
                             aria-label={isPlaying ? "Pause" : "Play"}
@@ -180,7 +180,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 
                         {/* Seek Forward (Desktop only) */}
                         <ToolbarButton
-                            onPointerDown={() => onScrub(5)}
+                            onClick={() => onScrub(5)}
                             disabled={!audioFile || isProcessing || isLiveMode}
                             title="Seek Forward"
                             aria-label="Seek Forward"
@@ -191,7 +191,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 
                         {/* Open/Close Pipeline */}
                         <ToolbarButton
-                            onPointerDown={() => {
+                            onClick={() => {
                                 setIsSidebarOpen(!isSidebarOpen);
                             }}
                             icon="layers"
@@ -204,7 +204,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 
                         {/* Library Toggle */}
                         <ToolbarButton
-                            onPointerDown={() => {
+                            onClick={() => {
                                 if (isLibraryOpen) removeFocus('library');
                                 else pushFocus('library');
                             }}
@@ -218,7 +218,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 
                         {/* Inspector Toggle (Desktop only) */}
                         <ToolbarButton
-                            onPointerDown={() => {
+                            onClick={() => {
                                 if (isInspectorOpen) removeFocus('inspector');
                                 else pushFocus('inspector');
                             }}
@@ -227,6 +227,14 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             isActive={isInspectorOpen}
                             activeBg="bg-white/10"
                             activeBorder="border-white/30"
+                            className="hidden lg:flex px-3"
+                        />
+
+                        {/* Hide UI (Desktop only) */}
+                        <ToolbarButton
+                            onClick={() => setIsUiHidden(true)}
+                            icon="visibility_off"
+                            title="Hide UI (H)"
                             className="hidden lg:flex px-3"
                         />
 

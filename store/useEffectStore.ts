@@ -33,6 +33,9 @@ interface EffectState {
     activeDropdownId: string | null;
     setActiveDropdownId: (id: string | null) => void;
 
+    isUiHidden: boolean;
+    setIsUiHidden: (hidden: boolean) => void;
+
     undo: () => void;
     redo: () => void;
     commitHistory: () => void;
@@ -77,6 +80,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
 
     activeDropdownId: null,
     setActiveDropdownId: (activeDropdownId) => set({ activeDropdownId }),
+
+    isUiHidden: false,
+    setIsUiHidden: (isUiHidden) => set({ isUiHidden }),
 
     setEffects: (effects) => {
         get().commitHistory();

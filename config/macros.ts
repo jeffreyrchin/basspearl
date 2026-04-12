@@ -228,12 +228,12 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Speed', { v: 75, m: 0, b: 'SUB' }, { v: 25, b: 'OFF' }),
           o('Blend', { v: 100, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'TERRAIN',
         params: [
-          o('Extrusion', { v: 10, b: 'OFF' }),
+          o('Extrusion', { v: 20, m: 5, b: 'SUB' }, { v: 10, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
           o('Tile Width', { v: 50, b: 'OFF' }),
           o('Tile Height', { v: 50, b: 'OFF' }),
@@ -244,9 +244,9 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Distance', { v: 70, b: 'OFF' }),
           o('Tile Blend', { v: 10, b: 'OFF' }),
           o('Speed X', { v: 0, b: 'OFF' }),
-          o('Speed Y', { v: 0, b: 'OFF' }),
+          o('Speed Y', { v: 3, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'HUE_ROTATION',
@@ -255,7 +255,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Speed', { v: 25, b: 'OFF' }),
           o('Vibrance', { v: 50, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'GLOW',

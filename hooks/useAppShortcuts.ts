@@ -17,17 +17,19 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
     const undo = useEffectStore(s => s.undo);
     const redo = useEffectStore(s => s.redo);
     const setActiveDropdownId = useEffectStore(s => s.setActiveDropdownId);
+    const isUiHidden = useEffectStore(s => s.isUiHidden);
+    const setIsUiHidden = useEffectStore(s => s.setIsUiHidden);
 
     // Derived state
     const isInspectorOpen = focusStack.includes('inspector');
     const isLibraryOpen = focusStack.includes('library');
 
     // These capture the latest state in the closure but we use a ref wrapper to ensure events get latest refs
-    const propsRef = useRef({ onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId });
+    const propsRef = useRef({ onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId, isUiHidden, setIsUiHidden });
 
     useEffect(() => {
-        propsRef.current = { onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId };
-    }, [onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId]);
+        propsRef.current = { onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId, isUiHidden, setIsUiHidden };
+    }, [onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId, isUiHidden, setIsUiHidden]);
 
     // Update global interaction logic on every render via ref
     const handleGlobalPtrDownLogicRef = useRef<(e: PointerEvent) => void>(() => { });
@@ -70,7 +72,7 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
         };
 
         handleGlobalKbdDownLogicRef.current = (e: KeyboardEvent) => {
-            const { undo, redo, setIsSidebarOpen, isSidebarOpen, isInspectorOpen, pushFocus, removeFocus, isLibraryOpen, onTogglePlay, onScrub } = propsRef.current;
+            const { undo, redo, setIsSidebarOpen, isSidebarOpen, isInspectorOpen, pushFocus, removeFocus, isLibraryOpen, onTogglePlay, onScrub, isUiHidden, setIsUiHidden } = propsRef.current;
             const target = e.target as HTMLElement;
             const isTyping = (target.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'button', 'submit'].includes((target as HTMLInputElement).type)) ||
                 target.tagName === 'TEXTAREA' ||
@@ -81,6 +83,20 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
             if (isTyping || isModalOpen) return;
 
             const key = e.key.toLowerCase();
+
+            // Toggle UI Visibility - H
+            if (key === 'h') {
+                e.preventDefault();
+                setIsUiHidden(!isUiHidden);
+                return;
+            }
+
+            // Show UI - Esc or Tab
+            if (isUiHidden && (key === 'escape' || key === 'tab')) {
+                e.preventDefault();
+                setIsUiHidden(false);
+                return;
+            }
 
             // Global Undo/Redo - Cmd/Ctrl + (Shift) + Z/Y
             const isMod = e.metaKey || e.ctrlKey;
