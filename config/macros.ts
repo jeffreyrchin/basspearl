@@ -161,7 +161,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Distance', { v: 70, b: 'OFF' }),
           o('Tile Blend', { v: 0, b: 'OFF' }),
           o('Speed X', { v: 0, b: 'OFF' }),
-          o('Speed Y', { v: 25, b: 'OFF' }),
+          o('Speed Y', { v: 100, b: 'SUB' }),
         ],
         melded: true
       },
@@ -655,7 +655,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'TERRAIN_SPHERE',
         params: [
-          o('Extrusion', { v: 0, b: 'OFF' }),
+          o('Extrusion', { v: 5, b: 'SUB' }, { v: 0, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
           o('Size', { v: 50, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
@@ -871,7 +871,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Extrusion', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
           o('Resolution', { v: 20, b: 'OFF' }),
-          o('Size', { v: 40, b: 'OFF' }),
+          o('Size', { v: 30, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
@@ -1322,7 +1322,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'INFINITE_ZOOM',
         params: [
-          o('Speed', { v: 20, b: 'SUB' }, { v: 15, b: 'OFF' }),
+          o('Speed', { v: 100, b: 'SUB' }, { v: 15, b: 'OFF' }),
           o('Depth', { v: 8, b: 'OFF' }),
           o('Spacing', { v: 40, b: 'OFF' }),
           o('Plane Count', { v: 100, b: 'OFF' }),
@@ -1763,7 +1763,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Distance', { v: 63, b: 'OFF' }),
           o('Tile Blend', { v: 10, b: 'OFF' }),
           o('Speed X', { v: 0, b: 'OFF' }),
-          o('Speed Y', { v: 10, b: 'OFF' }),
+          o('Speed Y', { v: 100, b: 'SUB' }, { v: 10, b: 'OFF' }),
         ],
         melded: false
       },
