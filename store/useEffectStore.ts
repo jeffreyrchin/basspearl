@@ -3,6 +3,26 @@ import { EffectConfig, GlitchEffectType, MacroType } from '../types';
 import { INITIAL_REACTIVE_EFFECTS, createEffectInstance, createMacroInstance } from '../constants';
 import { analytics } from '@/services/analytics';
 
+const SCENE_COUNT = 8;
+
+interface SceneSlot {
+    effects: EffectConfig[];
+    past: EffectConfig[][];
+    future: EffectConfig[][];
+    selectedIds: Set<string>;
+}
+
+const emptySlot = (): SceneSlot => ({
+    effects: [],
+    past: [],
+    future: [],
+    selectedIds: new Set<string>(),
+});
+
+const initialSlots = (): SceneSlot[] => {
+    return Array.from({ length: SCENE_COUNT }, emptySlot);
+};
+
 interface EffectState {
     effects: EffectConfig[];
     selectedIds: Set<string>;
@@ -10,6 +30,13 @@ interface EffectState {
     // History
     past: EffectConfig[][];
     future: EffectConfig[][];
+
+    // Scene Hotbar
+    scenes: SceneSlot[];
+    activeSceneIndex: number;
+    isSceneHotbarOpen: boolean;
+    setIsSceneHotbarOpen: (open: boolean) => void;
+    switchScene: (index: number) => void;
 
     // Actions
     setEffects: (effects: EffectConfig[]) => void;
@@ -61,6 +88,37 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     selectedIds: new Set<string>(),
     past: [],
     future: [],
+
+    // Scene Hotbar
+    scenes: initialSlots(),
+    activeSceneIndex: 0,
+    isSceneHotbarOpen: false,
+    setIsSceneHotbarOpen: (isSceneHotbarOpen) => set({ isSceneHotbarOpen }),
+
+    switchScene: (index: number) => {
+        const { activeSceneIndex, scenes, effects, past, future, selectedIds } = get();
+        if (index === activeSceneIndex) return;
+
+        // Park the current live state back into its slot
+        const updatedScenes = [...scenes];
+        updatedScenes[activeSceneIndex] = {
+            effects: JSON.parse(JSON.stringify(effects)),
+            past: JSON.parse(JSON.stringify(past)),
+            future: JSON.parse(JSON.stringify(future)),
+            selectedIds: new Set<string>(), // Clear selection on park
+        };
+
+        // Load the target slot
+        const target = updatedScenes[index];
+        set({
+            scenes: updatedScenes,
+            activeSceneIndex: index,
+            effects: JSON.parse(JSON.stringify(target.effects)),
+            past: JSON.parse(JSON.stringify(target.past)),
+            future: JSON.parse(JSON.stringify(target.future)),
+            selectedIds: new Set<string>(), // Always clear selection on switch
+        });
+    },
 
     focusStack: ['pipeline'],
     pushFocus: (zone) => set(s => ({

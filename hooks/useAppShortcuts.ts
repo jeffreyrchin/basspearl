@@ -19,17 +19,20 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
     const setActiveDropdownId = useEffectStore(s => s.setActiveDropdownId);
     const isUiHidden = useEffectStore(s => s.isUiHidden);
     const setIsUiHidden = useEffectStore(s => s.setIsUiHidden);
+    const switchScene = useEffectStore(s => s.switchScene);
+    const isSceneHotbarOpen = useEffectStore(s => s.isSceneHotbarOpen);
+    const setIsSceneHotbarOpen = useEffectStore(s => s.setIsSceneHotbarOpen);
 
     // Derived state
     const isInspectorOpen = focusStack.includes('inspector');
     const isLibraryOpen = focusStack.includes('library');
 
     // These capture the latest state in the closure but we use a ref wrapper to ensure events get latest refs
-    const propsRef = useRef({ onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId, isUiHidden, setIsUiHidden });
+    const propsRef = useRef({ onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId, isUiHidden, setIsUiHidden, switchScene, isSceneHotbarOpen });
 
     useEffect(() => {
-        propsRef.current = { onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId, isUiHidden, setIsUiHidden };
-    }, [onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId, isUiHidden, setIsUiHidden]);
+        propsRef.current = { onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId, isUiHidden, setIsUiHidden, switchScene, isSceneHotbarOpen };
+    }, [onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId, isUiHidden, setIsUiHidden, switchScene, isSceneHotbarOpen]);
 
     // Update global interaction logic on every render via ref
     const handleGlobalPtrDownLogicRef = useRef<(e: PointerEvent) => void>(() => { });
@@ -72,7 +75,7 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
         };
 
         handleGlobalKbdDownLogicRef.current = (e: KeyboardEvent) => {
-            const { undo, redo, setIsSidebarOpen, isSidebarOpen, isInspectorOpen, pushFocus, removeFocus, isLibraryOpen, onTogglePlay, onScrub, isUiHidden, setIsUiHidden } = propsRef.current;
+            const { undo, redo, setIsSidebarOpen, isSidebarOpen, isInspectorOpen, pushFocus, removeFocus, isLibraryOpen, onTogglePlay, onScrub, isUiHidden, setIsUiHidden, switchScene, isSceneHotbarOpen } = propsRef.current;
             const target = e.target as HTMLElement;
             const isTyping = (target.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'button', 'submit'].includes((target as HTMLInputElement).type)) ||
                 target.tagName === 'TEXTAREA' ||
@@ -124,6 +127,21 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
             else if (key === 'y' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
                 if (isLibraryOpen) removeFocus('library');
                 else pushFocus('library');
+            }
+
+            // Toggle Scene Hotbar - K
+            else if (key === 'k' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                setIsSceneHotbarOpen(!isSceneHotbarOpen);
+            }
+
+            // Scene Hotbar - digits 1-8 (only when no modifier keys held)
+            if (!e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey && isSceneHotbarOpen) {
+                const digit = parseInt(e.key, 10);
+                if (digit >= 1 && digit <= 8) {
+                    e.preventDefault();
+                    switchScene(digit - 1);
+                    return;
+                }
             }
 
             // Handle Space for Play/Pause

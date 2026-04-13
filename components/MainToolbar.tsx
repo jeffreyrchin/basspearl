@@ -84,6 +84,8 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
     const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
     const setIsUiHidden = useEffectStore(s => s.setIsUiHidden);
+    const isSceneHotbarOpen = useEffectStore(s => s.isSceneHotbarOpen);
+    const setIsSceneHotbarOpen = useEffectStore(s => s.setIsSceneHotbarOpen);
 
     const constraintsRef = useRef(null);
 
@@ -225,6 +227,17 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             icon="info"
                             title={isInspectorOpen ? "Close Inspector (I)" : "Open Inspector (I)"}
                             isActive={isInspectorOpen}
+                            activeBg="bg-white/10"
+                            activeBorder="border-white/30"
+                            className="hidden lg:flex px-3"
+                        />
+
+                        {/* Scene Hotbar Toggle (Desktop only) */}
+                        <ToolbarButton
+                            onClick={() => setIsSceneHotbarOpen(!isSceneHotbarOpen)}
+                            icon="keyboard_keys"
+                            title={isSceneHotbarOpen ? "Close Scene Bar (K)" : "Open Scene Bar (K)"}
+                            isActive={isSceneHotbarOpen}
                             activeBg="bg-white/10"
                             activeBorder="border-white/30"
                             className="hidden lg:flex px-3"

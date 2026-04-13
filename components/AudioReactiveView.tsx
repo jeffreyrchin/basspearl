@@ -9,6 +9,7 @@ import LandingModal from './LandingModal';
 import InspectorWindow from './InspectorWindow';
 import LibraryWindow from './LibraryWindow';
 import TabAudioUnsupportedModal from './TabAudioUnsupportedModal';
+import SceneHotbar from './SceneHotbar';
 import { Footer } from './Footer';
 import { analytics } from '@/services/analytics';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
@@ -185,12 +186,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
         window.addEventListener('mousemove', wakeUp);
         window.addEventListener('pointerdown', wakeUp);
-        window.addEventListener('keydown', wakeUp);
 
         return () => {
             window.removeEventListener('mousemove', wakeUp);
             window.removeEventListener('pointerdown', wakeUp);
-            window.removeEventListener('keydown', wakeUp);
             window.clearTimeout(timeoutId);
         };
     }, [isUiHidden]);
@@ -277,6 +276,11 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     isExporting={isExporting}
                 />
 
+                {/* Scene Hotbar - centered above playback */}
+                <div className="absolute bottom-22 left-0 right-0 flex justify-center">
+                    <SceneHotbar />
+                </div>
+
                 {/* Bottom UI Overlay */}
                 <div className="absolute bottom-0 left-0 right-0 z-footer flex flex-col pointer-events-none bg-gradient-to-t from-black via-black/80 to-transparent pt-3">
                     <div className="w-full">
@@ -303,7 +307,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         ) : (
                             <div className="h-14 bg-transparent flex items-center justify-center shrink-0 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
                                 <div className="flex items-center gap-3 text-red-500">
-                                    <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                                    <span className="w-1 h-1 rounded-full bg-red-500 animate-ping" />
                                     <span className="text-xs font-medium tracking-widest uppercase">Live Audio</span>
                                 </div>
                             </div>
