@@ -1,9 +1,7 @@
 import { create } from 'zustand';
 import { EffectConfig, GlitchEffectType, MacroType } from '../types';
-import { INITIAL_REACTIVE_EFFECTS, createEffectInstance, createMacroInstance } from '../constants';
+import { INITIAL_REACTIVE_EFFECTS, createEffectInstance, createMacroInstance, INITIAL_SCENE_COUNT } from '../constants';
 import { analytics } from '@/services/analytics';
-
-const SCENE_COUNT = 8;
 
 interface SceneSlot {
     effects: EffectConfig[];
@@ -20,7 +18,7 @@ const emptySlot = (): SceneSlot => ({
 });
 
 const initialSlots = (): SceneSlot[] => {
-    return Array.from({ length: SCENE_COUNT }, emptySlot);
+    return Array.from({ length: INITIAL_SCENE_COUNT }, emptySlot);
 };
 
 interface EffectState {
@@ -80,6 +78,7 @@ interface EffectState {
 
     addColor: () => void;
     setEffectAssetUrl: (effectId: string, assetUrl: string | undefined, assetName?: string) => void;
+    addScene: () => void;
 }
 
 export const useEffectStore = create<EffectState>((set, get) => ({
@@ -95,9 +94,16 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     isSceneHotbarOpen: false,
     setIsSceneHotbarOpen: (isSceneHotbarOpen) => set({ isSceneHotbarOpen }),
 
+    addScene: () => {
+        set((state) => ({
+            scenes: [...state.scenes, emptySlot()]
+        }));
+    },
+
     switchScene: (index: number) => {
         const { activeSceneIndex, scenes, effects, past, future, selectedIds } = get();
         if (index === activeSceneIndex) return;
+        if (index < 0 || index >= scenes.length) return;
 
         // Park the current live state back into its slot
         const updatedScenes = [...scenes];

@@ -22,6 +22,7 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
     const switchScene = useEffectStore(s => s.switchScene);
     const isSceneHotbarOpen = useEffectStore(s => s.isSceneHotbarOpen);
     const setIsSceneHotbarOpen = useEffectStore(s => s.setIsSceneHotbarOpen);
+    const activeSceneIndex = useEffectStore(s => s.activeSceneIndex);
 
     // Derived state
     const isInspectorOpen = focusStack.includes('inspector');
@@ -134,14 +135,26 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
                 setIsSceneHotbarOpen(!isSceneHotbarOpen);
             }
 
-            // Scene Hotbar - digits 1-8 (only when no modifier keys held)
+            // Scene Hotbar - digits 1-9 (only when no modifier keys held)
             if (!e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey && isSceneHotbarOpen) {
                 const digit = parseInt(e.key, 10);
-                if (digit >= 1 && digit <= 8) {
+                if (digit >= 1 && digit <= 9) {
                     e.preventDefault();
                     switchScene(digit - 1);
                     return;
                 }
+            }
+
+            if (e.key === '[') {
+                e.preventDefault();
+                switchScene(activeSceneIndex - 1);
+                return;
+            }
+
+            if (e.key === ']') {
+                e.preventDefault();
+                switchScene(activeSceneIndex + 1);
+                return;
             }
 
             // Handle Space for Play/Pause
