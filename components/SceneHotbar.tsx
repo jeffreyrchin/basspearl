@@ -17,7 +17,7 @@ const SceneHotbar: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
                     transition={{ duration: 0.2, ease: 'easeOut' }}
-                    className="pointer-events-auto flex items-center gap-1 px-2 py-1.5 rounded-xl bg-[#0A0F1E]/95 border border-white/10 shadow-[0_12px_48px_rgba(0,0,0,0.5),0_0_20px_rgba(251,0,255,0.06)] ring-1 ring-white/5"
+                    className="pointer-events-auto flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0A0F1E]/95 border border-white/10 shadow-[0_12px_48px_rgba(0,0,0,0.5),0_0_20px_rgba(251,0,255,0.06)] ring-1 ring-white/5"
                     title="Scene Bar - press 1-8 to switch scenes."
                 >
                     {scenes.map((slot, i) => {
