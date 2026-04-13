@@ -35,7 +35,7 @@ const SceneHotbar: React.FC = () => {
                                     focus-visible:ring-2 focus-visible:ring-primary/70
                                     ${isActive
                                         ? 'bg-primary/15 border-primary/40 text-primary'
-                                        : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:border-white/25 hover:text-white'
+                                        : 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/25 hover:text-white'
                                     }
                                 `}
                             >
@@ -47,9 +47,9 @@ const SceneHotbar: React.FC = () => {
                                 {/* Dot Indicator */}
                                 <span
                                     className={`
-                                        absolute bottom-1.5 left-1/2 -translate-x-1/2 w-0.5 h-0.5 rounded-full transition-all
+                                        absolute bottom-1.5 left-1/2 -translate-x-1/2 w-2 h-0.5 rounded-full transition-all
                                         ${effectCount > 0
-                                            ? isActive ? 'bg-primary' : 'bg-indigo-400'
+                                            ? isActive ? 'bg-primary' : 'bg-indigo-300'
                                             : 'bg-transparent'
                                         }
                                     `}
