@@ -136,7 +136,7 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
             }
 
             // Scene Hotbar - digits 1-9 (only when no modifier keys held)
-            if (!e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey && isSceneHotbarOpen) {
+            if (!e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey) {
                 const digit = parseInt(e.key, 10);
                 if (digit >= 1 && digit <= 9) {
                     e.preventDefault();

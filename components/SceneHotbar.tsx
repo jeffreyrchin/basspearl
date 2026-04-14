@@ -61,7 +61,7 @@ const SceneHotbar: React.FC = () => {
                 container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
             }
         }
-    }, [activeSceneIndex]);
+    }, [activeSceneIndex, isSceneHotbarOpen]);
 
     const scroll = (direction: 'left' | 'right') => {
         if (scrollRef.current) {
