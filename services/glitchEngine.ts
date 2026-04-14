@@ -1,9 +1,10 @@
-import { EffectConfig } from '../types';
+import { EffectConfig, TransitionType } from '../types';
 import { dragOverride } from './dragOverride';
 import { TextureManager } from './TextureManager';
 import { ShaderManager, BASE_VERTEX_SHADER, PASS_THROUGH_FRAGMENT_SHADER } from './ShaderManager';
 import { EffectPipeline } from './EffectPipeline';
 import { SHADER_REGISTRY } from './glitchShaders';
+import { TRANSITION_SHADERS } from './transitionShaders';
 import { calculateExportDimensions } from './exportService';
 
 export interface GlitchRenderOptions {
@@ -13,6 +14,11 @@ export interface GlitchRenderOptions {
   currentTime?: number;
   imagelessWidth?: number;
   imagelessHeight?: number;
+  transition?: {
+    type: TransitionType;
+    progress: number;
+    seed?: number;
+  };
 }
 
 export class GlitchEngine {
@@ -29,6 +35,8 @@ export class GlitchEngine {
   private uParamsBuffer = new Float32Array(16);
   private uIntegratedBuffer = new Float32Array(16);
   private uResolutionBuffer = new Float32Array(2);
+
+  private transitionSnapshotTexture: WebGLTexture | null = null;
 
   private targetCtxMap = new WeakMap<HTMLCanvasElement, CanvasRenderingContext2D>();
 
@@ -57,6 +65,11 @@ export class GlitchEngine {
       if (!shader.is3D) {
         this.shaderManager.createProgram(name, BASE_VERTEX_SHADER, shader.fragmentSource);
       }
+    });
+
+    // Initialize transition shaders
+    Object.entries(TRANSITION_SHADERS).forEach(([name, fragmentSource]) => {
+      this.shaderManager.createProgram(`TRANSITION_${name}`, BASE_VERTEX_SHADER, fragmentSource);
     });
   }
 
@@ -217,7 +230,43 @@ export class GlitchEngine {
       this.pipeline.mergeSubStack();
     }
 
+    // If we are currently in a transition, we apply it as a final post-process pass
+    // The snapshot is captured externally via captureTransitionSnapshot() right before the first render of the new scene.
+    // Apply transition if active
+    if (options.transition && options.transition.type !== 'none' && this.transitionSnapshotTexture) {
+      this.pipeline.applyTransition(
+        options.transition.type,
+        this.transitionSnapshotTexture,
+        options.transition.progress,
+        {
+          u_time: currentTime || 0,
+          u_seed: options.transition.seed || 0,
+          u_resolution: this.uResolutionBuffer
+        }
+      );
+    }
+
     this.pipeline.renderToScreen(false);
+  }
+
+  /**
+   * Captures the current content of the internal canvas into a persistent snapshot texture.
+   * This is used for "Scene Handover" transitions.
+   */
+  public captureTransitionSnapshot() {
+    if (!this.gl) return;
+
+    // Lazily create or resize the snapshot texture to match current internal canvas
+    if (this.transitionSnapshotTexture) {
+      this.textureManager.destroyTexture(this.transitionSnapshotTexture);
+    }
+
+    this.transitionSnapshotTexture = this.textureManager.createTexture(this.canvas.width, this.canvas.height);
+
+    const gl = this.gl;
+    gl.bindTexture(gl.TEXTURE_2D, this.transitionSnapshotTexture);
+    gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, this.canvas.width, this.canvas.height, 0);
+    gl.bindTexture(gl.TEXTURE_2D, null);
   }
 
   private applyEffect(

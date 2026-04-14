@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { EffectConfig, GlitchEffectType, MacroType } from '../types';
-import { INITIAL_REACTIVE_EFFECTS, createEffectInstance, createMacroInstance, INITIAL_SCENE_COUNT } from '../constants';
+import { EffectConfig, GlitchEffectType, MacroType, TransitionType } from '../types';
+import { INITIAL_REACTIVE_EFFECTS, createEffectInstance, createMacroInstance, INITIAL_SCENE_COUNT, DEFAULT_TRANSITION_DURATION } from '../constants';
 import { analytics } from '@/services/analytics';
 
 interface SceneSlot {
@@ -79,6 +79,14 @@ interface EffectState {
     addColor: () => void;
     setEffectAssetUrl: (effectId: string, assetUrl: string | undefined, assetName?: string) => void;
     addScene: () => void;
+
+    // Transitions
+    transitionType: TransitionType;
+    setTransitionType: (type: TransitionType) => void;
+    transitionDuration: number;
+    setTransitionDuration: (duration: number) => void;
+    activeTransition: { startTime: number, fromIndex: number } | null;
+    setActiveTransition: (transition: { startTime: number, fromIndex: number } | null) => void;
 }
 
 export const useEffectStore = create<EffectState>((set, get) => ({
@@ -101,9 +109,19 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     },
 
     switchScene: (index: number) => {
-        const { activeSceneIndex, scenes, effects, past, future, selectedIds } = get();
+        const { activeSceneIndex, scenes, effects, past, future, transitionType, transitionDuration } = get();
         if (index === activeSceneIndex) return;
         if (index < 0 || index >= scenes.length) return;
+
+        // If a transition is enabled, record the start time and the scene we are leaving
+        if (transitionType !== 'none') {
+            set({
+                activeTransition: {
+                    startTime: performance.now(),
+                    fromIndex: activeSceneIndex
+                }
+            });
+        }
 
         // Park the current live state back into its slot
         const updatedScenes = [...scenes];
@@ -424,4 +442,12 @@ export const useEffectStore = create<EffectState>((set, get) => ({
             effects: state.effects.map(e => e.id === effectId ? { ...e, assetUrl, assetName } : e)
         }));
     },
+
+    // Transitions
+    transitionType: 'none',
+    setTransitionType: (transitionType) => set({ transitionType }),
+    transitionDuration: DEFAULT_TRANSITION_DURATION,
+    setTransitionDuration: (transitionDuration) => set({ transitionDuration }),
+    activeTransition: null,
+    setActiveTransition: (activeTransition) => set({ activeTransition }),
 }));

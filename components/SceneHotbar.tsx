@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffectStore } from '../store/useEffectStore';
+import { TRANSITION_OPTIONS } from '../constants';
+import { MenuDropdown } from './MenuDropdown';
 
 const SceneHotbar: React.FC = () => {
     const isSceneHotbarOpen = useEffectStore(s => s.isSceneHotbarOpen);
@@ -9,6 +11,12 @@ const SceneHotbar: React.FC = () => {
     const liveEffects = useEffectStore(s => s.effects);
     const switchScene = useEffectStore(s => s.switchScene);
     const addScene = useEffectStore(s => s.addScene);
+
+    // Global transition state
+    const transitionType = useEffectStore(s => s.transitionType);
+    const setTransitionType = useEffectStore(s => s.setTransitionType);
+    const transitionDuration = useEffectStore(s => s.transitionDuration);
+    const setTransitionDuration = useEffectStore(s => s.setTransitionDuration);
 
     const scrollRef = useRef<HTMLDivElement>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -82,99 +90,134 @@ const SceneHotbar: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
                     transition={{ duration: 0.2, ease: 'easeOut' }}
-                    className="group relative pointer-events-auto h-12 flex items-center rounded-xl bg-[#0A0F1E]/95 border border-white/10 shadow-[0_12px_48px_rgba(0,0,0,0.5),0_0_20px_rgba(251,0,255,0.06)] ring-1 ring-white/5 overflow-hidden w-fit max-w-[60vw]"
+                    className="group relative pointer-events-auto flex flex-col rounded-xl bg-[#0A0F1E]/95 border border-white/10 shadow-[0_12px_48px_rgba(0,0,0,0.5),0_0_20px_rgba(251,0,255,0.06)] ring-1 ring-white/5 overflow-hidden w-fit min-w-[400px] max-w-[60vw]"
                     title="Scene Bar (1-9 to switch scenes, [ / ] to navigate scenes)"
                 >
-                    {/* Left Gradient/Arrow */}
-                    <AnimatePresence>
-                        {canScrollLeft && (
-                            <motion.div
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -10 }}
-                                className="absolute left-0 top-0 bottom-0 z-10 flex items-center pl-1 pr-8 bg-gradient-to-r from-[#0A0F1E] to-transparent pointer-events-none"
-                            >
-                                <button
-                                    onClick={() => scroll('left')}
-                                    className="pointer-events-auto w-6 h-8 flex items-center justify-center rounded-md hover:bg-white/10 text-white transition-colors"
+                    {/* ROW 1: SCENE SELECTOR */}
+                    <div className="relative h-12 flex items-center">
+                        {/* Left Gradient/Arrow */}
+                        <AnimatePresence>
+                            {canScrollLeft && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -10 }}
+                                    className="absolute left-0 top-0 bottom-0 z-10 flex items-center pl-1 pr-8 bg-gradient-to-r from-[#0A0F1E] to-transparent pointer-events-none"
                                 >
-                                    <span className="material-symbols-outlined !text-[18px]">chevron_left</span>
-                                </button>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                                    <button
+                                        onClick={() => scroll('left')}
+                                        className="pointer-events-auto w-6 h-8 flex items-center justify-center rounded-md hover:bg-white/10 text-white transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined !text-[18px]">chevron_left</span>
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
-                    {/* Scrollable Content */}
-                    <div
-                        ref={scrollRef}
-                        className="flex items-center gap-2 px-3 h-full overflow-x-auto no-scrollbar"
-                    >
-                        {scenes.map((slot, i) => {
-                            const isActive = i === activeSceneIndex;
-                            // For the active slot, use the live effects count (reactive); for parked slots, use the stored snapshot count
-                            const effectCount = isActive ? liveEffects.length : slot.effects.length;
+                        {/* Scrollable Content */}
+                        <div
+                            ref={scrollRef}
+                            className="flex items-center gap-2 px-3 h-full overflow-x-auto no-scrollbar"
+                        >
+                            {scenes.map((slot, i) => {
+                                const isActive = i === activeSceneIndex;
+                                // For the active slot, use the live effects count (reactive); for parked slots, use the stored snapshot count
+                                const effectCount = isActive ? liveEffects.length : slot.effects.length;
 
-                            return (
-                                <button
-                                    key={i}
-                                    onClick={() => switchScene(i)}
-                                    title={`Scene ${i + 1}${effectCount > 0 ? ` (${effectCount} effect${effectCount !== 1 ? 's' : ''})` : ' (Empty)'}`}
-                                    className={`
-                                        relative shrink-0 w-9 h-9 flex flex-col items-center justify-center rounded-lg border transition-all outline-none
-                                        focus-visible:ring-2 focus-visible:ring-primary/70
-                                        ${isActive
-                                            ? 'bg-primary/20 border-primary/50 text-primary shadow-[0_0_12px_rgba(251,0,255,0.2)]'
-                                            : 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/25'
-                                        }
-                                    `}
-                                >
-                                    {/* Slot Number */}
-                                    <span className="text-[15px] font-semibold leading-none">
-                                        {i + 1}
-                                    </span>
-
-                                    {/* Dot Indicator */}
-                                    <span
+                                return (
+                                    <button
+                                        key={i}
+                                        onClick={() => switchScene(i)}
+                                        title={`Scene ${i + 1}${effectCount > 0 ? ` (${effectCount} effect${effectCount !== 1 ? 's' : ''})` : ' (Empty)'}`}
                                         className={`
-                                            absolute bottom-1.5 left-1/2 -translate-x-1/2 w-2 h-0.5 rounded-full transition-all
-                                            ${effectCount > 0
-                                                ? isActive ? 'bg-primary' : 'bg-indigo-300'
-                                                : 'bg-transparent'
+                                            relative shrink-0 w-9 h-9 flex flex-col items-center justify-center rounded-lg border transition-all outline-none
+                                            focus-visible:ring-2 focus-visible:ring-primary/70
+                                            ${isActive
+                                                ? 'bg-primary/20 border-primary/50 text-primary shadow-[0_0_12px_rgba(251,0,255,0.2)]'
+                                                : 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/25'
                                             }
                                         `}
-                                    />
-                                </button>
-                            );
-                        })}
+                                    >
+                                        {/* Slot Number */}
+                                        <span className="text-[15px] font-semibold leading-none">
+                                            {i + 1}
+                                        </span>
 
-                        <button
-                            onClick={() => addScene()}
-                            title="Add New Scene"
-                            tabIndex={0}
-                            className="shrink-0 w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white hover:bg-white/10 hover:border-white/25 transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
-                        >
-                            <span className="material-symbols-outlined !text-[20px]">add</span>
-                        </button>
+                                        {/* Dot Indicator */}
+                                        <span
+                                            className={`
+                                                absolute bottom-1.5 left-1/2 -translate-x-1/2 w-2 h-0.5 rounded-full transition-all
+                                                ${effectCount > 0
+                                                    ? isActive ? 'bg-primary' : 'bg-indigo-300'
+                                                    : 'bg-transparent'
+                                                }
+                                            `}
+                                        />
+                                    </button>
+                                );
+                            })}
+
+                            <button
+                                onClick={() => addScene()}
+                                title="Add New Scene"
+                                tabIndex={0}
+                                className="shrink-0 w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white hover:bg-white/10 hover:border-white/25 transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+                            >
+                                <span className="material-symbols-outlined !text-[20px]">add</span>
+                            </button>
+                        </div>
+
+                        {/* Right Gradient/Arrow */}
+                        <AnimatePresence>
+                            {canScrollRight && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: 10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 10 }}
+                                    className="absolute right-0 top-0 bottom-0 z-10 flex items-center pr-1 pl-8 bg-gradient-to-l from-[#0A0F1E] to-transparent pointer-events-none"
+                                >
+                                    <button
+                                        onClick={() => scroll('right')}
+                                        className="pointer-events-auto w-6 h-8 flex items-center justify-center rounded-md hover:bg-white/10 text-white transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined !text-[18px]">chevron_right</span>
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
 
-                    {/* Right Gradient/Arrow */}
-                    <AnimatePresence>
-                        {canScrollRight && (
-                            <motion.div
-                                initial={{ opacity: 0, x: 10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 10 }}
-                                className="absolute right-0 top-0 bottom-0 z-10 flex items-center pr-1 pl-8 bg-gradient-to-l from-[#0A0F1E] to-transparent pointer-events-none"
-                            >
-                                <button
-                                    onClick={() => scroll('right')}
-                                    className="pointer-events-auto w-6 h-8 flex items-center justify-center rounded-md hover:bg-white/10 text-white transition-colors"
-                                >
-                                    <span className="material-symbols-outlined !text-[18px]">chevron_right</span>
-                                </button>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                    {/* SEPARATOR */}
+                    <div className="h-[1px] w-full bg-white/5" />
+
+                    {/* ROW 2: TRANSITION CONTROLS */}
+                    <div className="h-9 flex items-center justify-center gap-6 bg-white/3 px-3">
+                        {/* Type Selector */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap">Transition</span>
+                            <MenuDropdown
+                                id="sceneTransitionMenu"
+                                value={transitionType}
+                                onChange={(val) => setTransitionType(val as any)}
+                                options={TRANSITION_OPTIONS}
+                            />
+                        </div>
+
+                        {/* Duration Slider */}
+                        <div className="flex items-center gap-3">
+                            <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap">Duration</span>
+                            <input
+                                type="range"
+                                min="0"
+                                max="3"
+                                step="0.1"
+                                value={transitionDuration}
+                                onChange={(e) => setTransitionDuration(parseFloat(e.target.value))}
+                                className="w-30 h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-white"
+                            />
+                            <span className="text-[10px] w-8 text-center tabular-nums text-white/60">{transitionDuration.toFixed(1)}s</span>
+                        </div>
+                    </div>
                 </motion.div>
             )}
         </AnimatePresence>

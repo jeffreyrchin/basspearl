@@ -5,6 +5,16 @@ export const THUMBNAIL_SIZE = 512;
 export const INITIAL_SCENE_COUNT = 8;
 export const CONTACT_EMAIL = 'jeffreyrchin.20@gmail.com';
 
+export const DEFAULT_TRANSITION_DURATION = 0.2;
+
+export const TRANSITION_OPTIONS = [
+  { label: 'None', value: 'none' },
+  { label: 'Crossfade', value: 'crossfade' },
+  { label: 'Fade to Black', value: 'fade_to_black' },
+  { label: 'Flash', value: 'flash' },
+  { label: 'Zoom Fade', value: 'zoom_fade' }
+] as const;
+
 // Re-export Data
 export * from './config/effects';
 export * from './config/macros';

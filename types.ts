@@ -139,3 +139,10 @@ export interface MacroMetadata {
   label: string;
   effects: MacroEffectOverrideItem[];
 }
+
+export type TransitionType =
+  'none' |
+  'crossfade' |
+  'fade_to_black' |
+  'flash' |
+  'zoom_fade';

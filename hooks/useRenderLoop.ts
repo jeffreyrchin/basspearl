@@ -25,6 +25,11 @@ export const useRenderLoop = ({
     isDraggingScrubberRef
 }: UseRenderLoopProps) => {
     const effects = useEffectStore(s => s.effects);
+    const activeTransition = useEffectStore(s => s.activeTransition);
+
+    // Note: Transition state is read directly from the store inside the loop
+    // to avoid stale closure issues in high-performance animation frames.
+
     const viewportRef = useRef({
         width: typeof window !== 'undefined' ? window.innerWidth : 1920,
         height: typeof window !== 'undefined' ? window.innerHeight : 1080,
@@ -54,6 +59,8 @@ export const useRenderLoop = ({
     // Track the "current time" in a ref so the drag render callback can use it
     // without needing React state (which would cause a re-render).
     const currentRenderTimeRef = useRef(0);
+
+    const lastTransitionRef = useRef<any>(null);
 
     const renderFrame = useCallback(async (time: number) => {
         if (!canvasRef.current) return;
@@ -103,6 +110,35 @@ export const useRenderLoop = ({
             }
         }
 
+        // 1.5 Calculate Transition Progress (Fresh access via getState to avoid stale closures)
+        const transitionState = useEffectStore.getState();
+        const activeTransition = transitionState.activeTransition;
+        const transitionType = transitionState.transitionType;
+        const transitionDuration = transitionState.transitionDuration;
+
+        let transitionOptions: any = undefined;
+        if (activeTransition) {
+            // Snapshot on first frame of switch
+            if (activeTransition !== lastTransitionRef.current) {
+                mainGlitchEngine.captureTransitionSnapshot();
+                lastTransitionRef.current = activeTransition;
+            }
+
+            const elapsed = performance.now() - activeTransition.startTime;
+            const progress = Math.min(1, elapsed / (transitionDuration * 1000));
+
+            if (progress < 1) {
+                transitionOptions = {
+                    type: transitionType,
+                    progress: progress,
+                    seed: activeTransition.startTime
+                };
+            } else {
+                transitionState.setActiveTransition(null);
+                lastTransitionRef.current = null;
+            }
+        }
+
         // 2. Global State Update (for WebGL shaders)
         if (smoothed) {
             SHARED_AUDIO_STATE[0] = smoothed.sub;
@@ -123,7 +159,8 @@ export const useRenderLoop = ({
                 imagelessHeight: height,
                 reactivity: smoothed,
                 integratedReactivity: frameIntegrated,
-                currentTime: time
+                currentTime: time,
+                transition: transitionOptions
             }
         );
     }, [isLiveMode, getLiveReactivity, canvasRef]);
@@ -140,7 +177,7 @@ export const useRenderLoop = ({
     // Update viewport on resize with requestAnimationFrame throttle
     useEffect(() => {
         let frameId: number | null = null;
-        
+
         const handleResize = () => {
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
             viewportRef.current = {
@@ -149,7 +186,7 @@ export const useRenderLoop = ({
                 aspectRatio: window.innerWidth / window.innerHeight,
                 dpr
             };
-            
+
             // Throttle rendering to wait for the next screen refresh cycle (prevents CPU stutter)
             if (frameId === null) {
                 frameId = requestAnimationFrame(() => {
@@ -181,7 +218,10 @@ export const useRenderLoop = ({
     }, [currentTimeLabelRef, audioStore.formatTime, scrubberRef, scrubberPercent, audioStore.duration]);
 
     const animate = useCallback(async () => {
-        if (!mainAudioEngine.isPlaying && !isLiveModeRef.current) {
+        // If engine is asleep but a transition is happening, we must wake up
+        const isTransitioning = !!useEffectStore.getState().activeTransition;
+
+        if (!mainAudioEngine.isPlaying && !isLiveModeRef.current && !isTransitioning) {
             requestRef.current = undefined;
             return;
         }
@@ -199,6 +239,13 @@ export const useRenderLoop = ({
 
         requestRef.current = requestAnimationFrame(animate); // Keep animation loop going even if no image or canvas
     }, [isLiveModeRef, audioStore, frameCounterRef, isDraggingScrubberRef, updateScrubberUI, renderFrame, requestRef]);
+
+    // Kickstart the loop if a transition starts while the engine is asleep
+    useEffect(() => {
+        if (activeTransition && requestRef.current === undefined) {
+            animate();
+        }
+    }, [activeTransition, animate]);
 
     return {
         renderFrame,

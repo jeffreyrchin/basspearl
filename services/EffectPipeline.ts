@@ -426,6 +426,29 @@ export class EffectPipeline {
         this.currentFBIndex = 1 - this.currentFBIndex;
     }
 
+    /**
+     * Final post-processing pass that blends the previous scene (snapshot)
+     * with the current scene result using a transition shader.
+     */
+    public applyTransition(type: string, fromTexture: WebGLTexture, progress: number, extraUniforms: Record<string, any>) {
+        const input = this.pingPongTextures[this.currentFBIndex];
+        const outputFB = this.pingPongFBs[1 - this.currentFBIndex];
+
+        const uniforms = {
+            ...extraUniforms,
+            u_progress: progress,
+        };
+
+        const inputs = [
+            { name: 'u_image', texture: fromTexture },      // The "From" state
+            { name: 'u_overlay', texture: input }           // The "To" state (current result)
+        ];
+
+        this.draw(`TRANSITION_${type.toUpperCase()}`, outputFB, inputs, uniforms, false, true);
+
+        this.currentFBIndex = 1 - this.currentFBIndex;
+    }
+
     public renderToScreen(flipY: boolean = true) {
         const currentResult = this.pingPongTextures[this.currentFBIndex];
         this.draw('pass-through', null, [{ name: 'u_image', texture: currentResult }], {}, flipY, true);
