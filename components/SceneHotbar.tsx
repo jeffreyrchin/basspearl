@@ -91,7 +91,7 @@ const SceneHotbar: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
                     transition={{ duration: 0.2, ease: 'easeOut' }}
-                    className="group relative pointer-events-auto flex flex-col rounded-xl bg-[#0A0F1E]/95 border border-white/10 shadow-[0_12px_48px_rgba(0,0,0,0.5),0_0_20px_rgba(251,0,255,0.06)] ring-1 ring-white/5 overflow-hidden w-fit min-w-[420px] max-w-[60vw]"
+                    className="group relative pointer-events-auto flex flex-col rounded-xl bg-[#0A0F1E]/95 border border-white/10 shadow-[0_12px_48px_rgba(0,0,0,0.5),0_0_20px_rgba(251,0,255,0.06)] ring-1 ring-white/5 overflow-hidden w-fit max-w-[90vw] md:max-w-[60vw]"
                     title="Scene Bar (1-9 to switch scenes, [ / ] to navigate scenes)"
                 >
                     {/* HEADER */}
