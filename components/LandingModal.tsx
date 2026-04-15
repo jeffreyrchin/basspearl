@@ -2,6 +2,8 @@ import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLegalStore } from '../store/useLegalStore';
 import { useEffectStore } from '@/store/useEffectStore';
+import LandingBackground from './LandingBackground';
+
 
 interface LandingModalProps {
     onStart: (audioOption: 'demo' | 'upload' | 'mic' | 'tab', audioFile?: File) => void;
@@ -59,23 +61,15 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
     }> = ({ onClick, icon, label, color, badge }) => {
         const theme = {
             cyan: {
-                border: 'border-accent-blue/30 hover:border-accent-blue/60',
-                bg: 'bg-accent-blue/5 hover:bg-accent-blue/10',
-                text: 'text-accent-blue'
+                text: 'text-cyan-400'
             },
             red: {
-                border: 'border-red-500/30 hover:border-red-500/60',
-                bg: 'bg-red-500/5 hover:bg-red-500/10',
                 text: 'text-red-400'
             },
             pink: {
-                border: 'border-primary/30 hover:border-primary/60',
-                bg: 'bg-primary/5 hover:bg-primary/10',
                 text: 'text-primary'
             },
             purple: {
-                border: 'border-purple-500/30 hover:border-purple-500/60',
-                bg: 'bg-purple-500/5 hover:bg-purple-500/10',
                 text: 'text-purple-400'
             }
         }[color];
@@ -83,7 +77,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
         return (
             <button
                 onClick={onClick}
-                className={`flex-1 rounded-2xl border ${theme.border} ${theme.bg} transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-2 sm:p-4 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 shadow-2xl relative overflow-hidden`}
+                className={`flex-1 rounded-2xl bg-black/40 hover:bg-black/50 transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-2 sm:p-4 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 shadow-2xl relative overflow-hidden`}
             >
                 <div className={`absolute -inset-2 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
@@ -91,7 +85,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                     {icon}
                 </span>
                 <div className="flex flex-col items-center gap-1.5 z-10 text-center px-1">
-                    <span className="text-[11px] sm:text-[12px] font-medium uppercase tracking-[0.1em] sm:tracking-[0.2em] text-white/90 group-hover:text-white transition-colors">
+                    <span className="text-[11px] sm:text-[14px] font-medium uppercase tracking-[0.15em] text-white/90 group-hover:text-white transition-colors">
                         {label}
                     </span>
                     {badge && (
@@ -122,78 +116,83 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ type: 'spring', damping: 50, stiffness: 1000 }}
                 data-section="modal"
-                className="relative w-[95vw] max-w-4xl bg-[#0a0a1a] rounded-2xl border border-white/5 max-h-[90vh] overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+                className="relative w-[95vw] max-w-4xl bg-[#0a0a1a] rounded-2xl border border-white/5 max-h-[90vh] overflow-hidden custom-scrollbar flex flex-col items-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
             >
-                {/* Close Button */}
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-all z-10"
-                    title="Close"
-                >
-                    <span className="material-symbols-outlined text-[20px]">close</span>
-                </button>
+                {/* Aurora Background */}
+                <LandingBackground />
 
-                {/* Header Section */}
-                <div className="w-full text-center pt-8 pb-4">
-                    <motion.h1
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                        className="text-2xl font-bold tracking-normal uppercase bg-gradient-to-r from-primary via-indigo-300 to-white bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-move will-change-transform">
-                        muxels
-                    </motion.h1>
-                    <motion.p
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                        className="text-white/60 font-medium text-xs tracking-widest uppercase will-change-transform">Visualize Your Audio</motion.p>
-                </div>
+                <div className="relative w-full h-full overflow-y-auto overflow-x-hidden flex flex-col items-center custom-scrollbar">
+                    {/* Close Button */}
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-all z-10"
+                        title="Close"
+                    >
+                        <span className="material-symbols-outlined text-[20px]">close</span>
+                    </button>
 
-                {/* Body Section */}
-                <div className="w-full p-8 pt-4">
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-                        <input
-                            ref={audioInputRef}
-                            type="file"
-                            accept="audio/*"
-                            onChange={handleAudioFile}
-                            className="hidden"
-                        />
-
-                        <LandingCard
-                            onClick={() => audioInputRef.current?.click()}
-                            icon="upload_file"
-                            label="Audio File"
-                            color="cyan"
-                        />
-
-                        <LandingCard
-                            onClick={handleExternalSource}
-                            icon="mic"
-                            label="Microphone"
-                            color="red"
-                        />
-
-                        <LandingCard
-                            onClick={handleTabAudio}
-                            icon="present_to_all"
-                            label="Tab Audio"
-                            color="purple"
-                            badge={isTabAudioUnsupported ? 'Unsupported Browser' : undefined}
-                        />
-
-                        <LandingCard
-                            onClick={handleDemoTrack}
-                            icon="music_note"
-                            label="Demo Track"
-                            color="pink"
-                        />
+                    {/* Header Section */}
+                    <div className="w-full text-center pt-8 pb-4">
+                        <motion.h1
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                            className="text-2xl font-bold tracking-normal uppercase bg-gradient-to-r from-primary via-indigo-300 to-white bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-move will-change-transform">
+                            muxels
+                        </motion.h1>
+                        <motion.p
+                            animate={{ scale: [1, 1.1, 1] }}
+                            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                            className="text-white/60 font-medium text-xs tracking-widest uppercase will-change-transform">Visualize Your Audio</motion.p>
                     </div>
 
-                    {/* Disclaimer */}
-                    <div className="mt-8 flex flex-col items-center">
-                        <p className="text-[11px] uppercase tracking-widest leading-relaxed text-center max-w-xl">
-                            <span className="text-yellow-300">This application can produce rapid flashing, strobing, and high-contrast effects that may trigger seizures. </span>
-                            <span className="text-white/90">By continuing, you acknowledge that you have the rights to your media and agree to our <button onClick={openLegal} className="text-indigo-300 hover:text-white font-bold uppercase cursor-pointer transition-colors">Privacy & Terms.</button></span>
-                        </p>
+                    {/* Body Section */}
+                    <div className="w-full p-8 pt-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+                            <input
+                                ref={audioInputRef}
+                                type="file"
+                                accept="audio/*"
+                                onChange={handleAudioFile}
+                                className="hidden"
+                            />
+
+                            <LandingCard
+                                onClick={() => audioInputRef.current?.click()}
+                                icon="upload_file"
+                                label="Audio File"
+                                color="cyan"
+                            />
+
+                            <LandingCard
+                                onClick={handleExternalSource}
+                                icon="mic"
+                                label="Microphone"
+                                color="red"
+                            />
+
+                            <LandingCard
+                                onClick={handleTabAudio}
+                                icon="present_to_all"
+                                label="Tab Audio"
+                                color="purple"
+                                badge={isTabAudioUnsupported ? 'Unsupported Browser' : undefined}
+                            />
+
+                            <LandingCard
+                                onClick={handleDemoTrack}
+                                icon="music_note"
+                                label="Demo Track"
+                                color="pink"
+                            />
+                        </div>
+
+                        {/* Disclaimer */}
+                        <div className="mt-8 flex flex-col items-center">
+                            <p className="text-[11px] uppercase tracking-widest leading-relaxed text-center max-w-xl">
+                                <span className="text-yellow-300">This application can produce rapid flashing, strobing, and high-contrast effects that may trigger seizures. </span>
+                                <span className="text-white/90">By continuing, you acknowledge that you have the rights to your media and agree to our <button onClick={openLegal} className="text-indigo-300 hover:text-white font-bold uppercase cursor-pointer transition-colors">Privacy & Terms.</button></span>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </motion.div>
