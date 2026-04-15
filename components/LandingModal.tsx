@@ -136,12 +136,15 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                 {/* Header Section */}
                 <div className="w-full text-center pt-8 pb-4">
                     <motion.h1
-                        animate={{ scale: [1, 1.1, 1] }}
+                        animate={{ scale: [1, 1.2, 1] }}
                         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                         className="text-2xl font-bold tracking-normal uppercase bg-gradient-to-r from-primary via-indigo-300 to-white bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-move will-change-transform">
                         muxels
                     </motion.h1>
-                    <p className="text-white/60 text-xs tracking-widest uppercase">Audio Visualizer</p>
+                    <motion.p
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                        className="text-white/60 font-medium text-xs tracking-widest uppercase will-change-transform">Visualize Your Audio</motion.p>
                 </div>
 
                 {/* Body Section */}
@@ -186,19 +189,10 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                     </div>
 
                     {/* Disclaimer */}
-                    <div className="mt-8 flex flex-col items-center gap-3 w-full">
-                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 w-full max-w-lg flex flex-col items-center gap-1.5 shadow-lg">
-                            <div className="flex flex-col sm:flex-row text-center items-center gap-1.5 text-red-400">
-                                <span className="material-symbols-outlined text-[16px]">warning</span>
-                                <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Photosensitivity Warning</span>
-                            </div>
-                            <p className="text-[11px] text-red-300/80 uppercase tracking-[0.1em] leading-relaxed text-center">
-                                This application can produce rapid flashing, strobing, and high-contrast effects that may trigger seizures.
-                            </p>
-                        </div>
-
-                        <p className="text-[11px] text-white/90 uppercase tracking-[0.15em] leading-relaxed text-center max-w-lg mt-1">
-                            By continuing, you acknowledge that you have the rights to your media and agree to our <button onClick={openLegal} className="text-indigo-300 hover:text-white font-bold uppercase cursor-pointer transition-colors">Privacy & Terms.</button>
+                    <div className="mt-8 flex flex-col items-center">
+                        <p className="text-[11px] uppercase tracking-widest leading-relaxed text-center max-w-xl">
+                            <span className="text-yellow-300">This application can produce rapid flashing, strobing, and high-contrast effects that may trigger seizures. </span>
+                            <span className="text-white/90">By continuing, you acknowledge that you have the rights to your media and agree to our <button onClick={openLegal} className="text-indigo-300 hover:text-white font-bold uppercase cursor-pointer transition-colors">Privacy & Terms.</button></span>
                         </p>
                     </div>
                 </div>

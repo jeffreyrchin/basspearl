@@ -118,7 +118,8 @@ export type MacroType =
   'CRYSTAL_RAIN' |
   'STORM' |
   'GHOSTS' |
-  'HEXAGON_TUNNEL';
+  'HEXAGON_TUNNEL' |
+  'AURORA';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;

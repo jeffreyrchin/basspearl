@@ -17,7 +17,7 @@ const Navbar = () => {
                     <h1 className="text-xl font-bold tracking-normal uppercase bg-gradient-to-r from-indigo-300 to-indigo-200 bg-clip-text text-transparent">
                         muxels
                     </h1>
-                    <p className="hidden sm:block text-white/60 text-xs tracking-widest uppercase relative top-[0.5px] leading-[1.1em]">Audio Visualizer</p>
+                    <p className="hidden sm:block text-white/60 font-medium text-xs tracking-widest uppercase relative top-[0.5px] leading-[1.1em]">Visualize Your Audio</p>
                 </Link>
 
                 {/* Right: Navigation Links and User Menu */}

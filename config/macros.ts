@@ -2144,7 +2144,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         ],
         melded: false
       },
-
       {
         type: 'TUNNEL_WARP',
         params: [
@@ -2163,6 +2162,46 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         ],
         melded: false
       },
+    ]
+  },
+  AURORA: {
+    id: 'AURORA',
+    label: 'Aurora',
+    effects: [
+      {
+        type: 'ORGANIC_NOISE',
+        params: [
+          o('Scale', { v: 5 }, { v: 2, b: 'OFF' }),
+          o('Complexity', { v: 0 }),
+          o('Warp', { v: 5 }),
+          o('Speed', { v: 30, m: 0, b: 'SUB' }, { v: 15, b: 'OFF' }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'SPECTRAL_MAP',
+        params: [
+          o('Resolution', { v: 15, b: 'OFF' }),
+          o('Phase Offset', { v: 10, b: 'OFF' }),
+          o('Speed', { v: 5, b: 'OFF' }),
+          o('Strength', { v: 70, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 0, b: 'OFF' }),
+          o('Distance', { v: 50, b: 'OFF' }),
+          o('Strength', { v: 70, b: 'OFF' }),
+        ],
+        melded: false
+      }
     ]
   },
 };
