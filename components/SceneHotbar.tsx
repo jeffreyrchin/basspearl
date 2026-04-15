@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffectStore } from '../store/useEffectStore';
 import { TRANSITION_OPTIONS } from '../constants';
-import { MenuDropdown } from './MenuDropdown';
 
 const SceneHotbar: React.FC = () => {
     const isSceneHotbarOpen = useEffectStore(s => s.isSceneHotbarOpen);
@@ -81,6 +80,8 @@ const SceneHotbar: React.FC = () => {
         }
     };
 
+    const [showSettings, setShowSettings] = useState(false);
+
     return (
         <AnimatePresence>
             {isSceneHotbarOpen && (
@@ -90,10 +91,23 @@ const SceneHotbar: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
                     transition={{ duration: 0.2, ease: 'easeOut' }}
-                    className="group relative pointer-events-auto flex flex-col rounded-xl bg-[#0A0F1E]/95 border border-white/10 shadow-[0_12px_48px_rgba(0,0,0,0.5),0_0_20px_rgba(251,0,255,0.06)] ring-1 ring-white/5 overflow-hidden w-fit min-w-[400px] max-w-[60vw]"
+                    className="group relative pointer-events-auto flex flex-col rounded-xl bg-[#0A0F1E]/95 border border-white/10 shadow-[0_12px_48px_rgba(0,0,0,0.5),0_0_20px_rgba(251,0,255,0.06)] ring-1 ring-white/5 overflow-hidden w-fit min-w-[420px] max-w-[60vw]"
                     title="Scene Bar (1-9 to switch scenes, [ / ] to navigate scenes)"
                 >
-                    {/* ROW 1: SCENE SELECTOR */}
+                    {/* HEADER */}
+                    <div className="h-8 flex items-center justify-between px-4 border-b border-white/5 bg-white/5">
+                        <span className="text-[10px] font-bold text-white uppercase tracking-widest select-none">Scenes</span>
+                        <button
+                            onClick={() => setShowSettings(!showSettings)}
+                            className={`flex items-center gap-1.5 transition-colors ${showSettings ? 'text-primary' : 'text-white/80 hover:text-white'}`}
+                        >
+                            <span className={`material-symbols-outlined !text-[14px] transition-transform duration-300 ${showSettings ? 'rotate-90' : ''}`}>
+                                settings
+                            </span>
+                        </button>
+                    </div>
+
+                    {/* SCENE BUTTONS */}
                     <div className="relative h-12 flex items-center">
                         {/* Left Gradient/Arrow */}
                         <AnimatePresence>
@@ -187,37 +201,62 @@ const SceneHotbar: React.FC = () => {
                         </AnimatePresence>
                     </div>
 
-                    {/* SEPARATOR */}
-                    <div className="h-[1px] w-full bg-white/5" />
+                    {/* EXPANDABLE SETTINGS SECTION */}
+                    <AnimatePresence>
+                        {showSettings && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                                className="overflow-hidden border-t border-white/5 flex flex-col items-center"
+                            >
+                                <div className="w-fit flex flex-col gap-1.5 px-6">
+                                    {/* ROW 1: TRANSITION TYPE */}
+                                    <div className="h-8 flex items-center gap-4">
+                                        <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap">Transition</span>
+                                        <div className="flex items-center gap-1.5">
+                                            {TRANSITION_OPTIONS.map((opt) => {
+                                                const isActive = transitionType === opt.value;
+                                                return (
+                                                    <button
+                                                        key={opt.value}
+                                                        onClick={() => setTransitionType(opt.value as any)}
+                                                        className={`
+                                                            px-2 py-1 rounded-md text-[10px] font-medium tracking-wide transition-all
+                                                            ${isActive
+                                                                ? 'bg-primary/20 text-primary shadow-[0_0_8px_rgba(251,0,255,0.15)]'
+                                                                : 'text-white/80 hover:text-white hover:bg-white/5'
+                                                            }
+                                                        `}
+                                                    >
+                                                        {opt.label}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
 
-                    {/* ROW 2: TRANSITION CONTROLS */}
-                    <div className="h-9 flex items-center justify-center gap-6 bg-white/3 px-3">
-                        {/* Type Selector */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap">Transition</span>
-                            <MenuDropdown
-                                id="sceneTransitionMenu"
-                                value={transitionType}
-                                onChange={(val) => setTransitionType(val as any)}
-                                options={TRANSITION_OPTIONS}
-                            />
-                        </div>
-
-                        {/* Duration Slider */}
-                        <div className="flex items-center gap-3">
-                            <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap">Duration</span>
-                            <input
-                                type="range"
-                                min="0"
-                                max="3"
-                                step="0.1"
-                                value={transitionDuration}
-                                onChange={(e) => setTransitionDuration(parseFloat(e.target.value))}
-                                className="w-30 h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-white"
-                            />
-                            <span className="text-[10px] w-8 text-center tabular-nums text-white/60">{transitionDuration.toFixed(1)}s</span>
-                        </div>
-                    </div>
+                                    {/* ROW 2: DURATION SLIDER */}
+                                    <div className="h-8 flex items-center gap-4">
+                                        <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap">Transition Time</span>
+                                        <div className="flex items-center gap-4 grow">
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max="5"
+                                                step="0.1"
+                                                value={transitionDuration}
+                                                onChange={(e) => setTransitionDuration(parseFloat(e.target.value))}
+                                                className="grow h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-white"
+                                            />
+                                            <span className="text-[10px] w-8 text-center font-medium tabular-nums text-white/80">{transitionDuration.toFixed(1)}s</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </motion.div>
             )}
         </AnimatePresence>
