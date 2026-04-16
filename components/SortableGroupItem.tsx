@@ -122,7 +122,9 @@ const SortableGroupItem = ({
                                     title={`Select ${EFFECT_METADATA[effect.type]?.label}`}
                                 >
                                     <div className="flex items-center gap-3">
-                                        {EFFECT_METADATA[effect.type]?.category === 'Pattern' ? <span className="material-symbols-outlined text-red-400 transition-colors">category</span> : <span className="material-symbols-outlined text-indigo-400 transition-colors">water_drop</span>}
+                                        {EFFECT_METADATA[effect.type]?.category === 'Pattern' ?
+                                            <span className="material-symbols-outlined text-red-400 !text-[18px] transition-colors">category</span> :
+                                            <span className="material-symbols-outlined text-indigo-400 !text-[18px] transition-colors">water_drop</span>}
                                         {EFFECT_METADATA[effect.type]?.label}
                                     </div>
                                 </button>
@@ -130,19 +132,30 @@ const SortableGroupItem = ({
                                 {!isOverlay && (
                                     <div className="flex h-full items-center" onClick={(e) => e.stopPropagation()}>
                                         <button
+                                            onClick={() => {
+                                                toggleSelected(effect.id, false);
+                                                pushFocus('inspector');
+                                            }}
+                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors text-white/60 hover:bg-white/10 hover:text-white`}
+                                            title="Show Inspector (I)"
+                                        >
+                                            <span className="material-symbols-outlined">switches</span>
+                                        </button>
+                                        <div className="w-[1px] h-8 md:h-5 bg-white/10"></div>
+                                        <button
                                             onClick={() => toggleSolo(effect.id)}
-                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors ${effect.soloed ? 'bg-white text-black' : 'text-white/50 hover:bg-white/10 hover:text-white'}`}
+                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors ${effect.soloed ? 'bg-white text-black' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}
                                             title="Toggle Solo"
                                         >
-                                            <span className="material-symbols-outlined text-[18px]">pill</span>
+                                            <span className="material-symbols-outlined">pill</span>
                                         </button>
                                         <div className="w-[1px] h-8 md:h-5 bg-white/10"></div>
                                         <button
                                             onClick={() => toggleMute(effect.id)}
-                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors ${effect.muted ? 'bg-indigo-500 text-white' : 'text-white/50 hover:bg-white/10 hover:text-white'}`}
+                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors ${effect.muted ? 'bg-indigo-500 text-white' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}
                                             title="Toggle Visibility"
                                         >
-                                            <span className="material-symbols-outlined text-[18px]">{effect.muted ? 'visibility_off' : 'visibility'}</span>
+                                            <span className="material-symbols-outlined">{effect.muted ? 'visibility_off' : 'visibility'}</span>
                                         </button>
                                     </div>
                                 )}

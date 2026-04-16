@@ -13,9 +13,6 @@ const ActionBar: React.FC<ActionBarProps> = () => {
     const batchDuplicate = useEffectStore(s => s.batchDuplicate);
 
     const selectionCount = selectedIds.size;
-    const focusStack = useEffectStore(s => s.focusStack);
-    const pushFocus = useEffectStore(s => s.pushFocus);
-    const isInspectorOpen = focusStack.includes('inspector');
 
     const addColor = useEffectStore(s => s.addColor);
 
@@ -42,27 +39,14 @@ const ActionBar: React.FC<ActionBarProps> = () => {
         return true;
     }, [canMeld, selectionCount, selectedIds, effects]);
 
-    if (selectionCount === 0) return null;
-
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
             className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-black border border-white/15 shadow-2xl shadow-black/50 z-actionbar">
-            {/* Parameters — only for single selection */}
-            <button
-                onClick={() => pushFocus('inspector')}
-                disabled={selectionCount !== 1}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest enabled:hover:text-white enabled:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all ${isInspectorOpen && selectionCount === 1 ? 'text-white bg-white/10' : 'text-white/70'}`}
-                title="Show Inspector (I)"
-            >
-                <span className="material-symbols-outlined text-[16px]">info</span>
-            </button>
 
-            <div className="w-[1px] h-4 bg-white/20" />
-
-            {/* Add Color */}
+            {/* Add Color - always enabled */}
             <button
                 onClick={addColor}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-white/70 hover:text-white hover:bg-white/10 transition-all`}
@@ -73,10 +57,11 @@ const ActionBar: React.FC<ActionBarProps> = () => {
 
             <div className="w-[1px] h-4 bg-white/20" />
 
-            {/* Duplicate — always visible */}
+            {/* Duplicate */}
             <button
                 onClick={batchDuplicate}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-white/70 hover:text-white hover:bg-white/10 transition-all"
+                disabled={selectionCount === 0}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-white/70 enabled:hover:text-white enabled:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 title="Duplicate (Cmd+D)"
             >
                 <span className="material-symbols-outlined text-[16px]">content_copy</span>
@@ -88,7 +73,7 @@ const ActionBar: React.FC<ActionBarProps> = () => {
             <button
                 key={isAlreadyMelded ? 'ungroup' : 'group'}
                 onClick={isAlreadyMelded ? batchUnmeld : batchMeld}
-                disabled={!canMeld || selectionCount === 1}
+                disabled={!canMeld || selectionCount < 2}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-white/70 enabled:hover:text-white enabled:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 title={isAlreadyMelded ? "Ungroup (Cmd+Shift+G)" : "Group (Cmd+G)"}
             >
@@ -102,7 +87,8 @@ const ActionBar: React.FC<ActionBarProps> = () => {
             {/* Remove */}
             <button
                 onClick={batchRemove}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-all"
+                disabled={selectionCount === 0}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-red-400 enabled:hover:text-red-300 enabled:hover:bg-red-400/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 title="Remove (Backspace)"
             >
                 <span className="material-symbols-outlined text-[16px]">delete</span>
