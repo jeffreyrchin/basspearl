@@ -22,7 +22,7 @@ const InspectorWindow: React.FC = () => {
 
     const dragControls = useDragControls();
 
-    const [isMobile, setIsMobile] = useState(false);
+    const isMobile = useEffectStore(s => s.isMobile);
 
     const minWidth = 280;
     const minHeight = 150;
@@ -32,13 +32,6 @@ const InspectorWindow: React.FC = () => {
     const [winWidth, setWinWidth] = useState(initialWidth);
     const [winHeight, setWinHeight] = useState(initialHeight);
     const [winX, setWinX] = useState((window.innerWidth - initialWidth) / 2);
-
-    useEffect(() => {
-        const checkMobile = () => setIsMobile(window.innerWidth < 768);
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
 
     if (!isInspectorOpen) return null;
 

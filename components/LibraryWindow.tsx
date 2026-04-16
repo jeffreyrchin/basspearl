@@ -15,7 +15,7 @@ const LibraryWindow: React.FC = () => {
 
     const dragControls = useDragControls();
 
-    const [isMobile, setIsMobile] = useState(false);
+    const isMobile = useEffectStore(s => s.isMobile);
 
     const minWidth = 300;
     const minHeight = 200;
@@ -66,13 +66,6 @@ const LibraryWindow: React.FC = () => {
             <span className="material-symbols-outlined text-[18px]">close</span>
         </button>
     );
-
-    useEffect(() => {
-        const checkMobile = () => setIsMobile(window.innerWidth < 768);
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
 
     if (!isLibraryOpen) return null;
 

@@ -64,6 +64,9 @@ interface EffectState {
     isUiHidden: boolean;
     setIsUiHidden: (hidden: boolean) => void;
 
+    isMobile: boolean;
+    setIsMobile: (isMobile: boolean) => void;
+
     undo: () => void;
     redo: () => void;
     commitHistory: () => void;
@@ -172,6 +175,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     isUiHidden: false,
     setIsUiHidden: (isUiHidden) => set({ isUiHidden }),
 
+    isMobile: false,
+    setIsMobile: (isMobile) => set({ isMobile }),
+
     setEffects: (effects) => {
         get().commitHistory();
         set({ effects })
@@ -274,10 +280,11 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         get().commitHistory();
         analytics.effect.added(type);
         const newEffect = createEffectInstance(type);
+        const { isMobile } = get();
         set((state) => ({
             effects: [...state.effects, newEffect],
-            isSidebarOpen: true,
-            focusStack: [...state.focusStack.filter(z => z !== 'pipeline'), 'pipeline'] as ('pipeline' | 'inspector' | 'library')[]
+            isSidebarOpen: isMobile ? state.isSidebarOpen : true,
+            focusStack: isMobile ? state.focusStack : [...state.focusStack.filter(z => z !== 'pipeline'), 'pipeline'] as ('pipeline' | 'inspector' | 'library')[]
         }));
     },
 
@@ -302,10 +309,11 @@ export const useEffectStore = create<EffectState>((set, get) => ({
 
         get().commitHistory();
         analytics.effect.added(`MACRO_${macroType}` as any);
+        const { isMobile } = get();
         set((state) => ({
             effects: newEffects,
-            isSidebarOpen: true,
-            focusStack: [...state.focusStack.filter(z => z !== 'pipeline'), 'pipeline'] as ('pipeline' | 'inspector' | 'library')[]
+            isSidebarOpen: isMobile ? state.isSidebarOpen : true,
+            focusStack: isMobile ? state.focusStack : [...state.focusStack.filter(z => z !== 'pipeline'), 'pipeline'] as ('pipeline' | 'inspector' | 'library')[]
         }));
     },
 
