@@ -74,7 +74,6 @@ export interface EffectMetadata {
   label: string;
   category: EffectCategory;
   params: EffectParamMetadata[];
-  isColorable?: boolean;
 }
 
 export type MacroType =

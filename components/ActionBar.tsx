@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { useEffectStore } from '../store/useEffectStore';
-import { EFFECT_METADATA } from '../config/effects';
 import { motion } from 'framer-motion';
 
 interface ActionBarProps { }
@@ -19,13 +18,6 @@ const ActionBar: React.FC<ActionBarProps> = () => {
     const isInspectorOpen = focusStack.includes('inspector');
 
     const addColor = useEffectStore(s => s.addColor);
-
-    const [selectedId, selectedEffect, canAddColor] = useMemo(() => {
-        const selectedId = selectionCount === 1 ? selectedIds.values().next().value : null;
-        const selectedEffect = effects.find(e => e.id === selectedId);
-        const canAddColor = selectedEffect && EFFECT_METADATA[selectedEffect?.type]?.isColorable;
-        return [selectedId, selectedEffect, canAddColor];
-    }, [selectionCount, selectedIds, effects]); // Only run when selectionCount, selectedIds, or effects change
 
     // Check if selected effects are contiguous (for meld eligibility)
     const canMeld = useMemo(() => {

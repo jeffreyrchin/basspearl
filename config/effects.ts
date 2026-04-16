@@ -137,7 +137,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Density', { v: 50 }),
       p('Speed', { v: 40, b: 'SUB' }, { v: 5 }),
     ],
-    isColorable: true
   },
   TUNNEL_WARP: {
     label: 'Tunnel Warp',
@@ -165,7 +164,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Pan Y', { v: 50 }),
       p('Rotation', { v: 0 }),
     ],
-    isColorable: true
   },
   SHAPE: {
     label: 'Shape',
@@ -182,7 +180,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Pan Y', { v: 50 }),
       p('Rotation', { v: 0 }),
     ],
-    isColorable: true
   },
   TILE: {
     label: 'Tile',
@@ -204,7 +201,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Speed', { v: 74, b: 'BASS' }, { v: 20 }),
       p('Blend', { v: 100 }),
     ],
-    isColorable: true
   },
   CELLULAR_NOISE: {
     label: 'Cellular Noise',
@@ -219,7 +215,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Speed', { v: 30, b: 'BASS' }, { v: 20, b: 'BASS' }),
       p('Blend', { v: 100 }),
     ],
-    isColorable: true
   },
   LUMINANCE_MASK: {
     label: 'Luminance Mask',
@@ -263,7 +258,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Pan Y', { v: 50 }),
       p('Rotation', { v: 0 }),
     ],
-    isColorable: true
   },
   SPECTRAL_MAP: {
     label: 'Spectral',
@@ -373,7 +367,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Pan Y', { v: 50 }),
       p('Rotation', { v: 0 }),
     ],
-    isColorable: true
   },
   TRANSFORM: {
     label: 'Transform',
@@ -507,6 +500,5 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Drift', { v: 30 }),
       p('Blend', { v: 100 }),
     ],
-    isColorable: true
   },
 };
