@@ -656,8 +656,10 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
             depthTest: false,
             blending: THREE.NormalBlending,
             uniforms: {
-                u_time: { value: 0.0 },
-                u_speed: { value: 0.0 },
+                u_driftTime: { value: 0.0 },
+                u_zoomTime: { value: 0.0 },
+                u_driftSpeed: { value: 0.0 },
+                u_zoomSpeed: { value: 0.0 },
                 u_drift: { value: 0.0 },
                 u_spread: { value: 0.0 },
                 u_aspect: { value: 1.0 },
@@ -667,8 +669,10 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 u_opacity: { value: 1.0 },
             },
             vertexShader: `
-                uniform float u_time;
-                uniform float u_speed;
+                uniform float u_driftTime;
+                uniform float u_zoomTime;
+                uniform float u_driftSpeed;
+                uniform float u_zoomSpeed;
                 uniform float u_drift;
                 uniform float u_spread;
                 uniform float u_aspect;
@@ -677,32 +681,49 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 uniform float u_size;
 
                 in vec3 a_random;
+                out float v_depthAlpha;
 
                 void main() {
                     // 1. Individual speed jitter: each particle moves at a slightly different rate
                     // to break up the "synchronized" look and make it feel organic.
                     float speedJitter = mix(0.5, 1.5, a_random.y);
-                    float t = u_time * u_speed * speedJitter;
+                    float t = u_driftTime * u_driftSpeed * speedJitter;
                     
-                    // 2. Narrow Z-variance for layering (same as simplified JS)
-                    float z = (position.z * 200.0) + sin(t * 0.3 + a_random.z * 200.0) * (u_drift * 0.2);
+                    // Infinite Starfield Tunnel: Flying toward camera
+                    float tunnelLen = 2000.0;
+                    float travel = (u_zoomTime * u_zoomSpeed * 1000.0);
                     
-                    // 3. Uniform screen-space movement logic
-                    float fieldH = 2.0 * u_tanHalfFov * u_zDepth;
+                    float baseZ = (position.z + 1.0) * 0.5 * tunnelLen; 
+                    float zRaw = mod(baseZ + travel, tunnelLen); // 0 (far) to 2000 (near)
+                    
+                    // Map into world space: -1700 (deep) up to 300 (camera)
+                    float finalZ = -1700.0 + zRaw;
+                    finalZ += sin(t * 0.3 + a_random.z * 200.0) * (u_drift * 0.2); // Narrow Z-variance for layering
+                    
+                    // Depth Alpha: Fade in far away, fade out near camera
+                    float dist = zRaw / tunnelLen;
+                    v_depthAlpha = smoothstep(0.0, 0.15, dist) * (1.0 - smoothstep(0.85, 1.0, dist));
+
+                    // 3. Static Frustum Spawning:
+                    // Use a fixed reference distance (1800) to ensure the starfield is 
+                    // wide enough to fill the screen even in the deep background.
+                    float refDist = 1800.0;
+                    float fieldH = 2.0 * u_tanHalfFov * refDist;
                     float fieldW = fieldH * u_aspect;
                     float fill   = (u_spread / 400.0) * 0.5;
 
                     float finalX = (position.x * fieldW * fill) + sin(t * 0.5 + a_random.x * 20.0) * u_drift;
                     float finalY = (position.y * fieldH * fill) + cos(t * 0.4 + a_random.x * 40.0) * u_drift;
 
-                    vec4 mvPosition = modelViewMatrix * vec4(finalX, finalY, z, 1.0);
-                    gl_PointSize = u_size * clamp(800.0 / -mvPosition.z, 0.5, 20.0);
+                    vec4 mvPosition = modelViewMatrix * vec4(finalX, finalY, finalZ, 1.0);
+                    gl_PointSize = u_size * clamp(2000.0 / -mvPosition.z, 0.5, 20.0);
                     gl_Position = projectionMatrix * mvPosition;
                 }
             `,
             fragmentShader: `
                 precision highp float;
                 uniform float u_opacity;
+                in float v_depthAlpha;
                 out vec4 outColor;
 
                 void main() {
@@ -711,9 +732,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                     
                     // Starfield-Style Falloff: 1 / (1 + d * size)
                     float intensity = 1.0 / (1.0 + d * 500.0);
-                    
-                    // Starfield stars are white dots that mix into the background
-                    outColor = vec4(1.0, 1.0, 1.0, intensity * u_opacity);
+                    outColor = vec4(1.0, 1.0, 1.0, intensity * u_opacity * v_depthAlpha);
                 }
             `
         });
@@ -736,51 +755,38 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
             update: (params, texture) => {
                 const p = params.params;
                 const iv = params.integratedValues;
-                if (p && iv && p.length >= 6) {
-                    // p[0] Count    (0-100)
-                    // p[1] Size     (0-100)
-                    // p[2] Speed    (0-100) -> drives iv[2]
-                    // p[3] Spread   (0-100)
-                    // p[4] Drift    (0-100)
-                    // p[5] Blend    (0-100)
+                if (!p || !iv) return;
 
-                    const countVal = p[0] / 100.0;
-                    const size = (p[1] / 100.0) * 100.0 + 2.0;
-                    const speed = (p[2] / 100.0) * 10.0;
-                    const spread = (p[3] / 100.0) * 1500.0 + 100.0;
-                    const drift = (p[4] / 100.0) * 200.0;
-                    const blend = p[5] / 100.0;
+                const countVal = p[0] / 100.0;
+                const size = (p[1] / 100.0) * 100.0 + 2.0;
+                const spread = (p[2] / 100.0) * 1500.0 + 100.0;
+                const drift = (p[3] / 100.0) * 200.0;
+                const driftSpeed = (p[4] / 100.0) * 10.0;
+                const zoomSpeed = p[5] / 100.0 * 5.0;
+                const blend = p[6] / 100.0;
 
-                    // Fixed camera defaults for Screen-Space Spawning
-                    const fov = 75.0;
-                    const zDepth = 300.0;
+                const fov = 75.0, zDepth = 300.0;
+                if (camera.fov !== fov) { camera.fov = fov; camera.updateProjectionMatrix(); }
+                camera.position.set(0, 0, zDepth);
+                camera.lookAt(0, 0, 0);
 
-                    if (camera.fov !== fov) {
-                        camera.fov = fov;
-                        camera.updateProjectionMatrix();
-                    }
-                    camera.position.set(0, 0, zDepth);
-                    camera.lookAt(0, 0, 0);
+                geometry.setDrawRange(0, Math.floor(countVal * PARTICLE_COUNT));
 
-                    // 2. Control count via Draw Range
-                    const activeCount = Math.floor(countVal * PARTICLE_COUNT);
-                    geometry.setDrawRange(0, activeCount);
+                const mat = material as THREE.ShaderMaterial;
+                mat.uniforms.u_driftTime.value = iv[4] || 0.0;
+                mat.uniforms.u_zoomTime.value = iv[5] || 0.0;
+                mat.uniforms.u_driftSpeed.value = driftSpeed;
+                mat.uniforms.u_zoomSpeed.value = zoomSpeed;
+                mat.uniforms.u_drift.value = drift;
+                mat.uniforms.u_spread.value = spread;
+                mat.uniforms.u_aspect.value = params.width / params.height;
+                mat.uniforms.u_size.value = size;
+                mat.uniforms.u_opacity.value = blend;
 
-                    // 3. Update Uniforms (Animation now runs entirely on the GPU)
-                    const mat = material as THREE.ShaderMaterial;
-                    mat.uniforms.u_time.value = iv[2] || 0.0;
-                    mat.uniforms.u_speed.value = speed;
-                    mat.uniforms.u_drift.value = drift;
-                    mat.uniforms.u_spread.value = spread;
-                    mat.uniforms.u_aspect.value = params.width / params.height;
-                    mat.uniforms.u_size.value = size;
-                    mat.uniforms.u_opacity.value = blend;
+                // Background Quad
+                bgMaterial.uniforms.u_image.value = texture;
 
-                    // Background Quad
-                    bgMaterial.uniforms.u_image.value = texture;
-
-                    phantom.rotation.y += 0.01;
-                }
+                phantom.rotation.y += 0.01;
             },
             dispose: () => {
                 geometry.dispose();
