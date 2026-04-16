@@ -98,7 +98,7 @@ export type MacroType =
   'GLOBE' |
   'SHARDS' |
   'ARCS' |
-  'SQUARE_TUNNEL' |
+  'GRAIN_TUNNEL' |
   'LIGHT_TUNNEL' |
   'CLOUDS' |
   'QUAD_FRACTAL' |
@@ -109,7 +109,7 @@ export type MacroType =
   'RIPPLES' |
   'SPINNING_CORRIDOR' |
   'SQUARE_RIPPLES' |
-  'ANGULAR_EXPANSION' |
+  'ANGULAR' |
   'SEARCHLIGHTS' |
   'WAXY_STARS' |
   'SPIRAL_GLOW' |

@@ -1035,17 +1035,17 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       }
     ]
   },
-  SQUARE_TUNNEL: {
-    id: 'SQUARE_TUNNEL',
-    label: 'Square Tunnel',
+  GRAIN_TUNNEL: {
+    id: 'GRAIN_TUNNEL',
+    label: 'Grain Tunnel',
     effects: [
       {
         type: 'GRAIN',
         params: [
-          o('Width', { v: 90 }),
-          o('Height', { v: 90 }),
-          o('Freq X', { v: 70 }),
-          o('Freq Y', { v: 70 }),
+          o('Width', { v: 100 }),
+          o('Height', { v: 100 }),
+          o('Freq X', { v: 60 }),
+          o('Freq Y', { v: 60 }),
           o('Density', { v: 100, b: 'OFF' }),
           o('Roundness', { v: 0 }),
           o('Blend', { v: 100 }),
@@ -1070,7 +1070,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'HUE_ROTATION',
         params: [
           o('Phase Offset', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 25, b: 'OFF' }),
+          o('Speed', { v: 5, b: 'OFF' }),
           o('Vibrance', { v: 73, b: 'OFF' }),
         ],
         melded: false
@@ -1600,9 +1600,9 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       },
     ]
   },
-  ANGULAR_EXPANSION: {
-    id: 'ANGULAR_EXPANSION',
-    label: 'Angular Expansion',
+  ANGULAR: {
+    id: 'ANGULAR',
+    label: 'Angular',
     effects: [
       {
         type: 'RADIAL_GRADIENT',
