@@ -592,5 +592,202 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 scene.clear();
             }
         };
+    },
+    PARTICLES: () => {
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 10000);
+        camera.position.set(0, 0, 300);
+
+        const PARTICLE_COUNT = 10000;
+        const geometry = new THREE.BufferGeometry();
+        const basePositions = new Float32Array(PARTICLE_COUNT * 3);
+        const randoms = new Float32Array(PARTICLE_COUNT * 3);
+
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            const ix = i * 3;
+            basePositions[ix + 0] = (Math.random() - 0.5) * 2.0;
+            basePositions[ix + 1] = (Math.random() - 0.5) * 2.0;
+            basePositions[ix + 2] = (Math.random() - 0.5) * 2.0;
+
+            randoms[ix + 0] = Math.random();
+            randoms[ix + 1] = Math.random();
+            randoms[ix + 2] = Math.random();
+        }
+
+        const positions = new Float32Array(PARTICLE_COUNT * 3);
+        // Fill positions once; they will be used as "base" coordinates in the shader
+        for (let i = 0; i < PARTICLE_COUNT * 3; i++) positions[i] = basePositions[i];
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('a_random', new THREE.BufferAttribute(randoms, 3));
+
+        // Background quad to carry the image behind the particles
+        const bgMaterial = new THREE.ShaderMaterial({
+            glslVersion: THREE.GLSL3,
+            uniforms: { u_image: { value: null } },
+            vertexShader: `
+                out vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = vec4(position.xy, 0.999, 1.0); 
+                }
+            `,
+            fragmentShader: `
+                precision highp float;
+                uniform sampler2D u_image;
+                in vec2 vUv;
+                out vec4 outColor;
+                void main() {
+                    outColor = texture(u_image, vUv);
+                }
+            `,
+            depthWrite: false,
+            depthTest: false
+        });
+        const bgMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMaterial);
+        bgMesh.frustumCulled = false;
+        bgMesh.renderOrder = -1;
+        scene.add(bgMesh);
+
+        const material = new THREE.ShaderMaterial({
+            glslVersion: THREE.GLSL3,
+            transparent: true,
+            depthWrite: false,
+            depthTest: false,
+            blending: THREE.NormalBlending,
+            uniforms: {
+                u_time: { value: 0.0 },
+                u_speed: { value: 0.0 },
+                u_drift: { value: 0.0 },
+                u_spread: { value: 0.0 },
+                u_aspect: { value: 1.0 },
+                u_tanHalfFov: { value: Math.tan((75.0 * Math.PI) / 360.0) },
+                u_zDepth: { value: 300.0 },
+                u_size: { value: 1.0 },
+                u_opacity: { value: 1.0 },
+            },
+            vertexShader: `
+                uniform float u_time;
+                uniform float u_speed;
+                uniform float u_drift;
+                uniform float u_spread;
+                uniform float u_aspect;
+                uniform float u_tanHalfFov;
+                uniform float u_zDepth;
+                uniform float u_size;
+
+                in vec3 a_random;
+
+                void main() {
+                    // 1. Individual speed jitter: each particle moves at a slightly different rate
+                    // to break up the "synchronized" look and make it feel organic.
+                    float speedJitter = mix(0.5, 1.5, a_random.y);
+                    float t = u_time * u_speed * speedJitter;
+                    
+                    // 2. Narrow Z-variance for layering (same as simplified JS)
+                    float z = (position.z * 200.0) + sin(t * 0.3 + a_random.z * 200.0) * (u_drift * 0.2);
+                    
+                    // 3. Uniform screen-space movement logic
+                    float fieldH = 2.0 * u_tanHalfFov * u_zDepth;
+                    float fieldW = fieldH * u_aspect;
+                    float fill   = (u_spread / 400.0) * 0.5;
+
+                    float finalX = (position.x * fieldW * fill) + sin(t * 0.5 + a_random.x * 20.0) * u_drift;
+                    float finalY = (position.y * fieldH * fill) + cos(t * 0.4 + a_random.x * 40.0) * u_drift;
+
+                    vec4 mvPosition = modelViewMatrix * vec4(finalX, finalY, z, 1.0);
+                    gl_PointSize = u_size * clamp(800.0 / -mvPosition.z, 0.5, 20.0);
+                    gl_Position = projectionMatrix * mvPosition;
+                }
+            `,
+            fragmentShader: `
+                precision highp float;
+                uniform float u_opacity;
+                out vec4 outColor;
+
+                void main() {
+                    float d = dot(gl_PointCoord - 0.5, gl_PointCoord - 0.5);
+                    if (d > 0.25) discard;
+                    
+                    // Starfield-Style Falloff: 1 / (1 + d * size)
+                    float intensity = 1.0 / (1.0 + d * 500.0);
+                    
+                    // Starfield stars are white dots that mix into the background
+                    outColor = vec4(1.0, 1.0, 1.0, intensity * u_opacity);
+                }
+            `
+        });
+
+        const points = new THREE.Points(geometry, material);
+        points.frustumCulled = false;
+        scene.add(points);
+
+        // Stabilizer phantom
+        const phantom = new THREE.Mesh(
+            new THREE.SphereGeometry(1.5, 32, 32),
+            new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.0, depthWrite: false, depthTest: false })
+        );
+        scene.add(phantom);
+
+        return {
+            scene,
+            camera,
+            material,
+            update: (params, texture) => {
+                const p = params.params;
+                const iv = params.integratedValues;
+                if (p && iv && p.length >= 6) {
+                    // p[0] Count    (0-100)
+                    // p[1] Size     (0-100)
+                    // p[2] Speed    (0-100) -> drives iv[2]
+                    // p[3] Spread   (0-100)
+                    // p[4] Drift    (0-100)
+                    // p[5] Blend    (0-100)
+
+                    const countVal = p[0] / 100.0;
+                    const size = (p[1] / 100.0) * 100.0 + 2.0;
+                    const speed = (p[2] / 100.0) * 10.0;
+                    const spread = (p[3] / 100.0) * 1500.0 + 100.0;
+                    const drift = (p[4] / 100.0) * 200.0;
+                    const blend = p[5] / 100.0;
+
+                    // Fixed camera defaults for Screen-Space Spawning
+                    const fov = 75.0;
+                    const zDepth = 300.0;
+
+                    if (camera.fov !== fov) {
+                        camera.fov = fov;
+                        camera.updateProjectionMatrix();
+                    }
+                    camera.position.set(0, 0, zDepth);
+                    camera.lookAt(0, 0, 0);
+
+                    // 2. Control count via Draw Range
+                    const activeCount = Math.floor(countVal * PARTICLE_COUNT);
+                    geometry.setDrawRange(0, activeCount);
+
+                    // 3. Update Uniforms (Animation now runs entirely on the GPU)
+                    const mat = material as THREE.ShaderMaterial;
+                    mat.uniforms.u_time.value = iv[2] || 0.0;
+                    mat.uniforms.u_speed.value = speed;
+                    mat.uniforms.u_drift.value = drift;
+                    mat.uniforms.u_spread.value = spread;
+                    mat.uniforms.u_aspect.value = params.width / params.height;
+                    mat.uniforms.u_size.value = size;
+                    mat.uniforms.u_opacity.value = blend;
+
+                    // Background Quad
+                    bgMaterial.uniforms.u_image.value = texture;
+
+                    phantom.rotation.y += 0.01;
+                }
+            },
+            dispose: () => {
+                geometry.dispose();
+                bgMaterial.dispose();
+                material.dispose();
+                scene.clear();
+            }
+        };
     }
 };

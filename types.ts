@@ -43,7 +43,8 @@ export type GlitchEffectType =
   | 'TRI_CRUSH'
   | 'HEX_CRUSH'
   | 'SPIRAL_GRADIENT'
-  | 'IMAGE_OVERLAY';
+  | 'IMAGE_OVERLAY'
+  | 'PARTICLES';
 
 export type FrequencyBand = 'OFF' | 'SUB' | 'BASS' | 'MID' | 'TREBLE';
 

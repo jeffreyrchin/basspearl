@@ -1784,4 +1784,5 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     HEX_CRUSH: { name: 'HEX_CRUSH', fragmentSource: HEX_CRUSH_SHADER },
     TERRAIN_RING: { name: 'TERRAIN_RING', fragmentSource: '', velocityParamIndices: [6, 7, 8], is3D: true },
     IMAGE_OVERLAY: { name: 'IMAGE_OVERLAY', fragmentSource: IMAGE_OVERLAY_SHADER },
+    PARTICLES: { name: 'PARTICLES', fragmentSource: '', velocityParamIndices: [2], is3D: true },
 };

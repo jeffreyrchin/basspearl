@@ -496,4 +496,17 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Rotation', { v: 0 }),
     ],
   },
+  PARTICLES: {
+    label: 'Particles',
+    category: 'Pattern',
+    params: [
+      p('Count', { v: 15 }),
+      p('Size', { v: 15 }),
+      p('Speed', { v: 15 }),
+      p('Spread', { v: 30 }),
+      p('Drift', { v: 30 }),
+      p('Blend', { v: 100 }),
+    ],
+    isColorable: true
+  },
 };
