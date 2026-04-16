@@ -8,6 +8,8 @@ const LibraryWindow: React.FC = () => {
     const pushFocus = useEffectStore(s => s.pushFocus);
     const removeFocus = useEffectStore(s => s.removeFocus);
     const isLibraryOpen = focusStack.includes('library');
+    const keepLibraryOpen = useEffectStore(s => s.keepLibraryOpen);
+    const setKeepLibraryOpen = useEffectStore(s => s.setKeepLibraryOpen);
 
     const setActiveDropdownId = useEffectStore(s => s.setActiveDropdownId);
 
@@ -25,6 +27,45 @@ const LibraryWindow: React.FC = () => {
     const [winX, setWinX] = useState((window.innerWidth - initialWidth) / 2);
 
     const [entranceComplete, setEntranceComplete] = useState(false);
+
+    const handleSelectEffect = () => {
+        if (!keepLibraryOpen) removeFocus('library');
+    };
+
+    const keepOpenToggle = (
+        <label
+            htmlFor="keep-open-checkbox"
+            className="flex items-center gap-2 cursor-pointer group"
+            onPointerDown={(e) => e.stopPropagation()}
+        >
+            <span className="text-[10px] font-semibold text-white/80 uppercase tracking-wider group-hover:text-white transition-colors">
+                Keep Open
+            </span>
+            <input
+                type="checkbox"
+                id="keep-open-checkbox"
+                checked={keepLibraryOpen}
+                onChange={(e) => setKeepLibraryOpen(e.target.checked)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        setKeepLibraryOpen(!keepLibraryOpen);
+                    }
+                }}
+                className="w-4 h-4 rounded border-white/20 bg-white/5 checked:bg-indigo-500 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50"
+            />
+        </label>
+    );
+
+    const closeButton = (
+        <button
+            onClick={() => removeFocus('library')}
+            className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
+            title="Close Library (Y)"
+        >
+            <span className="material-symbols-outlined text-[18px]">close</span>
+        </button>
+    );
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -58,16 +99,13 @@ const LibraryWindow: React.FC = () => {
                         <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">
                             Library
                         </span>
-                        <button
-                            onClick={() => removeFocus('library')}
-                            className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
-                            title="Close Library (Y)"
-                        >
-                            <span className="material-symbols-outlined text-[18px]">close</span>
-                        </button>
+                        <div className="flex items-center gap-4">
+                            {keepOpenToggle}
+                            {closeButton}
+                        </div>
                     </div>
                     <div className="flex-1 overflow-y-auto custom-scrollbar" onScroll={() => setActiveDropdownId(null)}>
-                        <SidebarLibrary onSelectEffect={() => removeFocus('library')} />
+                        <SidebarLibrary onSelectEffect={handleSelectEffect} />
                     </div>
                 </div>
             </div>
@@ -103,13 +141,12 @@ const LibraryWindow: React.FC = () => {
                     <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em] pointer-events-none">
                         Library
                     </span>
-                    <button
-                        onClick={() => removeFocus('library')}
-                        className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
-                        title="Close Library (Y)"
-                    >
-                        <span className="material-symbols-outlined text-[18px]">close</span>
-                    </button>
+                    <div className="flex items-center gap-4">
+                        <div className="border-r border-white/10 pr-4 h-6 flex items-center">
+                            {keepOpenToggle}
+                        </div>
+                        {closeButton}
+                    </div>
                 </div>
 
                 {/* Content Body */}
@@ -127,7 +164,7 @@ const LibraryWindow: React.FC = () => {
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.1 }}
                         >
-                            <SidebarLibrary />
+                            <SidebarLibrary onSelectEffect={handleSelectEffect} />
                         </motion.div>
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center gap-2">

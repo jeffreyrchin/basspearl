@@ -55,6 +55,9 @@ interface EffectState {
     isSidebarOpen: boolean;
     setIsSidebarOpen: (open: boolean) => void;
 
+    keepLibraryOpen: boolean;
+    setKeepLibraryOpen: (open: boolean) => void;
+
     activeDropdownId: string | null;
     setActiveDropdownId: (id: string | null) => void;
 
@@ -159,6 +162,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         isSidebarOpen: open,
         focusStack: open ? [...s.focusStack.filter(z => z !== 'pipeline'), 'pipeline'] as ('pipeline' | 'inspector' | 'library')[] : s.focusStack
     })),
+
+    keepLibraryOpen: false,
+    setKeepLibraryOpen: (open) => set({ keepLibraryOpen: open }),
 
     activeDropdownId: null,
     setActiveDropdownId: (activeDropdownId) => set({ activeDropdownId }),

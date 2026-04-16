@@ -93,7 +93,7 @@ const CATEGORIES = ['All', 'Patterns', 'Effects', 'Presets'];
 const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
     const addEffect = useEffectStore(s => s.addEffect);
     const addMacro = useEffectStore(s => s.addMacro);
-    const [selectedCategory, setSelectedCategory] = useState<string>('Patterns');
+    const [selectedCategory, setSelectedCategory] = useState<string>('Presets');
 
     // === Shared Hover Canvas State ===
     // Only one (element, blueprint) pair is active at a time.
