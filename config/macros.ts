@@ -1485,56 +1485,39 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       },
     ]
   },
-  SPINNING_CORRIDOR: {
-    id: 'SPINNING_CORRIDOR',
-    label: 'Spinning Corridor',
+  CORRIDOR: {
+    id: 'CORRIDOR',
+    label: 'Corridor',
     effects: [
       {
-        type: 'SHAPE',
+        type: 'CHECKERBOARD',
         params: [
-          o('Side Count', { v: 4, b: 'OFF' }),
-          o('Pointiness', { v: 0, b: 'OFF' }),
-          o('Roundness', { v: 0, b: 'OFF' }),
+          o('Freq X', { v: 11, b: 'OFF' }, { v: 7, b: 'OFF' }),
+          o('Freq Y', { v: 0, b: 'OFF' }),
           o('Feather', { v: 0, b: 'OFF' }),
-          o('Blend', { v: 100, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 30, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 70, b: 'OFF' }),
-          o('Rotation', { v: 0, b: 'OFF' }),
+          o('Scale X', { v: 50 }),
+          o('Scale Y', { v: 50 }),
+          o('Pan X', { v: 50 }),
+          o('Pan Y', { v: 50 }),
+          o('Rotation', { v: 0 }),
         ],
-        melded: true
+        melded: false
       },
       {
-        type: 'SHAPE',
+        type: 'GLOW',
         params: [
-          o('Side Count', { v: 4, b: 'OFF' }),
-          o('Pointiness', { v: 0, b: 'OFF' }),
-          o('Roundness', { v: 0, b: 'OFF' }),
-          o('Feather', { v: 0, b: 'OFF' }),
-          o('Blend', { v: 100, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 30, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 30, b: 'OFF' }),
-          o('Rotation', { v: 0, b: 'OFF' }),
+          o('Sensitivity', { v: 0, b: 'OFF' }),
+          o('Distance', { v: 5, b: 'OFF' }),
+          o('Strength', { v: 100, b: 'OFF' }),
         ],
-        melded: true
-      },
-      {
-        type: 'ROTATE',
-        params: [
-          o('Rotation', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 5, b: 'OFF' }),
-        ],
-        melded: true
+        melded: false
       },
       {
         type: 'INFINITE_ZOOM',
         params: [
-          o('Speed', { v: 50, b: 'SUB' }, { v: 25, b: 'OFF' }),
-          o('Depth', { v: 45 }),
-          o('Spacing', { v: 11 }),
+          o('Speed', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Depth', { v: 22 }),
+          o('Spacing', { v: 17 }),
           o('Plane Count', { v: 100 }),
           o('Edge Feather', { v: 100 }),
           o('Fade Buffer', { v: 0 }),

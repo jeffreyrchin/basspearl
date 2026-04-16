@@ -73,13 +73,6 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
                 </div>
             )}
 
-            {/* Macro Indicator */}
-            {macroType && (
-                <div className="absolute top-2 left-2 z-30 w-5 h-5 rounded-full bg-purple-500/80 pointer-events-none flex items-center justify-center">
-                    <span className="material-symbols-outlined text-white transition-colors !text-[14px]">group_work</span>
-                </div>
-            )}
-
             {/* Quick add indicator */}
             <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-y-[-4px] group-hover:translate-y-0 pointer-events-none z-20">
                 <span className="text-sm material-symbols-outlined text-white">add</span>

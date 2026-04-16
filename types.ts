@@ -107,7 +107,7 @@ export type MacroType =
   'SMOKE' |
   'CRUSHED_RAIN' |
   'RIPPLES' |
-  'SPINNING_CORRIDOR' |
+  'CORRIDOR' |
   'SQUARE_RIPPLES' |
   'ANGULAR' |
   'SEARCHLIGHTS' |
