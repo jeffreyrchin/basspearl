@@ -2204,4 +2204,23 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       }
     ]
   },
+  STARFIELD_3D: {
+    id: 'STARFIELD_3D',
+    label: '3D Starfield',
+    effects: [
+      {
+        type: 'PARTICLES',
+        params: [
+          o('Count', { v: 50 }, { v: 5 }),
+          o('Size', { v: 10 }),
+          o('Spread', { v: 10 }),
+          o('Drift', { v: 0 }),
+          o('Drift Speed', { v: 0 }),
+          o('Zoom Speed', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: false
+      }
+    ]
+  }
 };
