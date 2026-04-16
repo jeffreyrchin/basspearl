@@ -237,53 +237,51 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
 
                 out vec2 vSampleUv;
                 out vec4 vTexColor;
-                out float vVisibility;
+                out float vWorldX;
+                out float vWorldZ;
 
                 void main() {
+                    // SECTION 1: VOXEL AND MESH SETUP
                     float gridRes = clamp(u_res, 1.0, 1024.0);
 
                     // Block size scales with tile size so voxels stay consistent per tile
                     float blockSizeX = u_tileW / gridRes;
                     float blockSizeZ = u_tileH / gridRes;
-
                     vec3 pos = position;
 
-                    // Snap vertices to voxel grid centers
-                    float snappedX = floor(pos.x / blockSizeX + 0.5) * blockSizeX;
-                    float snappedZ = floor(pos.z / blockSizeZ + 0.5) * blockSizeZ;
+                    // SECTION 2: COORDINATES AND UV GENERATION
+                    vSampleUv = vec2((position.x / u_tileW) + 0.5, 0.5 - (position.z / u_tileH));
 
+                    float gridX = position.x / blockSizeX;
+                    float gridZ = position.z / blockSizeZ;
+                    float snappedX = floor(gridX + 0.5) * blockSizeX;
+                    float snappedZ = floor(gridZ + 0.5) * blockSizeZ;
+                    vec2 snappedSampleUv = vec2((snappedX / u_tileW) + 0.5, 0.5 - (snappedZ / u_tileH));
+
+                    // SECTION 3: VOXEL GEOMETRY AND SNAPPING
                     // Bypass snapping when flat (extrusion = 0)
                     float isFlat = step(u_extrusion, 0.01);
-                    pos.x = mix(snappedX, pos.x, isFlat);
-                    pos.z = mix(snappedZ, pos.z, isFlat);
+                    pos.x = mix(snappedX, position.x, isFlat);
+                    pos.z = mix(snappedZ, position.z, isFlat);
 
-                    // Tiling UV: position / tile size → naturally repeats via GL_REPEAT
-                    vSampleUv = vec2((pos.x / u_tileW) + 0.5, 0.5 - (pos.z / u_tileH));
+                    // SECTION 4: TEXTURE SAMPLING AND HEIGHTMAP
+                    vec2 tileFrac = fract(snappedSampleUv);
+                    vec2 ghostUv  = snappedSampleUv + 0.5;
 
-                    // ── TILE EDGE BLENDING ─────
-                    vec2 tileFrac = fract(vSampleUv);
-                    vec2 ghostUv  = vSampleUv + 0.5;
-
-                    // Weight: 0 in center of tile, 1 at seam
                     float wx = (u_tileBlend < 1.0) ? smoothstep(u_tileBlend, 1.0, abs(tileFrac.x - 0.5) * 2.0) : 0.0;
                     float wy = (u_tileBlend < 1.0) ? smoothstep(u_tileBlend, 1.0, abs(tileFrac.y - 0.5) * 2.0) : 0.0;
 
-                    // Sample 4 tiles. textureLod is used as derivatives aren't in VS.
-                    vec4 c1 = textureLod(u_image, vSampleUv,                    0.0);
-                    vec4 c2 = textureLod(u_image, vec2(ghostUv.x, vSampleUv.y), 0.0);
-                    vec4 c3 = textureLod(u_image, vec2(vSampleUv.x, ghostUv.y), 0.0);
-                    vec4 c4 = textureLod(u_image, ghostUv,                      0.0);
+                    vec4 c1 = textureLod(u_image, snappedSampleUv,                    0.0);
+                    vec4 c2 = textureLod(u_image, vec2(ghostUv.x, snappedSampleUv.y), 0.0);
+                    vec4 c3 = textureLod(u_image, vec2(snappedSampleUv.x, ghostUv.y), 0.0);
+                    vec4 c4 = textureLod(u_image, ghostUv,                            0.0);
 
                     vTexColor = mix(mix(c1, c2, wx), mix(c3, c4, wx), wy);
                     float heightVal = dot(vTexColor.rgb, vec3(0.333));
 
-                    // Fog: world-space so it stays fixed as the mesh physically scrolls.
-                    // pos.x/z is local; adding u_mesh_x/z converts to world space.
-                    float worldX = pos.x + u_mesh_x;
-                    float worldZ = pos.z + u_mesh_z;
-                    float sideFade = smoothstep(500.0, 400.0, abs(worldX));
-                    float zFog     = smoothstep(400.0, 500.0, abs(worldZ));
-                    vVisibility = step(0.01, heightVal) * sideFade * (1.0 - zFog);
+                    // SECTION 5: FINAL POSITION AND WORLD TRANSFORM
+                    vWorldX = pos.x + u_mesh_x;
+                    vWorldZ = pos.z + u_mesh_z;
 
                     pos.y += heightVal * u_extrusion;
                     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
@@ -291,15 +289,41 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
             `,
             fragmentShader: `
                 precision highp float;
+                uniform sampler2D u_image;
+                uniform float u_extrusion;
+                uniform float u_tileBlend;
                 in vec2 vSampleUv;
                 in vec4 vTexColor;
-                in float vVisibility;
+                in float vWorldX;
+                in float vWorldZ;
                 out vec4 outColor;
 
+                vec4 getBlendedColor(vec2 uv, float blend) {
+                    vec2 tileFrac = fract(uv);
+                    vec2 ghostUv  = uv + 0.5;
+                    float wx = (blend < 1.0) ? smoothstep(blend, 1.0, abs(tileFrac.x - 0.5) * 2.0) : 0.0;
+                    float wy = (blend < 1.0) ? smoothstep(blend, 1.0, abs(tileFrac.y - 0.5) * 2.0) : 0.0;
+                    
+                    vec4 c1 = texture(u_image, uv);
+                    vec4 c2 = texture(u_image, vec2(ghostUv.x, uv.y));
+                    vec4 c3 = texture(u_image, vec2(uv.x, ghostUv.y));
+                    vec4 c4 = texture(u_image, ghostUv);
+                    return mix(mix(c1, c2, wx), mix(c3, c4, wx), wy);
+                }
+
                 void main() {
-                    // Use the color pre-blended and passed from the vertex shader.
-                    // This ensures geometry heights and visual colors are perfectly synced.
-                    outColor = vec4(vTexColor.rgb, vTexColor.a * vVisibility);
+                    float isFlat = step(u_extrusion, 0.01);
+                    vec4 flatColor  = getBlendedColor(vSampleUv, u_tileBlend);
+                    vec4 finalColor = mix(vTexColor, flatColor, isFlat);
+                    
+                    float h = dot(finalColor.rgb, vec3(0.333));
+                    float sideFade = smoothstep(500.0, 400.0, abs(vWorldX));
+                    float zFog     = smoothstep(400.0, 500.0, abs(vWorldZ));
+                    float visibility = step(0.01, h) * sideFade * (1.0 - zFog);
+
+                    if (visibility < 0.01) discard;
+                    
+                    outColor = vec4(finalColor.rgb, finalColor.a * visibility);
                 }
             `,
             side: THREE.DoubleSide,
@@ -347,6 +371,12 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 const tileWWorld = 10.0 + (tileW / 100.0) * 990.0;
                 const tileHWorld = 10.0 + (tileH / 100.0) * 990.0;
 
+                // ── UV QUANTIZATION ──────────────────────────────────
+                // Align tile width/height with the vertex grid to eliminate Phase Shift pop.
+                const segmentSize = 3000.0 / 1024.0;
+                const snappedTileW = Math.max(segmentSize, Math.round(tileWWorld / segmentSize) * segmentSize);
+                const snappedTileH = Math.max(segmentSize, Math.round(tileHWorld / segmentSize) * segmentSize);
+
                 const toRad = (v: number) => (v / 100.0) * Math.PI * 2.0;
                 terrainGroup.rotation.x = toRad(rotateX);
                 terrainGroup.rotation.y = toRad(rotateY);
@@ -361,8 +391,8 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 material.uniforms.u_image.value = texture;
                 material.uniforms.u_extrusion.value = extrusion;
                 material.uniforms.u_res.value = targetRes;
-                material.uniforms.u_tileW.value = tileWWorld;
-                material.uniforms.u_tileH.value = tileHWorld;
+                material.uniforms.u_tileW.value = snappedTileW;
+                material.uniforms.u_tileH.value = snappedTileH;
                 // Map 0-100 → 1.0 (no blend) → 0.0 (full seamless blend), clamped just below 1.0
                 material.uniforms.u_tileBlend.value = 1.0 - Math.min(tileBlend / 100.0, 0.999);
 
