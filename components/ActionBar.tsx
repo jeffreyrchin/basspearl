@@ -14,7 +14,7 @@ const ActionBar: React.FC<ActionBarProps> = () => {
 
     const selectionCount = selectedIds.size;
 
-    const addColor = useEffectStore(s => s.addColor);
+    const addEffectFromSidebar = useEffectStore(s => s.addEffectFromSidebar);
 
     // Check if selected effects are contiguous (for meld eligibility)
     const canMeld = useMemo(() => {
@@ -44,45 +44,56 @@ const ActionBar: React.FC<ActionBarProps> = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-black border border-white/15 shadow-2xl shadow-black/50 z-actionbar">
+            className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-[#0a0a1a] border border-white/10 z-actionbar">
+
+            {/* Add Image Overlay - always enabled */}
+            <button
+                onClick={() => addEffectFromSidebar('IMAGE_OVERLAY')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-white/80 hover:text-white hover:bg-white/10 transition-all`}
+                title="Image Overlay (O)"
+            >
+                <span className="material-symbols-outlined">image</span>
+            </button>
+
+            <div className="w-[1px] h-4 bg-white/10" />
 
             {/* Add Color - always enabled */}
             <button
-                onClick={addColor}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-white/70 hover:text-white hover:bg-white/10 transition-all`}
+                onClick={() => addEffectFromSidebar('RGBA')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-white/80 hover:text-white hover:bg-white/10 transition-all`}
                 title="Color Select (C)"
             >
-                <span className="material-symbols-outlined text-[16px]">palette</span>
+                <span className="material-symbols-outlined">palette</span>
             </button>
 
-            <div className="w-[1px] h-4 bg-white/20" />
+            <div className="w-[1px] h-4 bg-white/10" />
 
             {/* Duplicate */}
             <button
                 onClick={batchDuplicate}
                 disabled={selectionCount === 0}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-white/70 enabled:hover:text-white enabled:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-white/80 enabled:hover:text-white enabled:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 title="Duplicate (Cmd+D)"
             >
-                <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                <span className="material-symbols-outlined">content_copy</span>
             </button>
 
-            <div className="w-[1px] h-4 bg-white/20" />
+            <div className="w-[1px] h-4 bg-white/10" />
 
             {/* Meld/Group — only for multi-selection of contiguous effects */}
             <button
                 key={isAlreadyMelded ? 'ungroup' : 'group'}
                 onClick={isAlreadyMelded ? batchUnmeld : batchMeld}
                 disabled={!canMeld || selectionCount < 2}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-white/70 enabled:hover:text-white enabled:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-white/80 enabled:hover:text-white enabled:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 title={isAlreadyMelded ? "Ungroup (Cmd+Shift+G)" : "Group (Cmd+G)"}
             >
-                <span className="material-symbols-outlined text-[16px]">
+                <span className="material-symbols-outlined">
                     {isAlreadyMelded ? 'link_off' : 'group_work'}
                 </span>
             </button>
 
-            <div className="w-[1px] h-4 bg-white/20" />
+            <div className="w-[1px] h-4 bg-white/10" />
 
             {/* Remove */}
             <button
@@ -91,7 +102,7 @@ const ActionBar: React.FC<ActionBarProps> = () => {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-red-400 enabled:hover:text-red-300 enabled:hover:bg-red-400/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 title="Remove (Backspace)"
             >
-                <span className="material-symbols-outlined text-[16px]">delete</span>
+                <span className="material-symbols-outlined">delete</span>
             </button>
         </motion.div>
     );

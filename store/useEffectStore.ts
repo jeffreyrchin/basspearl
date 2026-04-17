@@ -82,7 +82,7 @@ interface EffectState {
     updateParameter: (effectId: string, paramIndex: number, update: Partial<EffectConfig['params'][0]>) => void;
     updateMultipleParameters: (effectId: string, updates: { paramIndex: number, update: Partial<EffectConfig['params'][0]> }[]) => void;
 
-    addColor: () => void;
+    addEffectFromSidebar: (type: GlitchEffectType) => void;
     setEffectAssetUrl: (effectId: string, assetUrl: string | undefined, assetName?: string) => void;
     addScene: () => void;
 
@@ -284,22 +284,18 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         set((state) => ({
             effects: [...state.effects, newEffect],
             isSidebarOpen: isMobile ? state.isSidebarOpen : true,
-            focusStack: isMobile ? state.focusStack : [...state.focusStack.filter(z => z !== 'pipeline'), 'pipeline'] as ('pipeline' | 'inspector' | 'library')[]
         }));
+        if (!isMobile) get().pushFocus('pipeline');
     },
 
-    addColor: () => {
-        set((state) => {
-            const next = [...state.effects];
-            get().commitHistory();
-            analytics.effect.added('RGBA');
-            const newEffect = createEffectInstance('RGBA');
-            next.push(newEffect);
-            return {
-                effects: next,
-                selectedIds: new Set([newEffect.id]),
-            };
-        });
+    addEffectFromSidebar: (type) => {
+        get().commitHistory();
+        analytics.effect.added(type);
+        const newEffect = createEffectInstance(type);
+        set((state) => ({
+            effects: [...state.effects, newEffect],
+            selectedIds: new Set([newEffect.id]),
+        }));
         get().pushFocus('inspector');
     },
 
@@ -313,8 +309,8 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         set((state) => ({
             effects: newEffects,
             isSidebarOpen: isMobile ? state.isSidebarOpen : true,
-            focusStack: isMobile ? state.focusStack : [...state.focusStack.filter(z => z !== 'pipeline'), 'pipeline'] as ('pipeline' | 'inspector' | 'library')[]
         }));
+        if (!isMobile) get().pushFocus('pipeline');
     },
 
     batchDuplicate: () => {

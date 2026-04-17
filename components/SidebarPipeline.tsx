@@ -25,8 +25,7 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
     const focusStack = useEffectStore(s => s.focusStack);
     const activeFocus = focusStack[focusStack.length - 1];
     const pushFocus = useEffectStore(s => s.pushFocus);
-    const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
-    const addColor = useEffectStore(s => s.addColor);
+    const addEffectFromSidebar = useEffectStore(s => s.addEffectFromSidebar);
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
@@ -107,6 +106,18 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
                 return;
             }
 
+            // Add Image Overlay - O
+            if (key === 'o') {
+                e.preventDefault();
+                addEffectFromSidebar('IMAGE_OVERLAY');
+            }
+
+            // Add Color - C
+            else if (key === 'c') {
+                e.preventDefault();
+                addEffectFromSidebar('RGBA');
+            }
+
             if (selectedIds.size === 0) return;
 
             // Delete selected effects - Backspace or Delete
@@ -118,12 +129,6 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
             // Clear selection - Escape
             else if (e.key === 'Escape') {
                 clearSelection();
-            }
-
-            // Add Color - C
-            else if (key === 'c') {
-                e.preventDefault();
-                addColor();
             }
 
             // Duplicate selected effects - Ctrl/Cmd + D
