@@ -123,8 +123,8 @@ const SortableGroupItem = ({
                                 >
                                     <div className="flex items-center gap-3">
                                         {EFFECT_METADATA[effect.type]?.category === 'Pattern' ?
-                                            <span className="material-symbols-outlined text-red-400 !text-[18px] transition-colors">category</span> :
-                                            <span className="material-symbols-outlined text-indigo-400 !text-[18px] transition-colors">water_drop</span>}
+                                            <span className="material-symbols-outlined text-red-300 !text-[18px] transition-colors">grain</span> :
+                                            <span className="material-symbols-outlined text-indigo-300 !text-[18px] transition-colors">adjust</span>}
                                         {EFFECT_METADATA[effect.type]?.label}
                                     </div>
                                 </button>

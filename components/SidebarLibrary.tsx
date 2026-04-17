@@ -32,6 +32,8 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
     }, [onHoverStart, blueprint]);
 
     const label = effectType ? EFFECT_METADATA[effectType].label : MACRO_METADATA[macroType!].label;
+    const isPattern = effectType && EFFECT_METADATA[effectType].category === 'Pattern';
+    const isModifier = effectType && EFFECT_METADATA[effectType].category === 'Modifier';
 
     return (
         <button
@@ -50,28 +52,16 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
             </div>
 
             {/* Gradient overlay for text legibility */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none z-10" />
 
             {/* Label */}
             <div className="absolute inset-x-0 bottom-0 p-2 z-20 pointer-events-none">
-                <span className="text-[9px] text-left font-bold uppercase tracking-[0.15em] text-white/90 group-hover:text-white transition-colors block leading-tight">
+                <span className="flex items-center gap-1 text-[9px] text-left font-bold uppercase tracking-[0.15em] text-white/90 group-hover:text-white transition-colors leading-none">
+                    {isPattern && <span className="material-symbols-outlined text-red-300 !text-[12px]">grain</span>}
+                    {isModifier && <span className="material-symbols-outlined text-indigo-300 !text-[12px]">adjust</span>}
                     {label}
                 </span>
             </div>
-
-            {/* Pattern Category Indicator */}
-            {effectType && EFFECT_METADATA[effectType].category === 'Pattern' && (
-                <div className="absolute top-2 left-2 z-30 w-5 h-5 rounded-sm bg-red-500/80 pointer-events-none flex items-center justify-center">
-                    <span className="material-symbols-outlined text-white transition-colors !text-[14px]">category</span>
-                </div>
-            )}
-
-            {/* Modifier Category Indicator */}
-            {effectType && EFFECT_METADATA[effectType].category === 'Modifier' && (
-                <div className="absolute top-2 left-2 z-30 w-5 h-5 rounded-sm bg-indigo-500/80 pointer-events-none flex items-center justify-center">
-                    <span className="material-symbols-outlined text-white transition-colors !text-[14px]">water_drop</span>
-                </div>
-            )}
 
             {/* Quick add indicator */}
             <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-y-[-4px] group-hover:translate-y-0 pointer-events-none z-20">

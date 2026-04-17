@@ -235,7 +235,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                                 onStart={handleDragStart}
                                 onKeyUpdate={d => onChangeRef.current({ min: Math.max(0, Math.min(100, min + d)) })}
                                 labelRef={minLabelRef}
-                                borderStyle="border-white/60"
+                                borderStyle="border-indigo-300"
                             />
                         </div>
                         <div ref={thumbRef} className="absolute inset-y-0 pointer-events-none" style={{ left: `${value}%` }}>
@@ -303,7 +303,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                             onStart={handleDragStart}
                             onKeyUpdate={d => onChange({ value: Math.max(0, Math.min(100, value + d)) })}
                             labelRef={valueLabelRef}
-                            borderStyle="border-white/60"
+                            borderStyle="border-indigo-300"
                         />
                     </div>
                 </div>
