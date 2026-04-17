@@ -9,10 +9,11 @@ import { getEffectGroups, reorderEffectGroups } from '@/services/pipelineUtils';
 import SortableGroupItem from './SortableGroupItem';
 
 interface SidebarPipelineProps {
+    onLoadMuxels: () => void;
     onNavigateToLibrary: () => void;
 }
 
-const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
+const SidebarPipeline = ({ onLoadMuxels, onNavigateToLibrary }: SidebarPipelineProps) => {
     const effects = useEffectStore(s => s.effects);
     const setEffects = useEffectStore(s => s.setEffects);
     const selectedIds = useEffectStore(s => s.selectedIds);
@@ -160,12 +161,28 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []); // Listener is attached once
 
+    const pipelineCard = (icon: string, label: string, onClick: () => void) => (
+        <button
+            onClick={onClick}
+            className="group relative h-fit py-5 flex flex-col items-center justify-center rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all duration-300 hover:-translate-y-1 active:scale-[0.9] overflow-hidden"
+        >
+            <span className={`material-symbols-outlined text-white transition-all duration-300 group-hover:scale-110 mb-4 z-10`}>
+                {icon}
+            </span>
+
+            <div className="flex flex-col items-center z-10">
+                <span className="text-[11px] font-bold text-white/90 uppercase tracking-[0.15em] group-hover:text-white transition-colors">
+                    {label}
+                </span>
+            </div>
+        </button>
+    )
+
     if (effects.length === 0) {
         return (
-            <div className="py-20 flex flex-col items-center justify-center text-center px-6">
-                <span className="material-symbols-outlined text-white/60 text-5xl mb-4">layers_clear</span>
-                <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] leading-relaxed">No active effects</p>
-                <button onClick={onNavigateToLibrary} className="mt-6 px-4 py-2 rounded-full border border-white/10 text-[9px] font-bold text-white/60 uppercase tracking-widest hover:bg-white/5 hover:text-white transition-all">Browse Effects</button>
+            <div className="py-10 px-6 flex flex-col gap-4 select-none">
+                {pipelineCard('add_circle', 'Open Library', onNavigateToLibrary)}
+                {pipelineCard('upload_file', 'Import .muxels', onLoadMuxels)}
             </div>
         );
     }

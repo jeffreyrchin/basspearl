@@ -32,15 +32,15 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
 
     const NoEffectSelected = () => (
         <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
-            <span className="material-symbols-outlined text-white/60 text-5xl">info</span>
-            <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] leading-relaxed">No effect selected</p>
+            <span className="material-symbols-outlined text-white/80 text-5xl">info</span>
+            <p className="text-[10px] font-bold text-white/80 uppercase tracking-[0.15em] leading-relaxed">No effect selected</p>
         </div>
     );
 
     if (selectedIds.size > 1) {
         return <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
-            <span className="material-symbols-outlined text-white/60 text-5xl">info</span>
-            <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] leading-relaxed">Multiple effects selected</p>
+            <span className="material-symbols-outlined text-white/80 text-5xl">info</span>
+            <p className="text-[10px] font-bold text-white/80 uppercase tracking-[0.15em] leading-relaxed">Multiple effects selected</p>
         </div>
     }
 
@@ -118,7 +118,7 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
                     return (
                         <div key={paramIdx} className="py-3 flex flex-col">
                             <div className="flex justify-between items-center">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-white/80">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-white">
                                     {paramMeta.name}
                                 </label>
 

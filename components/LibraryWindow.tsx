@@ -38,7 +38,7 @@ const LibraryWindow: React.FC = () => {
             className="flex items-center gap-2 cursor-pointer group"
             onPointerDown={(e) => e.stopPropagation()}
         >
-            <span className="text-[10px] font-semibold text-white/80 uppercase tracking-wider group-hover:text-white transition-colors">
+            <span className="text-[10px] font-bold text-white uppercase tracking-widest group-hover:text-white transition-colors">
                 Keep Open
             </span>
             <input
@@ -89,7 +89,7 @@ const LibraryWindow: React.FC = () => {
                     data-window="library"
                 >
                     <div className="h-14 border-b bg-slate-900 border-white/10 flex items-center justify-between px-6 shrink-0">
-                        <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">
+                        <span className="text-[12px] font-bold text-white uppercase tracking-[0.15em]">
                             Library
                         </span>
                         <div className="flex items-center gap-4">
@@ -131,7 +131,7 @@ const LibraryWindow: React.FC = () => {
                     className="h-12 border-b border-white/10 bg-slate-900 flex items-center justify-between px-4 shrink-0 cursor-grab active:cursor-grabbing rounded-t-xl select-none"
                     onPointerDown={(e) => dragControls.start(e)}
                 >
-                    <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em] pointer-events-none">
+                    <span className="text-[12px] font-bold text-white uppercase tracking-[0.15em] pointer-events-none">
                         Library
                     </span>
                     <div className="flex items-center gap-4">
@@ -162,7 +162,7 @@ const LibraryWindow: React.FC = () => {
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center gap-2">
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white/60"></div>
-                            <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">
+                            <span className="text-[12px] font-bold text-white uppercase tracking-[0.15em]">
                                 Loading...
                             </span>
                         </div>

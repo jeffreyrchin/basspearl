@@ -91,7 +91,7 @@ const InspectorWindow: React.FC = () => {
                     data-window="inspector"
                 >
                     <div className="h-14 border-b bg-slate-900 border-white/10 flex items-center justify-between px-6 shrink-0">
-                        <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">
+                        <span className="text-[12px] font-bold text-white uppercase tracking-[0.15em]">
                             {metadata?.label || "Inspector"}
                         </span>
                         {headerControls}
@@ -133,7 +133,7 @@ const InspectorWindow: React.FC = () => {
                 className="h-12 border-b border-white/10 bg-slate-900 flex items-center justify-between px-4 shrink-0 cursor-grab active:cursor-grabbing rounded-t-xl select-none"
                 onPointerDown={(e) => dragControls.start(e)}
             >
-                <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em] pointer-events-none">
+                <span className="text-[12px] font-bold text-white uppercase tracking-[0.15em] pointer-events-none">
                     {metadata?.label || "Inspector"}
                 </span>
                 {headerControls}

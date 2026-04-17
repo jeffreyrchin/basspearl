@@ -61,7 +61,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                         if (isInSelectMode) setIsInSelectMode(false);
                         else setIsInSelectMode(true);
                     }}
-                    className={`px-2 h-7 rounded-md flex items-center justify-center text-[9px] font-bold uppercase tracking-wider transition-all border ${isInSelectMode ? 'bg-white text-black border-white' : 'text-white/60 hover:text-white hover:bg-white/10 border-transparent'}`}
+                    className={`px-2 h-7 rounded-md flex items-center justify-center text-[9px] font-bold uppercase tracking-wider transition-all border ${isInSelectMode ? 'bg-white text-black border-white' : 'text-white/80 hover:text-white hover:bg-white/10 border-transparent'}`}
                     title="Multiselect"
                 >
                     <span className="material-symbols-outlined text-[18px]">gesture_select</span>
@@ -69,16 +69,16 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 <div className="w-[1px] h-4 bg-white/10 mx-1"></div>
                 <button
                     onClick={handleImport}
-                    className="w-7 h-7 rounded-md flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                    className="w-7 h-7 rounded-md flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-all"
                     title="Import .muxels">
-                    <span className="material-symbols-outlined text-[18px]">file_upload</span>
+                    <span className="material-symbols-outlined text-[18px]">upload_file</span>
                 </button>
                 <button
                     onClick={handleExport}
                     disabled={effects.length === 0}
-                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all ${effects.length > 0 ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-white/20 cursor-not-allowed'}`}
+                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all ${effects.length > 0 ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-white/20 cursor-not-allowed'}`}
                     title="Export .muxels">
-                    <span className="material-symbols-outlined text-[18px]">file_download</span>
+                    <span className="material-symbols-outlined text-[18px]">download_file</span>
                 </button>
                 <div className="w-[1px] h-4 bg-white/10 mx-1"></div>
                 <button
@@ -99,7 +99,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             {onClose && (
                 <button
                     onClick={onClose}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/5"
+                    className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 text-white/80 hover:text-white hover:bg-white/10 transition-all border border-white/5"
                     title="Close Pipeline (P)">
                     <span className="material-symbols-outlined text-[20px]">close</span>
                 </button>
@@ -124,7 +124,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             </div>
 
             <div key="pipeline-scroll" className="flex-1 overflow-y-auto custom-scrollbar">
-                <SidebarPipeline onNavigateToLibrary={() => pushFocus('library')} />
+                <SidebarPipeline onLoadMuxels={handleImport} onNavigateToLibrary={() => pushFocus('library')} />
             </div>
 
             {/* Global Action Bar anchored to the bottom of the pipeline */}
