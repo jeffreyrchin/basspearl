@@ -158,7 +158,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
 
                             <LandingCard
                                 onClick={() => audioInputRef.current?.click()}
-                                icon="upload_file"
+                                icon="audio_file"
                                 label="Audio File"
                                 color="cyan"
                             />

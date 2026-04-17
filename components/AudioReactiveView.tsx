@@ -252,13 +252,13 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 </div>
             </div>
 
+            {/* Top UI Overlay */}
+            <div inert={isUiHidden} className={`absolute top-0 left-0 right-0 pointer-events-none bg-gradient-to-b from-black/90 via-black/50 to-transparent pb-8 transition-transform duration-300 ease-in-out ${isUiHidden ? '-translate-y-full' : 'translate-y-0'}`}>
+                <Navbar />
+            </div>
+
             {/* Main UI Layer */}
             <div inert={isUiHidden} className={`absolute inset-0 z-10 pointer-events-none transition-opacity duration-300 ${isUiHidden ? 'opacity-0 invisible' : 'opacity-100 visible'}`}>
-                {/* Top UI Overlay */}
-                <div className="absolute top-0 left-0 right-0 z-navbar pointer-events-none bg-gradient-to-b from-black via-black/60 to-transparent pb-3">
-                    <Navbar />
-                </div>
-
                 <MainToolbar
                     audioInputRef={audioInputRef}
                     audioFile={audioFile}
@@ -279,43 +279,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 {/* Scene Hotbar - centered above playback */}
                 <div className="absolute bottom-22 left-0 right-0 flex justify-center">
                     <SceneHotbar />
-                </div>
-
-                {/* Bottom UI Overlay */}
-                <div className="absolute bottom-0 left-0 right-0 z-footer flex flex-col pointer-events-none bg-gradient-to-t from-black via-black/80 to-transparent pt-3">
-                    <div className="w-full">
-                        {!isLiveMode ? (
-                            <div className="h-14 bg-transparent flex items-center shrink-0 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                <PlaybackBar
-                                    audioFile={audioFile}
-                                    isProcessing={isProcessing}
-                                    formatTime={formatTime}
-                                    currentTime={currentTime}
-                                    duration={duration}
-                                    currentTimeLabelRef={currentTimeLabelRef}
-                                    scrubberRef={scrubberRef}
-                                    isDraggingScrubberRef={isDraggingScrubberRef}
-                                    onScrubberChange={(e) => {
-                                        const val = parseFloat(e.target.value);
-                                        updateScrubberUI(val);
-                                        handleSeek(e, () => {
-                                            !requestRef.current && (requestRef.current = requestAnimationFrame(animate));
-                                        });
-                                    }}
-                                />
-                            </div>
-                        ) : (
-                            <div className="h-14 bg-transparent flex items-center justify-center shrink-0 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                <div className="flex items-center gap-3 text-red-500">
-                                    <span className="w-1 h-1 rounded-full bg-red-500 animate-ping" />
-                                    <span className="text-xs font-medium tracking-widest uppercase">Live Audio</span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    <div className="w-full">
-                        <Footer />
-                    </div>
                 </div>
 
                 {/* Sidebar: Effects Rack & Parameters */}
@@ -339,6 +302,36 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
                 <InspectorWindow />
                 <LibraryWindow />
+            </div>
+
+            {/* Bottom UI Overlay */}
+            <div inert={isUiHidden} className={`absolute bottom-0 left-0 right-0 flex flex-col pointer-events-none bg-gradient-to-t from-black via-black/60 via-black/20 to-transparent pt-12 transition-transform duration-300 ease-in-out ${isUiHidden ? 'translate-y-full' : 'translate-y-0'}`}>
+                <div className="w-full">
+                    {!isLiveMode && (
+                        <div className="h-14 bg-transparent flex items-center shrink-0 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <PlaybackBar
+                                audioFile={audioFile}
+                                isProcessing={isProcessing}
+                                formatTime={formatTime}
+                                currentTime={currentTime}
+                                duration={duration}
+                                currentTimeLabelRef={currentTimeLabelRef}
+                                scrubberRef={scrubberRef}
+                                isDraggingScrubberRef={isDraggingScrubberRef}
+                                onScrubberChange={(e) => {
+                                    const val = parseFloat(e.target.value);
+                                    updateScrubberUI(val);
+                                    handleSeek(e, () => {
+                                        !requestRef.current && (requestRef.current = requestAnimationFrame(animate));
+                                    });
+                                }}
+                            />
+                        </div>
+                    )}
+                </div>
+                <div className="w-full">
+                    <Footer />
+                </div>
             </div>
 
             <AnimatePresence>

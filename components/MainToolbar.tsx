@@ -97,7 +97,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                     dragConstraints={constraintsRef}
                     dragMomentum={false}
                     dragElastic={0}
-                    className="h-14 bg-[#0A0F1E]/95 border border-white/10 rounded-2xl flex items-center pl-2 pr-4 gap-2 shadow-[0_12px_48px_rgba(0,0,0,0.5),0_0_20px_rgba(251,0,255,0.08)] ring-1 ring-white/5 pointer-events-auto overflow-x-auto no-scrollbar group cursor-default"
+                    className="h-14 bg-[#0a0a1a] border border-white/10 rounded-2xl flex items-center pl-2 pr-4 gap-2 ring-1 ring-white/5 pointer-events-auto overflow-x-auto no-scrollbar group cursor-default"
                 >
                     {/* Drag Handle */}
                     <div className="flex items-center justify-center w-8 h-8 cursor-grab active:cursor-grabbing hover:bg-white/5 rounded-lg transition-colors group/handle shrink-0">
@@ -119,12 +119,12 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                         />
                         <ToolbarButton
                             onClick={() => audioInputRef.current && (audioInputRef.current.value = '', audioInputRef.current.click())}
-                            icon="graphic_eq"
+                            icon="audio_file"
                             title="Audio File"
                             isActive={!!audioFile}
-                            colorHex="#3B82F6"
-                            activeBg="bg-[#3B82F6]/5 hover:bg-[#3B82F6]/10"
-                            activeBorder="border-[#3B82F6]/30 hover:border-[#3B82F6]/50"
+                            colorHex="#22D3EE"
+                            activeBg="bg-white/5 hover:bg-[#22D3EE]/10"
+                            activeBorder="border-white/5 hover:border-[#22D3EE]/20"
                             showDot={!!audioFile && !isLiveMode}
                             className="px-3"
                         />
@@ -135,9 +135,9 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             icon="mic"
                             title="Microphone"
                             isActive={isLiveMode && liveSourceType === 'mic'}
-                            colorHex="#FF0055"
-                            activeBg="bg-[#FF0055]/5 hover:bg-[#FF0055]/10"
-                            activeBorder="border-[#FF0055]/30 hover:border-[#FF0055]/50"
+                            colorHex="#F87171"
+                            activeBg="bg-white/5 hover:bg-[#F87171]/10"
+                            activeBorder="border-white/5 hover:border-[#F87171]/20"
                             showDot={isLiveMode && liveSourceType === 'mic'}
                             className="px-3"
                         />
@@ -148,9 +148,9 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             icon="present_to_all"
                             title={isTabAudioUnsupported ? "Tab Audio (Unsupported Browser)" : "Tab Audio"}
                             isActive={isLiveMode && liveSourceType === 'tab'}
-                            colorHex={isTabAudioUnsupported ? "#666" : "#A855F7"}
-                            activeBg="bg-[#A855F7]/5 hover:bg-[#A855F7]/10"
-                            activeBorder="border-[#A855F7]/30 hover:border-[#A855F7]/50"
+                            colorHex={isTabAudioUnsupported ? "#666" : "#C084FC"}
+                            activeBg="bg-white/5 hover:bg-[#C084FC]/10"
+                            activeBorder="border-white/5 hover:border-[#C084FC]/20"
                             showDot={isLiveMode && liveSourceType === 'tab'}
                             className="px-3 hidden lg:flex"
                         />
@@ -196,7 +196,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                             onClick={() => {
                                 setIsSidebarOpen(!isSidebarOpen);
                             }}
-                            icon="layers"
+                            icon="format_list_bulleted"
                             title={isSidebarOpen ? "Close Pipeline (P)" : "Open Pipeline (P)"}
                             isActive={isSidebarOpen}
                             activeBg="bg-white/10"
