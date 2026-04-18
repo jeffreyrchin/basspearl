@@ -97,7 +97,7 @@ export class GlitchEngine {
 
     // 3. Size the final output canvas
     const requestedWidth = options.targetWidth || DEFAULT_TARGET_WIDTH;
-    const renderWidth = options.isExport ? requestedWidth : Math.min(requestedWidth, DEFAULT_TARGET_WIDTH);
+    const renderWidth = options.isExport ? requestedWidth : Math.max(Math.min(requestedWidth, DEFAULT_TARGET_WIDTH), 1280);
     const renderHeight = Math.round(renderWidth / MASTER_ASPECT_RATIO);
 
     if (targetCanvas.width !== renderWidth) targetCanvas.width = renderWidth;
@@ -156,10 +156,10 @@ export class GlitchEngine {
     // Base target width from the caller, defaulting to 1080p width
     let width = targetWidth || DEFAULT_TARGET_WIDTH;
 
-    // In Live Preview, cap the resolution to keep framerates high for editing.
+    // In Live Preview, clamp the resolution to keep framerates high for editing.
     // In Export, we respect the target exactly (e.g., 3840 for 4K).
     if (!isExport) {
-      width = Math.min(width, DEFAULT_TARGET_WIDTH);
+      width = Math.max(Math.min(width, DEFAULT_TARGET_WIDTH), 1280);
     }
 
     // Ensure even dimensions
