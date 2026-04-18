@@ -1090,7 +1090,7 @@ export const CELLULAR_NOISE_SHADER = `#version 300 es
 precision highp float;
 
 uniform sampler2D u_image;
-uniform float u_params[8]; // [cell width, cell height, freq-x, freq-y, density, jitter, speed, blend]
+uniform float u_params[13]; // [cell width, cell height, freq-x, freq-y, density, jitter, speed, blend, scaleX, scaleY, panX, panY, rotation]
 uniform float u_integrated_values[8];
 uniform float u_seed;
 uniform vec2 u_resolution;
@@ -1099,6 +1099,8 @@ in vec2 v_texCoord;
 out vec4 outColor;
 
 ${GLSL_HASH}
+${GLSL_HYBRID_FREQ}
+${GLSL_TRANSFORM}
 
 // Bhaskara I's sine approximation — branchless, continuous, max error 0.166%.
 // Avoids native transcendental sin/cos by using a rational parabolic function.
@@ -1112,6 +1114,8 @@ float fastSin(float x) {
 }
 
 void main() {
+    TR tr = getTransform_(v_texCoord, u_params[8], u_params[9], u_params[10], u_params[11], u_params[12], u_resolution);
+    
     // 1. Map parameters
     float xFreq = u_params[2] / 100.0;
     float yFreq = u_params[3] / 100.0;
@@ -1122,17 +1126,14 @@ void main() {
     float speed = u_params[6] / 100.0 * 50.0;
     float blend = u_params[7] / 100.0;
 
-    // 2. Exponential frequency (consistent across resolutions using 1024px reference)
+    // 2. Hybrid frequency: linear 1-50, then exponential up to 1024
     vec2 freq = vec2(
-        round(exp2(xFreq * log2(1024.0))),
-        round(exp2(yFreq * log2(1024.0)))
+        getHybridFreq(xFreq),
+        getHybridFreq(yFreq)
     );
 
     float t = u_integrated_values[6] * speed * 0.5;
-    float aspect = u_resolution.x / u_resolution.y;
-    vec2 baseUv = v_texCoord;
-    baseUv.x *= aspect;
-    vec2 cellCoord = baseUv * freq;
+    vec2 cellCoord = tr.localUV * freq;
     vec2 gv = floor(cellCoord);
     vec2 fv = fract(cellCoord);
 
@@ -1179,7 +1180,7 @@ void main() {
     float intensity = smoothstep(1.0, 0.0, f1) * probMask;
 
     vec4 src = texture(u_image, v_texCoord);
-    float alpha = blend * step(0.001, probDensity);
+    float alpha = blend * step(0.001, probDensity) * tr.mask;
 
     // Premultiplied Mix
     vec3 finalRGB = mix(src.rgb, vec3(intensity), alpha);

@@ -1099,14 +1099,14 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Cell Width', { v: 30 }),
           o('Cell Height', { v: 50 }),
-          o('Freq X', { v: 20 }),
-          o('Freq Y', { v: 40 }),
+          o('Freq X', { v: 10 }),
+          o('Freq Y', { v: 30 }),
           o('Density', { v: 100 }),
           o('Jitter', { v: 100 }),
           o('Speed', { v: 5, b: 'OFF' }),
           o('Blend', { v: 100 }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'ORGANIC_NOISE',
@@ -1117,7 +1117,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Speed', { v: 0, b: 'OFF' }),
           o('Blend', { v: 50, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'LUMINANCE_MASK',
@@ -1126,7 +1126,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Feather', { v: 30, b: 'OFF' }),
           o('Invert', { v: 0, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'INFINITE_ZOOM',
@@ -1251,8 +1251,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Cell Width', { v: 50 }),
           o('Cell Height', { v: 50 }),
-          o('Freq X', { v: 40 }),
-          o('Freq Y', { v: 40 }),
+          o('Freq X', { v: 30 }),
+          o('Freq Y', { v: 30 }),
           o('Density', { v: 100 }),
           o('Jitter', { v: 100 }),
           o('Speed', { v: 30, b: 'SUB' }, { v: 15, b: 'OFF' }),
@@ -1852,8 +1852,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Cell Width', { v: 50 }),
           o('Cell Height', { v: 100 }),
-          o('Freq X', { v: 15 }),
-          o('Freq Y', { v: 15 }),
+          o('Freq X', { v: 7 }),
+          o('Freq Y', { v: 7 }),
           o('Density', { v: 100 }),
           o('Jitter', { v: 100 }),
           o('Speed', { v: 0, b: 'OFF' }),

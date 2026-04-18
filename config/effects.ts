@@ -214,6 +214,11 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Jitter', { v: 100 }),
       p('Speed', { v: 30, b: 'BASS' }, { v: 20, b: 'BASS' }),
       p('Blend', { v: 100 }),
+      p('Scale X', { v: 54 }),
+      p('Scale Y', { v: 96 }),
+      p('Pan X', { v: 50 }),
+      p('Pan Y', { v: 50 }),
+      p('Rotation', { v: 0 }),
     ],
   },
   LUMINANCE_MASK: {
