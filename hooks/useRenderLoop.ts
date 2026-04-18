@@ -6,6 +6,7 @@ import { mainAudioEngine } from '../services/audioEngine';
 import { useEffectStore } from '../store/useEffectStore';
 import { useLiveAudio } from './useLiveAudio';
 import { dragOverride } from '../services/dragOverride';
+import { DEFAULT_TARGET_WIDTH } from '../constants';
 
 export interface UseRenderLoopProps {
     canvasRef: React.RefObject<HTMLCanvasElement>;
@@ -31,9 +32,7 @@ export const useRenderLoop = ({
     // to avoid stale closure issues in high-performance animation frames.
 
     const viewportRef = useRef({
-        width: typeof window !== 'undefined' ? window.innerWidth : 1920,
-        height: typeof window !== 'undefined' ? window.innerHeight : 1080,
-        aspectRatio: typeof window !== 'undefined' ? window.innerWidth / window.innerHeight : 16 / 9,
+        width: typeof window !== 'undefined' ? window.innerWidth : DEFAULT_TARGET_WIDTH,
         dpr: typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1
     });
 
@@ -148,15 +147,13 @@ export const useRenderLoop = ({
         }
 
         // Dynamic resolution based on window size
-        const { width, height } = viewportRef.current;
+        const { width } = viewportRef.current;
 
         await mainGlitchEngine.renderToCanvas(
             canvasRef.current,
             effectsRef.current,
             {
-                maxSize: 1920,
-                imagelessWidth: width,
-                imagelessHeight: height,
+                targetWidth: width,
                 reactivity: smoothed,
                 integratedReactivity: frameIntegrated,
                 currentTime: time,
@@ -182,8 +179,6 @@ export const useRenderLoop = ({
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
             viewportRef.current = {
                 width: window.innerWidth * dpr,
-                height: window.innerHeight * dpr,
-                aspectRatio: window.innerWidth / window.innerHeight,
                 dpr
             };
 

@@ -5,15 +5,14 @@ import { ShaderManager, BASE_VERTEX_SHADER, PASS_THROUGH_FRAGMENT_SHADER } from 
 import { EffectPipeline } from './EffectPipeline';
 import { SHADER_REGISTRY } from './glitchShaders';
 import { TRANSITION_SHADERS } from './transitionShaders';
-import { calculateExportDimensions } from './exportService';
+import { MASTER_ASPECT_RATIO, DEFAULT_TARGET_WIDTH } from '../constants';
 
 export interface GlitchRenderOptions {
-  maxSize?: number;
+  targetWidth?: number;
   reactivity?: { sub: number, bass: number, mid: number, treble: number };
   integratedReactivity?: { sub: number, bass: number, mid: number, treble: number };
   currentTime?: number;
-  imagelessWidth?: number;
-  imagelessHeight?: number;
+  isExport?: boolean;
   transition?: {
     type: TransitionType;
     progress: number;
@@ -96,10 +95,13 @@ export class GlitchEngine {
     // 2. Process
     this.processSync(effects, options);
 
-    // 3. Copy internal canvas to target canvas
-    // Optimization: Only resize if dimensions actually changed to avoid Safari context resets
-    if (targetCanvas.width !== this.canvas.width) targetCanvas.width = this.canvas.width;
-    if (targetCanvas.height !== this.canvas.height) targetCanvas.height = this.canvas.height;
+    // 3. Size the final output canvas
+    const requestedWidth = options.targetWidth || DEFAULT_TARGET_WIDTH;
+    const renderWidth = options.isExport ? requestedWidth : Math.min(requestedWidth, DEFAULT_TARGET_WIDTH);
+    const renderHeight = Math.round(renderWidth / MASTER_ASPECT_RATIO);
+
+    if (targetCanvas.width !== renderWidth) targetCanvas.width = renderWidth;
+    if (targetCanvas.height !== renderHeight) targetCanvas.height = renderHeight;
 
     // Optimization: Cache the 2D context to avoid context overhead during loop
     let ctx = this.targetCtxMap.get(targetCanvas);
@@ -112,7 +114,11 @@ export class GlitchEngine {
       // Paint the floor solid black so alpha parts don't smear with old frames
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
-      ctx.drawImage(this.canvas, 0, 0);
+
+      // Full 16:9 master copy to the output canvas
+      // Since the internal world and output canvas are perfectly matched in size,
+      // we can do a straight 1:1 draw without any complex cropping.
+      ctx.drawImage(this.canvas, 0, 0, targetCanvas.width, targetCanvas.height);
     }
   }
 
@@ -145,16 +151,20 @@ export class GlitchEngine {
     effects: EffectConfig[],
     options: GlitchRenderOptions = {}
   ): void {
-    const { maxSize, integratedReactivity, currentTime, imagelessWidth, imagelessHeight } = options;
+    const { targetWidth, integratedReactivity, currentTime, isExport } = options;
 
-    let targetRatio = 16 / 9;
-    if (imagelessWidth && imagelessHeight) {
-      targetRatio = imagelessWidth / imagelessHeight;
+    // Base target width from the caller, defaulting to 1080p width
+    let width = targetWidth || DEFAULT_TARGET_WIDTH;
+
+    // In Live Preview, cap the resolution to keep framerates high for editing.
+    // In Export, we respect the target exactly (e.g., 3840 for 4K).
+    if (!isExport) {
+      width = Math.min(width, DEFAULT_TARGET_WIDTH);
     }
 
-    const dims = calculateExportDimensions(targetRatio, maxSize || 1920);
-    const width = dims.width;
-    const height = dims.height;
+    // Ensure even dimensions
+    width = Math.floor(width) & ~1;
+    const height = Math.round(width / MASTER_ASPECT_RATIO) & ~1;
 
     if (this.canvas.width !== width || this.canvas.height !== height) {
       this.canvas.width = width;

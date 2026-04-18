@@ -62,20 +62,24 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Side Count', { v: 100, b: 'OFF' }),
           o('Pointiness', { v: 0, b: 'OFF' }),
           o('Roundness', { v: 0, b: 'OFF' }),
-          o('Size', { v: 80, m: 20, b: 'SUB' }),
           o('Feather', { v: 0, b: 'OFF' }),
           o('Blend', { v: 100, b: 'OFF' }),
+          o('Scale X', { v: 15, b: 'OFF' }),
+          o('Scale Y', { v: 25, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'WAVE_DISTORTION',
         params: [
-          o('Amplitude', { v: 75, m: 0, b: 'SUB' }, { v: 50, m: 0, b: 'SUB' }),
+          o('Amplitude', { v: 75, m: 0, b: 'SUB' }, { v: 50, m: 10, b: 'SUB' }),
           o('Frequency', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 75, m: 0, b: 'SUB' }, { v: 50, m: 0, b: 'SUB' }),
+          o('Speed', { v: 75, m: 0, b: 'SUB' }, { v: 50, m: 10, b: 'SUB' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'EDGE_MASK',
@@ -379,9 +383,9 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'GRID',
         params: [
-          o('Horizontal', { v: 25, b: 'OFF' }, { v: 20 }),
+          o('Horizontal', { v: 25, b: 'OFF' }),
           o('Vertical', { v: 0, b: 'OFF' }),
-          o('Thickness', { v: 100, b: 'OFF' }, { v: 75 }),
+          o('Thickness', { v: 100, b: 'OFF' }),
           o('Feather', { v: 0, b: 'OFF' }),
           o('Scale X', { v: 50, b: 'OFF' }),
           o('Scale Y', { v: 50, b: 'OFF' }),
@@ -428,7 +432,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 10, b: 'OFF' }),
+          o('Scale', { v: 5, b: 'OFF' }),
           o('Complexity', { v: 0, b: 'OFF' }),
           o('Warp', { v: 3, b: 'OFF' }),
           o('Speed', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
@@ -501,7 +505,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Speed', { v: 30, b: 'OFF' }),
           o('Blend', { v: 100 }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'ORGANIC_NOISE',
@@ -512,7 +516,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Speed', { v: 35, b: 'SUB' }, { v: 8, b: 'OFF' }),
           o('Blend', { v: 62, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'LUMINANCE_MASK',
@@ -521,14 +525,14 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Feather', { v: 64, b: 'OFF' }),
           o('Invert', { v: 0, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'TERRAIN_SPHERE',
         params: [
           o('Extrusion', { v: 90, m: 45, b: 'SUB' }, { v: 47, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
-          o('Size', { v: 28, b: 'OFF' }),
+          o('Size', { v: 20, b: 'OFF' }, { v: 28, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
@@ -536,7 +540,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Spin Speed Y', { v: 0, b: 'OFF' }),
           o('Spin Speed Z', { v: 0, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'SPECTRAL_MAP',
@@ -637,15 +641,15 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'GRAIN',
         params: [
-          o('Width', { v: 69 }),
-          o('Height', { v: 64 }),
+          o('Width', { v: 70 }),
+          o('Height', { v: 70 }),
           o('Freq X', { v: 50 }),
-          o('Freq Y', { v: 46 }),
+          o('Freq Y', { v: 41 }),
           o('Density', { v: 100, b: 'OFF' }),
           o('Roundness', { v: 0 }),
           o('Blend', { v: 100 }),
-          o('Scale X', { v: 57 }),
-          o('Scale Y', { v: 67 }),
+          o('Scale X', { v: 50 }),
+          o('Scale Y', { v: 50 }),
           o('Pan X', { v: 50 }),
           o('Pan Y', { v: 50 }),
           o('Rotation', { v: 0 }),
@@ -801,8 +805,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Width', { v: 100 }),
           o('Height', { v: 100 }),
-          o('Freq X', { v: 45 }),
-          o('Freq Y', { v: 45 }),
+          o('Freq X', { v: 40 }),
+          o('Freq Y', { v: 40 }),
           o('Density', { v: 100, b: 'OFF' }),
           o('Roundness', { v: 0 }),
           o('Blend', { v: 100 }),
@@ -993,8 +997,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Width', { v: 100 }),
           o('Height', { v: 100 }),
-          o('Freq X', { v: 41 }),
-          o('Freq Y', { v: 71 }),
+          o('Freq X', { v: 30 }),
+          o('Freq Y', { v: 75 }),
           o('Density', { v: 10, b: 'OFF' }),
           o('Roundness', { v: 0 }),
           o('Blend', { v: 100 }),
@@ -1131,10 +1135,10 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'CELLULAR_NOISE',
         params: [
-          o('Cell Width', { v: 46 }),
-          o('Cell Height', { v: 76 }),
+          o('Cell Width', { v: 30 }),
+          o('Cell Height', { v: 50 }),
           o('Freq X', { v: 20 }),
-          o('Freq Y', { v: 32 }),
+          o('Freq Y', { v: 40 }),
           o('Density', { v: 100 }),
           o('Jitter', { v: 100 }),
           o('Speed', { v: 5, b: 'OFF' }),
@@ -1185,8 +1189,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Width', { v: 50 }),
           o('Height', { v: 50 }),
-          o('Freq X', { v: 80 }),
-          o('Freq Y', { v: 72 }),
+          o('Freq X', { v: 68 }),
+          o('Freq Y', { v: 60 }),
           o('Density', { v: 30, b: 'OFF' }),
           o('Roundness', { v: 0 }),
           o('Blend', { v: 100 }),
@@ -1201,8 +1205,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'CHECKERBOARD',
         params: [
-          o('Freq X', { v: 10, b: 'OFF' }),
-          o('Freq Y', { v: 10, b: 'OFF' }),
+          o('Freq X', { v: 6, b: 'OFF' }),
+          o('Freq Y', { v: 6, b: 'OFF' }),
           o('Feather', { v: 0, b: 'OFF' }),
           o('Scale X', { v: 50 }),
           o('Scale Y', { v: 50 }),
@@ -1233,16 +1237,16 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'CELLULAR_NOISE',
         params: [
-          o('Cell Width', { v: 50, m: 1, b: 'SUB' }, { v: 35, b: 'OFF' }),
-          o('Cell Height', { v: 50, m: 1, b: 'SUB' }, { v: 35, b: 'OFF' }),
-          o('Freq X', { v: 45 }, { v: 30 }),
-          o('Freq Y', { v: 37 }, { v: 30 }),
+          o('Cell Width', { v: 30, m: 3, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Cell Height', { v: 30, m: 3, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Freq X', { v: 40 }),
+          o('Freq Y', { v: 40 }),
           o('Density', { v: 100 }),
-          o('Jitter', { v: 75 }),
-          o('Speed', { v: 100, b: 'SUB' }, { v: 15, b: 'OFF' }),
+          o('Jitter', { v: 100, b: 'SUB' }, { v: 75, b: 'OFF' }),
+          o('Speed', { v: 70, b: 'SUB' }, { v: 15, b: 'OFF' }),
           o('Blend', { v: 100 }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'LUMINANCE_MASK',
@@ -1251,7 +1255,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Feather', { v: 35, b: 'OFF' }),
           o('Invert', { v: 0, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'HUE_ROTATION',
@@ -1260,16 +1264,16 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Speed', { v: 10, b: 'OFF' }),
           o('Vibrance', { v: 50, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'INFINITE_ZOOM',
         params: [
-          o('Speed', { v: 70, b: 'SUB' }, { v: 5, b: 'OFF' }),
+          o('Speed', { v: 30, b: 'SUB' }, { v: 5, b: 'OFF' }),
           o('Depth', { v: 10, b: 'OFF' }),
-          o('Spacing', { v: 80, b: 'OFF' }),
-          o('Plane Count', { v: 20, b: 'OFF' }),
-          o('Edge Feather', { v: 75, b: 'OFF' }),
+          o('Spacing', { v: 70, b: 'OFF' }),
+          o('Plane Count', { v: 30, b: 'OFF' }),
+          o('Edge Feather', { v: 70, b: 'OFF' }),
           o('Fade Buffer', { v: 50, b: 'OFF' }),
         ],
         melded: false
@@ -1283,10 +1287,10 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'CELLULAR_NOISE',
         params: [
-          o('Cell Width', { v: 42 }, { v: 54, b: 'OFF' }),
-          o('Cell Height', { v: 54 }, { v: 54, b: 'OFF' }),
-          o('Freq X', { v: 50 }, { v: 42, b: 'OFF' }),
-          o('Freq Y', { v: 42 }, { v: 42, b: 'OFF' }),
+          o('Cell Width', { v: 50 }),
+          o('Cell Height', { v: 50 }),
+          o('Freq X', { v: 40 }),
+          o('Freq Y', { v: 40 }),
           o('Density', { v: 100 }),
           o('Jitter', { v: 100 }),
           o('Speed', { v: 30, b: 'SUB' }, { v: 15, b: 'OFF' }),
@@ -1380,7 +1384,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Width', { v: 100 }),
           o('Height', { v: 100 }),
-          o('Freq X', { v: 60 }, { v: 50 }),
+          o('Freq X', { v: 58 }),
           o('Freq Y', { v: 50 }),
           o('Density', { v: 35, b: 'OFF' }),
           o('Roundness', { v: 0 }),
@@ -1490,16 +1494,34 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
     label: 'Corridor',
     effects: [
       {
-        type: 'CHECKERBOARD',
+        type: 'SHAPE',
         params: [
-          o('Freq X', { v: 11, b: 'OFF' }, { v: 7, b: 'OFF' }),
-          o('Freq Y', { v: 0, b: 'OFF' }),
+          o('Side Count', { v: 4, b: 'OFF' }),
+          o('Pointiness', { v: 0, b: 'OFF' }),
+          o('Roundness', { v: 0, b: 'OFF' }),
           o('Feather', { v: 0, b: 'OFF' }),
-          o('Scale X', { v: 50 }),
-          o('Scale Y', { v: 50 }),
-          o('Pan X', { v: 50 }),
-          o('Pan Y', { v: 50 }),
-          o('Rotation', { v: 0 }),
+          o('Blend', { v: 100, b: 'OFF' }),
+          o('Scale X', { v: 30, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 30, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'SHAPE',
+        params: [
+          o('Side Count', { v: 4, b: 'OFF' }),
+          o('Pointiness', { v: 0, b: 'OFF' }),
+          o('Roundness', { v: 0, b: 'OFF' }),
+          o('Feather', { v: 0, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+          o('Scale X', { v: 30, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 70, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
         ],
         melded: false
       },
@@ -1802,7 +1824,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Width', { v: 100 }),
           o('Height', { v: 100 }),
-          o('Freq X', { v: 50 }, { v: 40 }),
+          o('Freq X', { v: 46 }),
           o('Freq Y', { v: 50 }),
           o('Density', { v: 30, b: 'OFF' }),
           o('Roundness', { v: 0 }),
@@ -1935,7 +1957,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Cell Width', { v: 60 }),
           o('Cell Height', { v: 100 }),
-          o('Freq X', { v: 70 }, { v: 50 }),
+          o('Freq X', { v: 60 }, { v: 50 }),
           o('Freq Y', { v: 60 }, { v: 50 }),
           o('Density', { v: 38 }),
           o('Jitter', { v: 100 }),
@@ -2194,12 +2216,12 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'PARTICLES',
         params: [
-          o('Count', { v: 50 }, { v: 5 }),
-          o('Size', { v: 10 }),
+          o('Count', { v: 10 }),
+          o('Size', { v: 20 }),
           o('Spread', { v: 10 }),
           o('Drift', { v: 0 }),
           o('Drift Speed', { v: 0 }),
-          o('Zoom Speed', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Zoom Speed', { v: 50, b: 'SUB' }, { v: 5, b: 'OFF' }),
           o('Blend', { v: 100 }),
         ],
         melded: false

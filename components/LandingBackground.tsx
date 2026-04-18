@@ -31,9 +31,7 @@ const LandingBackground: React.FC = () => {
             // Render the macro preview
             engineRef.current.renderToCanvas(canvasRef.current, blueprint, {
                 currentTime: elapsed,
-                maxSize: Math.max(width, height),
-                imagelessWidth: width,
-                imagelessHeight: height,
+                targetWidth: width,
                 reactivity: { sub: 0.0, bass: 0.0, mid: 0.0, treble: 0.0 }
             });
 

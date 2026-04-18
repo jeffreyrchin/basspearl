@@ -1,5 +1,6 @@
 import React from 'react';
 import { useEffectStore } from '../store/useEffectStore';
+import { MASTER_ASPECT_RATIO } from '../constants';
 
 /**
  * Hook that returns a pointer down handler capable of performing
@@ -12,8 +13,28 @@ export const useCanvasSelection = (canvasRef: React.RefObject<HTMLCanvasElement>
         if (!rect || rect.width === 0 || rect.height === 0) return;
 
         // 1. Get click position relative to canvas box as percentages (0 - 100)
-        const px = ((e.clientX - rect.left) / rect.width) * 100;
-        const py = ((e.clientY - rect.top) / rect.height) * 100;
+        let px = ((e.clientX - rect.left) / rect.width);
+        let py = ((e.clientY - rect.top) / rect.height);
+
+        // ── INVERSE VIEWPORT MAPPING (object-fit: cover) ──────────────────
+        // Since the 16:9 Art is being cropped to fit the UI window, we must
+        // remap the mouse UV [0..1] in screen-space back to the Art's [0..1] space.
+        const ART_ASPECT = MASTER_ASPECT_RATIO;
+        const WIN_ASPECT = rect.width / rect.height;
+
+        if (WIN_ASPECT < ART_ASPECT) {
+            // Window is narrower than Art (e.g. Square window vs 16:9 Art)
+            // Art width is cropped.
+            px = (px - 0.5) * (WIN_ASPECT / ART_ASPECT) + 0.5;
+        } else {
+            // Window is taller than Art (e.g. 21:9 monitor vs 16:9 Art)
+            // Art height is cropped.
+            py = (py - 0.5) * (ART_ASPECT / WIN_ASPECT) + 0.5;
+        }
+
+        // Convert to 0-100 range for the internal hitbox math
+        px *= 100;
+        py *= 100;
 
         const store = useEffectStore.getState();
         const effects = store.effects;

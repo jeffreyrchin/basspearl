@@ -90,11 +90,9 @@ export const getThumbnailDataUrl = (effects: EffectConfig[]): Promise<string> =>
 
         // Use a static frame (time=10.0) for the cached poster
         await eng.renderToCanvas(canvas, renderEffects, {
-            maxSize: THUMBNAIL_SIZE,
+            targetWidth: THUMBNAIL_SIZE,
             currentTime: 10.0,
-            reactivity: { sub: 0.9, bass: 0.9, mid: 0.9, treble: 0.9 },
-            imagelessWidth: THUMBNAIL_SIZE,
-            imagelessHeight: THUMBNAIL_SIZE
+            reactivity: { sub: 0.9, bass: 0.9, mid: 0.9, treble: 0.9 }
         });
 
         const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
@@ -128,11 +126,9 @@ export const renderThumbnail = (
 
         // Render directly using the zero-allocation reactivity path
         await eng.renderToCanvas(targetCanvas, renderEffects, {
-            maxSize: THUMBNAIL_SIZE,
+            targetWidth: THUMBNAIL_SIZE,
             currentTime,
-            reactivity: syntheticSmoothed,
-            imagelessWidth: THUMBNAIL_SIZE,
-            imagelessHeight: THUMBNAIL_SIZE
+            reactivity: syntheticSmoothed
         });
     });
 

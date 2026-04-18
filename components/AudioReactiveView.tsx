@@ -208,7 +208,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
     const handleCanvasPointerDown = useCanvasSelection(canvasRef);
 
-    const handleActualExport = async (options: { fps: number; resolution: number, aspectRatio?: number }) => {
+    const handleActualExport = async (options: { fps: number; resolution: number }) => {
         await startExport({
             options,
             audioBuffer: audioBufferRef.current,
@@ -233,7 +233,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 >
                     <canvas
                         ref={canvasRef}
-                        className="max-w-full max-h-full object-contain"
+                        className="w-full h-full object-cover"
                         onPointerDown={(e) => {
                             e.stopPropagation();
                             handleCanvasPointerDown(e);
@@ -356,7 +356,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 isExporting={isExporting}
                 exportProgress={exportProgress}
                 exportResult={exportResult}
-                aspectRatio={window.innerWidth / window.innerHeight}
             />
 
             <AnimatePresence>

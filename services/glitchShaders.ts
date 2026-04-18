@@ -897,6 +897,7 @@ precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[5]; // [scale, complexity, warp, speed, blend]
 uniform float u_integrated_values[8];
+uniform vec2 u_resolution;
 uniform float u_seed;
 
 in vec2 v_texCoord;
@@ -996,7 +997,10 @@ void main() {
 
     // Use seed to offset noise coordinates
     vec2 seedOffset = vec2(fract(u_seed * 0.123), fract(u_seed * 0.456)) * 10.0;
-    vec2 uv = v_texCoord * scale + seedOffset;
+    float aspect = u_resolution.x / u_resolution.y;
+    vec2 baseUv = v_texCoord;
+    baseUv.x *= aspect;
+    vec2 uv = baseUv * scale + seedOffset;
     float t = u_integrated_values[3] * speed;
 
     // ---- Domain warp (2 noise calls) ----
@@ -1116,7 +1120,10 @@ void main() {
     );
 
     float t = u_integrated_values[6] * speed * 0.5;
-    vec2 cellCoord = v_texCoord * freq;
+    float aspect = u_resolution.x / u_resolution.y;
+    vec2 baseUv = v_texCoord;
+    baseUv.x *= aspect;
+    vec2 cellCoord = baseUv * freq;
     vec2 gv = floor(cellCoord);
     vec2 fv = fract(cellCoord);
 

@@ -8,7 +8,7 @@ import {
 } from 'mediabunny';
 import { GlitchEngine } from './glitchEngine';
 import { EffectConfig } from '../types';
-import { MAX_PIXELS } from '../constants';
+import { MAX_PIXELS, MASTER_ASPECT_RATIO, DEFAULT_TARGET_WIDTH } from '../constants';
 
 export interface ExportOptions {
     audioBuffer: AudioBuffer | null;
@@ -27,8 +27,7 @@ export interface ExportOptions {
     effects: EffectConfig[];
     duration: number;
     fps?: number;
-    maxSize?: number;
-    aspectRatio?: number;
+    targetWidth?: number;
     onProgress?: (progress: number) => void;
     signal?: AbortSignal;
 }
@@ -36,15 +35,10 @@ export interface ExportOptions {
 /**
  * Calculates standardized export dimensions that fit within a 16:9 or 9:16 'resolution class' box.
  */
-export const calculateExportDimensions = (aspectRatio: number, maxSize: number): { width: number, height: number } => {
-    // 1. Determine the standard "Box" for this resolution (e.g., 1080p -> 1920x1080 or 1080x1920)
-    const boxW = aspectRatio >= 1 ? maxSize : Math.floor(maxSize * (9 / 16));
-    const boxH = aspectRatio >= 1 ? Math.floor(maxSize * (9 / 16)) : maxSize;
-
-    // 2. Scale our custom aspect ratio to fit inside that box
-    const scale = Math.min(boxW / aspectRatio, boxH);
-    let w = Math.floor(aspectRatio * scale) & ~1;
-    let h = Math.floor(scale) & ~1;
+export const calculateExportDimensions = (targetWidth: number): { width: number, height: number } => {
+    // 1. Scale our custom aspect ratio
+    let w = Math.floor(targetWidth) & ~1;
+    let h = Math.floor(w / MASTER_ASPECT_RATIO) & ~1;
 
     // 3. Absolute safety cap to prevent hardware encoder crashes (Total pixel area limit)
     const pixels = w * h;
@@ -68,17 +62,14 @@ export const exportVideo = async (options: ExportOptions): Promise<{ fileUrl: st
         effects,
         duration,
         fps = 60,
-        maxSize = 1920,
-        aspectRatio = 16 / 9,
+        targetWidth = DEFAULT_TARGET_WIDTH,
         onProgress
     } = options;
 
     if (!reactivityMap) throw new Error("Reactivity map is required for export");
     if (!audioBuffer) throw new Error("Audio buffer is required for export");
 
-    let targetRatio = aspectRatio;
-
-    const { width: outWidth, height: outHeight } = calculateExportDimensions(targetRatio, maxSize);
+    const { width: outWidth, height: outHeight } = calculateExportDimensions(targetWidth);
 
     console.log(`Initializing output at ${outWidth}x${outHeight}...`);
 
@@ -181,12 +172,11 @@ export const exportVideo = async (options: ExportOptions): Promise<{ fileUrl: st
 
             // Render glitch to our hidden canvas
             await exportEngine.renderToCanvas(renderCanvas, effects, {
-                maxSize,
+                targetWidth: outWidth,
                 reactivity: frameData,
                 integratedReactivity: frameIntegrated,
                 currentTime: time,
-                imagelessWidth: outWidth,
-                imagelessHeight: outHeight
+                isExport: true
             });
 
             // Inject the current state of the canvas into the video pipeline

@@ -7,7 +7,6 @@ export interface VideoExportParams {
     options: {
         fps: number;
         resolution: number;
-        aspectRatio?: number;
     };
     audioBuffer: AudioBuffer | null;
     reactivityMap: any | null; // using any to avoid wide imports, exportVideo handles typing
@@ -62,8 +61,7 @@ export const useVideoExport = () => {
                 effects: effects,
                 duration: duration,
                 fps: options.fps,
-                maxSize: options.resolution,
-                aspectRatio: options.aspectRatio,
+                targetWidth: options.resolution,
                 onProgress: (p) => setExportProgress(p * 100),
                 signal: abortControllerRef.current.signal
             });

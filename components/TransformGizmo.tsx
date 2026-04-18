@@ -3,6 +3,7 @@ import { useEffectStore } from '../store/useEffectStore';
 import { setDragOverride, clearDragOverride, dragOverride } from '../services/dragOverride';
 import { useDragSync } from '../hooks/useDragSync';
 import { useCanvasSelection } from '../hooks/useCanvasSelection';
+import { MASTER_ASPECT_RATIO } from '../constants';
 
 interface TransformGizmoProps {
     effectId: string;
@@ -60,15 +61,40 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
         if (!containerRef.current || !canvasRef.current) return;
 
         const updateRect = () => {
-            const cRect = canvasRef.current!.getBoundingClientRect();
-            const pRect = containerRef.current!.getBoundingClientRect();
+            const canvas = canvasRef.current;
+            const container = containerRef.current;
+            if (!canvas || !container) return;
+
+            const cRect = canvas.getBoundingClientRect();
+            const pRect = container.getBoundingClientRect();
 
             if (pRect.width > 0 && pRect.height > 0) {
+                // ── VIRTUAL ART MAPPING (object-fit: cover) ────────────────
+                // We calculate the BOUNDS of the 16:9 art, which is likely 
+                // wider than the square window you see.
+                const ART_ASPECT = MASTER_ASPECT_RATIO;
+                const WIN_ASPECT = cRect.width / cRect.height;
+
+                let virtualW = cRect.width;
+                let virtualH = cRect.height;
+                let offsetX = 0;
+                let offsetY = 0;
+
+                if (WIN_ASPECT < ART_ASPECT) {
+                    // Window is narrower than Art. Height matches, Width is wider.
+                    virtualW = cRect.height * ART_ASPECT;
+                    offsetX = (cRect.width - virtualW) / 2;
+                } else {
+                    // Window is taller than Art. Width matches, Height is taller.
+                    virtualH = cRect.width / ART_ASPECT;
+                    offsetY = (cRect.height - virtualH) / 2;
+                }
+
                 setCanvasRect({
-                    left: ((cRect.left - pRect.left) / pRect.width) * 100,
-                    top: ((cRect.top - pRect.top) / pRect.height) * 100,
-                    width: (cRect.width / pRect.width) * 100,
-                    height: (cRect.height / pRect.height) * 100
+                    left: ((cRect.left + offsetX - pRect.left) / pRect.width) * 100,
+                    top: ((cRect.top + offsetY - pRect.top) / pRect.height) * 100,
+                    width: (virtualW / pRect.width) * 100,
+                    height: (virtualH / pRect.height) * 100
                 });
             }
         };
