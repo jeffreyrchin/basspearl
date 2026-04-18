@@ -9,6 +9,15 @@ float hash(vec2 p, float seed) {
 }
 `;
 
+export const GLSL_HYBRID_FREQ = `
+// Hybrid Scaling: 0-50 maps linearly to 1-50. 50-100 maps exponentially to 50-1024.
+float getHybridFreq(float normVal) {
+    float linearFreq = max(1.0, floor(normVal * 100.0 + 0.5));
+    float expFreq = 50.0 * pow(20.48, (normVal - 0.5) * 2.0);
+    return mix(linearFreq, floor(expFreq + 0.5), step(0.5001, normVal));
+}
+`;
+
 export const GLSL_TRANSFORM = `
 struct TR {
     vec2 localUV; 
@@ -694,6 +703,7 @@ in vec2 v_texCoord;
 out vec4 outColor;
 ${GLSL_TRANSFORM}
 ${GLSL_HASH}
+${GLSL_HYBRID_FREQ}
 
 void main() {
     TR tr = getTransform_(v_texCoord, u_params[7], u_params[8], u_params[9], u_params[10], u_params[11], u_resolution);
@@ -706,11 +716,10 @@ void main() {
     float roundness = u_params[5] / 100.0;
     float blend = u_params[6] / 100.0;
 
-    // 2. Exponential frequency: freq=1 at 1%, doubling from there.
-    // Fixed reference resolution (1024) ensures consistent cell density regardless of canvas size.
+    // 2. Hybrid frequency: linear 1-50, then exponential up to 1024
     vec2 freq = vec2(
-        round(exp2(xFreq * log2(1024.0))),
-        round(exp2(yFreq * log2(1024.0)))
+        getHybridFreq(xFreq),
+        getHybridFreq(yFreq)
     );
 
     // 3. Sample background image.
@@ -1238,6 +1247,7 @@ uniform float u_unit;
 in vec2 v_texCoord;
 out vec4 outColor;
 ${GLSL_TRANSFORM}
+${GLSL_HYBRID_FREQ}
 
 void main() {
     TR tr = getTransform_(v_texCoord, u_params[4], u_params[5], u_params[6], u_params[7], u_params[8], u_resolution);
@@ -1251,8 +1261,8 @@ void main() {
     // Exponential frequency: freq=1 at 1%, doubling from there.
     // Fixed reference (1024) ensures the grid look won't change as you resize the window/export.
     vec2 freq = vec2(
-        round(exp2(normX * log2(1024.0))),
-        round(exp2(normY * log2(1024.0)))
+        getHybridFreq(normX),
+        getHybridFreq(normY)
     );
 
     // 2. Sample background image.

@@ -139,7 +139,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Width', { v: 100, b: 'OFF' }),
           o('Height', { v: 100, b: 'OFF' }),
           o('Freq X', { v: 50, b: 'OFF' }),
-          o('Freq Y', { v: 46, b: 'OFF' }),
+          o('Freq Y', { v: 50, b: 'OFF' }),
           o('Density', { v: 100, b: 'OFF' }),
           o('Roundness', { v: 0, b: 'OFF' }),
           o('Blend', { v: 100, b: 'OFF' }),
@@ -149,25 +149,25 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Pan Y', { v: 50, b: 'OFF' }),
           o('Rotation', { v: 0, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'TERRAIN',
         params: [
-          o('Extrusion', { v: 20, m: 9, b: 'TREBLE' }, { v: 10, b: 'OFF' }),
-          o('Resolution', { v: 1, b: 'OFF' }),
-          o('Tile Width', { v: 30, b: 'OFF' }),
-          o('Tile Height', { v: 30, b: 'OFF' }),
-          o('Rotate X', { v: 0, b: 'OFF' }),
+          o('Extrusion', { v: 10, m: 3, b: 'TREBLE' }, { v: 5, b: 'OFF' }),
+          o('Resolution', { v: 2, b: 'OFF' }),
+          o('Tile Width', { v: 100, b: 'OFF' }),
+          o('Tile Height', { v: 100, b: 'OFF' }),
+          o('Rotate X', { v: 97, b: 'OFF' }),
           o('Rotate Y', { v: 0, b: 'OFF' }),
           o('Rotate Z', { v: 0, b: 'OFF' }),
-          o('Elevation', { v: 40, b: 'OFF' }),
+          o('Elevation', { v: 37, b: 'OFF' }),
           o('Distance', { v: 70, b: 'OFF' }),
           o('Tile Blend', { v: 0, b: 'OFF' }),
-          o('Speed X', { v: 0, b: 'OFF' }),
+          o('Speed X', { v: 100, b: 'SUB' }, { v: 30, b: 'OFF' }),
           o('Speed Y', { v: 100, b: 'SUB' }, { v: 30, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'RGBA',
@@ -176,44 +176,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Green', { v: 100, b: 'OFF' }),
           o('Blue', { v: 50, b: 'OFF' }),
           o('Opacity', { v: 100, b: 'OFF' }),
-        ],
-        melded: false
-      }
-    ]
-  },
-  GRID_PLANE: {
-    id: 'GRID_PLANE',
-    label: 'Grid Plane',
-    effects: [
-      {
-        type: 'GRID',
-        params: [
-          o('Horizontal', { v: 40, b: 'OFF' }),
-          o('Vertical', { v: 40, b: 'OFF' }),
-          o('Thickness', { v: 15, b: 'OFF' }),
-          o('Feather', { v: 15, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
-        ],
-        melded: true
-      },
-      {
-        type: 'TERRAIN',
-        params: [
-          o('Extrusion', { v: 0, b: 'OFF' }),
-          o('Resolution', { v: 100, b: 'OFF' }),
-          o('Tile Width', { v: 50, b: 'OFF' }),
-          o('Tile Height', { v: 50, b: 'OFF' }),
-          o('Rotate X', { v: 0, b: 'OFF' }),
-          o('Rotate Y', { v: 0, b: 'OFF' }),
-          o('Rotate Z', { v: 0, b: 'OFF' }),
-          o('Elevation', { v: 40, b: 'OFF' }),
-          o('Distance', { v: 70, b: 'OFF' }),
-          o('Tile Blend', { v: 0, b: 'OFF' }),
-          o('Speed X', { v: 0, b: 'OFF' }),
-          o('Speed Y', { v: 3, b: 'OFF' }),
         ],
         melded: false
       }
@@ -336,7 +298,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'GRID',
         params: [
           o('Horizontal', { v: 0, b: 'OFF' }),
-          o('Vertical', { v: 17, b: 'OFF' }),
+          o('Vertical', { v: 3, b: 'OFF' }),
           o('Thickness', { v: 100, m: 0, b: 'SUB' }, { v: 20, b: 'OFF' }),
           o('Feather', { v: 20, b: 'OFF' }),
           o('Scale X', { v: 50, b: 'OFF' }),
@@ -383,7 +345,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'GRID',
         params: [
-          o('Horizontal', { v: 25, b: 'OFF' }),
+          o('Horizontal', { v: 6, b: 'OFF' }),
           o('Vertical', { v: 0, b: 'OFF' }),
           o('Thickness', { v: 100, b: 'OFF' }),
           o('Feather', { v: 0, b: 'OFF' }),
@@ -643,8 +605,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Width', { v: 70 }),
           o('Height', { v: 70 }),
-          o('Freq X', { v: 50 }),
-          o('Freq Y', { v: 41 }),
+          o('Freq X', { v: 36 }),
+          o('Freq Y', { v: 20 }),
           o('Density', { v: 100, b: 'OFF' }),
           o('Roundness', { v: 0 }),
           o('Blend', { v: 100 }),
@@ -703,7 +665,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'GRID',
         params: [
-          o('Horizontal', { v: 15, b: 'OFF' }),
+          o('Horizontal', { v: 9, b: 'OFF' }),
           o('Vertical', { v: 0, b: 'OFF' }),
           o('Thickness', { v: 40, b: 'OFF' }),
           o('Feather', { v: 25, b: 'OFF' }),
@@ -805,8 +767,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Width', { v: 100 }),
           o('Height', { v: 100 }),
-          o('Freq X', { v: 40 }),
-          o('Freq Y', { v: 40 }),
+          o('Freq X', { v: 20 }),
+          o('Freq Y', { v: 20 }),
           o('Density', { v: 100, b: 'OFF' }),
           o('Roundness', { v: 0 }),
           o('Blend', { v: 100 }),
@@ -828,7 +790,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Rotate X', { v: 0, b: 'OFF' }),
           o('Rotate Y', { v: 0, b: 'OFF' }),
           o('Rotate Z', { v: 0, b: 'OFF' }),
-          o('Elevation', { v: 40, b: 'OFF' }),
+          o('Elevation', { v: 30, b: 'OFF' }),
           o('Distance', { v: 70, b: 'OFF' }),
           o('Tile Blend', { v: 0, b: 'OFF' }),
           o('Speed X', { v: 0, b: 'OFF' }),
@@ -997,7 +959,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Width', { v: 100 }),
           o('Height', { v: 100 }),
-          o('Freq X', { v: 30 }),
+          o('Freq X', { v: 15 }),
           o('Freq Y', { v: 75 }),
           o('Density', { v: 10, b: 'OFF' }),
           o('Roundness', { v: 0 }),
@@ -1384,7 +1346,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Width', { v: 100 }),
           o('Height', { v: 100 }),
-          o('Freq X', { v: 58 }),
+          o('Freq X', { v: 60 }),
           o('Freq Y', { v: 50 }),
           o('Density', { v: 35, b: 'OFF' }),
           o('Roundness', { v: 0 }),
@@ -1503,7 +1465,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Blend', { v: 100, b: 'OFF' }),
           o('Scale X', { v: 30, b: 'OFF' }),
           o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 30, b: 'OFF' }),
+          o('Pan X', { v: 32, b: 'OFF' }),
           o('Pan Y', { v: 50, b: 'OFF' }),
           o('Rotation', { v: 0, b: 'OFF' }),
         ],
@@ -1519,7 +1481,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Blend', { v: 100, b: 'OFF' }),
           o('Scale X', { v: 30, b: 'OFF' }),
           o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 70, b: 'OFF' }),
+          o('Pan X', { v: 68, b: 'OFF' }),
           o('Pan Y', { v: 50, b: 'OFF' }),
           o('Rotation', { v: 0, b: 'OFF' }),
         ],
@@ -1824,7 +1786,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Width', { v: 100 }),
           o('Height', { v: 100 }),
-          o('Freq X', { v: 46 }),
+          o('Freq X', { v: 40 }),
           o('Freq Y', { v: 50 }),
           o('Density', { v: 30, b: 'OFF' }),
           o('Roundness', { v: 0 }),
@@ -1859,7 +1821,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'SCROLL',
         params: [
           o('Left Speed', { v: 0, b: 'OFF' }),
-          o('Right Speed', { v: 15, b: 'SUB' }),
+          o('Right Speed', { v: 15, b: 'SUB' }, { v: 10, b: 'OFF' }),
           o('Up Speed', { v: 0, b: 'OFF' }),
           o('Down Speed', { v: 0, b: 'OFF' }),
           o('Ghost X', { v: 0, b: 'OFF' }),
@@ -1888,10 +1850,10 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'CELLULAR_NOISE',
         params: [
-          o('Cell Width', { v: 58 }),
-          o('Cell Height', { v: 45 }),
-          o('Freq X', { v: 35 }),
-          o('Freq Y', { v: 35 }),
+          o('Cell Width', { v: 50 }),
+          o('Cell Height', { v: 100 }),
+          o('Freq X', { v: 15 }),
+          o('Freq Y', { v: 15 }),
           o('Density', { v: 100 }),
           o('Jitter', { v: 100 }),
           o('Speed', { v: 0, b: 'OFF' }),
@@ -1928,8 +1890,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'EDGE_MASK',
         params: [
-          o('Sensitivity', { v: 5, b: 'OFF' }),
-          o('Thickness', { v: 3, b: 'OFF' }),
+          o('Sensitivity', { v: 9, b: 'OFF' }),
+          o('Thickness', { v: 5, b: 'OFF' }),
           o('Invert', { v: 0, b: 'OFF' }),
         ],
         melded: false
@@ -1937,7 +1899,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'INFINITE_ZOOM',
         params: [
-          o('Speed', { v: 20, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Speed', { v: 20, b: 'SUB' }, { v: 2, b: 'OFF' }),
           o('Depth', { v: 0, b: 'OFF' }),
           o('Spacing', { v: 100, b: 'OFF' }),
           o('Plane Count', { v: 100, b: 'OFF' }),

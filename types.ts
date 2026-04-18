@@ -81,7 +81,6 @@ export type MacroType =
   'RUBBER_BAND' |
   'METRO' |
   'LANDSCAPE' |
-  'GRID_PLANE' |
   'LIQUID' |
   'RODS' |
   'RINGS' |
