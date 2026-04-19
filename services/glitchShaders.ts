@@ -904,7 +904,7 @@ export const ORGANIC_NOISE_SHADER = `#version 300 es
 precision highp float;
 
 uniform sampler2D u_image;
-uniform float u_params[5]; // [scale, complexity, warp, speed, blend]
+uniform float u_params[6]; // [scale, complexity, warp, speed, direction, blend]
 uniform float u_integrated_values[8];
 uniform vec2 u_resolution;
 uniform float u_seed;
@@ -912,88 +912,35 @@ uniform float u_seed;
 in vec2 v_texCoord;
 out vec4 outColor;
 
-#define MAX_OCTAVES 6
+${GLSL_HASH}
 
-// Simplex 2D noise
-vec3 permute(vec3 x) {
-    return mod(((x * 34.0) + 1.0) * x, 289.0);
+#define MAX_OCTAVES 3
+
+// Procedural Value Noise with Hermite Smoothing
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+
+    vec2 u = f * f * (3.0 - 2.0 * f);
+
+    float a = hash(i, u_seed);
+    float b = hash(i + vec2(1.0, 0.0), u_seed);
+    float c = hash(i + vec2(0.0, 1.0), u_seed);
+    float d = hash(i + vec2(1.0, 1.0), u_seed);
+
+    float n = mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+    return n * 2.0 - 1.0;
 }
 
-float snoise(vec2 v){
-    const vec4 C = vec4(
-        0.211324865405187,
-        0.366025403784439,
-        -0.577350269189626,
-        0.024390243902439
-    );
-
-    vec2 i = floor(v + dot(v, C.yy));
-    vec2 x0 = v - i + dot(i, C.xx);
-
-    vec2 i1 = (x0.x > x0.y)
-        ? vec2(1.0, 0.0)
-        : vec2(0.0, 1.0);
-
-    vec4 x12 = x0.xyxy + C.xxzz;
-    x12.xy -= i1;
-
-    i = mod(i, 289.0);
-    vec3 p = permute(
-        permute(i.y + vec3(0.0, i1.y, 1.0))
-        + i.x + vec3(0.0, i1.x, 1.0)
-    );
-
-    vec3 m = max(0.5 - vec3(
-        dot(x0, x0),
-        dot(x12.xy, x12.xy),
-        dot(x12.zw, x12.zw)
-    ), 0.0);
-
-    m *= m;
-    m *= m;
-
-    vec3 x = 2.0 * fract(p * C.www) - 1.0;
-    vec3 h = abs(x) - 0.5;
-    vec3 a0 = x - floor(x + 0.5);
-
-    float g0 = a0.x * x0.x + h.x * x0.y;
-    vec2 g12 = a0.yz * x12.xz + h.yz * x12.yw;
-
-    return 130.0 * dot(m, vec3(g0, g12));
-}
-
-// Fully unrolled, branchless FBM
 float fbm(vec2 p, float octaves) {
-    // Precompute amplitudes
-    float a0 = 0.5;
-    float a1 = 0.25;
-    float a2 = 0.125;
-    float a3 = 0.0625;
-    float a4 = 0.03125;
-    float a5 = 0.015625;
-
-    // Sum of amplitudes
-    float totalAmp = a0 + a1 + a2 + a3 + a4 + a5;
-
-    // Octave fractional weights (clamped 0–1)
-    float w0 = clamp(octaves - 0.0, 0.0, 1.0);
-    float w1 = clamp(octaves - 1.0, 0.0, 1.0);
-    float w2 = clamp(octaves - 2.0, 0.0, 1.0);
-    float w3 = clamp(octaves - 3.0, 0.0, 1.0);
-    float w4 = clamp(octaves - 4.0, 0.0, 1.0);
-    float w5 = clamp(octaves - 5.0, 0.0, 1.0);
-
-    // Compute each octave with scaling
-    float n0 = w0 * a0 * snoise(p);
-    float n1 = w1 * a1 * snoise(p * 2.0);
-    float n2 = w2 * a2 * snoise(p * 4.0);
-    float n3 = w3 * a3 * snoise(p * 8.0);
-    float n4 = w4 * a4 * snoise(p * 16.0);
-    float n5 = w5 * a5 * snoise(p * 32.0);
-
-    float value = n0 + n1 + n2 + n3 + n4 + n5;
-
-    return value / totalAmp; // normalized 0–1
+    float v = 0.0, a = 0.5;
+    for (int i = 0; i < MAX_OCTAVES; i++) {
+        float w = clamp(octaves - float(i), 0.0, 1.0);
+        v += a * noise(p) * w;
+        p = p * 2.0 + 100.0; 
+        a *= 0.5;
+    }
+    return v;
 }
 
 void main() {
@@ -1002,21 +949,22 @@ void main() {
     float complexity = mix(1.0, float(MAX_OCTAVES), u_params[1] * 0.01);
     float warp = u_params[2] * 0.08;
     float speed = u_params[3] * 0.1;
-    float blend = u_params[4] * 0.01;
+    float flowAngle = u_params[4] * 0.06283185; // 0-100 to 0-2PI
+    float blend = u_params[5] * 0.01;
 
     // Use seed to offset noise coordinates
     vec2 seedOffset = vec2(fract(u_seed * 0.123), fract(u_seed * 0.456)) * 10.0;
+
     float aspect = u_resolution.x / u_resolution.y;
     vec2 baseUv = v_texCoord;
     baseUv.x *= aspect;
     vec2 uv = baseUv * scale + seedOffset;
+
     float t = u_integrated_values[3] * speed;
 
-    // ---- Domain warp (2 noise calls) ----
-    vec2 warpVec = vec2(
-        snoise(uv + t * 0.5),
-        snoise(uv + vec2(5.2, 1.3) + t * 0.5)
-    );
+    vec2 d1 = vec2(cos(flowAngle), sin(flowAngle));
+    float w = noise(uv + d1 * t);
+    vec2 warpVec = vec2(w, w * w); // adds asymmetry to avoid structured directional bias
 
     vec2 warpedUV = uv + warp * warpVec * scale;
 

@@ -24,13 +24,14 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 1, b: 'OFF' }),
+          o('Scale', { v: 7, b: 'OFF' }),
           o('Complexity', { v: 100, b: 'OFF' }),
-          o('Warp', { v: 2, b: 'OFF' }),
-          o('Speed', { v: 50, b: 'SUB' }, { v: 25, b: 'OFF' }),
+          o('Warp', { v: 3, b: 'OFF' }),
+          o('Warp Speed', { v: 30, b: 'OFF' }),
+          o('Warp Direction', { v: 0, b: 'OFF' }),
           o('Blend', { v: 100, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'LUMINANCE_MASK',
@@ -39,14 +40,14 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Feather', { v: 30, b: 'OFF' }),
           o('Invert', { v: 0, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'TUNNEL_WARP',
         params: [
-          o('Scale', { v: 10, b: 'OFF' }),
+          o('Scale', { v: 5, b: 'OFF' }),
           o('Speed', { v: 100, b: 'SUB' }, { v: 70, b: 'OFF' }),
-          o('Twist', { v: 10, b: 'OFF' }),
+          o('Twist', { v: 3, b: 'OFF' }),
         ],
         melded: false
       }
@@ -188,10 +189,11 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 15, b: 'OFF' }),
-          o('Complexity', { v: 3, b: 'OFF' }),
-          o('Warp', { v: 3, b: 'OFF' }),
-          o('Speed', { v: 75, m: 0, b: 'SUB' }, { v: 25, b: 'OFF' }),
+          o('Scale', { v: 40, b: 'OFF' }),
+          o('Complexity', { v: 0, b: 'OFF' }),
+          o('Warp', { v: 2, b: 'OFF' }),
+          o('Warp Speed', { v: 100, m: 0, b: 'SUB' }, { v: 30, b: 'OFF' }),
+          o('Warp Direction', { v: 25, b: 'OFF' }),
           o('Blend', { v: 100, b: 'OFF' }),
         ],
         melded: false
@@ -199,18 +201,18 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'TERRAIN',
         params: [
-          o('Extrusion', { v: 20, m: 5, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Extrusion', { v: 30, m: 5, b: 'SUB' }, { v: 10, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
-          o('Tile Width', { v: 50, b: 'OFF' }),
-          o('Tile Height', { v: 50, b: 'OFF' }),
+          o('Tile Width', { v: 100, b: 'OFF' }),
+          o('Tile Height', { v: 100, b: 'OFF' }),
           o('Rotate X', { v: 0, b: 'OFF' }),
           o('Rotate Y', { v: 0, b: 'OFF' }),
           o('Rotate Z', { v: 0, b: 'OFF' }),
-          o('Elevation', { v: 40, b: 'OFF' }),
+          o('Elevation', { v: 30, b: 'OFF' }),
           o('Distance', { v: 70, b: 'OFF' }),
-          o('Tile Blend', { v: 10, b: 'OFF' }),
+          o('Tile Blend', { v: 0, b: 'OFF' }),
           o('Speed X', { v: 0, b: 'OFF' }),
-          o('Speed Y', { v: 3, b: 'OFF' }),
+          o('Speed Y', { v: 0, b: 'OFF' }),
         ],
         melded: false
       },
@@ -218,7 +220,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'HUE_ROTATION',
         params: [
           o('Phase Offset', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 25, b: 'OFF' }),
+          o('Speed', { v: 10, b: 'OFF' }),
           o('Vibrance', { v: 50, b: 'OFF' }),
         ],
         melded: false
@@ -228,7 +230,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Sensitivity', { v: 0, b: 'OFF' }),
           o('Distance', { v: 5, b: 'OFF' }),
-          o('Strength', { v: 70, b: 'OFF' }),
+          o('Strength', { v: 50, b: 'OFF' }),
         ],
         melded: false
       }
@@ -394,29 +396,21 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 5, b: 'OFF' }),
+          o('Scale', { v: 20, b: 'OFF' }),
           o('Complexity', { v: 0, b: 'OFF' }),
-          o('Warp', { v: 3, b: 'OFF' }),
-          o('Speed', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
-          o('Blend', { v: 80, b: 'OFF' }),
+          o('Warp', { v: 5, b: 'OFF' }),
+          o('Warp Speed', { v: 50, m: 5, b: 'SUB' }, { v: 30, b: 'OFF' }),
+          o('Warp Direction', { v: 5, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
         ],
-        melded: true
-      },
-      {
-        type: 'GLOW',
-        params: [
-          o('Sensitivity', { v: 45, b: 'OFF' }),
-          o('Distance', { v: 0, b: 'OFF' }),
-          o('Strength', { v: 100, b: 'OFF' }),
-        ],
-        melded: true
+        melded: false
       },
       {
         type: 'TERRAIN_SPHERE',
         params: [
-          o('Extrusion', { v: 80, m: 0, b: 'SUB' }, { v: 40, b: 'OFF' }),
+          o('Extrusion', { v: 90, m: 0, b: 'SUB' }, { v: 40, b: 'OFF' }),
           o('Resolution', { v: 10, b: 'OFF' }),
-          o('Size', { v: 75, m: 10, b: 'TREBLE' }, { v: 25, m: 0, b: 'OFF' }),
+          o('Size', { v: 30, m: 10, b: 'TREBLE' }, { v: 30, m: 0, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
@@ -424,7 +418,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Spin Speed Y', { v: 0, b: 'OFF' }),
           o('Spin Speed Z', { v: 10, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'SPECTRAL_MAP',
@@ -438,7 +432,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Pan X', { v: 50, b: 'OFF' }),
           o('Pan Y', { v: 50, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'EDGE_MASK',
@@ -446,6 +440,15 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Sensitivity', { v: 3, b: 'OFF' }),
           o('Thickness', { v: 3, b: 'OFF' }),
           o('Invert', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 0, b: 'OFF' }),
+          o('Distance', { v: 5, b: 'OFF' }),
+          o('Strength', { v: 100, b: 'OFF' }),
         ],
         melded: false
       }
@@ -472,10 +475,11 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 4, b: 'OFF' }),
+          o('Scale', { v: 22, b: 'OFF' }),
           o('Complexity', { v: 0, b: 'OFF' }),
-          o('Warp', { v: 13, b: 'OFF' }),
-          o('Speed', { v: 35, b: 'SUB' }, { v: 8, b: 'OFF' }),
+          o('Warp', { v: 4, b: 'OFF' }),
+          o('Warp Speed', { v: 75, b: 'SUB' }, { v: 15, b: 'OFF' }),
+          o('Warp Direction', { v: 0, b: 'OFF' }),
           o('Blend', { v: 62, b: 'OFF' }),
         ],
         melded: false
@@ -494,7 +498,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Extrusion', { v: 90, m: 45, b: 'SUB' }, { v: 47, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
-          o('Size', { v: 20, b: 'OFF' }, { v: 28, b: 'OFF' }),
+          o('Size', { v: 15, b: 'OFF' }, { v: 28, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
@@ -538,59 +542,35 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Pan Y', { v: 50, b: 'OFF' }),
           o('Rotation', { v: 0, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 20, b: 'OFF' }),
-          o('Complexity', { v: 0, b: 'OFF' }),
-          o('Warp', { v: 4, b: 'OFF' }),
-          o('Speed', { v: 17, b: 'OFF' }),
-          o('Blend', { v: 60, b: 'OFF' }),
+          o('Scale', { v: 22, b: 'OFF' }),
+          o('Complexity', { v: 40, b: 'OFF' }),
+          o('Warp', { v: 11, b: 'OFF' }),
+          o('Warp Speed', { v: 75, b: 'SUB' }, { v: 20, b: 'OFF' }),
+          o('Warp Direction', { v: 0, b: 'OFF' }),
+          o('Blend', { v: 50, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'TERRAIN',
         params: [
-          o('Extrusion', { v: 34, m: 4, b: 'SUB' }, { v: 12, m: 0, b: 'OFF' }),
+          o('Extrusion', { v: 20, m: 4, b: 'SUB' }, { v: 12, m: 0, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
           o('Tile Width', { v: 100, b: 'OFF' }),
           o('Tile Height', { v: 100, b: 'OFF' }),
           o('Rotate X', { v: 0, b: 'OFF' }),
           o('Rotate Y', { v: 0, b: 'OFF' }),
           o('Rotate Z', { v: 0, b: 'OFF' }),
-          o('Elevation', { v: 35, b: 'OFF' }),
-          o('Distance', { v: 72, b: 'OFF' }),
+          o('Elevation', { v: 33, b: 'OFF' }),
+          o('Distance', { v: 75, b: 'OFF' }),
           o('Tile Blend', { v: 0, b: 'OFF' }),
           o('Speed X', { v: 0, b: 'OFF' }),
           o('Speed Y', { v: 0, b: 'OFF' }),
-        ],
-        melded: false
-      }
-    ]
-  },
-  WATERCOLOR: {
-    id: 'WATERCOLOR',
-    label: 'Watercolor',
-    effects: [
-      {
-        type: 'ORGANIC_NOISE',
-        params: [
-          o('Scale', { v: 1, b: 'OFF' }),
-          o('Complexity', { v: 100, b: 'OFF' }),
-          o('Warp', { v: 5, b: 'OFF' }),
-          o('Speed', { v: 50, b: 'SUB' }, { v: 25, b: 'OFF' }),
-          o('Blend', { v: 100, b: 'OFF' }),
-        ],
-        melded: true
-      },
-      {
-        type: 'DEEP_FRY',
-        params: [
-          o('Heat', { v: 50, b: 'OFF' }),
-          o('Posterize', { v: 0, b: 'OFF' })
         ],
         melded: false
       }
@@ -713,13 +693,14 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 5, b: 'OFF' }),
-          o('Complexity', { v: 31, b: 'OFF' }),
-          o('Warp', { v: 10, b: 'OFF' }),
-          o('Speed', { v: 3, m: 0, b: 'OFF' }, { v: 5, b: 'OFF' }),
+          o('Scale', { v: 20, b: 'OFF' }),
+          o('Complexity', { v: 0, b: 'OFF' }),
+          o('Warp', { v: 5, b: 'OFF' }),
+          o('Warp Speed', { v: 75, m: 0, b: 'SUB' }, { v: 30, b: 'OFF' }),
+          o('Warp Direction', { v: 12, b: 'OFF' }),
           o('Blend', { v: 100, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'LUMINANCE_MASK',
@@ -728,7 +709,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Feather', { v: 0, b: 'OFF' }),
           o('Invert', { v: 0, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'DEEP_FRY',
@@ -736,7 +717,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Heat', { v: 55, b: 'OFF' }),
           o('Posterize', { v: 0, b: 'OFF' })
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'TUNNEL_WARP',
@@ -745,7 +726,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Speed', { v: 50, m: 0, b: 'SUB' }, { v: 15, b: 'OFF' }),
           o('Twist', { v: 2, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'HUE_ROTATION',
@@ -865,28 +846,29 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 3, b: 'OFF' }),
+          o('Scale', { v: 25, b: 'OFF' }),
           o('Complexity', { v: 100, b: 'OFF' }),
-          o('Warp', { v: 10, b: 'OFF' }),
-          o('Speed', { v: 50, m: 0, b: 'SUB' }, { v: 15, b: 'OFF' }),
+          o('Warp', { v: 6, b: 'OFF' }),
+          o('Warp Speed', { v: 50, m: 0, b: 'SUB' }, { v: 25, b: 'OFF' }),
+          o('Warp Direction', { v: 0, b: 'OFF' }),
           o('Blend', { v: 100, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'TERRAIN_SPHERE',
         params: [
-          o('Extrusion', { v: 0, b: 'OFF' }),
+          o('Extrusion', { v: 3, b: 'OFF' }),
           o('Resolution', { v: 100, b: 'OFF' }),
-          o('Size', { v: 50, b: 'OFF' }, { v: 57, b: 'OFF' }),
+          o('Size', { v: 40, b: 'OFF' }, { v: 50, b: 'OFF' }),
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
           o('Spin Speed X', { v: 0, b: 'OFF' }),
           o('Spin Speed Y', { v: 0, b: 'OFF' }),
-          o('Spin Speed Z', { v: 30, m: 0, b: 'SUB' }, { v: 5, b: 'OFF' }),
+          o('Spin Speed Z', { v: 0, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'HUE_ROTATION',
@@ -895,14 +877,14 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Speed', { v: 25, b: 'OFF' }),
           o('Vibrance', { v: 25, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'GLOW',
         params: [
           o('Sensitivity', { v: 0, b: 'OFF' }),
           o('Distance', { v: 50, b: 'OFF' }),
-          o('Strength', { v: 75, b: 'OFF' }),
+          o('Strength', { v: 50, b: 'OFF' }),
         ],
         melded: false
       }
@@ -1111,10 +1093,11 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 38, b: 'OFF' }),
+          o('Scale', { v: 100, b: 'OFF' }),
           o('Complexity', { v: 100, b: 'OFF' }),
           o('Warp', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 0, b: 'OFF' }),
+          o('Warp Speed', { v: 0, b: 'OFF' }),
+          o('Warp Direction', { v: 0, b: 'OFF' }),
           o('Blend', { v: 50, b: 'OFF' }),
         ],
         melded: false
@@ -1306,32 +1289,33 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 15 }),
+          o('Scale', { v: 30 }),
           o('Complexity', { v: 100 }),
-          o('Warp', { v: 5 }),
-          o('Speed', { v: 5, b: 'OFF' }),
+          o('Warp', { v: 2 }),
+          o('Warp Speed', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Warp Direction', { v: 75, b: 'OFF' }),
           o('Blend', { v: 100 }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'LUMINANCE_MASK',
         params: [
-          o('Threshold', { v: 50, b: 'OFF' }),
-          o('Feather', { v: 54, b: 'OFF' }),
+          o('Threshold', { v: 60, b: 'OFF' }),
+          o('Feather', { v: 50, b: 'OFF' }),
           o('Invert', { v: 0, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'INFINITE_ZOOM',
         params: [
-          o('Speed', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Speed', { v: 25, b: 'SUB' }, { v: 10, b: 'OFF' }),
           o('Depth', { v: 50, b: 'OFF' }),
-          o('Spacing', { v: 15, b: 'OFF' }),
-          o('Plane Count', { v: 20, b: 'OFF' }),
-          o('Edge Feather', { v: 15, b: 'OFF' }),
-          o('Fade Buffer', { v: 30, b: 'OFF' }),
+          o('Spacing', { v: 25, b: 'OFF' }),
+          o('Plane Count', { v: 3, b: 'OFF' }),
+          o('Edge Feather', { v: 20, b: 'OFF' }),
+          o('Fade Buffer', { v: 50, b: 'OFF' }),
         ],
         melded: false
       }
@@ -1404,22 +1388,23 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Feather', { v: 30 }),
           o('Frequency', { v: 30 }),
-          o('Speed', { v: 70, b: 'SUB' }, { v: 15, b: 'OFF' }),
+          o('Speed', { v: 70, b: 'SUB' }, { v: 20, b: 'OFF' }),
           o('Pan X', { v: 50 }),
           o('Pan Y', { v: 50 }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 15 }),
-          o('Complexity', { v: 10 }),
-          o('Warp', { v: 8 }),
-          o('Speed', { v: 50, m: 0, b: 'SUB' }, { v: 25, b: 'SUB' }),
+          o('Scale', { v: 50 }),
+          o('Complexity', { v: 100 }),
+          o('Warp', { v: 1 }),
+          o('Warp Speed', { v: 75, m: 0, b: 'SUB' }, { v: 40, b: 'OFF' }),
+          o('Warp Direction', { v: 0, b: 'OFF' }),
           o('Blend', { v: 50 }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'TERRAIN',
@@ -1437,7 +1422,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Speed X', { v: 0, b: 'OFF' }),
           o('Speed Y', { v: 0, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'RGBA',
@@ -1984,10 +1969,11 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 9 }),
+          o('Scale', { v: 60 }),
           o('Complexity', { v: 100 }),
-          o('Warp', { v: 10 }),
-          o('Speed', { v: 60, m: 10, b: 'SUB' }, { v: 25, b: 'OFF' }),
+          o('Warp', { v: 1 }),
+          o('Warp Speed', { v: 75, b: 'SUB' }, { v: 15, b: 'OFF' }),
+          o('Warp Direction', { v: 0, b: 'OFF' }),
           o('Blend', { v: 100 }),
         ],
         melded: false
@@ -2138,10 +2124,11 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 5 }, { v: 2, b: 'OFF' }),
-          o('Complexity', { v: 0 }),
+          o('Scale', { v: 5 }),
+          o('Complexity', { v: 50 }),
           o('Warp', { v: 5 }),
-          o('Speed', { v: 30, m: 0, b: 'SUB' }, { v: 15, b: 'OFF' }),
+          o('Warp Speed', { v: 50, m: 1, b: 'SUB' }, { v: 20, b: 'OFF' }),
+          o('Warp Direction', { v: 12 }),
           o('Blend', { v: 100 }),
         ],
         melded: false
@@ -2149,10 +2136,10 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'SPECTRAL_MAP',
         params: [
-          o('Resolution', { v: 15, b: 'OFF' }),
+          o('Resolution', { v: 10, b: 'OFF' }),
           o('Phase Offset', { v: 10, b: 'OFF' }),
-          o('Speed', { v: 5, b: 'OFF' }),
-          o('Strength', { v: 70, b: 'OFF' }),
+          o('Speed', { v: 10, b: 'OFF' }),
+          o('Strength', { v: 60, b: 'OFF' }),
           o('Scale X', { v: 50, b: 'OFF' }),
           o('Scale Y', { v: 50, b: 'OFF' }),
           o('Pan X', { v: 50, b: 'OFF' }),
@@ -2164,8 +2151,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'GLOW',
         params: [
           o('Sensitivity', { v: 0, b: 'OFF' }),
-          o('Distance', { v: 50, b: 'OFF' }),
-          o('Strength', { v: 70, b: 'OFF' }),
+          o('Distance', { v: 0, b: 'OFF' }),
+          o('Strength', { v: 100, b: 'OFF' }),
         ],
         melded: false
       }
@@ -2185,6 +2172,65 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Drift Speed', { v: 0 }),
           o('Zoom Speed', { v: 50, b: 'SUB' }, { v: 5, b: 'OFF' }),
           o('Blend', { v: 100 }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  FLAMES: {
+    id: 'FLAMES',
+    label: 'Flames',
+    effects: [
+      {
+        type: 'ORGANIC_NOISE',
+        params: [
+          o('Scale', { v: 60 }),
+          o('Complexity', { v: 50 }),
+          o('Warp', { v: 1 }),
+          o('Warp Speed', { v: 100, b: 'SUB' }, { v: 50, b: 'OFF' }),
+          o('Warp Direction', { v: 75 }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'PARTICLES',
+        params: [
+          o('Count', { v: 40 }),
+          o('Size', { v: 30, m: 10, b: 'SUB' }),
+          o('Spread', { v: 16 }),
+          o('Drift', { v: 100 }),
+          o('Drift Speed', { v: 100, b: 'SUB' }, { v: 50, b: 'OFF' }),
+          o('Zoom Speed', { v: 0 }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'RGBA',
+        params: [
+          o('Red', { v: 100, b: 'OFF' }),
+          o('Green', { v: 50, b: 'OFF' }),
+          o('Blue', { v: 0, b: 'OFF' }),
+          o('Opacity', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'LUMINANCE_MASK',
+        params: [
+          o('Threshold', { v: 20, m: 50, b: 'SUB' }),
+          o('Feather', { v: 10, b: 'OFF' }),
+          o('Invert', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 0, m: 30, b: 'SUB' }),
+          o('Distance', { v: 0, b: 'OFF' }),
+          o('Strength', { v: 100, b: 'OFF' }),
         ],
         melded: false
       }

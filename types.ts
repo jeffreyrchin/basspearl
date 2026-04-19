@@ -88,7 +88,6 @@ export type MacroType =
   'CELL_MESH' |
   'SPIKY_BALL' |
   'CRYOGENIC_FLUID' |
-  'WATERCOLOR' |
   'DISCO_BALL' |
   'STREAKS' |
   'PAINT_MORPH' |
@@ -119,7 +118,8 @@ export type MacroType =
   'GHOSTS' |
   'HEXAGON_TUNNEL' |
   'AURORA' |
-  'STARFIELD_3D';
+  'STARFIELD_3D' |
+  'FLAMES';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;
