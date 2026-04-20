@@ -205,10 +205,10 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
         camera.position.set(0, 30, 60);
         camera.lookAt(0, 0, 0);
 
-        // Single large plane
-        const PLANE_W = 3000;
-        const PLANE_H = 3000;
-        const MESH_RES = 1024;
+        // Single large plane (Tile Size Max 500 + Fog Buffer 500 = 1000)
+        const PLANE_W = 1000;
+        const PLANE_H = 1000;
+        const MESH_RES = 512;
         const geometry = new THREE.PlaneGeometry(PLANE_W, PLANE_H, MESH_RES, MESH_RES);
         geometry.rotateX(-Math.PI / 2);
 
@@ -242,7 +242,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
 
                 void main() {
                     // SECTION 1: VOXEL AND MESH SETUP
-                    float gridRes = clamp(u_res, 1.0, 1024.0);
+                    float gridRes = clamp(u_res, 1.0, 512.0);
 
                     // Block size scales with tile size so voxels stay consistent per tile
                     float blockSizeX = u_tileW / gridRes;
@@ -317,8 +317,8 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                     vec4 finalColor = mix(vTexColor, flatColor, isFlat);
                     
                     float h = dot(finalColor.rgb, vec3(0.333));
-                    float sideFade = smoothstep(500.0, 400.0, abs(vWorldX));
-                    float zFog     = smoothstep(400.0, 500.0, abs(vWorldZ));
+                    float sideFade = smoothstep(250.0, 200.0, abs(vWorldX));
+                    float zFog     = smoothstep(200.0, 250.0, abs(vWorldZ));
                     float visibility = step(0.01, h) * sideFade * (1.0 - zFog);
 
                     if (visibility < 0.01) discard;
@@ -351,29 +351,29 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
             update: (params, texture) => {
                 const p = params.params;
 
-                const extrusion = p ? p[0] * 10 : 0;  // Extrusion   0-100
-                const resolution = p ? p[1] : 100;    // Resolution  0-100 → 2-1024 voxel columns
-                const tileW = p ? p[2] : 100;         // Tile Width  0-100 → 10-1000 world units per tile (X)
-                const tileH = p ? p[3] : 100;         // Tile Height 0-100 → 10-1000 world units per tile (Z)
+                const extrusion = p ? p[0] * 5 : 0;  // Extrusion   0-100
+                const resolution = p ? p[1] : 100;    // Resolution  0-100 → 2-512 voxel columns
+                const tileW = p ? p[2] : 100;         // Tile Width  0-100 → 10-500 world units per tile (X)
+                const tileH = p ? p[3] : 100;         // Tile Height 0-100 → 10-500 world units per tile (Z)
                 const rotateX = p ? p[4] : 0;         // Rotate X    0-100 → 0-2π
                 const rotateY = p ? p[5] : 0;         // Rotate Y    0-100 → 0-2π
                 const rotateZ = p ? p[6] : 0;         // Rotate Z    0-100 → 0-2π
-                const elevation = p ? p[7] : 50;      // Elevation   0-100 → -500 to +500 world units
-                const distance = p ? p[8] : 50;       // Distance    0-100 → -1000 to +1000 world units
+                const elevation = p ? p[7] : 50;      // Elevation   0-100
+                const distance = p ? p[8] : 50;       // Distance    0-100
                 const tileBlend = p ? p[9] : 50;      // Tile Blend  0-100 → hard seams → full seamless blend
-                const speedX = p ? p[10] * 10 : 0;    // Speed X     0-100 → UV/s leftward → rightward
-                const speedY = p ? p[11] * 10 : 0;    // Speed Y     0-100 → UV/s forward → backward
+                const speedX = p ? p[10] * 5 : 0;    // Speed X     0-100 → UV/s leftward → rightward
+                const speedY = p ? p[11] * 5 : 0;    // Speed Y     0-100 → UV/s forward → backward
 
-                // Map 0-100 → 2-1024 voxel columns
-                const targetRes = Math.max(2, Math.floor(2 + (resolution / 100.0) * 1022.0));
+                // Map 0-100 → 2-512 voxel columns
+                const targetRes = Math.max(2, Math.floor(2 + (resolution / 100.0) * 510.0));
 
-                // Map 0-100 → 10-1000 world units per tile
-                const tileWWorld = 10.0 + (tileW / 100.0) * 990.0;
-                const tileHWorld = 10.0 + (tileH / 100.0) * 990.0;
+                // Map 0-100 → 10-500 world units per tile
+                const tileWWorld = 10.0 + (tileW / 100.0) * 490.0;
+                const tileHWorld = 10.0 + (tileH / 100.0) * 490.0;
 
                 // ── UV QUANTIZATION ──────────────────────────────────
                 // Align tile width/height with the vertex grid to eliminate Phase Shift pop.
-                const segmentSize = 3000.0 / 1024.0;
+                const segmentSize = 1000.0 / 512.0;
                 const snappedTileW = Math.max(segmentSize, Math.round(tileWWorld / segmentSize) * segmentSize);
                 const snappedTileH = Math.max(segmentSize, Math.round(tileHWorld / segmentSize) * segmentSize);
 
@@ -382,11 +382,11 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 terrainGroup.rotation.y = toRad(rotateY);
                 terrainGroup.rotation.z = toRad(rotateZ);
 
-                // Elevation: 0 = -500, 100 = +500, 50 = ground level (y=0)
-                terrainGroup.position.y = (elevation - 50.0) * 10.0;
+                // Elevation (1000 unit span): 0 = -550, 100 = +450, 50 = ground level (y=-50)
+                terrainGroup.position.y = (elevation * 10.0) - 550.0;
 
-                // Distance: 0 = 1000, 100 = -1000, 50 = 0
-                terrainGroup.position.z = (50.0 - distance) * 20.0;
+                // Distance (1000 unit span): 0 = +350, 100 = -650, 50 = -150
+                terrainGroup.position.z = (-distance * 10.0) + 350.0;
 
                 material.uniforms.u_image.value = texture;
                 material.uniforms.u_extrusion.value = extrusion;
@@ -406,15 +406,19 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 const rawTx = (iv && iv.length > 10) ? iv[10] : time;
                 const rawTy = (iv && iv.length > 11) ? iv[11] : time;
 
-                // Max speed 100 units/s per axis
-                const distX = rawTx * (speedX / 100.0) * 100.0;
-                const distZ = rawTy * (speedY / 100.0) * 100.0;
+                // Max speed 500 units/s per axis
+                const distX = rawTx * speedX;
+                const distZ = rawTy * speedY;
 
                 const mod = (n: number, m: number) => ((n % m) + m) % m;
 
-                // Move in physical space, wrapping exactly at the full tile repeat boundary
-                mesh.position.x = -mod(distX, tileWWorld);
-                mesh.position.z = mod(distZ, tileHWorld);
+                // Move in physical space using a SYMMETRIC wrap (-half to +half) 
+                // This halves the maximum distance the mesh moves from center, allowing
+                // us to use a 1000x1000 plane without leaving the fog bounds!
+                const halfW = snappedTileW / 2.0;
+                const halfH = snappedTileH / 2.0;
+                mesh.position.x = -(mod(distX + halfW, snappedTileW) - halfW);
+                mesh.position.z = mod(distZ + halfH, snappedTileH) - halfH;
 
                 material.uniforms.u_mesh_x.value = mesh.position.x;
                 material.uniforms.u_mesh_z.value = mesh.position.z;
