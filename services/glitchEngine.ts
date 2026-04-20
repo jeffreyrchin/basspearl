@@ -5,7 +5,7 @@ import { ShaderManager, BASE_VERTEX_SHADER, PASS_THROUGH_FRAGMENT_SHADER } from 
 import { EffectPipeline } from './EffectPipeline';
 import { SHADER_REGISTRY } from './glitchShaders';
 import { TRANSITION_SHADERS } from './transitionShaders';
-import { MASTER_ASPECT_RATIO, DEFAULT_TARGET_WIDTH } from '../constants';
+import { MASTER_ASPECT_RATIO, DEFAULT_TARGET_WIDTH, MIN_TARGET_WIDTH } from '../constants';
 
 export interface GlitchRenderOptions {
   targetWidth?: number;
@@ -97,7 +97,7 @@ export class GlitchEngine {
 
     // 3. Size the final output canvas
     const requestedWidth = options.targetWidth || DEFAULT_TARGET_WIDTH;
-    const renderWidth = options.isExport ? requestedWidth : Math.max(Math.min(requestedWidth, DEFAULT_TARGET_WIDTH), 1280);
+    const renderWidth = options.isExport ? requestedWidth : Math.max(Math.min(requestedWidth, DEFAULT_TARGET_WIDTH), MIN_TARGET_WIDTH);
     const renderHeight = Math.round(renderWidth / MASTER_ASPECT_RATIO);
 
     if (targetCanvas.width !== renderWidth) targetCanvas.width = renderWidth;
@@ -159,7 +159,7 @@ export class GlitchEngine {
     // In Live Preview, clamp the resolution to keep framerates high for editing.
     // In Export, we respect the target exactly (e.g., 3840 for 4K).
     if (!isExport) {
-      width = Math.max(Math.min(width, DEFAULT_TARGET_WIDTH), 1280);
+      width = Math.max(Math.min(width, DEFAULT_TARGET_WIDTH), MIN_TARGET_WIDTH);
     }
 
     // Ensure even dimensions

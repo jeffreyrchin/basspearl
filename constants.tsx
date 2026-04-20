@@ -8,7 +8,8 @@ export const CONTACT_EMAIL = 'jeffreyrchin.20@gmail.com';
 export const DEFAULT_TRANSITION_DURATION = 0.2;
 
 export const MASTER_ASPECT_RATIO = 16 / 9;
-export const DEFAULT_TARGET_WIDTH = 1920;
+export const DEFAULT_TARGET_WIDTH = 1440;
+export const MIN_TARGET_WIDTH = 960;
 
 export const TRANSITION_OPTIONS = [
   { label: 'None', value: 'none' },
