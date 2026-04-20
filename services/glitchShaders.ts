@@ -1050,15 +1050,9 @@ ${GLSL_HASH}
 ${GLSL_HYBRID_FREQ}
 ${GLSL_TRANSFORM}
 
-// Bhaskara I's sine approximation — branchless, continuous, max error 0.166%.
-// Avoids native transcendental sin/cos by using a rational parabolic function.
-// Works correctly over the full range with zero discontinuities at period boundaries.
-float fastSin(float x) {
-    x = fract(x * 0.15915);             // Normalize to one full period [0, 1)
-    float sign = step(0.5, x) * -2.0 + 1.0; // +1 for first half, -1 for second
-    x = fract(x * 2.0);                // Fold each half to [0, 1)
-    float k = 4.0 * x * (1.0 - x);    // Parabola with peak 1.0
-    return sign * k / (1.25 - 0.25 * k); // Bhaskara rational curve
+// Triangle wave (Vectorized)
+vec2 fastSin(vec2 x) {
+    return abs(fract(x * 0.15915) * 4.0 - 2.0) - 1.0;
 }
 
 void main() {
@@ -1086,11 +1080,8 @@ void main() {
     vec2 fv = fract(cellCoord);
 
     float f1 = 8.0;
-
-    vec2 cellScaling = 1.0 / max(vec2(cellWidth, cellHeight), 0.01);
-
-    // 5x5 Branchless Worley Search
     float probMask = step(0.001, probDensity); // Handle 0 density edge case
+    vec2 cellScaling = 1.0 / max(vec2(cellWidth, cellHeight), 0.01);
 
     for (int y = -2; y <= 2; y++) {
         for (int x = -2; x <= 2; x++) {
@@ -1107,11 +1098,12 @@ void main() {
 
             vec2 seed = vec2(baseHash, fract(baseHash * 43758.5453123));
 
-            // Morphic Jitter (Bhaskara Sine)
-            vec2 wiggle = 0.5 + 0.5 * vec2(
-                fastSin(t + seed.x * 6.2831),
-                fastSin(t * 0.8 + seed.y * 6.2831 + 1.5708)
-            );
+            // Vectorized Jitter
+            vec2 wiggle = 0.5 + 0.5 * fastSin(vec2(
+                t + seed.x * 6.2831,
+                t * 0.8 + seed.y * 6.2831 + 1.5708
+            ));
+            
             vec2 offset = mix(vec2(0.5), wiggle, jitter);
             vec2 diff = neighbor + offset - fv;
 
