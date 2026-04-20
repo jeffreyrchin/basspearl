@@ -26,12 +26,13 @@ const InspectorWindow: React.FC = () => {
 
     const minWidth = 280;
     const minHeight = 150;
-    const initialWidth = Math.max(minWidth, window.innerWidth * 0.25);
-    const initialHeight = Math.max(minHeight, window.innerHeight * 0.75);
+    const initialWidth = 329;
+    const initialHeight = Math.max(minHeight, window.innerHeight * 0.5);
 
     const [winWidth, setWinWidth] = useState(initialWidth);
     const [winHeight, setWinHeight] = useState(initialHeight);
-    const [winX, setWinX] = useState((window.innerWidth - initialWidth) / 2);
+    const [winX] = useState(window.innerWidth - initialWidth - 16); // 16 to align with right edge of effect/layer cards
+    const [winY] = useState(window.innerHeight - initialHeight - 110); // 110 to position above the action bar
 
     if (!isInspectorOpen) return null;
 
@@ -118,7 +119,7 @@ const InspectorWindow: React.FC = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             style={{
                 position: 'absolute',
-                top: 80,
+                top: winY,
                 left: winX,
                 width: winWidth,
                 height: winHeight,
