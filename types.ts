@@ -115,7 +115,7 @@ export type MacroType =
   'STEEL_LATTICE' |
   'CRYSTAL_RAIN' |
   'STORM' |
-  'GHOSTS' |
+  'TEETH' |
   'HEXAGON_TUNNEL' |
   'AURORA' |
   'STARFIELD_3D' |

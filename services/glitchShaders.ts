@@ -1052,7 +1052,8 @@ ${GLSL_TRANSFORM}
 
 // Triangle wave (Vectorized)
 vec2 fastSin(vec2 x) {
-    return abs(fract(x * 0.15915) * 4.0 - 2.0) - 1.0;
+    vec2 t = abs(fract(x * 0.15915) * 4.0 - 2.0) - 1.0;
+    return t * (2.0 - abs(t)); // smooths peaks into curves
 }
 
 void main() {

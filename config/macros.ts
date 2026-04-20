@@ -2010,17 +2010,17 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       },
     ]
   },
-  GHOSTS: {
-    id: 'GHOSTS',
-    label: 'Ghosts',
+  TEETH: {
+    id: 'TEETH',
+    label: 'Teeth',
     effects: [
       {
         type: 'CELLULAR_NOISE',
         params: [
           o('Cell Width', { v: 30 }),
           o('Cell Height', { v: 30 }),
-          o('Freq X', { v: 30 }),
-          o('Freq Y', { v: 30 }),
+          o('Freq X', { v: 10 }),
+          o('Freq Y', { v: 10 }),
           o('Density', { v: 100 }),
           o('Jitter', { v: 100 }),
           o('Speed', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
