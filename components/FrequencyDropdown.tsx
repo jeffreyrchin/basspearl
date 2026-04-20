@@ -116,8 +116,11 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
     );
 
     return (
-        <div className="relative z-50 flex items-center gap-2" ref={dropdownRef} onKeyDown={handleKeyDown}>
-            <span className={`material-symbols-outlined transition-colors ${value !== 'OFF' ? 'text-primary' : 'text-indigo-300'}`}>cadence</span>
+        <div className="relative z-50 flex flex-col items-end" ref={dropdownRef} onKeyDown={handleKeyDown}>
+            <div className="flex items-center gap-1">
+                <span className={`material-symbols-outlined transition-colors !text-sm ${value !== 'OFF' ? 'text-primary' : 'text-indigo-300'}`}>cadence</span>
+                <span className={`text-[10px] font-bold tracking-widest uppercase transition-colors ${value !== 'OFF' ? 'text-primary' : 'text-indigo-300'}`}>Frequency</span>
+            </div>
             <button
                 data-dropdown-ignore="true"
                 onClick={() => setActiveDropdownId(isOpen ? null : id)}
