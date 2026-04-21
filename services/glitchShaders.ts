@@ -1668,6 +1668,7 @@ export const IMAGE_OVERLAY_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
 uniform sampler2D u_overlay;
+uniform float u_has_overlay;
 uniform float u_params[6]; // [opacity, scaleX, scaleY, panX, panY, rotation]
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
@@ -1681,13 +1682,8 @@ void main() {
     vec4 bg = texture(u_image, v_texCoord);
     vec4 fg = texture(u_overlay, tr.localUV) * tr.mask;
     
-    // Normal alpha blending
-    vec4 blended = mix(bg, fg, fg.a * opacity);
-    
-    // Premultiplied alpha calculation for the final output alpha
-    float finalAlpha = mix(bg.a, 1.0, fg.a * opacity);
-    
-    outColor = vec4(blended.rgb, finalAlpha);
+    float alphaMultiplier = fg.a * opacity * u_has_overlay;
+    outColor = vec4(mix(bg.rgb, fg.rgb, alphaMultiplier), 1.0); // Force alpha to 1.0 to ensure base image is always visible, even with no overlay
 }
 `;
 

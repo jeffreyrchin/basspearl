@@ -356,7 +356,8 @@ export class GlitchEngine {
       u_unit: UNIT,
       u_seed: (seed !== undefined && seed !== null) ? seed : Math.random(),
       u_resolution: this.uResolutionBuffer,
-      u_time: currentTime
+      u_time: currentTime,
+      u_has_overlay: secondaryTexture ? 1.0 : 0.0
     };
 
     if (type === 'BLUR') {

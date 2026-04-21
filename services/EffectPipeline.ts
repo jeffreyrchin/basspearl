@@ -29,12 +29,14 @@ export class EffectPipeline {
     private blurFBs: [WebGLFramebuffer, WebGLFramebuffer] = [null as any, null as any];
     private blurWidth = 1;
     private blurHeight = 1;
+    private emptyTexture: WebGLTexture;
 
     constructor(gl: WebGL2RenderingContext, textureManager: TextureManager, shaderManager: ShaderManager) {
         this.gl = gl;
         this.textureManager = textureManager;
         this.shaderManager = shaderManager;
         this.threeRenderer = new ThreeJSRenderer(gl);
+        this.emptyTexture = textureManager.createTexture(1, 1);
         this.initQuad();
     }
 
@@ -202,8 +204,10 @@ export class EffectPipeline {
             if (is3D) {
                 this.renderThreeJS(programName, input, outputFB, uniforms);
             } else {
-                const inputs = [{ name: 'u_image', texture: input }];
-                if (secondaryTexture) inputs.push({ name: 'u_overlay', texture: secondaryTexture });
+                const inputs = [
+                    { name: 'u_image', texture: input },
+                    { name: 'u_overlay', texture: secondaryTexture || this.emptyTexture }
+                ];
                 this.draw(programName, outputFB, inputs, uniforms, false, true);
             }
             this.currentSubFBIndex = 1 - this.currentSubFBIndex;
@@ -214,8 +218,10 @@ export class EffectPipeline {
             if (is3D) {
                 this.renderThreeJS(programName, input, outputFB, uniforms);
             } else {
-                const inputs = [{ name: 'u_image', texture: input }];
-                if (secondaryTexture) inputs.push({ name: 'u_overlay', texture: secondaryTexture });
+                const inputs = [
+                    { name: 'u_image', texture: input },
+                    { name: 'u_overlay', texture: secondaryTexture || this.emptyTexture }
+                ];
                 this.draw(programName, outputFB, inputs, uniforms, false, true);
             }
             this.currentFBIndex = 1 - this.currentFBIndex;
@@ -441,7 +447,7 @@ export class EffectPipeline {
 
         const inputs = [
             { name: 'u_image', texture: fromTexture },      // The "From" state
-            { name: 'u_overlay', texture: input }           // The "To" state (current result)
+            { name: 'u_to_image', texture: input }          // The "To" state (current result)
         ];
 
         this.draw(`TRANSITION_${type.toUpperCase()}`, outputFB, inputs, uniforms, false, true);
@@ -469,6 +475,7 @@ export class EffectPipeline {
             this.gl.deleteBuffer(this.quadBuffer);
             this.quadBuffer = null;
         }
+        this.textureManager.destroyTexture(this.emptyTexture);
         if (this.threeRenderer) {
             this.threeRenderer.dispose();
         }
