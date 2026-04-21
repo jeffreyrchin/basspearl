@@ -689,7 +689,9 @@ void main() {
         abs(mod(depth, 2.0) - 1.0)
     );
 
-    outColor = texture(u_image, warpedUV);
+    // Fog: Fades the center (r=0) to hide the projection singularity
+    float fog = smoothstep(0.0, 0.25, r);
+    outColor = texture(u_image, warpedUV) * fog;
 }
 `;
 
