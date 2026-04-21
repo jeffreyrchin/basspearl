@@ -95,7 +95,10 @@ export const getThumbnailDataUrl = (effects: EffectConfig[]): Promise<string> =>
             reactivity: { sub: 0.9, bass: 0.9, mid: 0.9, treble: 0.9 }
         });
 
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+        if (!blob) throw new Error("Failed to generate thumbnail blob");
+        
+        const dataUrl = URL.createObjectURL(blob);
         THUMBNAIL_CACHE.set(cacheKey, dataUrl);
         return dataUrl;
     });
