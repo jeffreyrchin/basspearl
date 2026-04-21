@@ -142,7 +142,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                         <motion.p
                             animate={{ scale: [1, 1.1, 1] }}
                             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                            className="text-white/60 font-medium text-xs tracking-widest uppercase will-change-transform">Visualize Your Audio</motion.p>
+                            className="text-white/60 font-medium text-xs tracking-widest uppercase will-change-transform">Visualize Your Sound</motion.p>
                     </div>
 
                     {/* Body Section */}
