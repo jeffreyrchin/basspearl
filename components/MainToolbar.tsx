@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useEffectStore } from '../store/useEffectStore';
 
@@ -11,29 +11,36 @@ interface MainToolbarProps {
     isTabAudioUnsupported: boolean;
     startMic: () => void;
     startTabAudio: () => void;
-    onPlayPause: () => void;
-    isPlaying: boolean;
     isProcessing: boolean;
-    onScrub: (delta: number) => void;
     openExportModal: () => void;
     isExporting: boolean;
 }
 
-const ToolbarButton: React.FC<{
+const ToolbarRow: React.FC<{
     onClick?: () => void;
     icon: string;
-    title: string;
+    label: string;
+    shortcut?: string;
     isActive?: boolean;
+    disabled?: boolean;
+    colorHex?: string;
     activeBg?: string;
     activeBorder?: string;
-    colorHex?: string;
     showDot?: boolean;
     className?: string;
-    disabled?: boolean;
-}> = ({ onClick, icon, title, isActive, activeBg, activeBorder, colorHex, showDot, className = "w-12", disabled }) => {
-    const baseClass = "h-9 flex items-center justify-center rounded-xl border transition-all duration-200 outline-none focus-visible:ring-2 disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none";
-    const idleClass = "border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10 text-white";
-    const activeStyles = isActive ? `${activeBg} ${activeBorder}` : idleClass;
+    isCollapsed?: boolean;
+}> = ({ onClick, icon, label, shortcut, isActive, disabled, colorHex, activeBg, activeBorder, showDot, className = "", isCollapsed = false }) => {
+    const baseClass = `w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-3'} h-8 shrink-0 rounded-lg border transition-all outline-none focus-visible:ring-2 disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none select-none text-left group/row relative`;
+
+    let textClass = "text-white/80 hover:text-white";
+    let bgClass = "bg-transparent hover:bg-white/5";
+    let borderClass = "border-transparent";
+
+    if (isActive) {
+        textClass = "text-white";
+        bgClass = activeBg || "bg-white/10";
+        borderClass = activeBorder || "border-white/10";
+    }
 
     return (
         <button
@@ -41,24 +48,38 @@ const ToolbarButton: React.FC<{
             onClick={() => onClick?.()}
             onPointerDownCapture={(e) => { e.stopPropagation(); }}
             disabled={disabled}
-            className={`${baseClass} ${activeStyles} ${className}`}
-            title={title}
+            className={`${baseClass} ${bgClass} ${borderClass} ${textClass} ${className}`}
+            title={label}
         >
-            <span
-                className="material-symbols-outlined text-base"
-                style={{ color: isActive ? colorHex : undefined }}
-            >
-                {icon}
-            </span>
+            <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : 'gap-3'}`}>
+                <div className="relative flex items-center justify-center w-5 shrink-0">
+                    <span
+                        className="material-symbols-outlined !text-[20px] text-center"
+                        style={{ color: isActive && colorHex ? colorHex : (isActive && isCollapsed ? 'white' : undefined) }}
+                    >
+                        {icon}
+                    </span>
+                </div>
+                {!isCollapsed && (
+                    <span className="text-[13px] font-medium tracking-wide whitespace-nowrap overflow-hidden text-ellipsis">{label}</span>
+                )}
+            </div>
+
+            {shortcut && !isCollapsed && (
+                <div className="flex items-center pr-1 shrink-0">
+                    <span className={`text-[12px] font-medium mb-0.5 transition-colors ${isActive ? 'text-white' : 'text-white/80 group-hover/row:text-white'}`}>{shortcut}</span>
+                </div>
+            )}
+
             {showDot && (
                 <span
-                    className="ml-2 w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: colorHex }}
+                    className={`${isCollapsed ? 'absolute top-1/2 -translate-y-1/2 -left-2 w-0.5 h-4 rounded-full' : 'w-2 h-2 rounded-full'}`}
+                    style={{ backgroundColor: colorHex, boxShadow: `0 0 8px ${colorHex}` }}
                 />
             )}
         </button>
-    );
-};
+    )
+}
 
 const MainToolbar: React.FC<MainToolbarProps> = ({
     audioInputRef,
@@ -69,10 +90,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     isTabAudioUnsupported,
     startMic,
     startTabAudio,
-    onPlayPause,
-    isPlaying,
     isProcessing,
-    onScrub,
     openExportModal,
     isExporting
 }) => {
@@ -88,178 +106,167 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     const setIsSceneHotbarOpen = useEffectStore(s => s.setIsSceneHotbarOpen);
 
     const constraintsRef = useRef(null);
+    const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
 
     return (
         <div className="absolute inset-0 z-toolbar pointer-events-none overflow-hidden" ref={constraintsRef}>
-            <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center p-15">
+            <div className="absolute left-8 flex items-center justify-start pt-15">
                 <motion.div
                     drag
                     dragConstraints={constraintsRef}
                     dragMomentum={false}
                     dragElastic={0}
-                    className="h-14 bg-[#0a0a1a] border border-white/10 rounded-2xl flex items-center pl-2 pr-4 gap-2 ring-1 ring-white/5 pointer-events-auto overflow-x-auto no-scrollbar group cursor-default"
+                    className="relative flex flex-row items-center pointer-events-auto group/toolbar shadow-[0_16px_48px_rgba(0,0,0,0.5)] rounded-xl"
                 >
-                    {/* Drag Handle */}
-                    <div className="flex items-center justify-center w-8 h-8 cursor-grab active:cursor-grabbing hover:bg-white/5 rounded-lg transition-colors group/handle shrink-0">
-                        <span className="material-symbols-outlined text-[18px] text-white/60 group-hover/handle:text-white/60 transition-colors select-none">
-                            drag_indicator
-                        </span>
-                    </div>
+                    <motion.div
+                        animate={{ width: isToolbarCollapsed ? 60 : 200 }}
+                        transition={{ duration: 0.3, type: "spring", bounce: 0, ease: "easeInOut" }}
+                        className="bg-[#0a0a1a] border border-white/10 rounded-xl flex flex-col p-2 overflow-y-auto overflow-x-hidden no-scrollbar cursor-default relative z-10"
+                    >
+                        {/* Header */}
+                        <div className="flex items-center justify-center w-full h-4 mb-2 shrink-0 z-10 cursor-grab active:cursor-grabbing group/handle relative">
+                            {/* Drag Handle */}
+                            <div className={`${isToolbarCollapsed ? 'w-0' : 'w-10'} h-1 bg-white/80 rounded-full group-hover/handle:bg-white transition-colors`} />
 
-                    {/* Toolbar Buttons */}
-                    <div className="flex items-center gap-3 shrink-0">
-                        {/* Audio File */}
-                        <input
-                            ref={audioInputRef}
-                            type="file"
-                            accept="audio/*, .mp3, .wav, .m4a, .aac, .ogg"
-                            onChange={handleAudioUpload}
-                            title="Audio File"
-                            className="sr-only"
-                        />
-                        <ToolbarButton
-                            onClick={() => audioInputRef.current && (audioInputRef.current.value = '', audioInputRef.current.click())}
-                            icon="audio_file"
-                            title="Audio File"
-                            isActive={!!audioFile}
-                            colorHex="#22D3EE"
-                            activeBg="bg-white/5 hover:bg-[#22D3EE]/10"
-                            activeBorder="border-white/5 hover:border-[#22D3EE]/20"
-                            showDot={!!audioFile && !isLiveMode}
-                            className="px-3"
-                        />
+                            {/* Collapse Toggle */}
+                            <button
+                                className={`absolute ${isToolbarCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-0'} top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-all cursor-pointer`}
+                                onClick={() => setIsToolbarCollapsed(!isToolbarCollapsed)}
+                                onPointerDownCapture={(e) => { e.stopPropagation(); }}
+                                title={isToolbarCollapsed ? "Expand Toolbar" : "Collapse Toolbar"}
+                            >
+                                <span className="material-symbols-outlined !text-[20px]">
+                                    {isToolbarCollapsed ? 'chevron_right' : 'chevron_left'}
+                                </span>
+                            </button>
+                        </div>
 
-                        {/* Microphone */}
-                        <ToolbarButton
-                            onClick={startMic}
-                            icon="mic"
-                            title="Microphone"
-                            isActive={isLiveMode && liveSourceType === 'mic'}
-                            colorHex="#F87171"
-                            activeBg="bg-white/5 hover:bg-[#F87171]/10"
-                            activeBorder="border-white/5 hover:border-[#F87171]/20"
-                            showDot={isLiveMode && liveSourceType === 'mic'}
-                            className="px-3"
-                        />
+                        {/* Toolbar Buttons */}
+                        <div className="flex flex-col w-full px-1 pb-1">
+                            {/* Audio Sources */}
+                            <div className="flex flex-col gap-1 mb-2">
+                                {/* Audio File */}
+                                <input
+                                    ref={audioInputRef}
+                                    type="file"
+                                    accept="audio/*, .mp3, .wav, .m4a, .aac, .ogg"
+                                    onChange={handleAudioUpload}
+                                    title="Audio File"
+                                    className="sr-only"
+                                />
+                                <ToolbarRow
+                                    onClick={() => audioInputRef.current && (audioInputRef.current.value = '', audioInputRef.current.click())}
+                                    icon="audio_file"
+                                    label="Audio File"
+                                    isCollapsed={isToolbarCollapsed}
+                                    isActive={!!audioFile}
+                                    colorHex="#22D3EE"
+                                    activeBg="bg-[#22D3EE]/10"
+                                    activeBorder="border-[#22D3EE]/30"
+                                    showDot={!!audioFile && !isLiveMode}
+                                />
 
-                        {/* Tab Audio (Desktop only) */}
-                        <ToolbarButton
-                            onClick={startTabAudio}
-                            icon="present_to_all"
-                            title={isTabAudioUnsupported ? "Tab Audio (Unsupported Browser)" : "Tab Audio"}
-                            isActive={isLiveMode && liveSourceType === 'tab'}
-                            colorHex={isTabAudioUnsupported ? "#666" : "#C084FC"}
-                            activeBg="bg-white/5 hover:bg-[#C084FC]/10"
-                            activeBorder="border-white/5 hover:border-[#C084FC]/20"
-                            showDot={isLiveMode && liveSourceType === 'tab'}
-                            className="px-3 hidden lg:flex"
-                        />
+                                {/* Microphone */}
+                                <ToolbarRow
+                                    onClick={startMic}
+                                    icon="mic"
+                                    label="Microphone"
+                                    isCollapsed={isToolbarCollapsed}
+                                    isActive={isLiveMode && liveSourceType === 'mic'}
+                                    colorHex="#F87171"
+                                    activeBg="bg-[#F87171]/10"
+                                    activeBorder="border-[#F87171]/30"
+                                    showDot={isLiveMode && liveSourceType === 'mic'}
+                                />
 
-                        {/* Seek Backward (Desktop only) */}
-                        <ToolbarButton
-                            onClick={() => onScrub(-5)}
-                            disabled={!audioFile || isProcessing || isLiveMode}
-                            title="Seek Backward"
-                            aria-label="Seek Backward"
-                            icon="fast_rewind"
-                            colorHex="white"
-                            className="px-2 hidden lg:flex"
-                        />
+                                {/* Tab Audio (Desktop only) */}
+                                <ToolbarRow
+                                    onClick={startTabAudio}
+                                    icon="present_to_all"
+                                    label="Tab Audio"
+                                    isCollapsed={isToolbarCollapsed}
+                                    isActive={isLiveMode && liveSourceType === 'tab'}
+                                    colorHex={isTabAudioUnsupported ? "#666" : "#C084FC"}
+                                    activeBg="bg-[#C084FC]/10"
+                                    activeBorder="border-[#C084FC]/30"
+                                    showDot={isLiveMode && liveSourceType === 'tab'}
+                                    className="hidden lg:flex"
+                                />
+                            </div>
 
-                        {/* Play/Pause */}
-                        <ToolbarButton
-                            onClick={onPlayPause}
-                            disabled={!audioFile || isProcessing || isLiveMode}
-                            title={isPlaying ? "Pause" : "Play"}
-                            aria-label={isPlaying ? "Pause" : "Play"}
-                            icon={isPlaying ? 'pause' : 'play_arrow'}
-                            isActive={isPlaying}
-                            colorHex="white"
-                            activeBg="bg-primary/50"
-                            activeBorder="border-primary/50"
-                            className="px-3"
-                        />
+                            <div className="h-[1px] bg-white/5 mx-2 mb-3 mt-1" />
 
-                        {/* Seek Forward (Desktop only) */}
-                        <ToolbarButton
-                            onClick={() => onScrub(5)}
-                            disabled={!audioFile || isProcessing || isLiveMode}
-                            title="Seek Forward"
-                            aria-label="Seek Forward"
-                            icon="fast_forward"
-                            colorHex="white"
-                            className="px-2 hidden lg:flex"
-                        />
+                            {/* Window Toggles */}
+                            <div className="flex flex-col gap-1">
+                                {/* Pipeline Toggle */}
+                                <ToolbarRow
+                                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                                    icon="format_list_bulleted"
+                                    label="Pipeline"
+                                    shortcut="P"
+                                    isCollapsed={isToolbarCollapsed}
+                                    isActive={isSidebarOpen}
+                                />
 
-                        {/* Open/Close Pipeline */}
-                        <ToolbarButton
-                            onClick={() => {
-                                setIsSidebarOpen(!isSidebarOpen);
-                            }}
-                            icon="format_list_bulleted"
-                            title={isSidebarOpen ? "Close Pipeline (P)" : "Open Pipeline (P)"}
-                            isActive={isSidebarOpen}
-                            activeBg="bg-white/10"
-                            activeBorder="border-white/30"
-                            className="px-3"
-                        />
+                                {/* Library Toggle */}
+                                <ToolbarRow
+                                    onClick={() => {
+                                        if (isLibraryOpen) removeFocus('library');
+                                        else pushFocus('library');
+                                    }}
+                                    icon="add_circle"
+                                    label="Library"
+                                    shortcut="Y"
+                                    isCollapsed={isToolbarCollapsed}
+                                    isActive={isLibraryOpen}
+                                />
 
-                        {/* Library Toggle */}
-                        <ToolbarButton
-                            onClick={() => {
-                                if (isLibraryOpen) removeFocus('library');
-                                else pushFocus('library');
-                            }}
-                            icon="add_circle"
-                            title={isLibraryOpen ? "Close Library (Y)" : "Open Library (Y)"}
-                            isActive={isLibraryOpen}
-                            activeBg="bg-white/10"
-                            activeBorder="border-white/30"
-                            className="px-3"
-                        />
+                                {/* Inspector Toggle (Desktop only) */}
+                                <ToolbarRow
+                                    onClick={() => {
+                                        if (isInspectorOpen) removeFocus('inspector');
+                                        else pushFocus('inspector');
+                                    }}
+                                    icon="switches"
+                                    label="Inspector"
+                                    shortcut="I"
+                                    isCollapsed={isToolbarCollapsed}
+                                    isActive={isInspectorOpen}
+                                    className="hidden lg:flex"
+                                />
 
-                        {/* Inspector Toggle (Desktop only) */}
-                        <ToolbarButton
-                            onClick={() => {
-                                if (isInspectorOpen) removeFocus('inspector');
-                                else pushFocus('inspector');
-                            }}
-                            icon="info"
-                            title={isInspectorOpen ? "Close Inspector (I)" : "Open Inspector (I)"}
-                            isActive={isInspectorOpen}
-                            activeBg="bg-white/10"
-                            activeBorder="border-white/30"
-                            className="hidden lg:flex px-3"
-                        />
+                                {/* Scene Hotbar Toggle (Desktop only) */}
+                                <ToolbarRow
+                                    onClick={() => setIsSceneHotbarOpen(!isSceneHotbarOpen)}
+                                    icon="keyboard_keys"
+                                    label="Scenes"
+                                    shortcut="K"
+                                    isCollapsed={isToolbarCollapsed}
+                                    isActive={isSceneHotbarOpen}
+                                    className="hidden lg:flex"
+                                />
 
-                        {/* Scene Hotbar Toggle (Desktop only) */}
-                        <ToolbarButton
-                            onClick={() => setIsSceneHotbarOpen(!isSceneHotbarOpen)}
-                            icon="keyboard_keys"
-                            title={isSceneHotbarOpen ? "Close Scene Bar (K)" : "Open Scene Bar (K)"}
-                            isActive={isSceneHotbarOpen}
-                            activeBg="bg-white/10"
-                            activeBorder="border-white/30"
-                            className="hidden lg:flex px-3"
-                        />
+                                {/* Hide UI */}
+                                <ToolbarRow
+                                    onClick={() => setIsUiHidden(true)}
+                                    icon="visibility_off"
+                                    label="Hide UI"
+                                    shortcut="H"
+                                    isCollapsed={isToolbarCollapsed}
+                                />
 
-                        {/* Hide UI (Desktop only) */}
-                        <ToolbarButton
-                            onClick={() => setIsUiHidden(true)}
-                            icon="visibility_off"
-                            title="Hide UI (H)"
-                            className="hidden lg:flex px-3"
-                        />
-
-                        {/* Export (Desktop only) */}
-                        <ToolbarButton
-                            onClick={openExportModal}
-                            disabled={!audioFile || isExporting || isProcessing || isLiveMode}
-                            icon="download"
-                            title="Export"
-                            className="px-3 hidden lg:flex"
-                        />
-                    </div>
+                                {/* Export (Desktop only) */}
+                                <ToolbarRow
+                                    onClick={openExportModal}
+                                    disabled={!audioFile || isExporting || isProcessing || isLiveMode}
+                                    icon="download"
+                                    label="Export Video"
+                                    isCollapsed={isToolbarCollapsed}
+                                    className="hidden lg:flex"
+                                />
+                            </div>
+                        </div>
+                    </motion.div>
                 </motion.div>
             </div>
         </div>

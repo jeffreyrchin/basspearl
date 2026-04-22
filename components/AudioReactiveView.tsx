@@ -268,10 +268,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     isTabAudioUnsupported={isTabAudioUnsupported}
                     startMic={handleMicClick}
                     startTabAudio={handleTabAudioClick}
-                    onPlayPause={handleTogglePlay}
-                    isPlaying={isPlaying}
                     isProcessing={isProcessing}
-                    onScrub={handleScrub}
                     openExportModal={openExportModal}
                     isExporting={isExporting}
                 />
@@ -325,6 +322,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                                         !requestRef.current && (requestRef.current = requestAnimationFrame(animate));
                                     });
                                 }}
+                                onScrub={handleScrub}
+                                onPlayPause={handleTogglePlay}
+                                isPlaying={isPlaying}
+                                isLiveMode={isLiveMode}
                             />
                         </div>
                     )}
