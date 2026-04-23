@@ -386,7 +386,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     ],
   },
   RGBA: {
-    label: 'Color Select',
+    label: 'Color',
     category: 'Modifier',
     params: [
       p('Red', { v: 100 }),

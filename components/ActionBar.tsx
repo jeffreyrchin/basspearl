@@ -61,7 +61,7 @@ const ActionBar: React.FC<ActionBarProps> = () => {
             <button
                 onClick={() => addEffectFromSidebar('RGBA')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-white/80 hover:text-white hover:bg-white/10 transition-all`}
-                title="Color Select (C)"
+                title="Color (C)"
             >
                 <span className="material-symbols-outlined">palette</span>
             </button>

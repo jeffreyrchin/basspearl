@@ -90,11 +90,6 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({ r, g, b, onChange, onP
                             setIsOpen(!isOpen);
                         }
                     }}
-                    // onClick={(e) => {
-                    //     e.stopPropagation();
-                    //     onPointerDown?.();
-                    //     setIsOpen(!isOpen);
-                    // }}
                     style={{ backgroundColor: currentHex }}
                     className="w-10 h-10 rounded-md border border-white/20 shadow-inner focus:outline-none focus:ring-2 focus:ring-white/40 cursor-pointer active:scale-95 transition-transform"
                     title="Pick Color"
