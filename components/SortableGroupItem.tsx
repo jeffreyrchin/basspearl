@@ -132,28 +132,32 @@ const SortableGroupItem = ({
                                 {!isOverlay && (
                                     <div className="flex h-full items-center" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
                                         <button
+                                            onClick={(e) => {
+                                                if (e.altKey || effect.soloed) {
+                                                    toggleSolo(effect.id);
+                                                } else {
+                                                    toggleMute(effect.id);
+                                                }
+                                            }}
+                                            className={`w-10 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors
+                                                ${effect.soloed ? 'text-yellow-300 bg-yellow-300/20' : (effect.muted ? 'text-indigo-300 bg-indigo-300/20' : 'text-white/60 hover:bg-white/10 hover:text-white')}
+                                            `}
+                                            title={effect.soloed ? "Toggle Solo" : "Toggle Visibility (Alt+Click to Solo)"}
+                                        >
+                                            <span className="material-symbols-outlined">
+                                                {effect.soloed ? 'star' : (effect.muted ? 'visibility_off' : 'visibility')}
+                                            </span>
+                                        </button>
+                                        <div className="w-px h-4 bg-white/5" />
+                                        <button
                                             onClick={() => {
                                                 toggleSelected(effect.id, false);
                                                 pushFocus('inspector');
                                             }}
-                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors text-white/60 hover:bg-white/10 hover:text-white`}
+                                            className={`w-10 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors text-white/60 hover:bg-white/10 hover:text-white`}
                                             title="Show Inspector (I)"
                                         >
-                                            <span className="material-symbols-outlined">switches</span>
-                                        </button>
-                                        <button
-                                            onClick={() => toggleSolo(effect.id)}
-                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors ${effect.soloed ? 'bg-white text-black' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}
-                                            title="Toggle Solo"
-                                        >
-                                            <span className="material-symbols-outlined">pill</span>
-                                        </button>
-                                        <button
-                                            onClick={() => toggleMute(effect.id)}
-                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors ${effect.muted ? 'bg-indigo-500 text-white' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}
-                                            title="Toggle Visibility"
-                                        >
-                                            <span className="material-symbols-outlined">{effect.muted ? 'visibility_off' : 'visibility'}</span>
+                                            <span className="material-symbols-outlined">tune</span>
                                         </button>
                                     </div>
                                 )}

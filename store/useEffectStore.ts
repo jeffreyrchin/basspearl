@@ -260,7 +260,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
             const next = [...state.effects];
             const idx = next.findIndex(e => e.id === id);
             if (idx === -1) return {};
-            next[idx] = { ...next[idx], muted: !next[idx].muted };
+            next[idx] = { ...next[idx], muted: !next[idx].muted, soloed: false };
             return { effects: next };
         });
     },
@@ -271,7 +271,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
             const next = [...state.effects];
             const idx = next.findIndex(e => e.id === id);
             if (idx === -1) return {};
-            next[idx] = { ...next[idx], soloed: !next[idx].soloed };
+            next[idx] = { ...next[idx], soloed: !next[idx].soloed, muted: false };
             return { effects: next };
         });
     },

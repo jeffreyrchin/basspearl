@@ -227,7 +227,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                         if (isInspectorOpen) removeFocus('inspector');
                                         else pushFocus('inspector');
                                     }}
-                                    icon="switches"
+                                    icon="tune"
                                     label="Inspector"
                                     shortcut="I"
                                     isCollapsed={isToolbarCollapsed}
