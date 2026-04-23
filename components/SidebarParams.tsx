@@ -116,7 +116,7 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
                 {EFFECT_METADATA[selectedEffect.type]?.params?.map((paramMeta, paramIdx) => {
                     const param = selectedEffect.params[paramIdx];
                     return (
-                        <div key={paramIdx} className="py-3 flex flex-col">
+                        <div key={paramIdx} className="py-2 flex flex-col">
                             <div className="flex justify-between items-center">
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-white">
                                     {paramMeta.name}

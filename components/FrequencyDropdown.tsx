@@ -116,10 +116,10 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
     );
 
     return (
-        <div className="relative z-50 flex flex-col items-end" ref={dropdownRef} onKeyDown={handleKeyDown}>
+        <div className="relative z-50 flex items-center gap-1" ref={dropdownRef} onKeyDown={handleKeyDown}>
             <div className="flex items-center gap-1">
                 <span className={`material-symbols-outlined transition-colors !text-sm ${value !== 'OFF' ? 'text-primary' : 'text-indigo-300'}`}>cadence</span>
-                <span className={`text-[10px] font-bold tracking-widest uppercase transition-colors ${value !== 'OFF' ? 'text-primary' : 'text-indigo-300'}`}>Frequency</span>
+                <span className={`text-[10px] font-bold tracking-widest uppercase transition-colors ${value !== 'OFF' ? 'text-primary' : 'text-indigo-300'}`}>Listen:</span>
             </div>
             <button
                 data-dropdown-ignore="true"
@@ -127,8 +127,8 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
                 aria-haspopup="listbox"
                 aria-expanded={isOpen}
                 aria-label={ariaLabel}
-                className={`flex items-center gap-0.5 pl-3 pr-1 rounded-lg border text-[10px] font-bold uppercase tracking-[0.1em] active:scale-95 hover:text-white transition-colors
-                    ${value !== 'OFF' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-indigo-300/5 text-indigo-300 border-indigo-300/10'}`}
+                className={`flex items-center text-[10px] font-bold uppercase tracking-[0.1em] active:scale-95 hover:text-white transition-colors
+                    ${value !== 'OFF' ? 'text-primary' : 'text-indigo-300'}`}
             >
                 <span>{value}</span>
                 <motion.span
@@ -136,7 +136,7 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
                     initial={{ rotate: 0 }}
                     animate={{ rotate: isOpen ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
-                    className="material-symbols-outlined text-[18px]"
+                    className="material-symbols-outlined !text-[18px]"
                 >
                     expand_more
                 </motion.span>

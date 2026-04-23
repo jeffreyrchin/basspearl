@@ -207,7 +207,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
 
     if (isReactive) {
         return (
-            <div className={`relative h-10 flex items-center my-2`} onPointerDown={onPointerDown}>
+            <div className={`relative h-8 flex items-center my-1`} onPointerDown={onPointerDown}>
                 {/* Reactive Slider */}
                 <div key="reactive" className="relative w-full" ref={trackRef}>
                     {/* Visual Track (Padded to match thumb centers) */}
@@ -260,7 +260,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     }
 
     return (
-        <div className={`relative h-10 flex items-center my-1`} onPointerDown={onPointerDown}>
+        <div className={`relative h-8 flex items-center my-1`} onPointerDown={onPointerDown}>
             {/* Manual/Static Slider */}
             <div key="static" className="relative flex-1 group/static" ref={trackRef}>
                 <input
