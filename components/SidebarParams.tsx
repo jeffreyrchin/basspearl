@@ -77,40 +77,88 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
                 )}
                 {selectedEffect.type === 'IMAGE' && (
                     <div className="py-3 flex flex-col">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-white/80 mb-2">
-                            Image
-                        </label>
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => fileInputRef.current?.click()}
-                                className="py-1.5 px-3 rounded-md text-xs font-semibold bg-white/10 text-white hover:bg-white/20 transition-all cursor-pointer whitespace-nowrap active:scale-95"
-                            >
-                                Choose File
-                            </button>
+                        {/* Image Upload Zone */}
+                        <div
+                            className={`relative w-full h-32 rounded-xl transition-all flex flex-col items-center justify-center overflow-hidden cursor-pointer group bg-white/5 hover:bg-[#22D3EE]/5 data-[dragover=true]:bg-[#22D3EE]/10`}
+                            onClick={() => fileInputRef.current?.click()}
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                e.currentTarget.setAttribute('data-dragover', 'true');
+                            }}
+                            onDragLeave={(e) => {
+                                e.preventDefault();
+                                e.currentTarget.removeAttribute('data-dragover');
+                            }}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                e.currentTarget.removeAttribute('data-dragover');
+                                const file = e.dataTransfer.files?.[0];
+                                if (file && file.type.startsWith('image/')) {
+                                    const url = URL.createObjectURL(file);
+                                    setEffectAssetUrl(selectedEffect.id, url, file.name);
+                                }
+                            }}
+                        >
+                            {/* SVG Dashed Border for Cross-Browser Consistency */}
+                            {!selectedEffect.assetUrl && (
+                                <svg
+                                    className="absolute inset-0 w-full h-full pointer-events-none rounded-xl"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <rect
+                                        width="100%"
+                                        height="100%"
+                                        rx="12" /* Should match rounded-xl (12px) */
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                        strokeDasharray="4 2"
+                                        className="text-white/20 transition-colors group-hover:text-[#22D3EE]/80 group-data-[dragover=true]:text-[#22D3EE]"
+                                    />
+                                </svg>
+                            )}
+
                             <input
                                 ref={fileInputRef}
                                 type="file"
+                                title="Upload Image"
                                 accept="image/*"
                                 onChange={(e) => handleImageUpload(e, selectedEffect.id)}
                                 className="sr-only"
                             />
 
-                            <div className="flex items-center justify-between w-full min-w-0">
-                                <span className="text-white/80 text-xs truncate max-w-[150px]">
-                                    {selectedEffect.assetName || "No file chosen"}
-                                </span>
-
-                                {selectedEffect.assetUrl && (
+                            {selectedEffect.assetUrl ? (
+                                <>
+                                    <img src={selectedEffect.assetUrl} alt={selectedEffect.assetName} className="absolute inset-0 w-full h-full object-contain group-hover:opacity-40 group-data-[dragover=true]:opacity-40 transition-opacity" />
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-data-[dragover=true]:opacity-100 transition-opacity bg-black/40">
+                                        <span className="material-symbols-outlined text-white !text-3xl">add_photo_alternate</span>
+                                    </div>
                                     <button
-                                        onClick={() => setEffectAssetUrl(selectedEffect.id, undefined, undefined)}
-                                        className="material-symbols-outlined text-white/50 hover:text-red-400 text-lg transition-colors"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setEffectAssetUrl(selectedEffect.id, undefined, undefined);
+                                        }}
+                                        className="absolute top-2 right-2 w-7 h-7 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center transition-colors"
                                         title="Remove Image"
                                     >
-                                        close
+                                        <span className="material-symbols-outlined !text-[20px]">delete</span>
                                     </button>
-                                )}
-                            </div>
+                                    <div className="absolute inset-0 rounded-xl border-2 border-white/10 group-hover:border-[#22D3EE]/80 group-data-[dragover=true]:border-[#22D3EE] transition-colors pointer-events-none" />
+                                </>
+                            ) : (
+                                <div className="z-10 flex flex-col items-center gap-2 text-white/60 group-hover:text-[#22D3EE] group-data-[dragover=true]:text-[#22D3EE] transition-colors pointer-events-none">
+                                    <span className="material-symbols-outlined !text-3xl shrink-0">add_photo_alternate</span>
+                                    <span className="text-xs font-medium text-center px-4">Click or drag image here</span>
+                                </div>
+                            )}
                         </div>
+
+                        {/* Image File Name */}
+                        {selectedEffect.assetName && (
+                            <div className="mt-2 text-center text-[10px] text-white/60 truncate w-full px-2">
+                                {selectedEffect.assetName}
+                            </div>
+                        )}
                     </div>
                 )}
                 {EFFECT_METADATA[selectedEffect.type]?.params?.map((paramMeta, paramIdx) => {
