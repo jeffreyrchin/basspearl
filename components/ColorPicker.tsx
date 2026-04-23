@@ -1,6 +1,7 @@
 import { useDragSync } from '@/hooks/useDragSync';
 import { clearDragOverride, setDragOverride } from '@/services/dragOverride';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { HexColorPicker } from 'react-colorful';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -29,6 +30,34 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({ r, g, b, onChange, onP
     const colorWellRef = useRef<HTMLButtonElement>(null);
 
     const [isOpen, setIsOpen] = useState(false);
+    const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
+
+    useLayoutEffect(() => {
+        if (isOpen && colorWellRef.current) {
+            const updateStyles = () => {
+                const rect = colorWellRef.current!.getBoundingClientRect();
+                const spaceBelow = window.innerHeight - rect.bottom;
+                const spaceAbove = rect.top;
+                const flip = spaceBelow < 280 && spaceAbove > spaceBelow;
+
+                setPopoverStyle({
+                    position: 'fixed',
+                    left: `${Math.round(rect.left)}px`,
+                    top: flip ? 'auto' : `${Math.round(rect.bottom + 12)}px`,
+                    bottom: flip ? `${Math.round(window.innerHeight - rect.top + 12)}px` : 'auto',
+                    zIndex: 99999,
+                });
+            };
+
+            updateStyles();
+            window.addEventListener('resize', updateStyles);
+            window.addEventListener('scroll', updateStyles, true);
+            return () => {
+                window.removeEventListener('resize', updateStyles);
+                window.removeEventListener('scroll', updateStyles, true);
+            };
+        }
+    }, [isOpen]);
 
     // Convert 0-100 store values to 0-255 hex for the initialization/static state
     const currentHex = useMemo(() => `#${toHex(r)}${toHex(g)}${toHex(b)}`, [r, g, b]);
@@ -96,55 +125,59 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({ r, g, b, onChange, onP
                 />
 
                 {/* Popover & Backdrop */}
-                <AnimatePresence>
-                    {isOpen && (
-                        <>
-                            {/* Invisible Backdrop: Catches 'outside' clicks */}
-                            <div
-                                className="fixed inset-0 z-[90] bg-transparent cursor-default"
-                                onPointerDown={(e) => {
-                                    e.stopPropagation();
-                                    setIsOpen(false);
-                                    clearDragOverride();
-                                    onChange(rRef.current, gRef.current, bRef.current);
-                                }}
-                            />
+                {createPortal(
+                    <AnimatePresence>
+                        {isOpen && (
+                            <>
+                                {/* Invisible Backdrop: Catches 'outside' clicks */}
+                                <div
+                                    className="fixed inset-0 z-[90] bg-transparent cursor-default"
+                                    onPointerDown={(e) => {
+                                        e.stopPropagation();
+                                        setIsOpen(false);
+                                        clearDragOverride();
+                                        onChange(rRef.current, gRef.current, bRef.current);
+                                    }}
+                                />
 
-                            {/* The Actual Picker Popover */}
-                            <motion.div
-                                key="color-picker"
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                transition={{ duration: 0.2 }}
-                                className="absolute top-full left-0 mt-3 z-[100]"
-                            >
-                                <div className="p-3 bg-slate-800 border border-white/10 rounded-xl shadow-2xl relative">
-                                    <div onKeyDown={(e) => {
-                                        // Stop arrow keys from triggering the playback scrubber or navigation
-                                        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-                                            e.stopPropagation();
-                                        }
-                                    }}>
-                                        <HexColorPicker color={currentHex} onChange={handlePickerChange} />
+                                {/* The Actual Picker Popover */}
+                                <motion.div
+                                    key="color-picker"
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    transition={{ duration: 0.2 }}
+                                    style={popoverStyle}
+                                    className="z-[100]"
+                                >
+                                    <div className="p-3 bg-slate-800 border border-white/10 rounded-xl shadow-2xl relative">
+                                        <div onKeyDown={(e) => {
+                                            // Stop arrow keys from triggering the playback scrubber or navigation
+                                            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                                                e.stopPropagation();
+                                            }
+                                        }}>
+                                            <HexColorPicker color={currentHex} onChange={handlePickerChange} />
+                                        </div>
+                                        <div className="mt-3 flex items-center justify-end">
+                                            <button
+                                                onClick={() => {
+                                                    setIsOpen(false);
+                                                    clearDragOverride();
+                                                    onChange(rRef.current, gRef.current, bRef.current);
+                                                }}
+                                                className="px-2 py-1 text-[9px] font-bold tracking-widest bg-white/10 hover:bg-white/20 rounded uppercase text-white/80"
+                                            >
+                                                Done
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="mt-3 flex items-center justify-end">
-                                        <button
-                                            onClick={() => {
-                                                setIsOpen(false);
-                                                clearDragOverride();
-                                                onChange(rRef.current, gRef.current, bRef.current);
-                                            }}
-                                            className="px-2 py-1 text-[9px] font-bold tracking-widest bg-white/10 hover:bg-white/20 rounded uppercase text-white/80"
-                                        >
-                                            Done
-                                        </button>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </>
-                    )}
-                </AnimatePresence>
+                                </motion.div>
+                            </>
+                        )}
+                    </AnimatePresence>,
+                    document.body
+                )}
 
                 {/* Label */}
                 <div className="flex flex-col flex-1 min-w-0">
