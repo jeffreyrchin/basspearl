@@ -1664,7 +1664,7 @@ void main() {
 }
 `;
 
-export const IMAGE_OVERLAY_SHADER = `#version 300 es
+export const IMAGE_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
 uniform sampler2D u_overlay;
@@ -1740,6 +1740,6 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     TRI_CRUSH: { name: 'TRI_CRUSH', fragmentSource: TRI_CRUSH_SHADER },
     HEX_CRUSH: { name: 'HEX_CRUSH', fragmentSource: HEX_CRUSH_SHADER },
     TERRAIN_RING: { name: 'TERRAIN_RING', fragmentSource: '', velocityParamIndices: [6, 7, 8], is3D: true },
-    IMAGE_OVERLAY: { name: 'IMAGE_OVERLAY', fragmentSource: IMAGE_OVERLAY_SHADER },
+    IMAGE: { name: 'IMAGE', fragmentSource: IMAGE_SHADER },
     PARTICLES: { name: 'PARTICLES', fragmentSource: '', velocityParamIndices: [4, 5], is3D: true },
 };

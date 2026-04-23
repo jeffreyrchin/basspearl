@@ -296,7 +296,6 @@ export const useEffectStore = create<EffectState>((set, get) => ({
             effects: [...state.effects, newEffect],
             selectedIds: new Set([newEffect.id]),
         }));
-        get().pushFocus('inspector');
     },
 
     addMacro: (macroType) => {

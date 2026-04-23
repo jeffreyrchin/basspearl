@@ -46,11 +46,11 @@ const ActionBar: React.FC<ActionBarProps> = () => {
             transition={{ duration: 0.15, ease: "easeOut" }}
             className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-[#0a0a1a] border border-white/10 z-actionbar">
 
-            {/* Add Image Overlay - always enabled */}
+            {/* Add Image - always enabled */}
             <button
-                onClick={() => addEffectFromSidebar('IMAGE_OVERLAY')}
+                onClick={() => addEffectFromSidebar('IMAGE')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-white/80 hover:text-white hover:bg-white/10 transition-all`}
-                title="Image Overlay (O)"
+                title="Image (O)"
             >
                 <span className="material-symbols-outlined">image</span>
             </button>

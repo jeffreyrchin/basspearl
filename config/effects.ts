@@ -483,8 +483,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Pan Y', { v: 50 }),
     ],
   },
-  IMAGE_OVERLAY: {
-    label: 'Image Overlay',
+  IMAGE: {
+    label: 'Image',
     category: 'Pattern',
     params: [
       p('Opacity', { v: 100 }),

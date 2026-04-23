@@ -35,7 +35,7 @@ const getThumbnailBackgroundUrl = (effects: EffectConfig[]): string | null => {
         if (effect.category === 'Modifier') {
             return "./sunset_square.jpeg";
         }
-        if (effect.label === 'Image Overlay') {
+        if (effect.label === 'Image') {
             return "./landscape.png";
         }
     }
@@ -47,11 +47,11 @@ const prepareThumbnailEffects = (effects: EffectConfig[]): EffectConfig[] => {
     const bgUrl = getThumbnailBackgroundUrl(effects);
     if (!bgUrl) return effects;
 
-    // Create a mock IMAGE_OVERLAY effect
+    // Create a mock IMAGE effect
     const bgEffect: EffectConfig = {
         id: "thumb_bg",
-        type: "IMAGE_OVERLAY",
-        params: EFFECT_METADATA["IMAGE_OVERLAY"].params.map(p => ({
+        type: "IMAGE",
+        params: EFFECT_METADATA["IMAGE"].params.map(p => ({
             param: p.name,
             value: p.defaultValue,
             min: p.defaultMin ?? 0,
@@ -97,7 +97,7 @@ export const getThumbnailDataUrl = (effects: EffectConfig[]): Promise<string> =>
 
         const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
         if (!blob) throw new Error("Failed to generate thumbnail blob");
-        
+
         const dataUrl = URL.createObjectURL(blob);
         THUMBNAIL_CACHE.set(cacheKey, dataUrl);
         return dataUrl;

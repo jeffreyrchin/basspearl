@@ -120,7 +120,7 @@ const HelpContent: React.FC = () => {
                             <Shortcut keys={['Mod', 'Shift', 'G']} description="Ungroup Selected" />
                             <Shortcut keys={['Del']} description="Remove Selected" />
                             <Shortcut keys={['Esc']} description="Clear Selection" />
-                            <Shortcut keys={['O']} description="Add 'Image Overlay'" />
+                            <Shortcut keys={['O']} description="Add Image" />
                             <Shortcut keys={['C']} description="Add 'Color Select'" />
                         </div>
                     </div>

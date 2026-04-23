@@ -75,10 +75,10 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
                         effectId={selectedEffect.id}
                     />
                 )}
-                {selectedEffect.type === 'IMAGE_OVERLAY' && (
+                {selectedEffect.type === 'IMAGE' && (
                     <div className="py-3 flex flex-col">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-white/80 mb-2">
-                            Image Overlay
+                            Image
                         </label>
                         <div className="flex items-center gap-4">
                             <button

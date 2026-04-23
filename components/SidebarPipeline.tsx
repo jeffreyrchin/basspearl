@@ -107,10 +107,10 @@ const SidebarPipeline = ({ onLoadMuxels, onNavigateToLibrary }: SidebarPipelineP
                 return;
             }
 
-            // Add Image Overlay - O
+            // Add Image - O
             if (key === 'o') {
                 e.preventDefault();
-                addEffectFromSidebar('IMAGE_OVERLAY');
+                addEffectFromSidebar('IMAGE');
             }
 
             // Add Color - C
