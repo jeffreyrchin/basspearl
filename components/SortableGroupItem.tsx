@@ -41,20 +41,16 @@ const SortableGroupItem = ({
         <div
             ref={isOverlay ? undefined : setNodeRef}
             style={style}
-            className={`flex flex-row w-full border border-white/5 rounded-md overflow-hidden ${isOverlay ? 'bg-black shadow-2xl ring-1 ring-white/10' : 'bg-white/10'}`}
+            {...(isOverlay ? {} : { ...attributes, ...listeners })}
+            onKeyDown={isOverlay ? undefined : (e) => onGripKeyDown(e, groupIndex)}
+            tabIndex={isOverlay ? -1 : 0}
+            data-sortable-group
+            title="Drag to Reorder (Arrow keys for keyboard reorder)"
+            className={`flex flex-row w-full border border-white/5 rounded-md overflow-hidden
+                ${isOverlay ? 'bg-black shadow-2xl ring-1 ring-white/10' : 'bg-white/10 focus-visible:ring-1 focus-visible:ring-white/30 focus-visible:outline-none'}
+            `}
         >
-            {/* Grip Handle */}
-            <button
-                {...(isOverlay ? {} : { ...attributes, ...listeners })}
-                onKeyDown={isOverlay ? undefined : (e) => onGripKeyDown(e, groupIndex)}
-                onClick={(e) => e.stopPropagation()}
-                className="group w-8 flex-shrink-0 flex flex-col items-center justify-center outline-none rounded-l-md touch-none transition-colors cursor-grab active:cursor-grabbing"
-                title="Drag to Reorder"
-            >
-                <span className="material-symbols-outlined text-white/60 group-hover:text-white group-focus-visible:text-white transition-colors text-[18px]">drag_indicator</span>
-            </button>
-
-            {/* Effect Cards */}
+            {/* Effect Cards Wrapper */}
             <div className="flex-1 flex flex-col">
                 {group.effects.map((effect: any, idx: number) => {
                     const isSelected = !isOverlay && selectedIds.has(effect.id);
@@ -74,6 +70,7 @@ const SortableGroupItem = ({
                     const handleKeyDown = (e: React.KeyboardEvent) => {
                         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault(); // Prevent page scrolling
+                            e.stopPropagation(); // Prevent reordering the group while navigating cards
                             // Retrieve all cards in their current DOM order
                             const cards = Array.from(document.querySelectorAll('[data-effect-card]')) as HTMLElement[];
                             const currentIndex = cards.indexOf(e.currentTarget as HTMLElement);
@@ -123,14 +120,14 @@ const SortableGroupItem = ({
                                 >
                                     <div className="flex items-center gap-3">
                                         {EFFECT_METADATA[effect.type]?.category === 'Pattern' ?
-                                            <span className="material-symbols-outlined text-red-300 !text-[18px] transition-colors">grain</span> :
-                                            <span className="material-symbols-outlined text-indigo-300 !text-[18px] transition-colors">adjust</span>}
+                                            <span className="material-symbols-outlined text-red-300 transition-colors">grain</span> :
+                                            <span className="material-symbols-outlined text-indigo-300 transition-colors">adjust</span>}
                                         {EFFECT_METADATA[effect.type]?.label}
                                     </div>
                                 </button>
 
                                 {!isOverlay && (
-                                    <div className="flex h-full items-center" onClick={(e) => e.stopPropagation()}>
+                                    <div className="flex h-full items-center" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
                                         <button
                                             onClick={() => {
                                                 toggleSelected(effect.id, false);

@@ -58,8 +58,8 @@ const SidebarPipeline = ({ onLoadMuxels, onNavigateToLibrary }: SidebarPipelineP
 
                 // Restore focus to the same item in its new position
                 setTimeout(() => {
-                    const buttons = document.querySelectorAll('[title="Drag to Reorder"]');
-                    (buttons[newIndex] as HTMLElement)?.focus();
+                    const groups = document.querySelectorAll('[data-sortable-group]');
+                    (groups[newIndex] as HTMLElement)?.focus();
                 }, 0);
             }
         }
