@@ -219,8 +219,9 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     },
 
     loadAudioFromFile: async (file) => {
-        const { stopPlayback, resetAudioEngine, getAudioContext, precomputeReactivity } = get();
+        const { stopPlayback, resetAudioEngine, getAudioContext, precomputeReactivity, stopMic } = get();
         stopPlayback(true);
+        stopMic();
         analytics.audio.upload_started(file);
         resetAudioEngine();
 
@@ -247,8 +248,9 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     },
 
     loadAudioFromUrl: async (url, label) => {
-        const { stopPlayback, resetAudioEngine, getAudioContext, precomputeReactivity } = get();
+        const { stopPlayback, resetAudioEngine, getAudioContext, precomputeReactivity, stopMic } = get();
         stopPlayback(true);
+        stopMic();
         resetAudioEngine();
 
         try {
