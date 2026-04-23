@@ -43,7 +43,7 @@ const SidebarPipeline = ({ onLoadMuxels, onNavigateToLibrary }: SidebarPipelineP
         [effectGroups, activeId]);
 
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
+        useSensor(PointerSensor, { activationConstraint: { distance: 1 } })
     );
 
     const handleGripKeyDown = useCallback((e: React.KeyboardEvent, index: number) => {

@@ -43,7 +43,7 @@ const SortableGroupItem = ({
         <div
             ref={isOverlay ? undefined : setNodeRef}
             style={style}
-            {...(isOverlay ? {} : { ...attributes, ...listeners })}
+            {...(isOverlay ? {} : attributes)}
             onKeyDown={isOverlay ? undefined : (e) => onGripKeyDown(e, groupIndex)}
             tabIndex={isOverlay ? -1 : 0}
             data-sortable-group
@@ -117,9 +117,14 @@ const SortableGroupItem = ({
                                     title={`Select ${EFFECT_METADATA[effect.type]?.label}`}
                                 >
                                     <div className="flex items-center gap-3">
-                                        {EFFECT_METADATA[effect.type]?.category === 'Pattern' ?
-                                            <span className="material-symbols-outlined text-red-300 transition-colors">grain</span> :
-                                            <span className="material-symbols-outlined text-indigo-300 transition-colors">adjust</span>}
+                                        <div
+                                            {...(isOverlay ? {} : listeners)}
+                                            className="cursor-grab active:cursor-grabbing touch-none flex items-center"
+                                        >
+                                            {EFFECT_METADATA[effect.type]?.category === 'Pattern' ?
+                                                <span className="material-symbols-outlined text-red-300 transition-colors">grain</span> :
+                                                <span className="material-symbols-outlined text-indigo-300 transition-colors">adjust</span>}
+                                        </div>
                                         {EFFECT_METADATA[effect.type]?.label}
                                     </div>
                                 </button>
