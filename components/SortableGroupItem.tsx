@@ -37,6 +37,8 @@ const SortableGroupItem = ({
         opacity: isDragging ? 0.3 : 1,
     };
 
+    const isMelded = group.effects.length > 1;
+
     return (
         <div
             ref={isOverlay ? undefined : setNodeRef}
@@ -46,10 +48,11 @@ const SortableGroupItem = ({
             tabIndex={isOverlay ? -1 : 0}
             data-sortable-group
             title="Drag to Reorder (Arrow keys for keyboard reorder)"
-            className={`flex flex-row w-full border border-white/5 rounded-md overflow-hidden
-                ${isOverlay ? 'bg-black shadow-2xl ring-1 ring-white/10' : 'bg-white/10 focus-visible:ring-1 focus-visible:ring-white/30 focus-visible:outline-none'}
-            `}
+            className={`flex flex-row w-full overflow-hidden focus-visible:outline-none focus-visible:bg-white/10 ${isOverlay ? 'bg-white/10' : 'bg-white/5'}`}
         >
+            {/* Vertical bar indicator for melded groups */}
+            {isMelded && <div className="w-[3px] mx-1 my-2 rounded-full bg-indigo-400" />}
+
             {/* Effect Cards Wrapper */}
             <div className="flex-1 flex flex-col">
                 {group.effects.map((effect: any, idx: number) => {
@@ -96,13 +99,8 @@ const SortableGroupItem = ({
 
                     return (
                         <div key={effect.id} className="flex flex-col w-full">
-                            {/* Subtle separator line between melded effects */}
-                            {idx > 0 && (
-                                <div className="h-[1px] mx-3 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                            )}
-
                             <div
-                                className={`flex items-center h-16 md:h-10 rounded-md overflow-hidden
+                                className={`flex items-center h-16 md:h-10 overflow-hidden
                                     ${isSelected ? 'bg-white/10' : 'hover:bg-white/5'}
                                 `}
                             >
@@ -138,7 +136,6 @@ const SortableGroupItem = ({
                                         >
                                             <span className="material-symbols-outlined">switches</span>
                                         </button>
-                                        <div className="w-[1px] h-8 md:h-5 bg-white/10"></div>
                                         <button
                                             onClick={() => toggleSolo(effect.id)}
                                             className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors ${effect.soloed ? 'bg-white text-black' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}
@@ -146,7 +143,6 @@ const SortableGroupItem = ({
                                         >
                                             <span className="material-symbols-outlined">pill</span>
                                         </button>
-                                        <div className="w-[1px] h-8 md:h-5 bg-white/10"></div>
                                         <button
                                             onClick={() => toggleMute(effect.id)}
                                             className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors ${effect.muted ? 'bg-indigo-500 text-white' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}

@@ -43,7 +43,7 @@ const SidebarPipeline = ({ onLoadMuxels, onNavigateToLibrary }: SidebarPipelineP
         [effectGroups, activeId]);
 
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 1 } })
+        useSensor(PointerSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
     );
 
     const handleGripKeyDown = useCallback((e: React.KeyboardEvent, index: number) => {
@@ -196,7 +196,7 @@ const SidebarPipeline = ({ onLoadMuxels, onNavigateToLibrary }: SidebarPipelineP
             modifiers={[restrictToVerticalAxis]}
         >
             <div
-                className="p-4 pb-24 flex flex-col gap-2 min-h-full cursor-default"
+                className="pb-24 flex flex-col min-h-full cursor-default"
                 onClick={() => {
                     pushFocus('pipeline');
                     clearSelection();
