@@ -42,8 +42,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     label: 'Datamosh',
     category: 'Modifier',
     params: [
-      p('Mosh Length', { v: 20 }, { v: 30, b: 'SUB' }),
-      p('Mosh Density', { v: 100 }, { v: 50, b: 'SUB' }),
+      p('Displacement', { v: 20 }, { v: 30, b: 'SUB' }),
+      p('Mosh Level', { v: 100 }, { v: 50, b: 'SUB' }),
     ],
   },
   DEEP_FRY: {
@@ -58,8 +58,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     label: 'Bitcrusher',
     category: 'Modifier',
     params: [
-      p('Quantize', { v: 0 }),
-      p('Resample', { v: 20 }, { v: 50, b: 'SUB' }),
+      p('Block Size', { v: 20 }, { v: 50, b: 'SUB' }),
+      p('Posterize', { v: 0 }),
       p('Scale X', { v: 50 }),
       p('Scale Y', { v: 50 }),
       p('Pan X', { v: 50 }),
@@ -88,14 +88,14 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     category: 'Modifier',
     params: [
       p('Block Size', { v: 4 }, { v: 100, b: 'SUB' }),
-      p('Artifacting', { v: 80 }, { v: 100, b: 'SUB' }),
+      p('Compression Noise', { v: 80 }, { v: 100, b: 'SUB' }),
     ],
   },
   HUE_ROTATION: {
     label: 'Acid Trip',
     category: 'Modifier',
     params: [
-      p('Phase Offset', { v: 10 }),
+      p('Color Shift', { v: 10 }),
       p('Speed', { v: 25 }),
       p('Vibrance', { v: 73 }),
     ],
@@ -196,8 +196,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     category: 'Pattern',
     params: [
       p('Scale', { v: 50 }),
-      p('Complexity', { v: 100 }),
-      p('Warp', { v: 1 }),
+      p('Detail Level', { v: 100 }),
+      p('Warp Amount', { v: 1 }),
       p('Warp Speed', { v: 100, b: 'SUB' }, { v: 50 }),
       p('Warp Direction', { v: 0 }),
       p('Blend', { v: 100 }),
@@ -269,10 +269,10 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     label: 'Spectral',
     category: 'Modifier',
     params: [
-      p('Resolution', { v: 50 }),
-      p('Phase Offset', { v: 0 }),
+      p('Rainbow Density', { v: 50 }),
+      p('Color Shift', { v: 0 }),
       p('Speed', { v: 25 }),
-      p('Strength', { v: 100 }),
+      p('Intensity', { v: 100 }),
       p('Scale X', { v: 50 }),
       p('Scale Y', { v: 50 }),
       p('Pan X', { v: 50 }),
@@ -307,8 +307,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Right Speed', { v: 0 }),
       p('Up Speed', { v: 0 }),
       p('Down Speed', { v: 0 }),
-      p('Ghost X', { v: 100 }),
-      p('Ghost Y', { v: 0 }),
+      p('Overlap X', { v: 100 }),
+      p('Overlap Y', { v: 0 }),
     ],
   },
   TERRAIN: {
@@ -316,7 +316,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     category: 'Modifier',
     params: [
       p('Extrusion', { v: 5 }, { v: 15 }),
-      p('Resolution', { v: 100 }),
+      p('Detail Level', { v: 100 }),
       p('Tile Width', { v: 100 }),
       p('Tile Height', { v: 100 }),
       p('Rotate X', { v: 0 }),
@@ -334,7 +334,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     category: 'Modifier',
     params: [
       p('Extrusion', { v: 10 }),
-      p('Resolution', { v: 100 }),
+      p('Detail Level', { v: 100 }),
       p('Size', { v: 50 }),
       p('Offset X', { v: 0 }),
       p('Offset Y', { v: 0 }),
@@ -349,7 +349,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     category: 'Modifier',
     params: [
       p('Extrusion', { v: 10 }),
-      p('Resolution', { v: 100 }),
+      p('Detail Level', { v: 100 }),
       p('Size', { v: 40 }),
       p('Offset X', { v: 0 }),
       p('Offset Y', { v: 0 }),
@@ -436,7 +436,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Spacing', { v: 30 }),
       p('Plane Count', { v: 20 }),
       p('Edge Feather', { v: 70 }),
-      p('Fade Buffer', { v: 100 }),
+      p('Zoom Fade', { v: 100 }),
     ],
   },
   BLUR: {
@@ -462,8 +462,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     params: [
       p('Width', { v: 20 }, { v: 100, b: 'SUB' }),
       p('Height', { v: 20 }, { v: 100, b: 'SUB' }),
-      p('Shape', { v: 50 }),
-      p('Quantize', { v: 0 }),
+      p('Shear', { v: 50 }),
+      p('Posterize', { v: 0 }),
       p('Scale X', { v: 50 }),
       p('Scale Y', { v: 50 }),
       p('Pan X', { v: 50 }),
@@ -476,7 +476,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     params: [
       p('Width', { v: 100 }, { v: 100, b: 'SUB' }),
       p('Height', { v: 60 }, { v: 60, b: 'SUB' }),
-      p('Quantize', { v: 0 }),
+      p('Posterize', { v: 0 }),
       p('Scale X', { v: 50 }),
       p('Scale Y', { v: 50 }),
       p('Pan X', { v: 50 }),

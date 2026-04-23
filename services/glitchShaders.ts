@@ -103,7 +103,7 @@ void main() {
 export const BIT_CRUSH_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[6]; // [quantize, resample, scaleX, scaleY, panX, panY]
+uniform float u_params[6]; // [block size, posterize, scaleX, scaleY, panX, panY]
 uniform float u_unit;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
@@ -112,8 +112,8 @@ ${GLSL_TRANSFORM}
 
 void main() {
     TR tr = getTransform_(v_texCoord, u_params[2], u_params[3], u_params[4], u_params[5]);
-    float qFactor = floor(pow(u_params[0] / 10.0, 2.2)) + 1.0;
-    float rFactor = max(1.0, (u_params[1] * 0.1) * u_unit);
+    float rFactor = max(1.0, (u_params[0] * 0.1) * u_unit);
+    float qFactor = floor(pow(u_params[1] / 10.0, 2.2)) + 1.0;
     
     vec2 res = u_resolution;
     vec2 gridCoord = floor(v_texCoord * res / rFactor) * rFactor / res;
@@ -205,7 +205,7 @@ void main() {
 export const HUE_ROTATION_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[3]; // [phase offset, speed, vibrance]
+uniform float u_params[3]; // [color shift, speed, vibrance]
 uniform float u_integrated_values[8];
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -264,7 +264,7 @@ void main() {
 export const SPECTRAL_MAP_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[8]; // [resolution, phase offset, speed, strength, scaleX, scaleY, panX, panY]
+uniform float u_params[8]; // [rainbow density, color shift, speed, intensity, scaleX, scaleY, panX, panY]
 uniform float u_integrated_values[8];
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -370,7 +370,7 @@ export const DATA_CORRUPTION_SHADER = `#version 300 es
 precision highp float;
 
 uniform sampler2D u_image;
-uniform float u_params[2]; // [mosh length, mosh density]
+uniform float u_params[2]; // [displacement, mosh level]
 uniform vec2 u_resolution;
 uniform float u_unit;
 
@@ -384,7 +384,7 @@ void main() {
     // Scale block size proportionally to u_unit for perfect resolution consistency.
     // By working in UV space without pixel-snapping the size itself, we avoid "jumps" 
     // in glitch intensity across different canvas sizes.
-    vec2 blockUVSize = (u_unit * 0.4) / u_resolution;
+    vec2 blockUVSize = (u_unit * 0.1) / u_resolution;
     
     // Snap current coordinate to the logical block grid center
     vec2 blockUV = (floor(v_texCoord / blockUVSize) + 0.5) * blockUVSize;
@@ -455,7 +455,7 @@ void main() {
 export const COMPRESSION_HELL_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[2]; // [block size, artifacting]
+uniform float u_params[2]; // [block size, compression noise]
 uniform float u_unit;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
@@ -906,7 +906,7 @@ export const ORGANIC_NOISE_SHADER = `#version 300 es
 precision highp float;
 
 uniform sampler2D u_image;
-uniform float u_params[6]; // [scale, complexity, warp, speed, direction, blend]
+uniform float u_params[6]; // [scale, detail level, warp, speed, direction, blend]
 uniform float u_integrated_values[8];
 uniform vec2 u_resolution;
 uniform float u_seed;
@@ -1250,7 +1250,7 @@ void main() {
 export const SCROLL_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[6]; // [Left, Right, Up, Down, Ghost X, Ghost Y]
+uniform float u_params[6]; // [Left, Right, Up, Down, Overlap X, Overlap Y]
 uniform float u_integrated_values[8];
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -1554,7 +1554,7 @@ void main() {
 export const TRI_CRUSH_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[8]; // [width, height, shape, quantize, scaleX, scaleY, panX, panY]
+uniform float u_params[8]; // [width, height, shear, posterize, scaleX, scaleY, panX, panY]
 uniform float u_unit;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
@@ -1609,7 +1609,7 @@ void main() {
 export const HEX_CRUSH_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[7]; // [width, height, quantize, scaleX, scaleY, panX, panY]
+uniform float u_params[7]; // [width, height, posterize, scaleX, scaleY, panX, panY]
 uniform float u_unit;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
