@@ -102,7 +102,13 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({ r, g, b, onChange, onP
     };
 
     return (
-        <div className="flex items-center space-x-4 p-2 mb-1 bg-white/5 rounded-lg border border-white/10 group hover:border-white/20 transition-colors">
+        <div
+            className="flex items-center space-x-4 p-2 mb-1 bg-white/5 rounded-lg border border-white/10 group hover:border-white/20 hover:bg-white/10 transition-colors cursor-pointer"
+            onPointerDown={() => {
+                onPointerDown?.();
+                setIsOpen(!isOpen);
+            }}
+        >
             {/* Visual Color Well / Trigger */}
             <div className="relative flex items-center gap-3">
                 <button
@@ -149,6 +155,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({ r, g, b, onChange, onP
                                     transition={{ duration: 0.2 }}
                                     style={popoverStyle}
                                     className="z-[100]"
+                                    onPointerDown={(e) => e.stopPropagation()}
                                 >
                                     <div className="p-3 bg-slate-800 border border-white/10 rounded-xl shadow-2xl relative">
                                         <div onKeyDown={(e) => {
@@ -182,7 +189,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({ r, g, b, onChange, onP
                 {/* Label */}
                 <div className="flex flex-col flex-1 min-w-0">
                     <div className="flex justify-between items-baseline">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Color</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white">Open Color Picker</span>
                     </div>
                 </div>
             </div>
