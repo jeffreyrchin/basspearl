@@ -57,17 +57,6 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
                 <button
-                    onClick={() => {
-                        if (isInSelectMode) setIsInSelectMode(false);
-                        else setIsInSelectMode(true);
-                    }}
-                    className={`px-2 h-7 rounded-md flex items-center justify-center text-[9px] font-bold uppercase tracking-wider transition-all border ${isInSelectMode ? 'bg-white text-black border-white' : 'text-white/80 hover:text-white hover:bg-white/10 border-transparent'}`}
-                    title="Multiselect"
-                >
-                    <span className="material-symbols-outlined text-[18px]">gesture_select</span>
-                </button>
-                <div className="w-[1px] h-4 bg-white/10 mx-1"></div>
-                <button
                     onClick={handleImport}
                     className="w-7 h-7 rounded-md flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-all"
                     title="Import .muxels">
@@ -121,6 +110,25 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                     </button>
                 </div>
                 {HeaderRightControls}
+            </div>
+
+            {/* Selection Mode Bar */}
+            <div className="h-8 flex items-center px-6 shrink-0">
+                <span className="text-[10px] font-medium text-indigo-200 uppercase tracking-widest mr-auto">Selection Mode</span>
+                <div className="flex rounded-md">
+                    <button
+                        onClick={() => setIsInSelectMode(false)}
+                        className={`px-3 py-0.5 rounded transition-colors text-[11px] font-medium tracking-wide ${!isInSelectMode ? 'bg-indigo-300/30 text-white' : 'text-white/60 hover:text-white'}`}
+                    >
+                        Single
+                    </button>
+                    <button
+                        onClick={() => setIsInSelectMode(true)}
+                        className={`px-3 py-0.5 rounded transition-colors text-[11px] font-medium tracking-wide ${isInSelectMode ? 'bg-indigo-300/30 text-white' : 'text-white/60 hover:text-white'}`}
+                    >
+                        Multi
+                    </button>
+                </div>
             </div>
 
             <div key="pipeline-scroll" className="flex-1 overflow-y-auto custom-scrollbar">

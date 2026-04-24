@@ -48,7 +48,7 @@ const SortableGroupItem = ({
             tabIndex={isOverlay ? -1 : 0}
             data-sortable-group
             title="Drag to Reorder (Arrow keys for keyboard reorder)"
-            className={`flex flex-row w-full overflow-hidden focus-visible:outline-none focus-visible:bg-white/10 ${isOverlay ? 'bg-white/10' : 'bg-white/5'}`}
+            className={`flex flex-row w-full overflow-hidden focus-visible:outline-none focus-visible:bg-white/10 ${isOverlay && 'bg-white/10'}`}
         >
             {/* Vertical bar indicator for melded groups */}
             {isMelded && <div className="w-[3px] mx-1 my-2 rounded-full bg-indigo-400" />}
@@ -130,7 +130,7 @@ const SortableGroupItem = ({
                                 </button>
 
                                 {!isOverlay && (
-                                    <div className="flex h-full items-center" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+                                    <div className="flex h-full items-center mr-1" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
                                         <button
                                             onClick={(e) => {
                                                 if (e.altKey || effect.soloed) {
@@ -140,7 +140,7 @@ const SortableGroupItem = ({
                                                 }
                                             }}
                                             className={`w-10 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors
-                                                ${effect.soloed ? 'text-yellow-300 bg-yellow-300/20' : (effect.muted ? 'text-indigo-300 bg-indigo-300/20' : 'text-white/60 hover:bg-white/10 hover:text-white')}
+                                                ${effect.soloed ? 'text-yellow-300' : (effect.muted ? 'text-indigo-300' : 'text-white/60 hover:text-white')}
                                             `}
                                             title={effect.soloed ? "Toggle Solo" : "Toggle Visibility (Alt+Click to Solo)"}
                                         >
@@ -154,7 +154,7 @@ const SortableGroupItem = ({
                                                 toggleSelected(effect.id, false);
                                                 pushFocus('inspector');
                                             }}
-                                            className={`w-10 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors text-white/60 hover:bg-white/10 hover:text-white`}
+                                            className={`w-10 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors text-white/60 hover:text-white`}
                                             title="Show Inspector (I)"
                                         >
                                             <span className="material-symbols-outlined">tune</span>
