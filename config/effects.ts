@@ -60,6 +60,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     params: [
       p('Block Size', { v: 20 }, { v: 50, b: 'SUB' }),
       p('Posterize', { v: 0 }),
+      p('Noise', { v: 0 }),
       p('Scale X', { v: 50 }),
       p('Scale Y', { v: 50 }),
       p('Pan X', { v: 50 }),
@@ -81,14 +82,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     params: [
       p('Bleed', { v: 40 }, { v: 30, b: 'SUB' }),
       p('Ghosting', { v: 18 }, { v: 30, b: 'SUB' }),
-    ],
-  },
-  COMPRESSION_HELL: {
-    label: 'Lossy',
-    category: 'Modifier',
-    params: [
-      p('Block Size', { v: 4 }, { v: 100, b: 'SUB' }),
-      p('Compression Noise', { v: 80 }, { v: 100, b: 'SUB' }),
     ],
   },
   HUE_ROTATION: {

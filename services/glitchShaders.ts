@@ -103,7 +103,7 @@ void main() {
 export const BIT_CRUSH_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[6]; // [block size, posterize, scaleX, scaleY, panX, panY]
+uniform float u_params[7]; // [block size, posterize, noise, scaleX, scaleY, panX, panY]
 uniform float u_unit;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
@@ -111,9 +111,10 @@ out vec4 outColor;
 ${GLSL_TRANSFORM}
 
 void main() {
-    TR tr = getTransform_(v_texCoord, u_params[2], u_params[3], u_params[4], u_params[5]);
+    TR tr = getTransform_(v_texCoord, u_params[3], u_params[4], u_params[5], u_params[6]);
     float rFactor = max(1.0, (u_params[0] * 0.1) * u_unit);
     float qFactor = floor(pow(u_params[1] / 10.0, 2.2)) + 1.0;
+    float noiseFactor = u_params[2] / 10.0;
     
     vec2 res = u_resolution;
     vec2 gridCoord = floor(v_texCoord * res / rFactor) * rFactor / res;
@@ -125,8 +126,15 @@ void main() {
     // 2. Apply quantization to the crushed sample
     vec3 quant = floor(crushed.rgb * 255.0 / qFactor) * qFactor / 255.0;
     
-    // 3. Mix: Sharp photo outside, Crushed math inside
-    outColor = mix(src, vec4(quant, crushed.a), tr.mask);
+    // 3. Add ringing artifacts (Compression Noise) tied to the block grid
+    vec2 blockLocal = (v_texCoord * res) / rFactor;
+    float ringing = cos(blockLocal.x * 3.14159) * cos(blockLocal.y * 3.14159) * (noiseFactor * 4.0 / 255.0);
+    
+    // Scale ringing by alpha and clamp to keep math premultiplied-safe
+    vec3 finalRGB = clamp(quant + (ringing * crushed.a), 0.0, crushed.a);
+    
+    // 4. Mix: Sharp photo outside, Crushed math inside
+    outColor = mix(src, vec4(finalRGB, crushed.a), tr.mask);
 }
 `;
 
@@ -452,35 +460,6 @@ void main() {
 }
 `;
 
-export const COMPRESSION_HELL_SHADER = `#version 300 es
-precision highp float;
-uniform sampler2D u_image;
-uniform float u_params[2]; // [block size, compression noise]
-uniform float u_unit;
-uniform vec2 u_resolution;
-in vec2 v_texCoord;
-out vec4 outColor;
-
-void main() {
-    float blockSize = max(1.0, (0.1 + (u_params[0] * 0.2)) * u_unit);
-    float factor = u_params[1] / 10.0;
-    float q = 1.0 + factor * 4.0;
-    
-    vec2 res = u_resolution;
-    vec2 blockCoord = floor(v_texCoord * res / blockSize) * blockSize / res;
-    
-    vec4 color = texture(u_image, blockCoord);
-    color.rgb = floor(color.rgb * 255.0 / q) * q / 255.0;
-    
-    // Ground ringing in block-relative coordinates to ensure consistency
-    vec2 blockLocal = (v_texCoord * res) / blockSize;
-    float ringing = cos(blockLocal.x * 3.14159) * cos(blockLocal.y * 3.14159) * (factor * 4.0 / 255.0);
-    
-    // Scale ringing by alpha and clamp to color.a to keep math premultiplied-safe
-    vec3 finalRGB = clamp(color.rgb + (ringing * color.a), 0.0, color.a);
-    outColor = vec4(finalRGB, color.a);
-}
-`;
 
 export const ROTATE_SHADER = `#version 300 es
 precision highp float;
@@ -1704,7 +1683,6 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     PIXEL_SORT: { name: 'PIXEL_SORT', fragmentSource: PIXEL_SORT_SHADER },
     DATA_CORRUPTION: { name: 'DATA_CORRUPTION', fragmentSource: DATA_CORRUPTION_SHADER },
     COLOR_BLEED: { name: 'COLOR_BLEED', fragmentSource: COLOR_BLEED_SHADER },
-    COMPRESSION_HELL: { name: 'COMPRESSION_HELL', fragmentSource: COMPRESSION_HELL_SHADER },
     SCREEN_SHAKE: { name: 'SCREEN_SHAKE', fragmentSource: SCREEN_SHAKE_SHADER, velocityParamIndices: [1] },
     STARFIELD: { name: 'STARFIELD', fragmentSource: STARFIELD_SHADER, velocityParamIndices: [1] },
     TUNNEL_WARP: { name: 'TUNNEL_WARP', fragmentSource: TUNNEL_WARP_SHADER, velocityParamIndices: [1] },

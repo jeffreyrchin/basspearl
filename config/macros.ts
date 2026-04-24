@@ -1520,6 +1520,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Block Size', { v: 40, b: 'OFF' }),
           o('Posterize', { v: 0, b: 'OFF' }),
+          o('Noise', { v: 0, b: 'OFF' }),
           o('Scale X', { v: 50, b: 'OFF' }),
           o('Scale Y', { v: 50, b: 'OFF' }),
           o('Pan X', { v: 50, b: 'OFF' }),

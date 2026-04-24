@@ -8,7 +8,6 @@ export type GlitchEffectType =
   | 'BIT_CRUSH'
   | 'WAVE_DISTORTION'
   | 'COLOR_BLEED'
-  | 'COMPRESSION_HELL'
   | 'HUE_ROTATION'
   | 'INVERT'
   | 'ROTATE'
