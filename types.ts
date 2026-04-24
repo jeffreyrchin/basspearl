@@ -1,7 +1,6 @@
 export type EffectCategory = 'Pattern' | 'Macro' | 'Modifier';
 
 export type GlitchEffectType =
-  | 'PIXEL_SORT'
   | 'CHANNEL_SHIFT'
   | 'DATA_CORRUPTION'
   | 'DEEP_FRY'

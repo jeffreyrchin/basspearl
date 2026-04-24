@@ -310,70 +310,6 @@ void main() {
 }
 `;
 
-export const PIXEL_SORT_SHADER = `#version 300 es
-precision highp float;
-uniform sampler2D u_image;
-uniform float u_params[2]; // [streak length, trigger level]
-uniform vec2 u_resolution;
-uniform float u_seed;
-in vec2 v_texCoord;
-out vec4 outColor;
-
-float rand(vec2 co) {
-    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
-
-void main() {
-    float threshold = (100.0 - u_params[1]) / 100.0;
-    float triggerProb = u_params[0] / 100.0;
-    
-    // 1. Hardware-level "Nearest" Sampling via texelFetch
-    ivec2 pixelCoord = ivec2(
-        clamp(v_texCoord * u_resolution, vec2(0.0), u_resolution - 1.0)
-    );
-    vec4 color = texelFetch(u_image, pixelCoord, 0);
-    float brightness = dot(color.rgb, vec3(0.333));
-    
-    // Consistent column sampling (1024 bands) ensures same patterns across resolutions
-    float colID = floor(v_texCoord.x * 1024.0);
-    float colRand = rand(vec2(colID, u_seed));
-    
-    // Early exit for performance
-    if (colRand > triggerProb || brightness < threshold) {
-        outColor = color;
-        return;
-    }
-
-    // 2. Dynamic Performance: Only loop as far as the user's streak length requires.
-    // maxSteps is capped at 300 for 4K safety, but scales down to 1 if streak is low.
-    const int MAX_STEPS = 300;
-    float streakPercent = u_params[0] / 100.0;
-    float maxSteps = max(1.0, streakPercent * float(MAX_STEPS));
-    float stepPixels = max(1.0, (streakPercent * 0.4 * u_resolution.y) / maxSteps);
-    
-    ivec2 pullCoord = pixelCoord;
-    
-    for(int i = 0; i < MAX_STEPS; i++) {
-        if(float(i) >= maxSteps) break;
-
-        ivec2 checkCoord = pixelCoord - ivec2(0, int(float(i) * stepPixels));
-        if(checkCoord.y < 0) break;
-        
-        float checkBrightness = dot(
-            texelFetch(u_image, checkCoord, 0).rgb, 
-            vec3(0.333)
-        );
-        
-        if(checkBrightness < threshold) {
-            pullCoord = checkCoord;
-            break;
-        }
-    }
-    
-    outColor = texelFetch(u_image, pullCoord, 0);
-}
-`;
-
 export const DATA_CORRUPTION_SHADER = `#version 300 es
 precision highp float;
 
@@ -1680,7 +1616,6 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     WAVE_DISTORTION: { name: 'WAVE_DISTORTION', fragmentSource: WAVE_DISTORTION_SHADER, velocityParamIndices: [2] },
     HUE_ROTATION: { name: 'HUE_ROTATION', fragmentSource: HUE_ROTATION_SHADER, velocityParamIndices: [1] },
     INVERT: { name: 'INVERT', fragmentSource: INVERT_SHADER },
-    PIXEL_SORT: { name: 'PIXEL_SORT', fragmentSource: PIXEL_SORT_SHADER },
     DATA_CORRUPTION: { name: 'DATA_CORRUPTION', fragmentSource: DATA_CORRUPTION_SHADER },
     COLOR_BLEED: { name: 'COLOR_BLEED', fragmentSource: COLOR_BLEED_SHADER },
     SCREEN_SHAKE: { name: 'SCREEN_SHAKE', fragmentSource: SCREEN_SHAKE_SHADER, velocityParamIndices: [1] },

@@ -18,16 +18,8 @@ export const p = (
 });
 
 export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
-  PIXEL_SORT: {
-    label: 'Pixel Sort',
-    category: 'Modifier',
-    params: [
-      p('Streak Length', { v: 20 }, { v: 100, b: 'SUB' }),
-      p('Trigger Level', { v: 50 }, { v: 75 }),
-    ],
-  },
   CHANNEL_SHIFT: {
-    label: 'RGB Shift',
+    label: 'Color Separate',
     category: 'Modifier',
     params: [
       p('Offset', { v: 20 }, { v: 100, b: 'SUB' }),
@@ -47,7 +39,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     ],
   },
   DEEP_FRY: {
-    label: 'Incinerate',
+    label: 'Color Burn',
     category: 'Modifier',
     params: [
       p('Heat', { v: 10 }, { v: 20, b: 'SUB' }),
@@ -85,7 +77,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     ],
   },
   HUE_ROTATION: {
-    label: 'Acid Trip',
+    label: 'Color Rotate',
     category: 'Modifier',
     params: [
       p('Color Shift', { v: 10 }),
@@ -197,7 +189,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     ],
   },
   CELLULAR_NOISE: {
-    label: 'Cellular Noise',
+    label: 'Cells',
     category: 'Pattern',
     params: [
       p('Cell Width', { v: 100 }),
@@ -216,7 +208,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     ],
   },
   LUMINANCE_MASK: {
-    label: 'Luminance Mask',
+    label: 'Stencil',
     category: 'Modifier',
     params: [
       p('Threshold', { v: 50 }, { v: 80, b: 'SUB' }),
@@ -225,7 +217,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     ],
   },
   LUMINANCE_MAP: {
-    label: 'Luminance Map',
+    label: 'B/W Tint',
     category: 'Modifier',
     params: [
       p('Threshold', { v: 50 }, { v: 30, m: 20, b: 'SUB' }),
@@ -235,7 +227,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     ],
   },
   EDGE_MASK: {
-    label: 'Edge Mask',
+    label: 'Outline',
     category: 'Modifier',
     params: [
       p('Sensitivity', { v: 5 }),
@@ -259,7 +251,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     ],
   },
   SPECTRAL_MAP: {
-    label: 'Spectral',
+    label: 'Rainbow Cycler',
     category: 'Modifier',
     params: [
       p('Rainbow Density', { v: 50 }),
@@ -323,7 +315,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     ],
   },
   TERRAIN_SPHERE: {
-    label: 'Terrain Sphere',
+    label: 'Ball Warp',
     category: 'Modifier',
     params: [
       p('Extrusion', { v: 10 }),
@@ -338,7 +330,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     ],
   },
   TERRAIN_RING: {
-    label: 'Terrain Ring',
+    label: 'Ring Warp',
     category: 'Modifier',
     params: [
       p('Extrusion', { v: 10 }),
@@ -368,7 +360,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     ],
   },
   TRANSFORM: {
-    label: 'Transform',
+    label: 'Move-Scale',
     category: 'Modifier',
     params: [
       p('Scale X', { v: 50 }, { v: 100, m: 50, b: 'SUB' }),
@@ -450,7 +442,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     ],
   },
   TRI_CRUSH: {
-    label: 'Tritile',
+    label: 'Triangulate',
     category: 'Modifier',
     params: [
       p('Width', { v: 20 }, { v: 100, b: 'SUB' }),
