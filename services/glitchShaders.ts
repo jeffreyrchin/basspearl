@@ -63,12 +63,11 @@ TR getTransform_(vec2 uv_, float scaleX, float scaleY, float panX, float panY) {
 export const CHANNEL_SHIFT_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[6]; // [shiftX, shiftY, scaleX, scaleY, panX, panY]
+uniform float u_params[2]; // [shiftX, shiftY]
 uniform float u_unit;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
-${GLSL_TRANSFORM}
 
 // Branchless (no if/else) sampling that returns transparent black outside 0..1 range (eliminates streaks)
 vec4 sampleTexture(sampler2D tex, vec2 uv) {
@@ -79,7 +78,6 @@ vec4 sampleTexture(sampler2D tex, vec2 uv) {
 }
 
 void main() {
-    TR tr = getTransform_(v_texCoord, u_params[2], u_params[3], u_params[4], u_params[5]);
     vec2 pixelSize = 1.0 / u_resolution;
     
     // Target: Max ~100px (10 units).
@@ -96,22 +94,20 @@ void main() {
     // Composite alpha ensures ghosts stay visible and solid when melded
     float finalAlpha = max(color.a, max(sampR.a, sampB.a));
     
-    outColor = mix(color, vec4(sampR.r, color.g, sampB.b, finalAlpha), tr.mask);
+    outColor = vec4(sampR.r, color.g, sampB.b, finalAlpha);
 }
 `;
 
 export const BIT_CRUSH_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[7]; // [block size, posterize, noise, scaleX, scaleY, panX, panY]
+uniform float u_params[3]; // [block size, posterize, noise]
 uniform float u_unit;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
-${GLSL_TRANSFORM}
 
 void main() {
-    TR tr = getTransform_(v_texCoord, u_params[3], u_params[4], u_params[5], u_params[6]);
     float rFactor = max(1.0, (u_params[0] * 0.1) * u_unit);
     float qFactor = floor(pow(u_params[1] / 10.0, 2.2)) + 1.0;
     float noiseFactor = u_params[2] / 10.0;
@@ -133,8 +129,7 @@ void main() {
     // Scale ringing by alpha and clamp to keep math premultiplied-safe
     vec3 finalRGB = clamp(quant + (ringing * crushed.a), 0.0, crushed.a);
     
-    // 4. Mix: Sharp photo outside, Crushed math inside
-    outColor = mix(src, vec4(finalRGB, crushed.a), tr.mask);
+    outColor = vec4(finalRGB, crushed.a);
 }
 `;
 
@@ -272,14 +267,12 @@ void main() {
 export const SPECTRAL_MAP_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[8]; // [rainbow density, color shift, speed, intensity, scaleX, scaleY, panX, panY]
+uniform float u_params[4]; // [rainbow density, color shift, speed, intensity]
 uniform float u_integrated_values[8];
 in vec2 v_texCoord;
 out vec4 outColor;
-${GLSL_TRANSFORM}
 
 void main() {
-    TR tr = getTransform_(v_texCoord, u_params[4], u_params[5], u_params[6], u_params[7]);
     vec4 src = texture(u_image, v_texCoord);
     
     // 1. Calculate Luminance (Luma)
@@ -306,7 +299,7 @@ void main() {
     // This preserves the internal darkness of the original image
     vec3 finalColor = mix(src.rgb, src.rgb * spectral, strength);
     
-    outColor = mix(src, vec4(finalColor, src.a), tr.mask);
+    outColor = vec4(finalColor, src.a);
 }
 `;
 
@@ -1469,15 +1462,13 @@ void main() {
 export const TRI_CRUSH_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[8]; // [width, height, shear, posterize, scaleX, scaleY, panX, panY]
+uniform float u_params[4]; // [width, height, shear, posterize]
 uniform float u_unit;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
-${GLSL_TRANSFORM}
 
 void main() {
-    TR tr = getTransform_(v_texCoord, u_params[4], u_params[5], u_params[6], u_params[7]);
     float cellW   = max(1.0, (u_params[0] * 0.1) * u_unit);
     float cellH   = max(1.0, (u_params[1] * 0.1) * u_unit);
     float shape   = (u_params[2] / 100.0) * 3.0 - 1.0;
@@ -1515,21 +1506,19 @@ void main() {
     vec4 crushed  = mix(crushed1, crushed2, m);
 
     vec3 quant = floor(crushed.rgb * 255.0 / qFactor) * qFactor / 255.0;
-    vec4 src   = texture(u_image, v_texCoord);
 
-    outColor = mix(src, vec4(quant, crushed.a), tr.mask);
+    outColor = vec4(quant, crushed.a);
 }
 `;
 
 export const HEX_CRUSH_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform float u_params[7]; // [width, height, posterize, scaleX, scaleY, panX, panY]
+uniform float u_params[3]; // [width, height, posterize]
 uniform float u_unit;
 uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
-${GLSL_TRANSFORM}
 
 // Dual-grid nearest-hex-center search.
 // Grid A is the standard snapped grid; Grid B is offset by half a cell on both
@@ -1544,7 +1533,6 @@ vec2 hexCenter(vec2 uv, vec2 cellSize) {
 }
 
 void main() {
-    TR tr = getTransform_(v_texCoord, u_params[3], u_params[4], u_params[5], u_params[6]);
     float cellW   = max(1.0, (u_params[0] * 0.1) * u_unit);
     float cellH   = max(1.0, (u_params[1] * 0.1) * u_unit);
     vec2 cellSize = vec2(cellW, cellH);
@@ -1573,9 +1561,7 @@ void main() {
 
     vec3 quant = floor(crushed.rgb * 255.0 / qFactor) * qFactor / 255.0;
 
-    vec4 src = texture(u_image, v_texCoord);
-
-    outColor = mix(src, vec4(quant, crushed.a), tr.mask);
+    outColor = vec4(quant, crushed.a);
 }
 `;
 

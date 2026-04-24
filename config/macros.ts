@@ -223,10 +223,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Color Shift', { v: 0, b: 'OFF' }),
           o('Speed', { v: 0, b: 'OFF' }),
           o('Intensity', { v: 58, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
         ],
         melded: false
       },
@@ -270,10 +266,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Color Shift', { v: 0, b: 'OFF' }),
           o('Speed', { v: 75, b: 'OFF' }),
           o('Intensity', { v: 100, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
         ],
         melded: true
       },
@@ -417,10 +409,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Color Shift', { v: 0, b: 'OFF' }),
           o('Speed', { v: 20, b: 'OFF' }),
           o('Intensity', { v: 50, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
         ],
         melded: false
       },
@@ -520,10 +508,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Color Shift', { v: 0, b: 'OFF' }),
           o('Speed', { v: 20, b: 'OFF' }),
           o('Intensity', { v: 50, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
         ],
         melded: false
       }
@@ -625,10 +609,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Color Shift', { v: 0, b: 'OFF' }),
           o('Speed', { v: 100, b: 'OFF' }),
           o('Intensity', { v: 100, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
         ],
         melded: true
       },
@@ -791,10 +771,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Color Shift', { v: 0, b: 'OFF' }),
           o('Speed', { v: 15, b: 'OFF' }),
           o('Intensity', { v: 50, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
         ],
         melded: false
       }
@@ -1521,10 +1497,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Block Size', { v: 40, b: 'OFF' }),
           o('Posterize', { v: 0, b: 'OFF' }),
           o('Noise', { v: 0, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
         ],
         melded: true
       },
@@ -1580,10 +1552,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Height', { v: 33, m: 0, b: 'OFF' }),
           o('Shear', { v: 50, m: 0, b: 'OFF' }),
           o('Posterize', { v: 0, m: 0, b: 'OFF' }),
-          o('Scale X', { v: 50, m: 0, b: 'OFF' }),
-          o('Scale Y', { v: 50, m: 0, b: 'OFF' }),
-          o('Pan X', { v: 50, m: 0, b: 'OFF' }),
-          o('Pan Y', { v: 50, m: 0, b: 'OFF' }),
         ],
         melded: false
       },
@@ -1645,10 +1613,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Color Shift', { v: 0, b: 'OFF' }),
           o('Speed', { v: 15, b: 'OFF' }),
           o('Intensity', { v: 100, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
         ],
         melded: false
       },
@@ -1700,10 +1664,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Color Shift', { v: 0, b: 'OFF' }),
           o('Speed', { v: 25, b: 'OFF' }),
           o('Intensity', { v: 50, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
         ],
         melded: false
       },
@@ -1750,10 +1710,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Color Shift', { v: 0, b: 'OFF' }),
           o('Speed', { v: 13, b: 'OFF' }),
           o('Intensity', { v: 100, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
         ],
         melded: false
       },
@@ -1857,10 +1813,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Offset', { v: 15, b: 'OFF' }),
           o('Vertical Tear', { v: 15, b: 'OFF' }),
-          o('Scale X', { v: 50 }),
-          o('Scale Y', { v: 50 }),
-          o('Pan X', { v: 50 }),
-          o('Pan Y', { v: 50 }),
         ],
         melded: false
       },
@@ -1871,10 +1823,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Height', { v: 37, b: 'OFF' }),
           o('Shear', { v: 50, b: 'OFF' }),
           o('Posterize', { v: 0, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
         ],
         melded: false
       },
@@ -1926,10 +1874,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Height', { v: 8, b: 'OFF' }, { v: 20, b: 'OFF' }),
           o('Shear', { v: 50, b: 'OFF' }),
           o('Posterize', { v: 0, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
         ],
         melded: false
       },
@@ -2082,10 +2026,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Width', { v: 96, b: 'OFF' }),
           o('Height', { v: 59, b: 'OFF' }),
           o('Posterize', { v: 0 }),
-          o('Scale X', { v: 79 }),
-          o('Scale Y', { v: 79 }),
-          o('Pan X', { v: 50 }),
-          o('Pan Y', { v: 50 }),
         ],
         melded: false
       },
@@ -2096,10 +2036,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Color Shift', { v: 0, b: 'OFF' }),
           o('Speed', { v: 10, b: 'OFF' }),
           o('Intensity', { v: 100, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
         ],
         melded: false
       },
@@ -2146,10 +2082,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Color Shift', { v: 10, b: 'OFF' }),
           o('Speed', { v: 10, b: 'OFF' }),
           o('Intensity', { v: 60, b: 'OFF' }),
-          o('Scale X', { v: 50, b: 'OFF' }),
-          o('Scale Y', { v: 50, b: 'OFF' }),
-          o('Pan X', { v: 50, b: 'OFF' }),
-          o('Pan Y', { v: 50, b: 'OFF' }),
         ],
         melded: false
       },

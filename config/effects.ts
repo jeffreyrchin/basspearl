@@ -24,10 +24,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     params: [
       p('Offset', { v: 20 }, { v: 100, b: 'SUB' }),
       p('Vertical Tear', { v: 20 }, { v: 100, b: 'SUB' }),
-      p('Scale X', { v: 50 }),
-      p('Scale Y', { v: 50 }),
-      p('Pan X', { v: 50 }),
-      p('Pan Y', { v: 50 }),
     ],
   },
   DATA_CORRUPTION: {
@@ -53,10 +49,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Block Size', { v: 20 }, { v: 50, b: 'SUB' }),
       p('Posterize', { v: 0 }),
       p('Noise', { v: 0 }),
-      p('Scale X', { v: 50 }),
-      p('Scale Y', { v: 50 }),
-      p('Pan X', { v: 50 }),
-      p('Pan Y', { v: 50 }),
     ],
   },
   WAVE_DISTORTION: {
@@ -258,10 +250,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Color Shift', { v: 0 }),
       p('Speed', { v: 25 }),
       p('Intensity', { v: 100 }),
-      p('Scale X', { v: 50 }),
-      p('Scale Y', { v: 50 }),
-      p('Pan X', { v: 50 }),
-      p('Pan Y', { v: 50 }),
     ],
   },
   BLACK_HOLE: {
@@ -449,10 +437,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Height', { v: 20 }, { v: 100, b: 'SUB' }),
       p('Shear', { v: 50 }),
       p('Posterize', { v: 0 }),
-      p('Scale X', { v: 50 }),
-      p('Scale Y', { v: 50 }),
-      p('Pan X', { v: 50 }),
-      p('Pan Y', { v: 50 }),
     ],
   },
   HEX_CRUSH: {
@@ -462,10 +446,6 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Width', { v: 100 }, { v: 100, b: 'SUB' }),
       p('Height', { v: 60 }, { v: 60, b: 'SUB' }),
       p('Posterize', { v: 0 }),
-      p('Scale X', { v: 50 }),
-      p('Scale Y', { v: 50 }),
-      p('Pan X', { v: 50 }),
-      p('Pan Y', { v: 50 }),
     ],
   },
   IMAGE: {
