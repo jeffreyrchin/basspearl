@@ -210,19 +210,6 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                     isActive={isSidebarOpen}
                                 />
 
-                                {/* Library Toggle */}
-                                <ToolbarRow
-                                    onClick={() => {
-                                        if (isLibraryOpen) removeFocus('library');
-                                        else pushFocus('library');
-                                    }}
-                                    icon="add_circle"
-                                    label="Library"
-                                    shortcut="Y"
-                                    isCollapsed={isToolbarCollapsed}
-                                    isActive={isLibraryOpen}
-                                />
-
                                 {/* Puzzles Toggle */}
                                 {/* <ToolbarRow
                                     onClick={() => setIsPuzzlesModalOpen(!isPuzzlesModalOpen)}

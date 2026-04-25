@@ -1,6 +1,8 @@
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useEffectStore } from '../store/useEffectStore';
 import SidebarPipeline from './SidebarPipeline';
+import SidebarLibrary from './SidebarLibrary';
 import ActionBar from './ActionBar';
 import { loadMuxelsFile } from '@/services/sanitizeImportedEffects';
 
@@ -19,6 +21,9 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     const isInSelectMode = useEffectStore(s => s.isInSelectMode);
     const setIsInSelectMode = useEffectStore(s => s.setIsInSelectMode);
     const pushFocus = useEffectStore(s => s.pushFocus);
+    const focusStack = useEffectStore(s => s.focusStack);
+    const removeFocus = useEffectStore(s => s.removeFocus);
+    const isLibraryOpen = focusStack.includes('library');
 
     const setEffects = useEffectStore(s => s.setEffects);
 
@@ -103,10 +108,10 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 {/* Add Effect Button */}
                 <div className="flex items-center h-full">
                     <button
-                        onClick={() => pushFocus('library')}
-                        className="h-8 px-3 rounded-full flex items-center justify-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white transition-colors border border-indigo-400 shadow-md"
-                        title="Open Library (Y)">
-                        <span className="material-symbols-outlined text-[16px]">add</span>
+                        onClick={() => isLibraryOpen ? removeFocus('library') : pushFocus('library')}
+                        className={`h-8 px-3 rounded-full flex items-center justify-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white transition-colors border border-indigo-400 shadow-md`}
+                        title="Toggle Library (Y)">
+                        <span className="material-symbols-outlined">{isLibraryOpen ? 'remove' : 'add'}</span>
                     </button>
                 </div>
                 {HeaderRightControls}
@@ -131,12 +136,45 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 </div>
             </div>
 
-            <div key="pipeline-scroll" className="flex-1 overflow-y-auto custom-scrollbar">
+            {/* Pipeline List — shrinks as library panel grows */}
+            <div key="pipeline-scroll" className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
                 <SidebarPipeline onLoadMuxels={handleImport} onNavigateToLibrary={() => pushFocus('library')} />
             </div>
 
             {/* Global Action Bar anchored to the bottom of the pipeline */}
             <ActionBar />
+
+            {/* Library Panel — grows from bottom, pushing pipeline list up */}
+            <AnimatePresence>
+                {isLibraryOpen && (
+                    <motion.div
+                        key="library-panel"
+                        initial={{ height: '0%' }}
+                        animate={{ height: '55%' }}
+                        exit={{ height: '0%' }}
+                        transition={{ type: 'spring', damping: 30, stiffness: 280 }}
+                        className="z-library flex flex-col bg-slate-900 border-t border-white/10 overflow-hidden shrink-0"
+                        style={{ minHeight: 0 }}
+                    >
+                        {/* Library Header */}
+                        <div className="h-10 flex items-center justify-between px-4 shrink-0 border-b border-white/5 bg-slate-800">
+                            <span className="text-[10px] font-bold text-white uppercase tracking-[0.15em]">Library</span>
+                            <button
+                                onClick={() => removeFocus('library')}
+                                className="w-7 h-7 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
+                                title="Close Library (Y)"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        {/* Library Scrollable Content */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
+                            <SidebarLibrary />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

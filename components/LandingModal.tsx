@@ -16,7 +16,8 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
     const audioInputRef = useRef<HTMLInputElement>(null);
 
     const openLegal = useLegalStore(e => e.openLegal);
-    const pushFocus = useEffectStore(e => e.pushFocus);
+    const isMobile = useEffectStore(e => e.isMobile);
+    const setIsSidebarOpen = useEffectStore(e => e.setIsSidebarOpen);
 
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -29,18 +30,18 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
     const handleAudioFile = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             onStart('upload', e.target.files[0]);
-            pushFocus('library');
+            !isMobile && setIsSidebarOpen(true);
         }
     };
 
     const handleDemoTrack = () => {
         onStart('demo');
-        pushFocus('library');
+        !isMobile && setIsSidebarOpen(true);
     };
 
     const handleExternalSource = () => {
         onStart('mic');
-        pushFocus('library');
+        !isMobile && setIsSidebarOpen(true);
     };
 
     const handleTabAudio = () => {
@@ -49,7 +50,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
             return;
         }
         onStart('tab');
-        pushFocus('library');
+        !isMobile && setIsSidebarOpen(true);
     };
 
     const LandingCard: React.FC<{

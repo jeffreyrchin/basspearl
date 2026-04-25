@@ -164,9 +164,9 @@ const SidebarPipeline = ({ onLoadMuxels, onNavigateToLibrary }: SidebarPipelineP
     const pipelineCard = (icon: string, label: string, onClick: () => void) => (
         <button
             onClick={onClick}
-            className="group relative h-fit py-5 flex flex-col items-center justify-center rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all duration-300 hover:-translate-y-1 active:scale-[0.9] overflow-hidden"
+            className="group relative py-4 flex flex-col items-center justify-center rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all duration-300 hover:-translate-y-1 active:scale-[0.9] overflow-hidden"
         >
-            <span className={`material-symbols-outlined text-white transition-all duration-300 group-hover:scale-110 mb-4 z-10`}>
+            <span className={`material-symbols-outlined text-white transition-all duration-300 group-hover:scale-110 mb-3 z-10`}>
                 {icon}
             </span>
 
@@ -180,8 +180,8 @@ const SidebarPipeline = ({ onLoadMuxels, onNavigateToLibrary }: SidebarPipelineP
 
     if (effects.length === 0) {
         return (
-            <div className="py-10 px-6 flex flex-col gap-4 select-none">
-                {pipelineCard('add_circle', 'Open Library', onNavigateToLibrary)}
+            <div className="py-3 px-6 flex flex-col gap-4 select-none">
+                {pipelineCard('add_circle', 'Add Visuals', onNavigateToLibrary)}
                 {pipelineCard('upload_file', 'Import .muxels', onLoadMuxels)}
             </div>
         );

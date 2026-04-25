@@ -7,7 +7,6 @@ import MainToolbar from './MainToolbar';
 import ExportModal from './ExportModal';
 import LandingModal from './LandingModal';
 import InspectorWindow from './InspectorWindow';
-import LibraryWindow from './LibraryWindow';
 import PuzzlesModal from './PuzzlesModal';
 import PuzzleHeader from './PuzzleHeader';
 import TabAudioUnsupportedModal from './TabAudioUnsupportedModal';
@@ -303,7 +302,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 )}
 
                 <InspectorWindow />
-                <LibraryWindow />
             </div>
 
             {/* Bottom UI Overlay */}

@@ -6,7 +6,6 @@ import EffectPreview from './EffectPreview';
 import HoverCanvas from './HoverCanvas';
 
 interface SidebarLibraryProps {
-    onSelectEffect?: () => void;
 }
 
 interface LibraryCardProps {
@@ -37,7 +36,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
 
     return (
         <button
-            className="w-full aspect-square relative group transition-all duration-500 overflow-hidden cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-white/60"
+            className="w-full aspect-square relative group transition-all duration-500 overflow-hidden cursor-pointer outline-none"
             onClick={onClick}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={onHoverEnd}
@@ -55,7 +54,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none z-10" />
 
             {/* Label */}
-            <div className="absolute inset-x-0 bottom-0 p-2 z-20 pointer-events-none">
+            <div className="absolute inset-x-0 bottom-0 p-1.5 z-20 pointer-events-none">
                 <span className="flex items-center gap-1 text-[9px] text-left font-bold uppercase tracking-[0.15em] text-white/90 group-hover:text-white transition-colors leading-none">
                     {isPattern && <span className="material-symbols-outlined text-red-300 !text-[12px]">grain</span>}
                     {isModifier && <span className="material-symbols-outlined text-indigo-300 !text-[12px]">adjust</span>}
@@ -67,13 +66,16 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
             <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-y-[-4px] group-hover:translate-y-0 pointer-events-none z-20">
                 <span className="text-sm material-symbols-outlined text-white">add</span>
             </div>
+
+            {/* Focus ring */}
+            <div className="z-30 absolute inset-0 border-2 border-white opacity-0 group-focus-visible:opacity-100 pointer-events-none transition-opacity" />
         </button>
     );
 }
 
 const CATEGORIES = ['All', 'Patterns', 'Effects', 'Presets'];
 
-const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
+const SidebarLibrary: React.FC<SidebarLibraryProps> = () => {
     const addEffect = useEffectStore(s => s.addEffect);
     const addMacro = useEffectStore(s => s.addMacro);
     const [selectedCategory, setSelectedCategory] = useState<string>('Patterns');
@@ -123,12 +125,10 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
 
     const handleAdd = (type: GlitchEffectType) => {
         addEffect(type);
-        if (onSelectEffect) onSelectEffect();
     };
 
     const handleAddMacro = (macroType: MacroType) => {
         addMacro(macroType);
-        if (onSelectEffect) onSelectEffect();
     };
 
     return (
@@ -159,7 +159,7 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onSelectEffect }) => {
 
             {/* Gallery Grid */}
             <div className="rounded-lg m-3 overflow-hidden">
-                <div className="grid gap-[1px] grid-cols-[repeat(auto-fill,minmax(120px,1fr))]">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))]">
                     {libraryItems.map((item) => (
                         <LibraryCard
                             key={item.id}

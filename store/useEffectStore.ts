@@ -55,9 +55,6 @@ interface EffectState {
     isSidebarOpen: boolean;
     setIsSidebarOpen: (open: boolean) => void;
 
-    keepLibraryOpen: boolean;
-    setKeepLibraryOpen: (open: boolean) => void;
-
     isPuzzlesModalOpen: boolean;
     setIsPuzzlesModalOpen: (open: boolean) => void;
 
@@ -174,16 +171,13 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         focusStack: open ? [...s.focusStack.filter(z => z !== 'pipeline'), 'pipeline'] as ('pipeline' | 'inspector' | 'library')[] : s.focusStack
     })),
 
-    keepLibraryOpen: false,
-    setKeepLibraryOpen: (open) => set({ keepLibraryOpen: open }),
-
     isPuzzlesModalOpen: false,
     setIsPuzzlesModalOpen: (isPuzzlesModalOpen) => set({ isPuzzlesModalOpen }),
 
     currentPuzzle: null,
-    setCurrentPuzzle: (currentPuzzle) => set({ 
-        currentPuzzle, 
-        isGameMode: currentPuzzle !== null 
+    setCurrentPuzzle: (currentPuzzle) => set({
+        currentPuzzle,
+        isGameMode: currentPuzzle !== null
     }),
 
     isGameMode: false,
