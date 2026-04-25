@@ -58,6 +58,14 @@ interface EffectState {
     keepLibraryOpen: boolean;
     setKeepLibraryOpen: (open: boolean) => void;
 
+    isPuzzlesModalOpen: boolean;
+    setIsPuzzlesModalOpen: (open: boolean) => void;
+
+    currentPuzzle: number | null;
+    setCurrentPuzzle: (puzzle: number | null) => void;
+
+    isGameMode: boolean;
+
     activeDropdownId: string | null;
     setActiveDropdownId: (id: string | null) => void;
 
@@ -168,6 +176,17 @@ export const useEffectStore = create<EffectState>((set, get) => ({
 
     keepLibraryOpen: false,
     setKeepLibraryOpen: (open) => set({ keepLibraryOpen: open }),
+
+    isPuzzlesModalOpen: false,
+    setIsPuzzlesModalOpen: (isPuzzlesModalOpen) => set({ isPuzzlesModalOpen }),
+
+    currentPuzzle: null,
+    setCurrentPuzzle: (currentPuzzle) => set({ 
+        currentPuzzle, 
+        isGameMode: currentPuzzle !== null 
+    }),
+
+    isGameMode: false,
 
     activeDropdownId: null,
     setActiveDropdownId: (activeDropdownId) => set({ activeDropdownId }),

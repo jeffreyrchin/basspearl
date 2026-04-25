@@ -8,6 +8,8 @@ import ExportModal from './ExportModal';
 import LandingModal from './LandingModal';
 import InspectorWindow from './InspectorWindow';
 import LibraryWindow from './LibraryWindow';
+import PuzzlesModal from './PuzzlesModal';
+import PuzzleHeader from './PuzzleHeader';
 import TabAudioUnsupportedModal from './TabAudioUnsupportedModal';
 import SceneHotbar from './SceneHotbar';
 import { Footer } from './Footer';
@@ -34,6 +36,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const isUiHidden = useEffectStore(s => s.isUiHidden);
     const setIsUiHidden = useEffectStore(s => s.setIsUiHidden);
     const [isMouseIdle, setIsMouseIdle] = useState(false);
+
+    const isPuzzlesModalOpen = useEffectStore(s => s.isPuzzlesModalOpen);
+    const isGameMode = useEffectStore(s => s.isGameMode);
 
     const [isTabAudioUnsupportedModalOpen, setIsTabAudioUnsupportedModalOpen] = useState(false);
     const isTabAudioUnsupported = typeof navigator !== 'undefined' && (
@@ -358,6 +363,14 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 exportProgress={exportProgress}
                 exportResult={exportResult}
             />
+
+            <AnimatePresence>
+                {isGameMode && <PuzzleHeader />}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {isPuzzlesModalOpen && <PuzzlesModal />}
+            </AnimatePresence>
 
             <AnimatePresence>
                 {(isUiHidden && !isMouseIdle) && (

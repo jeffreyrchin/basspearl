@@ -104,6 +104,8 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     const setIsUiHidden = useEffectStore(s => s.setIsUiHidden);
     const isSceneHotbarOpen = useEffectStore(s => s.isSceneHotbarOpen);
     const setIsSceneHotbarOpen = useEffectStore(s => s.setIsSceneHotbarOpen);
+    const isPuzzlesModalOpen = useEffectStore(s => s.isPuzzlesModalOpen);
+    const setIsPuzzlesModalOpen = useEffectStore(s => s.setIsPuzzlesModalOpen);
 
     const constraintsRef = useRef(null);
     const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
@@ -220,6 +222,15 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                     isCollapsed={isToolbarCollapsed}
                                     isActive={isLibraryOpen}
                                 />
+
+                                {/* Puzzles Toggle */}
+                                {/* <ToolbarRow
+                                    onClick={() => setIsPuzzlesModalOpen(!isPuzzlesModalOpen)}
+                                    icon="grid_view"
+                                    label="Puzzles"
+                                    isCollapsed={isToolbarCollapsed}
+                                    isActive={isPuzzlesModalOpen}
+                                /> */}
 
                                 {/* Inspector Toggle (Desktop only) */}
                                 <ToolbarRow
