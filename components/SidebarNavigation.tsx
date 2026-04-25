@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffectStore } from '../store/useEffectStore';
 import SidebarPipeline from './SidebarPipeline';
@@ -24,6 +24,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     const focusStack = useEffectStore(s => s.focusStack);
     const removeFocus = useEffectStore(s => s.removeFocus);
     const isLibraryOpen = focusStack.includes('library');
+    const [libraryEntranceComplete, setLibraryEntranceComplete] = useState(false);
 
     const setEffects = useEffectStore(s => s.setEffects);
 
@@ -153,6 +154,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                         animate={{ height: '55%' }}
                         exit={{ height: '0%' }}
                         transition={{ type: 'spring', damping: 30, stiffness: 280 }}
+                        onAnimationComplete={() => setLibraryEntranceComplete(true)}
                         className="z-library flex flex-col bg-slate-900 border-t border-white/10 overflow-hidden shrink-0"
                         style={{ minHeight: 0 }}
                     >
@@ -170,7 +172,22 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
                         {/* Library Scrollable Content */}
                         <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
-                            <SidebarLibrary />
+                            {libraryEntranceComplete ? (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.1 }}
+                                >
+                                    <SidebarLibrary />
+                                </motion.div>
+                            ) : (
+                                <div className="h-full flex flex-col items-center justify-center gap-2">
+                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white/60"></div>
+                                    <span className="text-[12px] font-bold text-white uppercase tracking-[0.15em]">
+                                        Loading...
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 )}
