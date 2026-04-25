@@ -26,6 +26,10 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     const isLibraryOpen = focusStack.includes('library');
     const [libraryEntranceComplete, setLibraryEntranceComplete] = useState(false);
 
+    const selectedIds = useEffectStore(s => s.selectedIds);
+    const selectionCount = selectedIds.size;
+    const batchRemove = useEffectStore(s => s.batchRemove);
+
     const setEffects = useEffectStore(s => s.setEffects);
 
     const handleExport = () => {
@@ -63,40 +67,48 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
                 <button
+                    onClick={batchRemove}
+                    disabled={selectionCount === 0}
+                    className="w-8 h-8 rounded-md flex items-center justify-center transition-all enabled:text-white/80 enabled:hover:text-white enabled:hover:bg-white/10 disabled:text-white/20 disabled:cursor-not-allowed"
+                    title="Delete Selected">
+                    <span className="material-symbols-outlined">delete</span>
+                </button>
+                <div className="w-[1px] h-4 bg-white/10 mx-1"></div>
+                <button
                     onClick={handleImport}
-                    className="w-7 h-7 rounded-md flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-all"
+                    className="w-8 h-8 rounded-md flex items-center justify-center transition-all text-white/80 hover:text-white hover:bg-white/10"
                     title="Import .muxels">
-                    <span className="material-symbols-outlined text-[18px]">upload_file</span>
+                    <span className="material-symbols-outlined">upload</span>
                 </button>
                 <button
                     onClick={handleExport}
                     disabled={effects.length === 0}
-                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all ${effects.length > 0 ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-white/20 cursor-not-allowed'}`}
+                    className={`w-8 h-8 rounded-md flex items-center justify-center transition-all enabled:text-white/80 enabled:hover:text-white enabled:hover:bg-white/10 disabled:text-white/20 disabled:cursor-not-allowed`}
                     title="Export .muxels">
-                    <span className="material-symbols-outlined text-[18px]">download_file</span>
+                    <span className="material-symbols-outlined">download</span>
                 </button>
                 <div className="w-[1px] h-4 bg-white/10 mx-1"></div>
                 <button
                     onClick={undo}
                     disabled={past.length === 0}
-                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all ${past.length > 0 ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-white/20 cursor-not-allowed'}`}
+                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all enabled:text-white/80 enabled:hover:text-white enabled:hover:bg-white/10 disabled:text-white/20 disabled:cursor-not-allowed`}
                     title="Undo (Cmd+Z)">
-                    <span className="material-symbols-outlined text-[18px]">undo</span>
+                    <span className="material-symbols-outlined">undo</span>
                 </button>
                 <button
                     onClick={redo}
                     disabled={future.length === 0}
-                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all ${future.length > 0 ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-white/20 cursor-not-allowed'}`}
+                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all enabled:text-white/80 enabled:hover:text-white enabled:hover:bg-white/10 disabled:text-white/20 disabled:cursor-not-allowed`}
                     title="Redo (Cmd+Shift+Z)">
-                    <span className="material-symbols-outlined text-[18px]">redo</span>
+                    <span className="material-symbols-outlined">redo</span>
                 </button>
             </div>
             {onClose && (
                 <button
                     onClick={onClose}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 text-white/80 hover:text-white hover:bg-white/10 transition-all border border-white/5"
+                    className="w-8 h-8 rounded-xl flex items-center justify-center transition-all bg-white/5 text-white/80 hover:text-white hover:bg-white/10 border border-white/5"
                     title="Close Pipeline (P)">
-                    <span className="material-symbols-outlined text-[20px]">close</span>
+                    <span className="material-symbols-outlined">chevron_right</span>
                 </button>
             )}
         </div>
@@ -105,9 +117,9 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     return (
         <div data-section="pipeline" key="view-main" className="flex-1 flex flex-col min-h-0 pt-1 animate-in fade-in slide-in-from-right-4 duration-300 bg-slate-900/90 relative">
             {/* Header Bar */}
-            <div className="h-14 border-b border-white/5 bg-slate-800 flex items-center justify-between px-6 shrink-0 relative">
+            <div className="h-14 border-b border-white/5 bg-slate-800 flex items-center justify-between px-3 shrink-0 relative">
                 {/* Add Effect Button */}
-                <div className="flex items-center h-full">
+                <div className="flex items-center h-full ml-1">
                     <button
                         onClick={() => isLibraryOpen ? removeFocus('library') : pushFocus('library')}
                         className={`h-8 px-3 rounded-full flex items-center justify-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white transition-colors border border-indigo-400 shadow-md`}
@@ -119,20 +131,20 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             </div>
 
             {/* Selection Mode Bar */}
-            <div className="h-8 flex items-center px-6 shrink-0">
-                <span className="text-[10px] font-medium text-indigo-200 uppercase tracking-widest mr-auto">Selection Mode</span>
+            <div className="h-8 flex items-center justify-center gap-2 shrink-0">
+                <span className="text-[10px] font-medium text-indigo-200 uppercase tracking-widest">Multiselect:</span>
                 <div className="flex rounded-md">
-                    <button
-                        onClick={() => setIsInSelectMode(false)}
-                        className={`px-3 py-0.5 rounded transition-colors text-[11px] font-medium tracking-wide ${!isInSelectMode ? 'bg-indigo-300/30 text-white' : 'text-white/60 hover:text-white'}`}
-                    >
-                        Single
-                    </button>
                     <button
                         onClick={() => setIsInSelectMode(true)}
                         className={`px-3 py-0.5 rounded transition-colors text-[11px] font-medium tracking-wide ${isInSelectMode ? 'bg-indigo-300/30 text-white' : 'text-white/60 hover:text-white'}`}
                     >
-                        Multi
+                        On
+                    </button>
+                    <button
+                        onClick={() => setIsInSelectMode(false)}
+                        className={`px-3 py-0.5 rounded transition-colors text-[11px] font-medium tracking-wide ${!isInSelectMode ? 'bg-indigo-300/30 text-white' : 'text-white/60 hover:text-white'}`}
+                    >
+                        Off
                     </button>
                 </div>
             </div>

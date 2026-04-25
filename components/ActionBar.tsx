@@ -7,7 +7,6 @@ interface ActionBarProps { }
 const ActionBar: React.FC<ActionBarProps> = () => {
     const effects = useEffectStore(s => s.effects);
     const selectedIds = useEffectStore(s => s.selectedIds);
-    const batchRemove = useEffectStore(s => s.batchRemove);
     const batchMeld = useEffectStore(s => s.batchMeld);
     const batchUnmeld = useEffectStore(s => s.batchUnmeld);
     const batchDuplicate = useEffectStore(s => s.batchDuplicate);
@@ -91,18 +90,6 @@ const ActionBar: React.FC<ActionBarProps> = () => {
                 <span className="material-symbols-outlined">
                     {isAlreadyMelded ? 'link_off' : 'group_work'}
                 </span>
-            </button>
-
-            <div className="w-[1px] h-4 bg-white/10" />
-
-            {/* Remove */}
-            <button
-                onClick={batchRemove}
-                disabled={selectionCount === 0}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest text-red-400 enabled:hover:text-red-300 enabled:hover:bg-red-400/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                title="Remove (Backspace)"
-            >
-                <span className="material-symbols-outlined">delete</span>
             </button>
         </motion.div>
     );
