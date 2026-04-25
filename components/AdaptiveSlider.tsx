@@ -207,16 +207,16 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
 
     if (isReactive) {
         return (
-            <div className={`relative h-8 flex items-center my-1`} onPointerDown={onPointerDown}>
+            <div className={`relative h-8 flex items-center my-2`} onPointerDown={onPointerDown}>
                 {/* Reactive Slider */}
                 <div key="reactive" className="relative w-full" ref={trackRef}>
                     {/* Visual Track (Padded to match thumb centers) */}
-                    <div className="absolute inset-x-0 h-7 bg-white/10 overflow-hidden rounded-full top-1/2 -translate-y-1/2 touch-none">
-                        <div className="absolute inset-x-[16px] inset-y-0">
+                    <div className="absolute inset-x-[16px] h-7 bg-white/10 overflow-hidden rounded-md top-1/2 -translate-y-1/2 touch-none">
+                        <div className="absolute inset-x-0 inset-y-0">
                             <div
                                 ref={trackFillRef}
                                 onPointerDown={(e) => { e.preventDefault(); handleDragStart(e.clientX, 'middle'); }}
-                                className="absolute h-full bg-primary/20 cursor-grab active:cursor-grabbing"
+                                className="absolute h-full bg-white/15 cursor-grab active:cursor-grabbing"
                                 style={{
                                     left: `${Math.min(min, value)}%`,
                                     width: `${Math.abs(value - min)}%`,
@@ -235,7 +235,8 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                                 onStart={handleDragStart}
                                 onKeyUpdate={d => onChangeRef.current({ min: Math.max(0, Math.min(100, min + d)) })}
                                 labelRef={minLabelRef}
-                                borderStyle="border-indigo-300"
+                                borderStyle="border-white/90"
+                                isReactive={isReactive}
                             />
                         </div>
                         <div ref={thumbRef} className="absolute inset-y-0 pointer-events-none" style={{ left: `${value}%` }}>
@@ -246,12 +247,13 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                                 onStart={handleDragStart}
                                 onKeyUpdate={d => onChangeRef.current({ value: Math.max(0, Math.min(100, value + d)) })}
                                 labelRef={valueLabelRef}
-                                borderStyle="border-primary/80"
+                                borderStyle="border-white/90"
+                                isReactive={isReactive}
                             />
                         </div>
 
-                        <div ref={needleRef} className="absolute h-7 pointer-events-none z-10 top-1/2 -translate-y-1/2"
-                            style={{ left: `${min}%`, width: '2px', backgroundColor: 'white' }}
+                        <div ref={needleRef} className="absolute h-7 pointer-events-none z-10 bg-cyan-300 top-1/2 -translate-y-1/2"
+                            style={{ left: `${min}%`, width: '2px' }}
                         />
                     </div>
                 </div>
@@ -260,7 +262,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     }
 
     return (
-        <div className={`relative h-8 flex items-center my-1`} onPointerDown={onPointerDown}>
+        <div className={`relative h-8 flex items-center my-2`} onPointerDown={onPointerDown}>
             {/* Manual/Static Slider */}
             <div key="static" className="relative flex-1 group/static" ref={trackRef}>
                 <input
@@ -292,7 +294,7 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                         const nextVal = parseInt(e.target.value);
                         if (nextVal !== value) onChange({ value: nextVal });
                     }}
-                    className="w-full h-10 mt-2 bg-transparent appearance-none cursor-pointer custom-slider relative z-10"
+                    className="w-full h-10 mt-2 px-[16px] bg-transparent appearance-none cursor-pointer custom-slider relative z-10"
                 />
                 <div className="absolute inset-x-[16px] inset-y-0 pointer-events-none">
                     <div ref={thumbRef} className="absolute inset-y-0 pointer-events-none" style={{ left: `${value}%` }}>
@@ -303,7 +305,8 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                             onStart={handleDragStart}
                             onKeyUpdate={d => onChange({ value: Math.max(0, Math.min(100, value + d)) })}
                             labelRef={valueLabelRef}
-                            borderStyle="border-indigo-300"
+                            borderStyle="border-white"
+                            isReactive={isReactive}
                         />
                     </div>
                 </div>
@@ -319,8 +322,9 @@ const SliderHandle = memo<{
     onStart: (cx: number, m: Mode) => void,
     onKeyUpdate: (d: number) => void,
     labelRef?: React.RefObject<HTMLSpanElement>,
-    borderStyle: string
-}>(({ label, value, mode, onStart, onKeyUpdate, labelRef, borderStyle }) => (
+    borderStyle: string,
+    isReactive: boolean
+}>(({ label, value, mode, onStart, onKeyUpdate, labelRef, borderStyle, isReactive }) => (
     <div
         role="slider"
         aria-label={label}
@@ -338,13 +342,13 @@ const SliderHandle = memo<{
             if (e.key === 'ArrowLeft') onKeyUpdate(e.shiftKey ? -10 : -1);
             if (e.key === 'ArrowRight') onKeyUpdate(e.shiftKey ? 10 : 1);
         }}
-        className={`absolute w-8 h-8 z-20 top-1/2 group/handle outline-none focus-visible:ring-1 focus-visible:ring-primary/60 touch-none pointer-events-auto cursor-pointer hover:scale-110 hover:z-31 active:z-31 focus-within:z-30 transition-transform -translate-x-1/2 -translate-y-1/2 origin-center before:absolute before:content-[''] before:bg-transparent before:w-8 before:h-10 before:top-1/2 before:left-1/2 before:-translate-y-1/2 before:-translate-x-1/2`}
+        className={`absolute ${isReactive ? 'w-3' : 'w-8'} h-8 z-20 top-1/2 group/handle outline-none focus-visible:ring-1 focus-visible:ring-primary/60 touch-none pointer-events-auto cursor-pointer hover:scale-110 hover:z-31 active:z-31 focus-within:z-30 transition-transform -translate-x-1/2 -translate-y-1/2 origin-center before:absolute before:content-[''] before:bg-transparent ${isReactive && 'before:w-5 before:h-10'} before:top-1/2 before:left-1/2 before:-translate-y-1/2 before:-translate-x-1/2`}
     >
         <div className={`absolute inset-0 bg-slate-700/50 border-2 ${borderStyle} rounded-full`} />
 
         {/* Percentage Label */}
-        <div key={`${mode}-label`} className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-            <span ref={labelRef} className="text-white font-mono font-medium text-[10px] select-none">
+        <div key={`${mode}-label`} className={`absolute ${isReactive ? 'top-full w-full mt-[-4px] text-center' : 'inset-0 items-center'} flex justify-center z-30 pointer-events-none`}>
+            <span ref={labelRef} className={`${isReactive ? (mode === 'left' ? 'text-indigo-300' : 'text-primary') : 'text-white'} font-semibold text-[12px] select-none`}>
                 {Math.round(value)}
             </span>
         </div>

@@ -106,7 +106,7 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
                         aria-selected={value === band}
                         onClick={() => { onChange(band); setActiveDropdownId(null); }}
                         className={`w-full flex items-center px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors outline-none
-                            ${value === band ? 'bg-primary/20 text-primary' : 'text-indigo-300 hover:text-white hover:bg-indigo-300/20 focus:text-white focus:bg-indigo-300/20'}`}
+                            ${value === band ? 'bg-cyan-300/10 text-cyan-300' : 'text-white hover:text-cyan-300 hover:bg-cyan-300/10 focus:text-cyan-300 focus:bg-cyan-300/10'}`}
                     >
                         {band}
                     </button>
@@ -116,19 +116,17 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
     );
 
     return (
-        <div className="relative z-50 flex items-center gap-1" ref={dropdownRef} onKeyDown={handleKeyDown}>
-            <div className="flex items-center gap-1">
-                <span className={`material-symbols-outlined transition-colors !text-sm ${value !== 'OFF' ? 'text-primary' : 'text-indigo-300'}`}>cadence</span>
-                <span className={`text-[10px] font-bold tracking-widest uppercase transition-colors ${value !== 'OFF' ? 'text-primary' : 'text-indigo-300'}`}>Listen:</span>
-            </div>
+        <div className="relative z-50 flex items-center gap-2" ref={dropdownRef} onKeyDown={handleKeyDown}>
+            {/* Visible Label */}
+            <span className={`text-[10px] font-bold tracking-widest uppercase text-white`}>Listen:</span>
             <button
                 data-dropdown-ignore="true"
                 onClick={() => setActiveDropdownId(isOpen ? null : id)}
                 aria-haspopup="listbox"
                 aria-expanded={isOpen}
                 aria-label={ariaLabel}
-                className={`flex items-center text-[10px] font-bold uppercase tracking-[0.1em] active:scale-95 hover:text-white transition-colors
-                    ${value !== 'OFF' ? 'text-primary' : 'text-indigo-300'}`}
+                className={`flex items-center text-[10px] pl-2 pr-1 rounded-full font-bold uppercase tracking-[0.1em] active:scale-95 border border-white/5 bg-white/5 hover:bg-white/10 transition-colors
+                    ${value !== 'OFF' ? 'text-cyan-300' : 'text-white'}`}
             >
                 <span>{value}</span>
                 <motion.span
@@ -141,6 +139,8 @@ export const FrequencyDropdown: React.FC<FrequencyDropdownProps> = ({ value, onC
                     expand_more
                 </motion.span>
             </button>
+
+            {/* Dropdown Menu */}
             {createPortal(
                 <AnimatePresence>
                     {isOpen && Menu}
