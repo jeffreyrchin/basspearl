@@ -25,6 +25,7 @@ const SortableGroupItem = ({
     const selectRange = useEffectStore(s => s.selectRange);
     const isInSelectMode = useEffectStore(s => s.isInSelectMode);
     const pushFocus = useEffectStore(s => s.pushFocus);
+    const removeEffect = useEffectStore(s => s.removeEffect);
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: group.id,
@@ -100,7 +101,7 @@ const SortableGroupItem = ({
                     return (
                         <div key={effect.id} className="flex flex-col w-full">
                             <div
-                                className={`flex items-center h-16 md:h-10 overflow-hidden
+                                className={`flex items-center h-12 md:h-10 overflow-hidden
                                     ${isSelected ? 'bg-white/10' : 'hover:bg-white/5'}
                                 `}
                             >
@@ -130,7 +131,7 @@ const SortableGroupItem = ({
                                 </button>
 
                                 {!isOverlay && (
-                                    <div className="flex h-full items-center mr-1" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+                                    <div className="flex h-full items-center mr-2" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
                                         <button
                                             onClick={(e) => {
                                                 if (e.altKey || effect.soloed) {
@@ -139,8 +140,8 @@ const SortableGroupItem = ({
                                                     toggleMute(effect.id);
                                                 }
                                             }}
-                                            className={`w-10 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors
-                                                ${effect.soloed ? 'text-yellow-300' : (effect.muted ? 'text-indigo-300' : 'text-white/60 hover:text-white')}
+                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors
+                                                ${effect.soloed ? 'text-yellow-300' : (effect.muted ? 'text-indigo-300' : 'text-white/80 hover:text-white')}
                                             `}
                                             title={effect.soloed ? "Toggle Solo" : "Toggle Visibility (Alt+Click to Solo)"}
                                         >
@@ -154,10 +155,20 @@ const SortableGroupItem = ({
                                                 toggleSelected(effect.id, false);
                                                 pushFocus('inspector');
                                             }}
-                                            className={`w-10 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors text-white/60 hover:text-white`}
+                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors text-white/80 hover:text-white`}
                                             title="Show Inspector (I)"
                                         >
                                             <span className="material-symbols-outlined">tune</span>
+                                        </button>
+                                        <div className="w-px h-4 bg-white/5" />
+                                        <button
+                                            onClick={() => {
+                                                removeEffect(effect.id);
+                                            }}
+                                            className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors text-white/80 hover:text-white`}
+                                            title="Remove"
+                                        >
+                                            <span className="material-symbols-outlined">delete</span>
                                         </button>
                                     </div>
                                 )}

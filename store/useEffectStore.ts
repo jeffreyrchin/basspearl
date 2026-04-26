@@ -80,6 +80,7 @@ interface EffectState {
     toggleSolo: (id: string) => void;
     addEffect: (type: GlitchEffectType) => void;
     addMacro: (macroType: MacroType) => void;
+    removeEffect: (id: string) => void;
     batchDuplicate: () => void;
     batchRemove: () => void;
     batchMeld: () => void;
@@ -323,6 +324,35 @@ export const useEffectStore = create<EffectState>((set, get) => ({
             isSidebarOpen: isMobile ? state.isSidebarOpen : true,
         }));
         if (!isMobile) get().pushFocus('pipeline');
+    },
+
+    removeEffect: (id) => {
+        get().commitHistory();
+        set((state) => {
+            const effectToRemove = state.effects.find(e => e.id === id);
+            if (effectToRemove) analytics.effect.removed(effectToRemove.type);
+
+            const next = state.effects.reduce((acc: EffectConfig[], current, index) => {
+                // If this effect is the one being removed, skip it
+                if (current.id === id) return acc;
+
+                const nextEffect = state.effects[index + 1];
+                const nextIsBeingDeleted = nextEffect && nextEffect.id === id;
+
+                if (current.melded && nextIsBeingDeleted) {
+                    acc.push({ ...current, melded: false });
+                } else {
+                    acc.push(current);
+                }
+
+                return acc;
+            }, []);
+
+            return { 
+                effects: next, 
+                selectedIds: new Set<string>() 
+            };
+        });
     },
 
     batchDuplicate: () => {
