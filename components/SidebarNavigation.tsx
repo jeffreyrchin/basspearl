@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffectStore } from '../store/useEffectStore';
 import SidebarPipeline from './SidebarPipeline';
 import SidebarLibrary from './SidebarLibrary';
-import ActionBar from './ActionBar';
 import { loadMuxelsFile } from '@/services/sanitizeImportedEffects';
+import { canMeld, isAlreadyMelded } from '@/services/pipelineUtils';
 
 interface SidebarNavigationProps {
     onClose?: () => void;
@@ -29,8 +29,16 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     const selectedIds = useEffectStore(s => s.selectedIds);
     const selectionCount = selectedIds.size;
     const batchRemove = useEffectStore(s => s.batchRemove);
+    const batchDuplicate = useEffectStore(s => s.batchDuplicate);
+    const batchMeld = useEffectStore(s => s.batchMeld);
+    const batchUnmeld = useEffectStore(s => s.batchUnmeld);
 
     const setEffects = useEffectStore(s => s.setEffects);
+
+    const canMeldSelected = useMemo(() => canMeld(effects, selectedIds), [effects, selectedIds]);
+    const isMelded = useMemo(() => isAlreadyMelded(effects, selectedIds), [effects, selectedIds]);
+
+    const addEffectFromSidebar = useEffectStore(s => s.addEffectFromSidebar);
 
     const handleExport = () => {
         const dataStr = JSON.stringify(effects, null, 2);
@@ -67,11 +75,16 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
                 <button
-                    onClick={batchRemove}
-                    disabled={selectionCount === 0}
-                    className="w-8 h-8 rounded-md flex items-center justify-center transition-all enabled:text-white/80 enabled:hover:text-white enabled:hover:bg-white/10 disabled:text-white/20 disabled:cursor-not-allowed"
-                    title="Delete Selected">
-                    <span className="material-symbols-outlined">delete</span>
+                    onClick={() => addEffectFromSidebar('IMAGE')}
+                    className="w-8 h-8 rounded-md flex items-center justify-center transition-all text-white/80 hover:text-white hover:bg-white/10"
+                    title="Add Image (O)">
+                    <span className="material-symbols-outlined !text-[22px]">image</span>
+                </button>
+                <button
+                    onClick={() => addEffectFromSidebar('RGBA')}
+                    className="w-8 h-8 rounded-md flex items-center justify-center transition-all text-white/80 hover:text-white hover:bg-white/10"
+                    title="Add Color (C)">
+                    <span className="material-symbols-outlined !text-[22px]">palette</span>
                 </button>
                 <div className="w-[1px] h-4 bg-white/10 mx-1"></div>
                 <button
@@ -122,7 +135,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 <div className="flex items-center h-full ml-1">
                     <button
                         onClick={() => isLibraryOpen ? removeFocus('library') : pushFocus('library')}
-                        className={`h-8 px-3 rounded-full flex items-center justify-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white transition-colors border border-indigo-400 shadow-md`}
+                        className={`h-8 px-2 rounded-full flex items-center justify-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white transition-colors border border-indigo-400 shadow-md`}
                         title="Toggle Library (Y)">
                         <span className="material-symbols-outlined">{isLibraryOpen ? 'remove' : 'add'}</span>
                     </button>
@@ -131,20 +144,50 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             </div>
 
             {/* Selection Mode Bar */}
-            <div className="h-8 flex items-center justify-center gap-2 shrink-0">
-                <span className="text-[10px] font-medium text-indigo-200 uppercase tracking-widest">Multiselect:</span>
-                <div className="flex rounded-md">
+            <div className="h-9 flex items-center justify-between px-3 gap-2 bg-slate-800/80 shrink-0 border-b border-white/5">
+                <div className="flex items-center gap-2">
+                    {/* Duplicate Button */}
                     <button
-                        onClick={() => setIsInSelectMode(true)}
-                        className={`px-3 py-0.5 rounded transition-colors text-[11px] font-medium tracking-wide ${isInSelectMode ? 'bg-indigo-300/30 text-white' : 'text-white/60 hover:text-white'}`}
+                        onClick={batchDuplicate}
+                        disabled={selectionCount === 0}
+                        className="w-8 h-6 border border-white/10 rounded-md flex items-center justify-center text-white bg-white/5 hover:bg-white/10 transition-all disabled:opacity-20 disabled:cursor-not-allowed group"
+                        title="Duplicate (Cmd+D)"
                     >
-                        On
+                        <span className="material-symbols-outlined !text-[16px] group-hover:scale-110 transition-transform will-change-transform">content_copy</span>
                     </button>
+
+                    {/* Group/Ungroup Button */}
                     <button
-                        onClick={() => setIsInSelectMode(false)}
-                        className={`px-3 py-0.5 rounded transition-colors text-[11px] font-medium tracking-wide ${!isInSelectMode ? 'bg-indigo-300/30 text-white' : 'text-white/60 hover:text-white'}`}
+                        onClick={isMelded ? batchUnmeld : batchMeld}
+                        disabled={!canMeldSelected}
+                        className="w-8 h-6 border border-white/10 rounded-md flex items-center justify-center text-white bg-white/5 hover:bg-white/10 transition-all disabled:opacity-20 disabled:cursor-not-allowed group"
+                        title={isMelded ? "Ungroup (Cmd+Shift+G)" : "Group (Cmd+G)"}
                     >
-                        Off
+                        <span className="material-symbols-outlined !text-[16px] group-hover:scale-110 transition-transform will-change-transform">
+                            {isMelded ? 'link_off' : 'group_work'}
+                        </span>
+                    </button>
+
+                    {/* Delete Button */}
+                    <button
+                        onClick={batchRemove}
+                        disabled={selectionCount === 0}
+                        className="w-8 h-6 border border-red-400/20 rounded-md flex items-center justify-center text-red-400 bg-red-400/5 hover:bg-red-400/20 transition-all disabled:opacity-20 disabled:cursor-not-allowed group"
+                        title="Delete Selected (Backspace)"
+                    >
+                        <span className="material-symbols-outlined !text-[16px] group-hover:scale-110 transition-transform will-change-transform">delete</span>
+                    </button>
+                </div>
+
+                {/* Multiselect Toggle */}
+                <div className="flex items-center gap-2.5">
+                    <span className="text-[10px] font-medium text-white/60 uppercase tracking-widest">Multiselect</span>
+                    <button
+                        onClick={() => setIsInSelectMode(!isInSelectMode)}
+                        className={`relative w-8 h-4.5 rounded-full transition-colors duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${isInSelectMode ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.4)]' : 'bg-white/10'}`}
+                        title="Toggle Multiselect"
+                    >
+                        <div className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all duration-300 ease-out ${isInSelectMode ? 'translate-x-3.5' : 'translate-x-0'}`} />
                     </button>
                 </div>
             </div>
@@ -154,16 +197,13 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 <SidebarPipeline onLoadMuxels={handleImport} onNavigateToLibrary={() => pushFocus('library')} />
             </div>
 
-            {/* Global Action Bar anchored to the bottom of the pipeline */}
-            <ActionBar />
-
             {/* Library Panel — grows from bottom, pushing pipeline list up */}
             <AnimatePresence>
                 {isLibraryOpen && (
                     <motion.div
                         key="library-panel"
                         initial={{ height: '0%' }}
-                        animate={{ height: '55%' }}
+                        animate={{ height: '53%' }}
                         exit={{ height: '0%' }}
                         transition={{ type: 'spring', damping: 30, stiffness: 280 }}
                         onAnimationComplete={() => setLibraryEntranceComplete(true)}

@@ -93,3 +93,31 @@ export const reorderEffectGroups = (
     // 3. Return flattened result
     return groups.flat();
 };
+
+/**
+ * Checks if the current selection is eligible for melding (grouping).
+ * Requires at least 2 selected items that are contiguous in the pipeline.
+ */
+export const canMeld = (effects: EffectConfig[], selectedIds: Set<string>): boolean => {
+    if (selectedIds.size < 2) return false;
+    const indices = effects
+        .map((e, i) => selectedIds.has(e.id) ? i : -1)
+        .filter(i => i !== -1);
+    return indices.every((v, i) => i === 0 || v === indices[i - 1] + 1);
+};
+
+/**
+ * Checks if the current selection is already fully melded together.
+ */
+export const isAlreadyMelded = (effects: EffectConfig[], selectedIds: Set<string>): boolean => {
+    if (!canMeld(effects, selectedIds)) return false;
+    const indices = effects
+        .map((e, i) => selectedIds.has(e.id) ? i : -1)
+        .filter(i => i !== -1);
+
+    // A group is considered "melded" if every item EXCEPT the last one has melded=true
+    for (let i = 0; i < indices.length - 1; i++) {
+        if (!effects[indices[i]].melded) return false;
+    }
+    return true;
+};

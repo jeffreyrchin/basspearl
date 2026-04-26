@@ -180,7 +180,7 @@ const SidebarPipeline = ({ onLoadMuxels, onNavigateToLibrary }: SidebarPipelineP
 
     if (effects.length === 0) {
         return (
-            <div className="py-3 px-6 flex flex-col gap-4 select-none">
+            <div className="py-6 px-6 flex flex-col gap-4 select-none">
                 {pipelineCard('add_circle', 'Add Visuals', onNavigateToLibrary)}
                 {pipelineCard('upload', 'Import .muxels', onLoadMuxels)}
             </div>

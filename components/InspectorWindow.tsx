@@ -32,7 +32,7 @@ const InspectorWindow: React.FC = () => {
     const [winWidth, setWinWidth] = useState(initialWidth);
     const [winHeight, setWinHeight] = useState(initialHeight);
     const [winX] = useState(window.innerWidth - initialWidth - 16); // 16 to align with right edge of effect/layer cards
-    const [winY] = useState(window.innerHeight - initialHeight - 110); // 110 to position above the action bar
+    const [winY] = useState(window.innerHeight - initialHeight - 110); // 110 to position above the playback scrubber
 
     if (!isInspectorOpen) return null;
 
