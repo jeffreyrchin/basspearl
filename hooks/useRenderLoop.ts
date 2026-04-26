@@ -149,9 +149,13 @@ export const useRenderLoop = ({
         // Dynamic resolution based on window size
         const { width } = viewportRef.current;
 
+        const currentEffects = transitionState.isPreviewingPuzzle
+            ? transitionState.targetPuzzleEffects
+            : effectsRef.current;
+
         await mainGlitchEngine.renderToCanvas(
             canvasRef.current,
-            effectsRef.current,
+            currentEffects,
             {
                 targetWidth: width,
                 reactivity: smoothed,

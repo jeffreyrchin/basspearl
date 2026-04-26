@@ -3,14 +3,10 @@ import { motion } from 'framer-motion';
 import { useEffectStore } from '../store/useEffectStore';
 import EffectPreview from './EffectPreview';
 import HoverCanvas from './HoverCanvas';
-import { EffectConfig, MacroType } from '../types';
 import { createMacroInstance } from '../constants';
+import { PUZZLES } from '../config/puzzles';
+import { EffectConfig, PuzzleConfig } from '../types';
 
-interface PuzzleConfig {
-    locked: boolean;
-    difficulty: string;
-    macro?: MacroType;
-}
 
 interface PuzzleCardProps {
     puzzle: PuzzleConfig;
@@ -80,9 +76,6 @@ const PuzzlesModal: React.FC = () => {
     const setIsPuzzlesModalOpen = useEffectStore(s => s.setIsPuzzlesModalOpen);
     const setCurrentPuzzle = useEffectStore(s => s.setCurrentPuzzle);
 
-    const puzzles: PuzzleConfig[] = [
-        { locked: false, difficulty: 'Easy', macro: 'SPIRAL_GLOW' }
-    ];
 
     const [hoverTarget, setHoverTarget] = useState<{ el: HTMLElement; blueprint: EffectConfig[] } | null>(null);
 
@@ -105,7 +98,7 @@ const PuzzlesModal: React.FC = () => {
     }, [isPuzzlesModalOpen, setIsPuzzlesModalOpen]);
 
     const handlePuzzleClick = (puzzleId: number) => {
-        if (puzzles[puzzleId].locked) return;
+        if (PUZZLES[puzzleId].locked) return;
         setCurrentPuzzle(puzzleId);
         setIsPuzzlesModalOpen(false);
     };
@@ -150,7 +143,7 @@ const PuzzlesModal: React.FC = () => {
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
                     <div className="p-4 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-1">
-                        {puzzles.map((puzzle, id) => (
+                        {PUZZLES.map((puzzle, id) => (
                             <PuzzleCard
                                 key={id}
                                 id={id}

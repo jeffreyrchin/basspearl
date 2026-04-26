@@ -145,3 +145,9 @@ export type TransitionType =
   'fade_to_black' |
   'flash' |
   'zoom_fade';
+
+export interface PuzzleConfig {
+  locked: boolean;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  macro: MacroType;
+}

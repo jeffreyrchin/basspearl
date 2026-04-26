@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { EffectConfig, GlitchEffectType, MacroType, TransitionType } from '../types';
 import { INITIAL_REACTIVE_EFFECTS, createEffectInstance, createMacroInstance, INITIAL_SCENE_COUNT, DEFAULT_TRANSITION_DURATION } from '../constants';
 import { analytics } from '@/services/analytics';
+import { PUZZLES } from '../config/puzzles';
 
 interface SceneSlot {
     effects: EffectConfig[];
@@ -62,6 +63,9 @@ interface EffectState {
     setCurrentPuzzle: (puzzle: number | null) => void;
 
     isGameMode: boolean;
+    isPreviewingPuzzle: boolean;
+    setIsPreviewingPuzzle: (previewing: boolean) => void;
+    targetPuzzleEffects: EffectConfig[];
 
     activeDropdownId: string | null;
     setActiveDropdownId: (id: string | null) => void;
@@ -175,13 +179,34 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     isPuzzlesModalOpen: false,
     setIsPuzzlesModalOpen: (isPuzzlesModalOpen) => set({ isPuzzlesModalOpen }),
 
-    currentPuzzle: null,
-    setCurrentPuzzle: (currentPuzzle) => set({
-        currentPuzzle,
-        isGameMode: currentPuzzle !== null
-    }),
-
     isGameMode: false,
+    isPreviewingPuzzle: false,
+    setIsPreviewingPuzzle: (isPreviewingPuzzle) => set({ isPreviewingPuzzle }),
+    targetPuzzleEffects: [],
+
+    currentPuzzle: null,
+    setCurrentPuzzle: (currentPuzzle) => {
+        // If exiting game mode
+        if (currentPuzzle === null) {
+            set({
+                currentPuzzle: null,
+                isGameMode: false,
+                targetPuzzleEffects: [],
+                isPreviewingPuzzle: false
+            });
+            return;
+        }
+
+        const puzzle = PUZZLES[currentPuzzle];
+        const targetPuzzleEffects = puzzle ? createMacroInstance(puzzle.macro, true) : [];
+
+        set({
+            currentPuzzle,
+            isGameMode: true,
+            targetPuzzleEffects,
+            isPreviewingPuzzle: false
+        });
+    },
 
     activeDropdownId: null,
     setActiveDropdownId: (activeDropdownId) => set({ activeDropdownId }),
@@ -348,9 +373,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
                 return acc;
             }, []);
 
-            return { 
-                effects: next, 
-                selectedIds: new Set<string>() 
+            return {
+                effects: next,
+                selectedIds: new Set<string>()
             };
         });
     },
