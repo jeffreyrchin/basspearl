@@ -7,6 +7,7 @@ import HelpPage from './components/HelpPage';
 import AudioReactiveView from './components/AudioReactiveView';
 import AuthModal from './components/AuthModal';
 import LegalConsentModal from './components/LegalConsentModal';
+import PuzzleTestPage from './components/content/PuzzleTestPage';
 
 const App = () => {
   const setIsMobile = useEffectStore((s) => s.setIsMobile);
@@ -24,6 +25,7 @@ const App = () => {
         <Route path="/" element={<AudioReactiveView />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/help" element={<HelpPage />} />
+        <Route path="/puzzle-service-test" element={<PuzzleTestPage />} />
       </Routes>
       <LegalConsentModal />
       <AuthModal />
