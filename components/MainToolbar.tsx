@@ -106,6 +106,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     const setIsSceneHotbarOpen = useEffectStore(s => s.setIsSceneHotbarOpen);
     const isPuzzlesModalOpen = useEffectStore(s => s.isPuzzlesModalOpen);
     const setIsPuzzlesModalOpen = useEffectStore(s => s.setIsPuzzlesModalOpen);
+    const isGameMode = useEffectStore(s => s.isGameMode);
 
     const constraintsRef = useRef(null);
     const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
@@ -121,9 +122,11 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                     className="relative flex flex-row items-center pointer-events-auto group/toolbar shadow-[0_16px_48px_rgba(0,0,0,0.5)] rounded-xl"
                 >
                     <motion.div
+                        layout="size"
                         animate={{ width: isToolbarCollapsed ? 60 : 200 }}
-                        transition={{ duration: 0.3, type: "spring", bounce: 0, ease: "easeInOut" }}
-                        className="bg-[#0a0a1a] border border-white/10 rounded-xl flex flex-col p-2 overflow-y-auto overflow-x-hidden no-scrollbar cursor-default relative z-10"
+                        transition={{ layout: { duration: 0.3, type: "spring", bounce: 0 }, default: { duration: 0.3, type: "spring", bounce: 0 } }}
+                        style={{ borderRadius: 12 }}
+                        className="bg-[#0a0a1a] border border-white/10 flex flex-col p-2 overflow-y-auto overflow-x-hidden no-scrollbar cursor-default relative z-10"
                     >
                         {/* Header */}
                         <div className="flex items-center justify-center w-full h-4 mb-2 shrink-0 z-10 cursor-grab active:cursor-grabbing group/handle relative">
@@ -146,7 +149,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                         {/* Toolbar Buttons */}
                         <div className="flex flex-col w-full px-1 pb-1">
                             {/* Audio Sources */}
-                            <div className="flex flex-col gap-1 mb-2">
+                            <div className={`${isGameMode ? 'hidden' : 'flex'} flex-col gap-1 mb-2`}>
                                 {/* Audio File */}
                                 <input
                                     ref={audioInputRef}
@@ -196,7 +199,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                 />
                             </div>
 
-                            <div className="h-[1px] bg-white/5 mx-2 mb-3 mt-1" />
+                            <div className={`${isGameMode && 'hidden'} h-[1px] bg-white/5 mx-2 mb-3 mt-1`} />
 
                             {/* Window Toggles */}
                             <div className="flex flex-col gap-1">
@@ -241,7 +244,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                     shortcut="K"
                                     isCollapsed={isToolbarCollapsed}
                                     isActive={isSceneHotbarOpen}
-                                    className="hidden lg:flex"
+                                    className={`hidden ${!isGameMode && 'lg:flex'}`}
                                 />
 
                                 {/* Hide UI */}
@@ -260,7 +263,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                     icon="download"
                                     label="Export Video"
                                     isCollapsed={isToolbarCollapsed}
-                                    className="hidden lg:flex"
+                                    className={`hidden ${!isGameMode && 'lg:flex'}`}
                                 />
                             </div>
                         </div>
