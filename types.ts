@@ -66,6 +66,7 @@ export interface EffectParamMetadata {
   previewValue?: number;
   previewMin?: number;
   previewBand?: FrequencyBand;
+  cyclic?: boolean;
 }
 
 export interface EffectMetadata {

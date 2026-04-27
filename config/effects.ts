@@ -4,7 +4,8 @@ import { GlitchEffectType, EffectMetadata, EffectParamMetadata, FrequencyBand } 
 export const p = (
   name: string,
   d: { v: number; m?: number; b?: FrequencyBand }, // Default values
-  p?: { v?: number; m?: number; b?: FrequencyBand } // Preview Overrides
+  p?: { v?: number; m?: number; b?: FrequencyBand }, // Preview Overrides
+  cyclic?: boolean
 ): EffectParamMetadata => ({
   name,
   defaultValue: d.v,
@@ -14,7 +15,8 @@ export const p = (
     previewValue: p.v,
     previewMin: p.m,
     previewBand: p.b
-  })
+  }),
+  cyclic: cyclic || false,
 });
 
 export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
@@ -72,7 +74,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     label: 'Color Rotate',
     category: 'Modifier',
     params: [
-      p('Color Shift', { v: 10 }),
+      p('Color Shift', { v: 10 }, undefined, true),
       p('Speed', { v: 25 }),
       p('Vibrance', { v: 73 }),
     ],
@@ -88,7 +90,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     label: 'Rotate',
     category: 'Modifier',
     params: [
-      p('Rotation', { v: 3 }),
+      p('Rotation', { v: 3 }, undefined, true),
       p('Speed', { v: 3 }, { v: 30 }),
     ],
   },
@@ -139,7 +141,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Scale Y', { v: 96 }),
       p('Pan X', { v: 50 }),
       p('Pan Y', { v: 50 }),
-      p('Rotation', { v: 0 }),
+      p('Rotation', { v: 0 }, undefined, true),
     ],
   },
   SHAPE: {
@@ -155,7 +157,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Scale Y', { v: 32 }),
       p('Pan X', { v: 50 }),
       p('Pan Y', { v: 50 }),
-      p('Rotation', { v: 0 }),
+      p('Rotation', { v: 0 }, undefined, true),
     ],
   },
   TILE: {
@@ -176,7 +178,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Detail Level', { v: 100 }),
       p('Warp Amount', { v: 1 }),
       p('Warp Speed', { v: 25 }, { v: 50 }),
-      p('Warp Direction', { v: 0 }),
+      p('Warp Direction', { v: 0 }, undefined, true),
       p('Blend', { v: 100 }),
     ],
   },
@@ -196,7 +198,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Scale Y', { v: 96 }),
       p('Pan X', { v: 50 }),
       p('Pan Y', { v: 50 }),
-      p('Rotation', { v: 0 }),
+      p('Rotation', { v: 0 }, undefined, true),
     ],
   },
   LUMINANCE_MASK: {
@@ -239,7 +241,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Scale Y', { v: 96 }),
       p('Pan X', { v: 50 }),
       p('Pan Y', { v: 50 }),
-      p('Rotation', { v: 0 }),
+      p('Rotation', { v: 0 }, undefined, true),
     ],
   },
   SPECTRAL_MAP: {
@@ -247,7 +249,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     category: 'Modifier',
     params: [
       p('Rainbow Density', { v: 50 }),
-      p('Color Shift', { v: 0 }),
+      p('Color Shift', { v: 0 }, undefined, true),
       p('Speed', { v: 25 }),
       p('Intensity', { v: 100 }),
     ],
@@ -292,14 +294,14 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Detail Level', { v: 100 }),
       p('Tile Width', { v: 100 }),
       p('Tile Height', { v: 100 }),
-      p('Rotate X', { v: 0 }),
-      p('Rotate Y', { v: 0 }),
-      p('Rotate Z', { v: 0 }),
+      p('Rotate X', { v: 0 }, undefined, true),
+      p('Rotate Y', { v: 0 }, undefined, true),
+      p('Rotate Z', { v: 0 }, undefined, true),
       p('Elevation', { v: 50 }),
       p('Distance', { v: 50 }),
       p('Tile Blend', { v: 0 }),
       p('Speed X', { v: 0 }),
-      p('Speed Y', { v: 15 }),
+      p('Speed Y', { v: 0 }),
     ],
   },
   TERRAIN_SPHERE: {
@@ -309,9 +311,9 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Extrusion', { v: 10 }),
       p('Detail Level', { v: 100 }),
       p('Size', { v: 50 }),
-      p('Offset X', { v: 0 }),
-      p('Offset Y', { v: 0 }),
-      p('Offset Z', { v: 25 }),
+      p('Offset X', { v: 0 }, undefined, true),
+      p('Offset Y', { v: 0 }, undefined, true),
+      p('Offset Z', { v: 25 }, undefined, true),
       p('Spin Speed X', { v: 25 }),
       p('Spin Speed Y', { v: 0 }),
       p('Spin Speed Z', { v: 0 }),
@@ -324,9 +326,9 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Extrusion', { v: 10 }),
       p('Detail Level', { v: 100 }),
       p('Size', { v: 40 }),
-      p('Offset X', { v: 0 }),
-      p('Offset Y', { v: 0 }),
-      p('Offset Z', { v: 25 }),
+      p('Offset X', { v: 0 }, undefined, true),
+      p('Offset Y', { v: 0 }, undefined, true),
+      p('Offset Z', { v: 25 }, undefined, true),
       p('Spin Speed X', { v: 25 }),
       p('Spin Speed Y', { v: 0 }),
       p('Spin Speed Z', { v: 0 }),
@@ -344,7 +346,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Scale Y', { v: 96 }),
       p('Pan X', { v: 50 }),
       p('Pan Y', { v: 50 }),
-      p('Rotation', { v: 0 }),
+      p('Rotation', { v: 0 }, undefined, true),
     ],
   },
   TRANSFORM: {
@@ -355,7 +357,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Scale Y', { v: 50 }, { v: 100, m: 50, b: 'SUB' }),
       p('Pan X', { v: 50 }),
       p('Pan Y', { v: 50 }),
-      p('Rotation', { v: 0 }),
+      p('Rotation', { v: 0 }, undefined, true),
     ],
   },
   RGBA: {
@@ -373,7 +375,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     category: 'Pattern',
     params: [
       p('Feather', { v: 50 }),
-      p('Rotation', { v: 50 }),
+      p('Rotation', { v: 50 }, undefined, true),
       p('Pan', { v: 50 }, { b: 'SUB' }),
     ],
   },
@@ -457,7 +459,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Scale Y', { v: 96 }),
       p('Pan X', { v: 50 }),
       p('Pan Y', { v: 50 }),
-      p('Rotation', { v: 0 }),
+      p('Rotation', { v: 0 }, undefined, true),
     ],
   },
   PARTICLES: {

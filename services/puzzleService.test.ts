@@ -76,9 +76,9 @@ export const TEST_CASES: TestCase[] = [
     // ── Close Parameters ──────────────────────────────────────────────────────
     {
         name: 'Near-Perfect Params',
-        description: 'Red overridden to 97 (default is 100). Within 5-unit tolerance — should still win.',
+        description: 'Red overridden to 95 (default is 100). Within 10-unit tolerance — should still win.',
         // Default RGBA: Red=100 Green=100 Blue=100 Opacity=100
-        user: [e('RGBA', { Red: 97 })],
+        user: [e('RGBA', { Red: 95 })],
         target: [e('RGBA', { Red: 100 })],
         expectMatch: true,
         expectScoreAbove: 90,
@@ -88,11 +88,11 @@ export const TEST_CASES: TestCase[] = [
     {
         name: 'Incorrect Params',
         description: 'TUNNEL_WARP Scale overridden to 80 vs default 20. Should fail.',
-        // Default TUNNEL_WARP: Scale=20, Speed=10, Twist=10
-        user: [e('TUNNEL_WARP', { Scale: 80, Speed: 90, Twist: 90 })],
+        // Default TUNNEL_WARP: Scale=20
+        user: [e('TUNNEL_WARP', { Scale: 80 })],
         target: [e('TUNNEL_WARP')],
         expectMatch: false,
-        expectScoreBelow: 50,
+        expectScoreBelow: 80,
     },
 
     // ── Extra Effect Added ────────────────────────────────────────────────────
@@ -373,14 +373,14 @@ export const TEST_CASES: TestCase[] = [
         expectScoreBelow: 80,
     },
 
-    // ── Frequency Band Mismatch ──────────────────────────────────────────────
+    // ── Frequency Band Mismatch (Legal) ──────────────────────────────────────────────
     {
-        name: 'Frequency Band Mismatch (Illegal)',
-        description: 'Parameters have identical values, but user has Red set to BASS reactivity while target is OFF. Incurs -25 penalty, fails.',
+        name: 'Frequency Band Mismatch (Passable)',
+        description: 'User has Red set to BASS while target is OFF. Incurs -10 penalty, scores 90. Should pass.',
         target: [e('RGBA')],
         user: [e('RGBA', { 'Red:band': 'BASS' })],
-        expectMatch: false,
-        expectScoreBelow: 80,
+        expectMatch: true,
+        expectScoreAbove: 90,
     },
 
     // ── Frequency Band Match (Legal) ─────────────────────────────────────────
@@ -396,21 +396,21 @@ export const TEST_CASES: TestCase[] = [
     // ── Multiple Frequency Band Mismatches (Illegal) ─────────────────────────
     {
         name: 'Multiple Frequency Band Mismatches (Illegal)',
-        description: 'Two separate parameters have the wrong band setting. Penalties stack to -50, score 50. Should fail.',
+        description: 'Three separate parameters have the wrong band setting. Penalties stack to -30, score 70. Should fail.',
         target: [e('RGBA')],
-        user: [e('RGBA', { 'Red:band': 'BASS', 'Blue:band': 'TREBLE' })],
+        user: [e('RGBA', { 'Red:band': 'BASS', 'Blue:band': 'TREBLE', 'Green:band': 'BASS' })],
         expectMatch: false,
         expectScoreBelow: 80,
     },
 
-    // ── Frequency Band Mismatch in Melded Group (Illegal) ────────────────────
+    // ── Frequency Band Mismatch in Melded Group (Legal) ────────────────────
     {
-        name: 'Frequency Band Mismatch in Melded Group (Illegal)',
-        description: 'Even inside a meld chain, a single band mismatch on a modifier (RGBA) fails.',
+        name: 'Frequency Band Mismatch in Melded Group (Passable)',
+        description: 'Inside a meld chain, a single band mismatch on a modifier scores 90. Passes.',
         target: [meld(e('GRID')), e('RGBA')],
         user: [meld(e('GRID')), e('RGBA', { 'Red:band': 'BASS' })],
-        expectMatch: false,
-        expectScoreBelow: 80,
+        expectMatch: true,
+        expectScoreAbove: 90,
     },
 
     // ── Commutative Band Match (Legal) ──────────────────────────────────────
@@ -422,32 +422,32 @@ export const TEST_CASES: TestCase[] = [
         expectMatch: true,
         expectScoreAbove: 95,
     },
-    // ── Min Mismatch (Illegal) ───────────────────────
+    // ── Min Mismatch (Legal) ───────────────────────
     {
-        name: 'Min Mismatch (Illegal)',
-        description: 'Both have BASS on Red, and Value=100. BUT Target Min=50 while User Min=0. Score 75, fails.',
+        name: 'Min Mismatch (Passable)',
+        description: 'Target Min=50 while User Min=0. Incurs -10 penalty, score 90. Passes.',
         target: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100 })],
         user: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 0, Red: 100 })],
-        expectMatch: false,
-        expectScoreBelow: 80,
+        expectMatch: true,
+        expectScoreAbove: 90,
     },
     // -- Multiple Min Mismatches (Illegal)
     {
         name: 'Multiple Min Mismatches (Illegal)',
-        description: 'Two separate parameters have the wrong min setting. Penalties stack to -50, score 50. Should fail.',
-        target: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100, 'Blue:band': 'BASS', 'Blue:min': 50, Blue: 100 })],
-        user: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 0, Red: 100, 'Blue:band': 'BASS', 'Blue:min': 0, Blue: 100 })],
+        description: 'Three separate parameters have the wrong min setting. Penalties stack to -30, score 70. Should fail.',
+        target: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100, 'Blue:band': 'BASS', 'Blue:min': 50, Blue: 100, 'Green:band': 'BASS', 'Green:min': 50, Green: 100 })],
+        user: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 0, Red: 100, 'Blue:band': 'BASS', 'Blue:min': 0, Blue: 100, 'Green:band': 'BASS', 'Green:min': 0, Green: 100 })],
         expectMatch: false,
         expectScoreBelow: 80,
     },
-    // -- Min Mismatch in Melded Group (Illegal)
+    // -- Min Mismatch in Melded Group (Legal)
     {
-        name: 'Min Mismatch in Melded Group (Illegal)',
-        description: 'Even inside a meld chain, a single min mismatch on a modifier (RGBA) fails.',
+        name: 'Min Mismatch in Melded Group (Passable)',
+        description: 'Inside a meld chain, a single min mismatch on a modifier scores 90. Passes.',
         target: [meld(e('GRID')), e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100 })],
         user: [meld(e('GRID')), e('RGBA', { 'Red:band': 'BASS', 'Red:min': 0, Red: 100 })],
-        expectMatch: false,
-        expectScoreBelow: 80,
+        expectMatch: true,
+        expectScoreAbove: 90,
     },
     // ── Commutative Min Match (Legal) ──────────────────────────────────────
     {
@@ -688,7 +688,28 @@ export const TEST_CASES: TestCase[] = [
         user: [e('LUMINANCE_MASK'), e('TERRAIN', { Extrusion: 10 })],
         expectMatch: false,
         expectScoreBelow: 80,
-    }
+    },
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // CYCLIC PARAMETERS
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    {
+        name: 'Cyclic Parameter Identity (0 vs 100)',
+        description: 'Rotation is cyclic. 0 and 100 are visually identical. Should score 100.',
+        target: [e('ROTATE', { Rotation: 0 })],
+        user: [e('ROTATE', { Rotation: 100 })],
+        expectMatch: true,
+        expectScoreAbove: 99,
+    },
+    {
+        name: 'Cyclic Parameter Proximity (5 vs 95)',
+        description: 'On a 0-100 loop, 5 and 95 are only 10 units apart. Should pass.',
+        target: [e('ROTATE', { Rotation: 5 })],
+        user: [e('ROTATE', { Rotation: 95 })],
+        expectMatch: true,
+        expectScoreAbove: 90,
+    },
 ];
 
 

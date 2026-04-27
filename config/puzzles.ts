@@ -40,5 +40,13 @@ export const PUZZLES: PuzzleConfig[] = [
         allowedEffects: [
             'TERRAIN_SPHERE', 'SPECTRAL_MAP', 'GLOW', 'GRAIN'
         ]
+    },
+    {
+        locked: false,
+        difficulty: 'Medium',
+        macro: 'LIQUID',
+        allowedEffects: [
+            'ORGANIC_NOISE', 'TERRAIN', 'SPECTRAL_MAP', 'GLOW'
+        ]
     }
 ];

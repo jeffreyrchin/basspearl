@@ -393,17 +393,24 @@ export class PuzzleService {
             if (!pB) return;
 
             let paramScore = 0;
-            const valDiff = Math.abs(pA.value - pB.value);
+            let valDiff = Math.abs(pA.value - pB.value);
+
+            // Handle Cyclic Parameters (e.g. 0 is identical to 100)
+            const meta = EFFECT_METADATA[a.type].params.find(m => m.name === pA.param);
+            if (meta?.cyclic) {
+                valDiff = Math.min(valDiff, 100 - valDiff);
+            }
+
             const minDiff = Math.abs(pA.min - pB.min);
 
             // 1. Value Matching (Graded)
             if (valDiff === 0) paramScore = 100;
-            else if (valDiff <= 5) paramScore = 75;
-            else if (valDiff <= 15) paramScore = 50;
+            else if (valDiff <= 5) paramScore = 90;
+            else if (valDiff <= 15) paramScore = 80;
 
             // 2. Frequency Band Matching (Global Penalty)
             if (pA.frequencyBand !== pB.frequencyBand) {
-                penalty += 25;
+                penalty += 10;
             }
 
             // 3. Min Matching (Floor)
@@ -411,7 +418,7 @@ export class PuzzleService {
             // If audio is ON, min mismatch is a major structural failure (Visual Floor).
             // If audio is OFF, min is visually irrelevant and should be ignored.
             if (pA.frequencyBand !== 'OFF') {
-                if (minDiff > 5) penalty += 25;
+                if (minDiff > 10) penalty += 10;
             }
 
             totalParamScore += paramScore;
