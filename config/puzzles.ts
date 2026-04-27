@@ -6,15 +6,39 @@ export const PUZZLES: PuzzleConfig[] = [
         difficulty: 'Easy',
         macro: 'SPIRAL_GLOW',
         allowedEffects: [
-            // The Solution
-            'SPIRAL_GRADIENT', 'SPECTRAL_MAP', 'GLOW',
-
-            // Red Herrings (Patterns)
-            'RADIAL_GRADIENT', 'LINEAR_GRADIENT', 'GRID',
-            // Red Herrings (Colors)
-            'RGBA', 'INVERT',
-            // Red Herrings (Modifiers)
-            'BLUR', 'WAVE_DISTORTION', 'TUNNEL_WARP'
+            'SPIRAL_GRADIENT', 'SPECTRAL_MAP', 'GLOW', 'RADIAL_GRADIENT', 'LINEAR_GRADIENT', 'GRID', 'RGBA', 'INVERT', 'BLUR', 'WAVE_DISTORTION', 'TUNNEL_WARP'
+        ]
+    },
+    {
+        locked: false,
+        difficulty: 'Medium',
+        macro: 'RUSH_HOUR',
+        allowedEffects: [
+            'GRAIN', 'HUE_ROTATION', 'GLOW', 'SCROLL', 'INFINITE_ZOOM'
+        ]
+    },
+    {
+        locked: false,
+        difficulty: 'Medium',
+        macro: 'STREAKS',
+        allowedEffects: [
+            'GRID', 'WAVE_DISTORTION', 'TUNNEL_WARP', 'HUE_ROTATION'
+        ]
+    },
+    {
+        locked: false,
+        difficulty: 'Medium',
+        macro: 'CRYOGENIC_FLUID',
+        allowedEffects: [
+            'SHAPE', 'ORGANIC_NOISE', 'TERRAIN'
+        ]
+    },
+    {
+        locked: false,
+        difficulty: 'Hard',
+        macro: 'DISCO_BALL',
+        allowedEffects: [
+            'TERRAIN_SPHERE', 'SPECTRAL_MAP', 'GLOW', 'GRAIN'
         ]
     }
 ];

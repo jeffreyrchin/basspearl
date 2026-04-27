@@ -585,7 +585,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Pan Y', { v: 50 }),
           o('Rotation', { v: 0 }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'TERRAIN_SPHERE',
@@ -600,7 +600,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Spin Speed Y', { v: 50, m: 0, b: 'SUB' }, { v: 18, b: 'OFF' }),
           o('Spin Speed Z', { v: 0, m: 0, b: 'OFF' }, { v: 18, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'SPECTRAL_MAP',
@@ -610,7 +610,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Speed', { v: 100, b: 'OFF' }),
           o('Intensity', { v: 100, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'GLOW',
@@ -640,7 +640,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Pan Y', { v: 50, b: 'OFF' }),
           o('Rotation', { v: 0, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'WAVE_DISTORTION',
@@ -649,7 +649,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Frequency', { v: 5, b: 'OFF' }),
           o('Speed', { v: 0, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'TUNNEL_WARP',
@@ -658,7 +658,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Speed', { v: 60, m: 10, b: 'SUB' }, { v: 40, b: 'OFF' }),
           o('Twist', { v: 1, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'HUE_ROTATION',

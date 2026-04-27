@@ -21,19 +21,38 @@ interface MeldGroup {
     members: EffectConfig[];
 }
 
-// Effects that only modify pixel colors (Point Operations).
-// They commute with UV effects, but NOT with other Color effects.
-const COLOR_EFFECTS = new Set<string>(['RGBA', 'INVERT', 'HUE_ROTATION']);
+// Category 1: Pure pixel math — apply an identical function to every pixel independently.
+// They distribute over ALL categorized spatial operations.
+const POINT_OPS = new Set<string>(['RGBA', 'INVERT', 'HUE_ROTATION']);
 
-// Effects that warp UV coordinates or sample neighboring pixels (Spatial Operations).
-const UV_EFFECTS = new Set<GlitchEffectType>([
-    'TUNNEL_WARP', 'ROTATE', 'SKEW', 'TILE', 'TRANSFORM', 'SCROLL',
-    'BIT_CRUSH', 'TRI_CRUSH', 'HEX_CRUSH', 'SCREEN_SHAKE', 'BLACK_HOLE',
-    'WHITE_HOLE', 'WAVE_DISTORTION', 'BLUR'
+// Category 2: Data-Dependent Point Ops — read current pixel data (luma) to decide output.
+// They commute with "Rigid" UV warps (Scroll, Rotate) because moving a pixel doesn't
+// change its luma. However, they DO NOT commute with effects that modify color content 
+// (e.g. BIT_CRUSH, TERRAIN) because the mask would be reacting to different source data.
+const ADAPTIVE_OPS = new Set<string>(['SPECTRAL_MAP', 'LUMINANCE_MASK', 'LUMINANCE_MAP']);
+
+// Category 3: Translation-Invariant Filters — symmetric neighbor convolutions.
+// Only commute with Uniform Warps (translation invariance property).
+const ISOTROPIC_FILTERS = new Set<string>(['BLUR', 'GLOW', 'EDGE_MASK', 'COLOR_BLEED', 'CHANNEL_SHIFT']);
+
+// Category 4: Uniform Warps — identical global translation applied to every pixel.
+// Commute with each other and with Isotropic Filters.
+const UNIFORM_WARPS = new Set<string>(['SCROLL', 'SCREEN_SHAKE']);
+
+// Category 5: Non-Uniform UV Warps — deterministic positional math, no image-data reading.
+// Commute with POINT_OPS and ADAPTIVE_OPS.
+const NON_UNIFORM_WARPS = new Set<string>([
+    'TUNNEL_WARP', 'ROTATE', 'SKEW', 'TILE', 'TRANSFORM',
+    'BLACK_HOLE', 'WHITE_HOLE', 'WAVE_DISTORTION',
+    'BIT_CRUSH', 'TRI_CRUSH', 'HEX_CRUSH',
+    'TERRAIN', 'TERRAIN_SPHERE', 'TERRAIN_RING'
 ]);
 
-export class PuzzleService {
+// Uncategorized effects (DATA_CORRUPTION, DEEP_FRY, etc.) 
+// default to STRICT (never commute)., UNLESS they satisfy
+// specific parameter conditions below.
 
+export class PuzzleService {
     static evaluate(userEffects: EffectConfig[], targetEffects: EffectConfig[]): PuzzleMatchResult {
         if (userEffects.length === 0 && targetEffects.length === 0) {
             return { isMatch: true, score: 100, feedback: 'Empty Match' };
@@ -261,30 +280,65 @@ export class PuzzleService {
 
     /**
      * General commutativity check for any two effects.
-     * 
-     * Rule 1 — Color vs Space: Point-ops (color math) commute with spatial transforms.
-     * Rule 2 — Spatial Non-Intersection: Spatially-bounded patterns that do not
-     *   overlap can be freely swapped without changing the visual.
-     * 
-     * Note: Color-vs-Color effects (e.g. Invert and RGBA) are NOT commutative.
+     *
+     * Rule 1 — Point Ops vs Spatial: Pure pixel math distributes over all
+     *           categorized spatial operations (UV warps, filters, etc).
+     * Rule 2 — Non-Intersecting Patterns: Spatially-bounded patterns at different
+     *           screen regions commute regardless of type.
+     * Rule 3 — Adaptive Ops vs UV Warps: Content-reading ops commute with warps that
+     *           don't change what content (luma) is at any given sample point.
+     * Rule 4 — Isotropic Filters vs Uniform Warps: Translation invariance theorem.
+     * Rule 5 — Uniform Warp vs Uniform Warp: Vector addition is commutative.
      */
     private static areEffectsCommutative(a: EffectConfig, b: EffectConfig): boolean {
-        const isColorA = COLOR_EFFECTS.has(a.type);
-        const isColorB = COLOR_EFFECTS.has(b.type);
-        const isSpaceA = UV_EFFECTS.has(a.type) || this.hasSpatialBounds(a.type);
-        const isSpaceB = UV_EFFECTS.has(b.type) || this.hasSpatialBounds(b.type);
+        const isPointA = POINT_OPS.has(a.type);
+        const isPointB = POINT_OPS.has(b.type);
+        const isAdaptiveA = ADAPTIVE_OPS.has(a.type);
+        const isAdaptiveB = ADAPTIVE_OPS.has(b.type);
+        const isFilterA = ISOTROPIC_FILTERS.has(a.type);
+        const isFilterB = ISOTROPIC_FILTERS.has(b.type);
+        const isUniformA = UNIFORM_WARPS.has(a.type);
+        const isUniformB = UNIFORM_WARPS.has(b.type);
+        let isNonUniformA = NON_UNIFORM_WARPS.has(a.type);
+        let isNonUniformB = NON_UNIFORM_WARPS.has(b.type);
 
-        // Color vs Space -> COMMUTE
-        if (isColorA && isSpaceB) return true;
-        if (isColorB && isSpaceA) return true;
+        // Conditional Commutativity Checks:
+        // Bit Crush and Terrain families are only Non-Uniform Warps when their
+        // data-altering parameters (Posterize, Extrusion) are 0. Otherwise they are Strict.
+        if (isNonUniformA) {
+            const posterize = a.params.find(p => p.param === 'Posterize')?.value ?? 0;
+            const extrusion = a.params.find(p => p.param === 'Extrusion')?.value ?? 0;
+            if (posterize > 0 || extrusion > 0) isNonUniformA = false;
+        }
 
-        // Space (Pattern) vs Space -> COMMUTE if no overlap
+        if (isNonUniformB) {
+            const posterize = b.params.find(p => p.param === 'Posterize')?.value ?? 0;
+            const extrusion = b.params.find(p => p.param === 'Extrusion')?.value ?? 0;
+            if (posterize > 0 || extrusion > 0) isNonUniformB = false;
+        }
+
+        const isSpatialA = isFilterA || isUniformA || isNonUniformA;
+        const isSpatialB = isFilterB || isUniformB || isNonUniformB;
+
+        // Rule 1: Point Ops commute with all categorized spatial ops.
+        if (isPointA && isSpatialB) return true;
+        if (isPointB && isSpatialA) return true;
+
+        // Rule 2: Non-intersecting spatial patterns commute.
         if (this.hasSpatialBounds(a.type) && this.hasSpatialBounds(b.type)) {
             return !this.doPatternsIntersect(a, b);
         }
 
-        // Color vs Color -> DO NOT COMMUTE
-        // Space vs Space -> DO NOT COMMUTE
+        // Rule 3: Adaptive Ops commute with content-preserving UV Warps.
+        if (isAdaptiveA && (isUniformB || isNonUniformB)) return true;
+        if (isAdaptiveB && (isUniformA || isNonUniformA)) return true;
+
+        // Rule 4: Isotropic Filters commute with Uniform Warps (translation invariance).
+        if ((isFilterA && isUniformB) || (isFilterB && isUniformA)) return true;
+
+        // Rule 5: Uniform Warps commute with each other (vector addition commutes).
+        if (isUniformA && isUniformB) return true;
+
         return false;
     }
 

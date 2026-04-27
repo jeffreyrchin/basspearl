@@ -95,71 +95,6 @@ export const TEST_CASES: TestCase[] = [
         expectScoreBelow: 50,
     },
 
-    // ── RGBA Passthrough: Legal Swap ──────────────────────────────────────────
-    {
-        name: 'RGBA Passthrough Swap (Legal)',
-        description: 'RGBA before Tunnel Warp in target, reversed in user. RGBA is PASSTHROUGH — should be forgiven.',
-        target: [e('RGBA'), e('TUNNEL_WARP')],
-        user: [e('TUNNEL_WARP'), e('RGBA')],
-        expectMatch: true,
-        expectScoreAbove: 90,
-    },
-
-    // ── Invert Passthrough: Legal Swap ────────────────────────────────────────
-    {
-        name: 'Invert Passthrough Swap (Legal)',
-        description: 'Invert swapped with Rotate. Should be forgiven.',
-        // Default INVERT: Inversion=100; Default ROTATE: Rotation=3, Speed=3
-        target: [e('INVERT'), e('ROTATE')],
-        user: [e('ROTATE'), e('INVERT')],
-        expectMatch: true,
-        expectScoreAbove: 90,
-    },
-
-    // ── Spectral Map is NOT a Passthrough ─────────────────────────────────────
-    {
-        name: 'Spectral Swap (Illegal)',
-        description: 'Spectral is STRICT — swapping with Tunnel Warp should lose order points.',
-        // Default SPECTRAL_MAP: Rainbow Density=50, Color Shift=0, Speed=25, Intensity=100
-        target: [e('SPECTRAL_MAP'), e('TUNNEL_WARP')],
-        user: [e('TUNNEL_WARP'), e('SPECTRAL_MAP')],
-        expectMatch: false,
-        expectScoreBelow: 90,
-    },
-
-    // ── Non-Intersecting Patterns: Legal Swap ─────────────────────────────────
-    {
-        name: 'Patterns No-Overlap Swap (Legal)',
-        description: 'Two GRIDs far apart spatially — order is irrelevant.',
-        // GRID real params: Horizontal, Vertical, Thickness, Feather, Scale X, Scale Y, Pan X, Pan Y, Rotation
-        target: [
-            e('GRID', { 'Pan X': 5, 'Scale X': 10 }),
-            e('GRID', { 'Pan X': 95, 'Scale X': 10 }),
-        ],
-        user: [
-            e('GRID', { 'Pan X': 95, 'Scale X': 10 }),
-            e('GRID', { 'Pan X': 5, 'Scale X': 10 }),
-        ],
-        expectMatch: true,
-        expectScoreAbove: 90,
-    },
-
-    // ── Intersecting Patterns: Illegal Swap ───────────────────────────────────
-    {
-        name: 'Patterns Overlapping Swap (Illegal)',
-        description: 'Two GRIDs both centered at ~50 — they overlap. Swap should be penalized.',
-        target: [
-            e('GRID', { 'Pan X': 50, 'Pan Y': 50, 'Scale X': 80, 'Scale Y': 80 }),
-            e('GRID', { 'Pan X': 55, 'Pan Y': 50, 'Scale X': 80, 'Scale Y': 80 }),
-        ],
-        user: [
-            e('GRID', { 'Pan X': 55, 'Pan Y': 50, 'Scale X': 80, 'Scale Y': 80 }),
-            e('GRID', { 'Pan X': 50, 'Pan Y': 50, 'Scale X': 80, 'Scale Y': 80 }),
-        ],
-        expectMatch: false,
-        expectScoreBelow: 90,
-    },
-
     // ── Extra Effect Added ────────────────────────────────────────────────────
     {
         name: 'Extra Effect in User Stack',
@@ -523,6 +458,211 @@ export const TEST_CASES: TestCase[] = [
         expectMatch: true,
         expectScoreAbove: 95,
     },
+    // ─────────────────────────────────────────────────────────────────────────
+    // RULE-BASED COMMUTATIVITY TESTS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ── Rule 1: Point Ops vs ALL Spatial Ops (Legal) ─────────────────────────
+    {
+        name: 'Point Op vs Non-Uniform Warp Swap (Legal)',
+        description:
+            'Pure Point Ops (INVERT, RGBA) distribute over all spatial transforms. ' +
+            'Inverting then Rotating is identical to Rotating then Inverting.',
+        target: [e('INVERT'), e('ROTATE')],
+        user: [e('ROTATE'), e('INVERT')],
+        expectMatch: true,
+        expectScoreAbove: 95,
+    },
+
+    // ── Rule 2: Intersecting Patterns ────────────────────────────
+    {
+        name: 'Non-Intersecting Patterns (Legal)',
+        description: 'Two GRIDs far apart spatially — order is irrelevant.',
+        target: [
+            e('GRID', { 'Pan X': 5, 'Scale X': 10 }),
+            e('GRID', { 'Pan X': 95, 'Scale X': 10 }),
+        ],
+        user: [
+            e('GRID', { 'Pan X': 95, 'Scale X': 10 }),
+            e('GRID', { 'Pan X': 5, 'Scale X': 10 }),
+        ],
+        expectMatch: true,
+        expectScoreAbove: 90,
+    },
+    {
+        name: 'Patterns Overlapping Swap (Illegal)',
+        description: 'Two GRIDs both centered at ~50 — they overlap. Swap should be penalized.',
+        target: [
+            e('GRID', { 'Pan X': 50, 'Pan Y': 50, 'Scale X': 80, 'Scale Y': 80 }),
+            e('GRID', { 'Pan X': 55, 'Pan Y': 50, 'Scale X': 80, 'Scale Y': 80 }),
+        ],
+        user: [
+            e('GRID', { 'Pan X': 55, 'Pan Y': 50, 'Scale X': 80, 'Scale Y': 80 }),
+            e('GRID', { 'Pan X': 50, 'Pan Y': 50, 'Scale X': 80, 'Scale Y': 80 }),
+        ],
+        expectMatch: false,
+        expectScoreBelow: 80,
+    },
+
+    // ── Rule 3: Adaptive Ops vs UV Warps ──────────────
+    {
+        name: 'Adaptive Op vs Non-Uniform UV Warp Swap (Legal)',
+        description:
+            'LUMINANCE_MASK reads per-pixel luma. ROTATE is a pure UV warp that never ' +
+            'changes luma values, only which pixel is sampled. The same luma ends up ' +
+            'at each screen position either way.',
+        target: [e('LUMINANCE_MASK'), e('ROTATE')],
+        user: [e('ROTATE'), e('LUMINANCE_MASK')],
+        expectMatch: true,
+        expectScoreAbove: 90,
+    },
+    {
+        name: 'Adaptive Op vs Uniform Warp Swap (Legal)',
+        description:
+            'LUMINANCE_MASK and SCROLL (Uniform Warp) commute because SCROLL preserves ' +
+            'the content of every pixel. A pixel\'s brightness remains the same ' +
+            'regardless of where on the screen it is translated.',
+        target: [e('LUMINANCE_MASK'), e('SCROLL')],
+        user: [e('SCROLL'), e('LUMINANCE_MASK')],
+        expectMatch: true,
+        expectScoreAbove: 90,
+    },
+    {
+        name: 'Adaptive Op vs Isotropic Filter (Illegal)',
+        description:
+            'LUMINANCE_MASK and BLUR do NOT commute. If you mask then blur, the black ' +
+            'pixels bleed into neighbors. If you blur then mask, the neighbors mix ' +
+            'their original brightness before the mask is applied.',
+        target: [e('LUMINANCE_MASK'), e('BLUR')],
+        user: [e('BLUR'), e('LUMINANCE_MASK')],
+        expectMatch: false,
+        expectScoreBelow: 80,
+    },
+    // ── Rule 4: Isotropic Filters vs Uniform Warps (Legal) ────────────────
+    {
+        name: 'Isotropic Filter vs Uniform Warp Swap (Legal)',
+        description:
+            'GLOW is an Isotropic Filter (Translation Invariant). SCROLL is a ' +
+            'Uniform Warp (Pure Translation). They commute due to translation invariance.',
+        target: [e('SCROLL'), e('GLOW')],
+        user: [e('GLOW'), e('SCROLL')],
+        expectMatch: true,
+        expectScoreAbove: 90,
+    },
+
+    // ── Isotropic Filters vs Non-Uniform Warps (Illegal) ────────────────
+    {
+        name: 'Isotropic Filter vs Non-Uniform Warp (Illegal)',
+        description:
+            'GLOW (Filter) and ROTATE (Non-Uniform Warp) are NOT commutative. ' +
+            'Boundary conditions and aspect ratio math make rotation order-dependent.',
+        target: [e('GLOW'), e('ROTATE')],
+        user: [e('ROTATE'), e('GLOW')],
+        expectMatch: false,
+        expectScoreBelow: 80,
+    },
+
+    // ── Rule 5: Uniform Warp vs Uniform Warp (Legal) ─────────────────────────
+    {
+        name: 'Uniform Warp vs Uniform Warp Swap (Legal)',
+        description: 'Two Uniform Warps (SCROLL + SCREEN_SHAKE) are just vector additions. Addition commutes.',
+        target: [e('SCROLL'), e('SCREEN_SHAKE')],
+        user: [e('SCREEN_SHAKE'), e('SCROLL')],
+        expectMatch: true,
+        expectScoreAbove: 90,
+    },
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // CONDITIONAL COMMUTATIVITY (Parameter-Aware)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ── BIT_CRUSH vs POINT_OPS ────────────────────────────────
+    {
+        name: 'Bit Crush (Warp Only) vs Invert (Legal)',
+        description:
+            'BIT_CRUSH with Posterize=0 is a pure UV warp (Pixelation). ' +
+            'It should commute with Point Ops like INVERT.',
+        target: [e('BIT_CRUSH', { Posterize: 0 }), e('INVERT')],
+        user: [e('INVERT'), e('BIT_CRUSH', { Posterize: 0 })],
+        expectMatch: true,
+        expectScoreAbove: 90,
+    },
+    {
+        name: 'Bit Crush (with Posterize) vs Invert (Illegal)',
+        description:
+            'BIT_CRUSH with Posterize=50 is a data-altering Point Op. ' +
+            'It no longer commutes with other Point Ops (Invert).',
+        target: [e('BIT_CRUSH', { Posterize: 50 }), e('INVERT')],
+        user: [e('INVERT'), e('BIT_CRUSH', { Posterize: 50 })],
+        expectMatch: false,
+        expectScoreBelow: 80,
+    },
+
+    // ── BIT_CRUSH vs ADAPTIVE_OPS ────────────────────────────────────────────
+    {
+        name: 'Bit Crush (Warp Only) vs Adaptive Op (Legal)',
+        description:
+            'BIT_CRUSH with Posterize=0 preserves pixel content. ' +
+            'It should commute with Adaptive Ops like LUMINANCE_MASK.',
+        target: [e('BIT_CRUSH', { Posterize: 0 }), e('LUMINANCE_MASK')],
+        user: [e('LUMINANCE_MASK'), e('BIT_CRUSH', { Posterize: 0 })],
+        expectMatch: true,
+        expectScoreAbove: 90,
+    },
+    {
+        name: 'Bit Crush (with Posterize) vs Adaptive Op (Illegal)',
+        description:
+            'BIT_CRUSH with Posterize=50 alters pixel luma. This changes ' +
+            'what the mask sees, making the order-dependent swap illegal.',
+        target: [e('BIT_CRUSH', { Posterize: 50 }), e('LUMINANCE_MASK')],
+        user: [e('LUMINANCE_MASK'), e('BIT_CRUSH', { Posterize: 50 })],
+        expectMatch: false,
+        expectScoreBelow: 80,
+    },
+
+    // ── TERRAIN vs POINT_OPS ──────────────────────────────────
+    {
+        name: 'Terrain (Warp Only) vs RGBA (Legal)',
+        description:
+            'TERRAIN with Extrusion=0 is a pure coordinate displacement. ' +
+            'It should commute with Point Ops like RGBA.',
+        target: [e('TERRAIN', { Extrusion: 0 }), e('RGBA')],
+        user: [e('RGBA'), e('TERRAIN', { Extrusion: 0 })],
+        expectMatch: true,
+        expectScoreAbove: 90,
+    },
+    {
+        name: 'Terrain (with Extrusion) vs RGBA (Illegal)',
+        description:
+            'TERRAIN with Extrusion=10 generates new lighting/3D data. ' +
+            'It becomes Strict and no longer commutes with Point Ops.',
+        target: [e('TERRAIN', { Extrusion: 10 }), e('RGBA')],
+        user: [e('RGBA'), e('TERRAIN', { Extrusion: 10 })],
+        expectMatch: false,
+        expectScoreBelow: 80,
+    },
+
+    // ── TERRAIN vs ADAPTIVE_OPS ──────────────────────────────────
+    {
+        name: 'Terrain (Warp Only) vs Adaptive Op (Legal)',
+        description:
+            'TERRAIN with Extrusion=0 preserves pixel content. ' +
+            'It should commute with Adaptive Ops like LUMINANCE_MASK.',
+        target: [e('TERRAIN', { Extrusion: 0 }), e('LUMINANCE_MASK')],
+        user: [e('LUMINANCE_MASK'), e('TERRAIN', { Extrusion: 0 })],
+        expectMatch: true,
+        expectScoreAbove: 90,
+    },
+    {
+        name: 'Terrain (with Extrusion) vs Adaptive Op (Illegal)',
+        description:
+            'TERRAIN with Extrusion=10 generates new lighting/3D data. ' +
+            'It becomes Strict and no longer commutes with Adaptive Ops.',
+        target: [e('TERRAIN', { Extrusion: 10 }), e('LUMINANCE_MASK')],
+        user: [e('LUMINANCE_MASK'), e('TERRAIN', { Extrusion: 10 })],
+        expectMatch: false,
+        expectScoreBelow: 80,
+    }
 ];
 
 

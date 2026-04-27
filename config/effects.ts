@@ -55,9 +55,9 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     label: 'Wave Distortion',
     category: 'Modifier',
     params: [
-      p('Amplitude', { v: 35, m: 11, b: 'BASS' }, { v: 33 }),
+      p('Amplitude', { v: 20 }, { v: 33 }),
       p('Frequency', { v: 3 }, { v: 5 }),
-      p('Speed', { v: 50, m: 5, b: 'BASS' }, { v: 5 }),
+      p('Speed', { v: 15 }, { v: 5 }),
     ],
   },
   COLOR_BLEED: {
@@ -112,7 +112,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     category: 'Pattern',
     params: [
       p('Density', { v: 50 }),
-      p('Speed', { v: 40, b: 'SUB' }, { v: 5 }),
+      p('Speed', { v: 5 }),
     ],
   },
   TUNNEL_WARP: {
@@ -175,7 +175,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Scale', { v: 50 }),
       p('Detail Level', { v: 100 }),
       p('Warp Amount', { v: 1 }),
-      p('Warp Speed', { v: 100, b: 'SUB' }, { v: 50 }),
+      p('Warp Speed', { v: 25 }, { v: 50 }),
       p('Warp Direction', { v: 0 }),
       p('Blend', { v: 100 }),
     ],
@@ -190,7 +190,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Freq Y', { v: 35 }),
       p('Density', { v: 100 }),
       p('Jitter', { v: 100 }),
-      p('Speed', { v: 30, b: 'BASS' }, { v: 20, b: 'BASS' }),
+      p('Speed', { v: 15 }, { v: 20, b: 'BASS' }),
       p('Blend', { v: 100 }),
       p('Scale X', { v: 54 }),
       p('Scale Y', { v: 96 }),
@@ -256,7 +256,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     label: 'Black Hole',
     category: 'Modifier',
     params: [
-      p('Intensity', { v: 51, m: 31, b: 'SUB' }, { v: 100, b: 'SUB' }),
+      p('Intensity', { v: 30 }, { v: 100, b: 'SUB' }),
       p('Radius', { v: 30 }, { v: 50 }),
       p('Center X', { v: 50 }),
       p('Center Y', { v: 50 }),
@@ -266,8 +266,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     label: 'White Hole',
     category: 'Modifier',
     params: [
-      p('Intensity', { v: 43, m: 23, b: 'SUB' }, { v: 30, b: 'SUB' }),
-      p('Radius', { v: 43, m: 23, b: 'SUB' }, { v: 40, b: 'SUB' }),
+      p('Intensity', { v: 30 }, { v: 30, b: 'SUB' }),
+      p('Radius', { v: 40 }, { v: 40, b: 'SUB' }),
       p('Center X', { v: 50 }),
       p('Center Y', { v: 50 }),
     ],
@@ -383,7 +383,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     params: [
       p('Feather', { v: 50 }),
       p('Frequency', { v: 25 }),
-      p('Speed', { v: 100, b: 'TREBLE' }, { v: 30 }),
+      p('Speed', { v: 30 }),
       p('Pan X', { v: 50 }),
       p('Pan Y', { v: 50 }),
     ],
@@ -404,7 +404,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     label: 'Infinite Zoom',
     category: 'Modifier',
     params: [
-      p('Speed', { v: 50, m: 0, b: 'SUB' }, { v: 10 }),
+      p('Speed', { v: 10 }),
       p('Depth', { v: 25 }),
       p('Spacing', { v: 30 }),
       p('Plane Count', { v: 20 }),
