@@ -40,6 +40,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const isPuzzlesModalOpen = useEffectStore(s => s.isPuzzlesModalOpen);
     const isGameMode = useEffectStore(s => s.isGameMode);
     const puzzleMatchResult = useEffectStore(s => s.puzzleMatchResult);
+    const isPreviewingPuzzle = useEffectStore(s => s.isPreviewingPuzzle);
 
     const [isTabAudioUnsupportedModalOpen, setIsTabAudioUnsupportedModalOpen] = useState(false);
     const isTabAudioUnsupported = typeof navigator !== 'undefined' && (
@@ -159,7 +160,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             renderFrame(currentTime);
             updateScrubberUI(currentTime);
         }
-    }, [effects, currentTime, isPlaying, audioFile, isLiveMode]);
+    }, [effects, currentTime, isPlaying, audioFile, isLiveMode, isPreviewingPuzzle]);
 
     // Sync effectsRef for export
     useEffect(() => {

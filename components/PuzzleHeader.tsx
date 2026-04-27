@@ -12,7 +12,10 @@ const PuzzleHeader: React.FC = () => {
     // Toggle preview on 'W' key
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key.toLowerCase() === 'w') setIsPreviewing(true);
+            if (e.key.toLowerCase() === 'w') {
+                if (isPreviewing) return; // Prevent multiple events firing due to holding key
+                setIsPreviewing(true);
+            }
         };
         const handleKeyUp = (e: KeyboardEvent) => {
             if (e.key.toLowerCase() === 'w') setIsPreviewing(false);
