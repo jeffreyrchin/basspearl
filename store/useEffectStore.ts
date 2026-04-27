@@ -3,6 +3,7 @@ import { EffectConfig, GlitchEffectType, MacroType, TransitionType } from '../ty
 import { INITIAL_REACTIVE_EFFECTS, createEffectInstance, createMacroInstance, INITIAL_SCENE_COUNT, DEFAULT_TRANSITION_DURATION } from '../constants';
 import { analytics } from '@/services/analytics';
 import { PUZZLES } from '../config/puzzles';
+import { PuzzleService, PuzzleMatchResult } from '../services/puzzleService';
 
 interface SceneSlot {
     effects: EffectConfig[];
@@ -66,6 +67,9 @@ interface EffectState {
     isPreviewingPuzzle: boolean;
     setIsPreviewingPuzzle: (previewing: boolean) => void;
     targetPuzzleEffects: EffectConfig[];
+    puzzleMatchResult: PuzzleMatchResult | null;
+    checkPuzzle: () => void;
+    setPuzzleMatchResult: (result: PuzzleMatchResult | null) => void;
 
     activeDropdownId: string | null;
     setActiveDropdownId: (id: string | null) => void;
@@ -183,6 +187,15 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     isPreviewingPuzzle: false,
     setIsPreviewingPuzzle: (isPreviewingPuzzle) => set({ isPreviewingPuzzle }),
     targetPuzzleEffects: [],
+    puzzleMatchResult: null,
+
+    checkPuzzle: () => {
+        const { effects, targetPuzzleEffects } = get();
+        const result = PuzzleService.evaluate(effects, targetPuzzleEffects);
+        set({ puzzleMatchResult: result });
+    },
+
+    setPuzzleMatchResult: (puzzleMatchResult) => set({ puzzleMatchResult }),
 
     currentPuzzle: null,
     setCurrentPuzzle: (currentPuzzle) => {

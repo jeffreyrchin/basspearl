@@ -13,7 +13,7 @@ import { EFFECT_METADATA } from '../config/effects';
 export interface PuzzleMatchResult {
     isMatch: boolean;
     score: number; // 0 to 100
-    message: string;
+    feedback: string;
 }
 
 interface MeldGroup {
@@ -36,7 +36,7 @@ export class PuzzleService {
 
     static evaluate(userEffects: EffectConfig[], targetEffects: EffectConfig[]): PuzzleMatchResult {
         if (userEffects.length === 0 && targetEffects.length === 0) {
-            return { isMatch: true, score: 100, message: 'Empty Match' };
+            return { isMatch: true, score: 100, feedback: 'Empty Match' };
         }
 
         const userGroups = this.parseGroups(userEffects);
@@ -59,7 +59,7 @@ export class PuzzleService {
         return {
             isMatch: finalScore >= 90,
             score: finalScore,
-            message: this.getFeedbackMessage(finalScore),
+            feedback: this.getFeedbackMessage(finalScore),
         };
     }
 
@@ -372,10 +372,10 @@ export class PuzzleService {
     // ─────────────────────────────────────────────────────────────────────────
 
     private static getFeedbackMessage(score: number): string {
-        if (score >= 95) return 'Perfect Reconstruction!';
-        if (score >= 90) return 'Match Confirmed. Well done.';
+        if (score >= 95) return 'Perfect reconstruction!';
+        if (score >= 90) return 'Match confirmed. Well done.';
         if (score >= 70) return "You're close, but the math isn't quite there.";
         if (score >= 40) return 'The essence is correct, but check your parameters.';
-        return 'Not quite. Hold W to study the Goal again.';
+        return 'Not quite. Hold W to study the goal again.';
     }
 }

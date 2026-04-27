@@ -7,6 +7,7 @@ const PuzzleHeader: React.FC = () => {
     const setCurrentPuzzle = useEffectStore(s => s.setCurrentPuzzle);
     const isPreviewing = useEffectStore(s => s.isPreviewingPuzzle);
     const setIsPreviewing = useEffectStore(s => s.setIsPreviewingPuzzle);
+    const checkPuzzle = useEffectStore(s => s.checkPuzzle);
 
     // Toggle preview on 'W' key
     useEffect(() => {
@@ -63,7 +64,7 @@ const PuzzleHeader: React.FC = () => {
                     </button>
 
                     <button
-                        onClick={() => {/* Check logic here Later */ }}
+                        onClick={checkPuzzle}
                         className="px-4 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white font-bold uppercase tracking-[0.2em] transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(79,70,229,0.4)]"
                     >
                         Check
