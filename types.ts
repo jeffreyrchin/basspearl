@@ -150,4 +150,5 @@ export interface PuzzleConfig {
   locked: boolean;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   macro: MacroType;
+  allowedEffects?: GlitchEffectType[];
 }

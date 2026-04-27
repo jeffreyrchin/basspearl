@@ -427,25 +427,25 @@ export const TEST_CASES: TestCase[] = [
     // ── Muted Modifier inside Meld Chain (Illegal) ───────────────────────────
     {
         name: 'Muted Modifier inside Meld Chain (Illegal)',
-        description: 'Muting a modifier (RGBA) inside a meld chain should incur a major penalty.',
+        description: 'Muting a modifier (RGBA) inside a meld chain occurs a -25 penalty. At 80% threshold, it fails with a 75.',
         target: [meld(e('GRID')), e('RGBA')],
         user: (() => {
             const u = [meld(e('GRID')), e('RGBA')];
-            u[1].muted = true; // Mute the child
+            u[1].muted = true;
             return u;
         })(),
         expectMatch: false,
-        expectScoreBelow: 90,
+        expectScoreBelow: 80,
     },
 
     // ── Frequency Band Mismatch ──────────────────────────────────────────────
     {
-        name: 'Frequency Band Mismatch',
-        description: 'Parameters have identical values, but user has Red set to BASS reactivity while target is OFF. Should fail.',
+        name: 'Frequency Band Mismatch (Illegal)',
+        description: 'Parameters have identical values, but user has Red set to BASS reactivity while target is OFF. Incurs -25 penalty, fails.',
         target: [e('RGBA')],
         user: [e('RGBA', { 'Red:band': 'BASS' })],
         expectMatch: false,
-        expectScoreBelow: 90,
+        expectScoreBelow: 80,
     },
 
     // ── Frequency Band Match (Legal) ─────────────────────────────────────────
@@ -461,21 +461,21 @@ export const TEST_CASES: TestCase[] = [
     // ── Multiple Frequency Band Mismatches (Illegal) ─────────────────────────
     {
         name: 'Multiple Frequency Band Mismatches (Illegal)',
-        description: 'Two separate parameters have the wrong band setting. Penalties should stack.',
+        description: 'Two separate parameters have the wrong band setting. Penalties stack to -50, score 50. Should fail.',
         target: [e('RGBA')],
         user: [e('RGBA', { 'Red:band': 'BASS', 'Blue:band': 'TREBLE' })],
         expectMatch: false,
-        expectScoreBelow: 75,
+        expectScoreBelow: 80,
     },
 
     // ── Frequency Band Mismatch in Melded Group (Illegal) ────────────────────
     {
         name: 'Frequency Band Mismatch in Melded Group (Illegal)',
-        description: 'Even inside a meld chain, a band mismatch on a modifier (RGBA) should cause a failure.',
+        description: 'Even inside a meld chain, a single band mismatch on a modifier (RGBA) fails.',
         target: [meld(e('GRID')), e('RGBA')],
         user: [meld(e('GRID')), e('RGBA', { 'Red:band': 'BASS' })],
         expectMatch: false,
-        expectScoreBelow: 90,
+        expectScoreBelow: 80,
     },
 
     // ── Commutative Band Match (Legal) ──────────────────────────────────────
@@ -490,29 +490,29 @@ export const TEST_CASES: TestCase[] = [
     // ── Min Mismatch (Illegal) ───────────────────────
     {
         name: 'Min Mismatch (Illegal)',
-        description: 'Both have BASS on Red, and Value=100. BUT Target Min=50 while User Min=0. The visual floor is different → should fail.',
+        description: 'Both have BASS on Red, and Value=100. BUT Target Min=50 while User Min=0. Score 75, fails.',
         target: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100 })],
         user: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 0, Red: 100 })],
         expectMatch: false,
-        expectScoreBelow: 90,
+        expectScoreBelow: 80,
     },
     // -- Multiple Min Mismatches (Illegal)
     {
         name: 'Multiple Min Mismatches (Illegal)',
-        description: 'Two separate parameters have the wrong min setting. Penalties should stack.',
+        description: 'Two separate parameters have the wrong min setting. Penalties stack to -50, score 50. Should fail.',
         target: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100, 'Blue:band': 'BASS', 'Blue:min': 50, Blue: 100 })],
         user: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 0, Red: 100, 'Blue:band': 'BASS', 'Blue:min': 0, Blue: 100 })],
         expectMatch: false,
-        expectScoreBelow: 75,
+        expectScoreBelow: 80,
     },
     // -- Min Mismatch in Melded Group (Illegal)
     {
         name: 'Min Mismatch in Melded Group (Illegal)',
-        description: 'Even inside a meld chain, a min mismatch on a modifier (RGBA) should cause a failure.',
+        description: 'Even inside a meld chain, a single min mismatch on a modifier (RGBA) fails.',
         target: [meld(e('GRID')), e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100 })],
         user: [meld(e('GRID')), e('RGBA', { 'Red:band': 'BASS', 'Red:min': 0, Red: 100 })],
         expectMatch: false,
-        expectScoreBelow: 90,
+        expectScoreBelow: 80,
     },
     // ── Commutative Min Match (Legal) ──────────────────────────────────────
     {

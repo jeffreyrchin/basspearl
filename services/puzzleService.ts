@@ -57,7 +57,7 @@ export class PuzzleService {
         const finalScore = Math.max(0, Math.round(rawScore - totalStatePenalty));
 
         return {
-            isMatch: finalScore >= 90,
+            isMatch: finalScore >= 80,
             score: finalScore,
             feedback: this.getFeedbackMessage(finalScore),
         };
@@ -131,10 +131,10 @@ export class PuzzleService {
             }
         });
 
-        const lengthPenalty = Math.abs(userGroups.length - targetGroups.length) * 20;
-        const normalizedScore = (totalScore / Math.max(targetGroups.length, 1)) - lengthPenalty;
+        const lengthPenalty = Math.abs(userGroups.length - targetGroups.length) * 25;
+        const normalizedScore = (totalScore / Math.max(targetGroups.length, 1));
 
-        return { totalParamScore: Math.max(0, normalizedScore), pairedIndices, totalStatePenalty };
+        return { totalParamScore: Math.max(0, normalizedScore), pairedIndices, totalStatePenalty: totalStatePenalty + lengthPenalty };
     }
 
     /**
@@ -151,9 +151,9 @@ export class PuzzleService {
         penalty += anchorParamPenalty;
 
         // State Mismatches (Anchor)
-        if ((user.anchor.muted ?? false) !== (target.anchor.muted ?? false)) penalty += 15;
-        if ((user.anchor.soloed ?? false) !== (target.anchor.soloed ?? false)) penalty += 15;
-        if ((user.anchor.melded ?? false) !== (target.anchor.melded ?? false)) penalty += 15;
+        if ((user.anchor.muted ?? false) !== (target.anchor.muted ?? false)) penalty += 25;
+        if ((user.anchor.soloed ?? false) !== (target.anchor.soloed ?? false)) penalty += 25;
+        if ((user.anchor.melded ?? false) !== (target.anchor.melded ?? false)) penalty += 25;
 
         memberScore += anchorScore;
 
@@ -174,8 +174,8 @@ export class PuzzleService {
                 let currentModPenalty = 0;
 
                 // Mismatches (Modifier)
-                if ((uMod.muted ?? false) !== (tMod.muted ?? false)) currentModPenalty += 15;
-                if ((uMod.soloed ?? false) !== (tMod.soloed ?? false)) currentModPenalty += 15;
+                if ((uMod.muted ?? false) !== (tMod.muted ?? false)) currentModPenalty += 25;
+                if ((uMod.soloed ?? false) !== (tMod.soloed ?? false)) currentModPenalty += 25;
 
                 if (score > bestMatchScore) {
                     bestMatchScore = score;
@@ -189,8 +189,8 @@ export class PuzzleService {
                 const { penalty: modParamPenalty } = this.compareParams(uMod, tMod);
                 penalty += modParamPenalty;
 
-                if ((uMod.muted ?? false) !== (tMod.muted ?? false)) penalty += 15;
-                if ((uMod.soloed ?? false) !== (tMod.soloed ?? false)) penalty += 15;
+                if ((uMod.muted ?? false) !== (tMod.muted ?? false)) penalty += 25;
+                if ((uMod.soloed ?? false) !== (tMod.soloed ?? false)) penalty += 25;
 
                 memberScore += bestMatchScore;
                 pairedModifierIndices.set(tIdx, bestMatchIdx);
@@ -203,7 +203,7 @@ export class PuzzleService {
 
         // 3. Internal Group Commutativity
         let structuralScore = 100;
-        const penaltyPerViolation = 50;
+        const penaltyPerViolation = 100;
 
         for (let i = 0; i < targetModifiers.length; i++) {
             for (let j = i + 1; j < targetModifiers.length; j++) {
@@ -218,14 +218,14 @@ export class PuzzleService {
             }
         }
 
-        const lengthPenalty = Math.abs(userModifiers.length - targetModifiers.length) * 20;
-        const normalizedParamScore = (memberScore / Math.max(target.members.length, 1)) - lengthPenalty;
+        const lengthPenalty = Math.abs(userModifiers.length - targetModifiers.length) * 25;
+        const normalizedParamScore = (memberScore / Math.max(target.members.length, 1));
 
         // Final Group Score construction (Internal Structural only)
         const internalStructuralPenalty = (100 - Math.max(0, structuralScore)) * 0.6;
         const finalGroupScore = normalizedParamScore - internalStructuralPenalty;
 
-        return { score: Math.max(0, finalGroupScore), penalty };
+        return { score: Math.max(0, finalGroupScore), penalty: penalty + lengthPenalty };
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -238,7 +238,7 @@ export class PuzzleService {
      */
     private static checkGroupOrderValidity(targetGroups: MeldGroup[], pairedIndices: Map<number, number>): number {
         let score = 100;
-        const penaltyPerViolation = 50;
+        const penaltyPerViolation = 100;
 
         for (let i = 0; i < targetGroups.length; i++) {
             for (let j = i + 1; j < targetGroups.length; j++) {
@@ -349,7 +349,7 @@ export class PuzzleService {
 
             // 2. Frequency Band Matching (Global Penalty)
             if (pA.frequencyBand !== pB.frequencyBand) {
-                penalty += 15;
+                penalty += 25;
             }
 
             // 3. Min Matching (Floor)
@@ -357,7 +357,7 @@ export class PuzzleService {
             // If audio is ON, min mismatch is a major structural failure (Visual Floor).
             // If audio is OFF, min is visually irrelevant and should be ignored.
             if (pA.frequencyBand !== 'OFF') {
-                if (minDiff > 5) penalty += 15;
+                if (minDiff > 5) penalty += 25;
             }
 
             totalParamScore += paramScore;
@@ -373,7 +373,7 @@ export class PuzzleService {
 
     private static getFeedbackMessage(score: number): string {
         if (score >= 95) return 'Perfect reconstruction!';
-        if (score >= 90) return 'Match confirmed. Well done.';
+        if (score >= 80) return 'Match confirmed. Well done.';
         if (score >= 70) return "You're close, but the math isn't quite there.";
         if (score >= 40) return 'The essence is correct, but check your parameters.';
         return 'Not quite. Hold W to study the goal again.';

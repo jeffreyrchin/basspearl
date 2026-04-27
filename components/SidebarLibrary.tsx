@@ -1,11 +1,20 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { GlitchEffectType, EffectCategory, MacroType, EffectConfig } from '../types';
 import { EFFECT_METADATA, MACRO_METADATA, createEffectInstance, createMacroInstance } from '../constants';
 import { useEffectStore } from '../store/useEffectStore';
+import { PUZZLES } from '../config/puzzles';
 import EffectPreview from './EffectPreview';
 import HoverCanvas from './HoverCanvas';
 
 interface SidebarLibraryProps {
+}
+
+interface SidebarLibraryItem {
+    id: string;
+    label: string;
+    category: EffectCategory;
+    effectType?: GlitchEffectType;
+    macroType?: MacroType;
 }
 
 interface LibraryCardProps {
@@ -78,7 +87,16 @@ const CATEGORIES = ['All', 'Patterns', 'Effects', 'Presets'];
 const SidebarLibrary: React.FC<SidebarLibraryProps> = () => {
     const addEffect = useEffectStore(s => s.addEffect);
     const addMacro = useEffectStore(s => s.addMacro);
+    const isGameMode = useEffectStore(s => s.isGameMode);
+    const currentPuzzle = useEffectStore(s => s.currentPuzzle);
     const [selectedCategory, setSelectedCategory] = useState<string>('Patterns');
+
+    // Automatically fall back to 'All' if the user starts a game while in 'Presets'
+    useEffect(() => {
+        if (isGameMode && selectedCategory === 'Presets') {
+            setSelectedCategory('All');
+        }
+    }, [isGameMode, selectedCategory]);
 
     // === Shared Hover Canvas State ===
     // Only one (element, blueprint) pair is active at a time.
@@ -94,7 +112,7 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = () => {
     }, []);
 
     const libraryItems = useMemo(() => {
-        const effects = (Object.entries(EFFECT_METADATA) as [GlitchEffectType, typeof EFFECT_METADATA[GlitchEffectType]][])
+        const effects: SidebarLibraryItem[] = (Object.entries(EFFECT_METADATA) as [GlitchEffectType, typeof EFFECT_METADATA[GlitchEffectType]][])
             .map(([type, meta]) => ({
                 id: type,
                 label: meta.label,
@@ -102,7 +120,7 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = () => {
                 effectType: type,
             }));
 
-        const macros = (Object.entries(MACRO_METADATA) as [MacroType, typeof MACRO_METADATA[MacroType]][])
+        const macros: SidebarLibraryItem[] = (Object.entries(MACRO_METADATA) as [MacroType, typeof MACRO_METADATA[MacroType]][])
             .map(([type, meta]) => ({
                 id: type,
                 label: meta.label,
@@ -110,10 +128,19 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = () => {
                 macroType: type,
             }));
 
-        const items = [...effects, ...macros];
+        const activePuzzle = isGameMode && currentPuzzle !== null ? PUZZLES[currentPuzzle] : null;
+        const allowedEffects = activePuzzle?.allowedEffects;
+
+        // Hide macros during game mode, as puzzles are meant to be solved with base effects
+        const items: SidebarLibraryItem[] = [...effects, ...(activePuzzle ? [] : macros)];
 
         return items
             .filter((item) => {
+                // If in game mode and allowedEffects is defined, strict filter
+                if (activePuzzle && allowedEffects && item.effectType) {
+                    if (!allowedEffects.includes(item.effectType)) return false;
+                }
+
                 if (selectedCategory === 'All') return true;
                 if (selectedCategory === 'Patterns') return item.category === 'Pattern';
                 if (selectedCategory === 'Effects') return item.category === 'Modifier';
@@ -121,7 +148,7 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = () => {
                 return false;
             })
             .sort((a, b) => a.label.localeCompare(b.label));
-    }, [selectedCategory]);
+    }, [selectedCategory, isGameMode, currentPuzzle]);
 
     const handleAdd = (type: GlitchEffectType) => {
         addEffect(type);
@@ -142,18 +169,21 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = () => {
             {/* Header / Category Filters */}
             <div className="sticky top-[-1px] z-50 px-6 py-3 border-b border-white/5 bg-slate-900 flex flex-col gap-4">
                 <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-                    {CATEGORIES.map(category => (
-                        <button
-                            key={category}
-                            onClick={() => setSelectedCategory(category)}
-                            className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap border ${selectedCategory === category
-                                ? 'bg-white/5 text-white border-white/20'
-                                : 'text-white/60 hover:text-white border-transparent hover:bg-white/5'
-                                }`}
-                        >
-                            {category}
-                        </button>
-                    ))}
+                    {CATEGORIES.map(category => {
+                        if (isGameMode && category === 'Presets') return null;
+                        return (
+                            <button
+                                key={category}
+                                onClick={() => setSelectedCategory(category)}
+                                className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap border ${selectedCategory === category
+                                    ? 'bg-white/5 text-white border-white/20'
+                                    : 'text-white/60 hover:text-white border-transparent hover:bg-white/5'
+                                    }`}
+                            >
+                                {category}
+                            </button>
+                        )
+                    })}
                 </div>
             </div>
 
