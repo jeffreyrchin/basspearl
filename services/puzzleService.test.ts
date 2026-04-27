@@ -13,14 +13,22 @@ import { createEffectInstance } from '../constants';
  */
 const e = (
     type: GlitchEffectType,
-    overrides: Record<string, number> = {}
+    overrides: Record<string, number | string> = {}
 ): EffectConfig => {
     const instance = createEffectInstance(type);
     if (Object.keys(overrides).length > 0) {
-        instance.params = instance.params.map(p => ({
-            ...p,
-            value: overrides[p.param] !== undefined ? overrides[p.param] : p.value,
-        }));
+        instance.params = instance.params.map(p => {
+            const val = overrides[p.param];
+            const min = overrides[`${p.param}:min` as string];
+            const band = overrides[`${p.param}:band` as string];
+
+            return {
+                ...p,
+                value: typeof val === 'number' ? val : p.value,
+                min: typeof min === 'number' ? min : p.min,
+                frequencyBand: (typeof band === 'string' ? band : p.frequencyBand) as any,
+            };
+        });
     }
     return instance;
 };
@@ -428,6 +436,92 @@ export const TEST_CASES: TestCase[] = [
         })(),
         expectMatch: false,
         expectScoreBelow: 90,
+    },
+
+    // ── Frequency Band Mismatch ──────────────────────────────────────────────
+    {
+        name: 'Frequency Band Mismatch',
+        description: 'Parameters have identical values, but user has Red set to BASS reactivity while target is OFF. Should fail.',
+        target: [e('RGBA')],
+        user: [e('RGBA', { 'Red:band': 'BASS' })],
+        expectMatch: false,
+        expectScoreBelow: 90,
+    },
+
+    // ── Frequency Band Match (Legal) ─────────────────────────────────────────
+    {
+        name: 'Frequency Band Match (Legal)',
+        description: 'Target and User both use BASS for Red. Should be a perfect match.',
+        target: [e('RGBA', { 'Red:band': 'BASS' })],
+        user: [e('RGBA', { 'Red:band': 'BASS' })],
+        expectMatch: true,
+        expectScoreAbove: 95,
+    },
+
+    // ── Multiple Frequency Band Mismatches (Illegal) ─────────────────────────
+    {
+        name: 'Multiple Frequency Band Mismatches (Illegal)',
+        description: 'Two separate parameters have the wrong band setting. Penalties should stack.',
+        target: [e('RGBA')],
+        user: [e('RGBA', { 'Red:band': 'BASS', 'Blue:band': 'TREBLE' })],
+        expectMatch: false,
+        expectScoreBelow: 75,
+    },
+
+    // ── Frequency Band Mismatch in Melded Group (Illegal) ────────────────────
+    {
+        name: 'Frequency Band Mismatch in Melded Group (Illegal)',
+        description: 'Even inside a meld chain, a band mismatch on a modifier (RGBA) should cause a failure.',
+        target: [meld(e('GRID')), e('RGBA')],
+        user: [meld(e('GRID')), e('RGBA', { 'Red:band': 'BASS' })],
+        expectMatch: false,
+        expectScoreBelow: 90,
+    },
+
+    // ── Commutative Band Match (Legal) ──────────────────────────────────────
+    {
+        name: 'Commutative Band Match (Legal)',
+        description: 'RGBA (BASS) and ROTATE swapped. Swapping is legal, and BASS matches BASS. Should pass.',
+        target: [e('RGBA', { 'Red:band': 'BASS' }), e('ROTATE')],
+        user: [e('ROTATE'), e('RGBA', { 'Red:band': 'BASS' })],
+        expectMatch: true,
+        expectScoreAbove: 95,
+    },
+    // ── Min Mismatch (Illegal) ───────────────────────
+    {
+        name: 'Min Mismatch (Illegal)',
+        description: 'Both have BASS on Red, and Value=100. BUT Target Min=50 while User Min=0. The visual floor is different → should fail.',
+        target: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100 })],
+        user: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 0, Red: 100 })],
+        expectMatch: false,
+        expectScoreBelow: 90,
+    },
+    // -- Multiple Min Mismatches (Illegal)
+    {
+        name: 'Multiple Min Mismatches (Illegal)',
+        description: 'Two separate parameters have the wrong min setting. Penalties should stack.',
+        target: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100, 'Blue:band': 'BASS', 'Blue:min': 50, Blue: 100 })],
+        user: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 0, Red: 100, 'Blue:band': 'BASS', 'Blue:min': 0, Blue: 100 })],
+        expectMatch: false,
+        expectScoreBelow: 75,
+    },
+    // -- Min Mismatch in Melded Group (Illegal)
+    {
+        name: 'Min Mismatch in Melded Group (Illegal)',
+        description: 'Even inside a meld chain, a min mismatch on a modifier (RGBA) should cause a failure.',
+        target: [meld(e('GRID')), e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100 })],
+        user: [meld(e('GRID')), e('RGBA', { 'Red:band': 'BASS', 'Red:min': 0, Red: 100 })],
+        expectMatch: false,
+        expectScoreBelow: 90,
+    },
+    // ── Commutative Min Match (Legal) ──────────────────────────────────────
+    {
+        name: 'Commutative Min Match (Legal)',
+        description: 'RGBA (BASS) and ROTATE swapped. Swapping is legal, and Min matches Min. Should pass.',
+        target: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100 }), e('ROTATE')],
+        user: [e('ROTATE'), e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100 })],
+        expectMatch: true,
+        expectScoreAbove: 95,
     },
 ];
 

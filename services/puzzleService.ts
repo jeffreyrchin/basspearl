@@ -42,15 +42,23 @@ export class PuzzleService {
         const userGroups = this.parseGroups(userEffects);
         const targetGroups = this.parseGroups(targetEffects);
 
-        const { totalParamScore, pairedIndices } = this.calculateBestFitGroupScore(userGroups, targetGroups);
+        // 1. Parameter Matching (Fuzzy)
+        const { totalParamScore, pairedIndices, totalStatePenalty } = this.calculateBestFitGroupScore(userGroups, targetGroups);
+
+        // 2. Global Order Validity (Strict)
         const structuralScore = this.checkGroupOrderValidity(targetGroups, pairedIndices);
 
-        const finalScore = (totalParamScore * 0.7) + (structuralScore * 0.3);
-        const threshold = 90;
+        // 3. Final Calculation
+        // Weights: 70% Param Accuracy (fuzzy), 30% Structural/Order Accuracy (logic)
+        const rawScore = (totalParamScore * 0.7) + (structuralScore * 0.3);
+
+        // Apply global state penalties (Muted, Soloed, Melded) directly to final score
+        // to ensure they are never "diluted" by long stacks.
+        const finalScore = Math.max(0, Math.round(rawScore - totalStatePenalty));
 
         return {
-            isMatch: finalScore >= threshold,
-            score: Math.round(finalScore),
+            isMatch: finalScore >= 90,
+            score: finalScore,
             message: this.getFeedbackMessage(finalScore),
         };
     }
@@ -95,25 +103,29 @@ export class PuzzleService {
      */
     private static calculateBestFitGroupScore(userGroups: MeldGroup[], targetGroups: MeldGroup[]) {
         let totalScore = 0;
+        let totalStatePenalty = 0;
         const pairedIndices = new Map<number, number>();
         const usedUserIndices = new Set<number>();
 
-        targetGroups.forEach((target, tIdx) => {
+        targetGroups.forEach((tGroup, tIdx) => {
             let bestMatchIdx = -1;
             let bestMatchScore = -1;
+            let bestMatchPenalty = 0;
 
-            userGroups.forEach((user, uIdx) => {
-                if (usedUserIndices.has(uIdx) || user.anchor.type !== target.anchor.type) return;
+            userGroups.forEach((uGroup, uIdx) => {
+                if (usedUserIndices.has(uIdx) || uGroup.anchor.type !== tGroup.anchor.type) return;
 
-                const score = this.compareGroups(user, target);
+                const { score, penalty } = this.compareGroups(uGroup, tGroup);
                 if (score > bestMatchScore) {
                     bestMatchScore = score;
                     bestMatchIdx = uIdx;
+                    bestMatchPenalty = penalty;
                 }
             });
 
             if (bestMatchIdx !== -1) {
                 totalScore += bestMatchScore;
+                totalStatePenalty += bestMatchPenalty;
                 pairedIndices.set(tIdx, bestMatchIdx);
                 usedUserIndices.add(bestMatchIdx);
             }
@@ -122,7 +134,7 @@ export class PuzzleService {
         const lengthPenalty = Math.abs(userGroups.length - targetGroups.length) * 20;
         const normalizedScore = (totalScore / Math.max(targetGroups.length, 1)) - lengthPenalty;
 
-        return { totalParamScore: Math.max(0, normalizedScore), pairedIndices };
+        return { totalParamScore: Math.max(0, normalizedScore), pairedIndices, totalStatePenalty };
     }
 
     /**
@@ -130,18 +142,19 @@ export class PuzzleService {
      * Anchor is scored strictly. Modifiers are paired greedily, applying commutativity rules
      * to ensure visual identity is preserved even if modifier order changes.
      */
-    private static compareGroups(user: MeldGroup, target: MeldGroup): number {
+    private static compareGroups(user: MeldGroup, target: MeldGroup): { score: number, penalty: number } {
         let memberScore = 0;
+        let penalty = 0;
 
         // 1. Score Anchor
-        let anchorScore = this.compareParams(user.anchor, target.anchor);
-        const anchorMutedMismatch  = (user.anchor.muted  ?? false) !== (target.anchor.muted  ?? false);
-        const anchorMeldedMismatch = (user.anchor.melded ?? false) !== (target.anchor.melded ?? false);
-        const anchorSoloedMismatch = (user.anchor.soloed ?? false) !== (target.anchor.soloed ?? false);
+        const { score: anchorScore, penalty: anchorParamPenalty } = this.compareParams(user.anchor, target.anchor);
+        penalty += anchorParamPenalty;
 
-        if (anchorMutedMismatch || anchorMeldedMismatch || anchorSoloedMismatch) {
-            anchorScore = Math.max(0, anchorScore - 60);
-        }
+        // State Mismatches (Anchor)
+        if ((user.anchor.muted ?? false) !== (target.anchor.muted ?? false)) penalty += 15;
+        if ((user.anchor.soloed ?? false) !== (target.anchor.soloed ?? false)) penalty += 15;
+        if ((user.anchor.melded ?? false) !== (target.anchor.melded ?? false)) penalty += 15;
+
         memberScore += anchorScore;
 
         // 2. Score Modifiers
@@ -156,15 +169,14 @@ export class PuzzleService {
 
             userModifiers.forEach((uMod, uIdx) => {
                 if (usedUserMods.has(uIdx) || uMod.type !== tMod.type) return;
-                let score = this.compareParams(uMod, tMod);
-                
-                const mutedMismatch  = (uMod.muted  ?? false) !== (tMod.muted  ?? false);
-                const soloedMismatch = (uMod.soloed ?? false) !== (tMod.soloed ?? false);
 
-                if (mutedMismatch || soloedMismatch) {
-                    score = Math.max(0, score - 60);
-                }
-                
+                const { score, penalty: modParamPenalty } = this.compareParams(uMod, tMod);
+                let currentModPenalty = 0;
+
+                // Mismatches (Modifier)
+                if ((uMod.muted ?? false) !== (tMod.muted ?? false)) currentModPenalty += 15;
+                if ((uMod.soloed ?? false) !== (tMod.soloed ?? false)) currentModPenalty += 15;
+
                 if (score > bestMatchScore) {
                     bestMatchScore = score;
                     bestMatchIdx = uIdx;
@@ -172,11 +184,22 @@ export class PuzzleService {
             });
 
             if (bestMatchIdx !== -1) {
+                // Determine the penalty of the selected user modifier
+                const uMod = userModifiers[bestMatchIdx];
+                const { penalty: modParamPenalty } = this.compareParams(uMod, tMod);
+                penalty += modParamPenalty;
+
+                if ((uMod.muted ?? false) !== (tMod.muted ?? false)) penalty += 15;
+                if ((uMod.soloed ?? false) !== (tMod.soloed ?? false)) penalty += 15;
+
                 memberScore += bestMatchScore;
                 pairedModifierIndices.set(tIdx, bestMatchIdx);
                 usedUserMods.add(bestMatchIdx);
             }
         });
+
+        // Penalty for missing/extra modifiers should also be global? 
+        // No, lengthPenalty handles that well enough in calculateBestFitGroupScore.
 
         // 3. Internal Group Commutativity
         let structuralScore = 100;
@@ -197,9 +220,12 @@ export class PuzzleService {
 
         const lengthPenalty = Math.abs(userModifiers.length - targetModifiers.length) * 20;
         const normalizedParamScore = (memberScore / Math.max(target.members.length, 1)) - lengthPenalty;
-        const finalGroupScore = normalizedParamScore - ((100 - Math.max(0, structuralScore)) * 0.6);
 
-        return Math.max(0, finalGroupScore);
+        // Final Group Score construction (Internal Structural only)
+        const internalStructuralPenalty = (100 - Math.max(0, structuralScore)) * 0.6;
+        const finalGroupScore = normalizedParamScore - internalStructuralPenalty;
+
+        return { score: Math.max(0, finalGroupScore), penalty };
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -304,17 +330,41 @@ export class PuzzleService {
      * Scores parameter similarity between two effects of the same type.
      * Uses a graded curve: exact matches score higher than near-matches.
      */
-    private static compareParams(a: EffectConfig, b: EffectConfig): number {
-        let matchCount = 0;
+    private static compareParams(a: EffectConfig, b: EffectConfig): { score: number, penalty: number } {
+        let totalParamScore = 0;
+        let penalty = 0;
+
         a.params.forEach((pA, idx) => {
             const pB = b.params[idx];
             if (!pB) return;
-            const diff = Math.abs(pA.value - pB.value);
-            if (diff === 0) matchCount += 100;
-            else if (diff <= 5) matchCount += 75;
-            else if (diff <= 15) matchCount += 50;
+
+            let paramScore = 0;
+            const valDiff = Math.abs(pA.value - pB.value);
+            const minDiff = Math.abs(pA.min - pB.min);
+
+            // 1. Value Matching (Graded)
+            if (valDiff === 0) paramScore = 100;
+            else if (valDiff <= 5) paramScore = 75;
+            else if (valDiff <= 15) paramScore = 50;
+
+            // 2. Frequency Band Matching (Global Penalty)
+            if (pA.frequencyBand !== pB.frequencyBand) {
+                penalty += 15;
+            }
+
+            // 3. Min Matching (Floor)
+            // We only care about the 'min' floor if the effect is audio-reactive.
+            // If audio is ON, min mismatch is a major structural failure (Visual Floor).
+            // If audio is OFF, min is visually irrelevant and should be ignored.
+            if (pA.frequencyBand !== 'OFF') {
+                if (minDiff > 5) penalty += 15;
+            }
+
+            totalParamScore += paramScore;
         });
-        return matchCount / a.params.length;
+
+        const avgScore = totalParamScore / Math.max(a.params.length, 1);
+        return { score: avgScore, penalty };
     }
 
     // ─────────────────────────────────────────────────────────────────────────
