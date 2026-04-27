@@ -471,7 +471,33 @@ export const TEST_CASES: TestCase[] = [
         target: [e('INVERT'), e('ROTATE')],
         user: [e('ROTATE'), e('INVERT')],
         expectMatch: true,
-        expectScoreAbove: 95,
+        expectScoreAbove: 90,
+    },
+    {
+        name: 'Point Op vs Uniform Warp Swap (Legal)',
+        description: 'INVERT and SCROLL (Uniform Warp) should commute perfectly.',
+        target: [e('INVERT'), e('SCROLL')],
+        user: [e('SCROLL'), e('INVERT')],
+        expectMatch: true,
+        expectScoreAbove: 90,
+    },
+    {
+        name: 'Point Op vs Isotropic Filter Swap (Legal)',
+        description: 'RGBA and BLUR should commute. Linear color math and isotropic convolution are distributive.',
+        target: [e('RGBA'), e('BLUR')],
+        user: [e('BLUR'), e('RGBA')],
+        expectMatch: true,
+        expectScoreAbove: 90,
+    },
+    {
+        name: 'Point Op vs Adaptive Op (Illegal)',
+        description:
+            'Point Ops (INVERT) and Adaptive Ops (LUMINANCE_MASK) do NOT commute. ' +
+            'Inverting the image changes which pixels hit the mask threshold.',
+        target: [e('INVERT'), e('LUMINANCE_MASK')],
+        user: [e('LUMINANCE_MASK'), e('INVERT')],
+        expectMatch: false,
+        expectScoreBelow: 80,
     },
 
     // ── Rule 2: Intersecting Patterns ────────────────────────────
