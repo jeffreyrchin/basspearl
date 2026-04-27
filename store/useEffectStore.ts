@@ -211,7 +211,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         }
 
         const puzzle = PUZZLES[currentPuzzle];
-        const targetPuzzleEffects = puzzle ? createMacroInstance(puzzle.macro, true) : [];
+        const targetPuzzleEffects = puzzle ? createMacroInstance(puzzle.macro) : [];
 
         set({
             currentPuzzle,
