@@ -173,6 +173,14 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         }
     }, [isLiveMode, animate]);
 
+    // Start animation loop when audio starts playing internally (e.g. from loadAudioFromUrl)
+    // Note: when handleTogglePlay sets requestRef.current, this useEffect will not run because requestRef.current is already set
+    useEffect(() => {
+        if (isPlaying && !requestRef.current) {
+            requestRef.current = requestAnimationFrame(animate);
+        }
+    }, [isPlaying, animate]);
+
     // Handle auto-hiding the Show UI button when UI is hidden
     useEffect(() => {
         if (!isUiHidden) {

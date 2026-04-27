@@ -46,6 +46,14 @@ export interface AudioState {
     getLiveReactivity: () => { smoothed: any, integrated: any } | null;
 }
 
+let demoTrackCache: {
+    buffer: AudioBuffer,
+    map: any,
+    integrated: any,
+    url: string,
+    file: File
+} | null = null;
+
 export const useAudioStore = create<AudioState>((set, get) => ({
     audioFile: null,
     isPlaying: false,
@@ -251,6 +259,18 @@ export const useAudioStore = create<AudioState>((set, get) => ({
         const { stopPlayback, resetAudioEngine, getAudioContext, precomputeReactivity, stopMic } = get();
         stopPlayback(true);
         stopMic();
+
+        // Check if we already have this track cached
+        if (demoTrackCache && demoTrackCache.url === url) {
+            const { buffer, map, integrated, file } = demoTrackCache;
+            mainAudioEngine.buffer = buffer;
+            mainAudioEngine.reactivityMap = map;
+            mainAudioEngine.integratedReactivityMap = integrated;
+            set({ duration: buffer.duration, audioFile: file });
+            get().playAudio(0);
+            return;
+        }
+
         resetAudioEngine();
 
         try {
@@ -266,7 +286,19 @@ export const useAudioStore = create<AudioState>((set, get) => ({
             set({ duration: audioBuffer.duration });
             await precomputeReactivity(audioBuffer);
 
+            // Cache the demo track
+            if (url.includes('/trip.mp3')) {
+                demoTrackCache = {
+                    buffer: audioBuffer,
+                    map: mainAudioEngine.reactivityMap,
+                    integrated: mainAudioEngine.integratedReactivityMap,
+                    url,
+                    file: new File([arrayBuffer], label, { type: 'audio/mpeg' })
+                };
+            }
+
             set({ audioFile: new File([arrayBuffer], label, { type: 'audio/mpeg' }) });
+            get().playAudio(0);
         } catch (err: any) {
             console.error('Error loading audio from URL:', err);
             throw err; // Re-throw so the caller can handle its own state/analytics

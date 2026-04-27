@@ -6,7 +6,7 @@ import HoverCanvas from './HoverCanvas';
 import { createMacroInstance } from '../constants';
 import { PUZZLES } from '../config/puzzles';
 import { EffectConfig, PuzzleConfig } from '../types';
-
+import { useAudioStore } from '../store/useAudioStore';
 
 interface PuzzleCardProps {
     puzzle: PuzzleConfig;
@@ -75,7 +75,7 @@ const PuzzlesModal: React.FC = () => {
     const isPuzzlesModalOpen = useEffectStore(s => s.isPuzzlesModalOpen);
     const setIsPuzzlesModalOpen = useEffectStore(s => s.setIsPuzzlesModalOpen);
     const setCurrentPuzzle = useEffectStore(s => s.setCurrentPuzzle);
-
+    const loadAudioFromUrl = useAudioStore(s => s.loadAudioFromUrl);
 
     const [hoverTarget, setHoverTarget] = useState<{ el: HTMLElement; blueprint: EffectConfig[] } | null>(null);
 
@@ -99,6 +99,9 @@ const PuzzlesModal: React.FC = () => {
 
     const handlePuzzleClick = (puzzleId: number) => {
         if (PUZZLES[puzzleId].locked) return;
+        loadAudioFromUrl('/trip.mp3', 'Demo Track').catch(err => {
+            console.error(err);
+        });
         setCurrentPuzzle(puzzleId);
         setIsPuzzlesModalOpen(false);
     };
