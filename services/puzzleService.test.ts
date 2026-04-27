@@ -196,7 +196,21 @@ export const TEST_CASES: TestCase[] = [
         expectScoreBelow: 90,
     },
 
-    // ── Greedy Pairer: Same-Type Disambiguation ───────────────────────────────
+    // ── Soloed Effect Mismatch ───────────────────────────────────────────────
+    {
+        name: 'Soloed Effect Mismatch',
+        description: 'User has RGBA soloed, which isolates it and hides other effects. Should fail.',
+        target: [e('RGBA'), e('BLUR')],
+        user: (() => {
+            const u = [e('RGBA'), e('BLUR')];
+            u[0].soloed = true; // Solo the RGBA
+            return u;
+        })(),
+        expectMatch: false,
+        expectScoreBelow: 90,
+    },
+
+    // ── Greedy Pairer: Same-Type GRID Disambiguation ───────────────────────────────
     {
         name: 'Greedy Pairer: Same-Type GRID Disambiguation',
         description: 'Two GRIDs with very different sizes, in wrong order. They DO overlap → illegal swap. Tests that the pairer pairs small↔small and big↔big correctly.',
@@ -215,14 +229,14 @@ export const TEST_CASES: TestCase[] = [
         expectScoreBelow: 90,
     },
 
-    // ── Passthrough Sandwich ──────────────────────────────────────────────────
+    // ── Color Sandwich Swap (Illegal) ──────────────────────────────────────────
     {
-        name: 'Passthrough Sandwich (Legal)',
-        description: 'RGBA and INVERT both flank a TUNNEL_WARP in the target, then are fully reversed in the user. Both are PASSTHROUGH — should be a legal full swap.',
+        name: 'Color Sandwich Swap (Illegal)',
+        description: 'RGBA and INVERT both flank a TUNNEL_WARP in the target, and are reversed in the user. Color vs Color is NOT commutative.',
         target: [e('RGBA'), e('TUNNEL_WARP'), e('INVERT')],
         user: [e('INVERT'), e('TUNNEL_WARP'), e('RGBA')],
-        expectMatch: true,
-        expectScoreAbove: 90,
+        expectMatch: false,
+        expectScoreBelow: 90,
     },
 
     // ── Cross-Type Spatial Swap ───────────────────────────────────────────────
@@ -262,12 +276,12 @@ export const TEST_CASES: TestCase[] = [
             'Anchors do not spatially overlap → legal whole-group swap.',
         // Grid1 anchor bounds: [0..10]. Grid2 anchor bounds: [90..100]. No overlap.
         target: [
-            meld(e('GRID', { 'Pan X': 5,  'Scale X': 10 })), e('RGBA'),
+            meld(e('GRID', { 'Pan X': 5, 'Scale X': 10 })), e('RGBA'),
             e('GRID', { 'Pan X': 95, 'Scale X': 10 }),
         ],
         user: [
             e('GRID', { 'Pan X': 95, 'Scale X': 10 }),
-            meld(e('GRID', { 'Pan X': 5,  'Scale X': 10 })), e('RGBA'),
+            meld(e('GRID', { 'Pan X': 5, 'Scale X': 10 })), e('RGBA'),
         ],
         expectMatch: true,
         expectScoreAbove: 90,
@@ -298,7 +312,7 @@ export const TEST_CASES: TestCase[] = [
             'Target: [GRAIN(melded), RGBA]. User: [RGBA(melded), GRAIN]. ' +
             'Swapping the anchor fundamentally changes the base layer. Should fail.',
         target: [meld(e('GRAIN')), e('RGBA')],
-        user:   [meld(e('RGBA')),  e('GRAIN')],
+        user: [meld(e('RGBA')), e('GRAIN')],
         expectMatch: false,
         expectScoreBelow: 90,
     },
@@ -311,7 +325,7 @@ export const TEST_CASES: TestCase[] = [
             'Modifiers inside a group are greedily matched and then verified for commutativity. ' +
             'Since RGBA is passthrough, traversing TUNNEL_WARP is valid.',
         target: [meld(e('GRID')), meld(e('RGBA')), e('TUNNEL_WARP')],
-        user:   [meld(e('GRID')), meld(e('TUNNEL_WARP')), e('RGBA')],
+        user: [meld(e('GRID')), meld(e('TUNNEL_WARP')), e('RGBA')],
         expectMatch: true,
         expectScoreAbove: 90,
     },
@@ -321,7 +335,7 @@ export const TEST_CASES: TestCase[] = [
         name: 'Within-Group Reorder (Illegal: Non-Commutative Modifiers)',
         description: 'Swapping two UV modifiers (e.g. SKEW and TUNNEL_WARP) that do not explicitly commute causes a structural penalty even inside a group.',
         target: [meld(e('GRID')), meld(e('SKEW')), e('TUNNEL_WARP')],
-        user:   [meld(e('GRID')), meld(e('TUNNEL_WARP')), e('SKEW')],
+        user: [meld(e('GRID')), meld(e('TUNNEL_WARP')), e('SKEW')],
         expectMatch: false,
         expectScoreBelow: 90,
     },
@@ -333,11 +347,11 @@ export const TEST_CASES: TestCase[] = [
             'RGBA was melded with Grid1 in the target. In the user it is a standalone ' +
             'group. Breaking the meld chain changes the composite → should fail.',
         target: [
-            meld(e('GRID', { 'Pan X': 5,  'Scale X': 10 })), e('RGBA'),  // Group A: GRID(m)+RGBA
+            meld(e('GRID', { 'Pan X': 5, 'Scale X': 10 })), e('RGBA'),  // Group A: GRID(m)+RGBA
             e('GRID', { 'Pan X': 95, 'Scale X': 10 }),                    // Group B: GRID
         ],
         user: [
-            e('GRID', { 'Pan X': 5,  'Scale X': 10 }),  // GRID standalone (not melded)
+            e('GRID', { 'Pan X': 5, 'Scale X': 10 }),  // GRID standalone (not melded)
             e('RGBA'),                                    // RGBA standalone (not melded)
             e('GRID', { 'Pan X': 95, 'Scale X': 10 }),  // GRID standalone
         ],
@@ -348,21 +362,72 @@ export const TEST_CASES: TestCase[] = [
     {
         name: 'Deep Meta-Shuffle (Legal)',
         description:
-            'Target: [G1(m), RGBA(m), INVERT], [G2]. ' +
-            'User:   [G2], [G1(m), INVERT(m), RGBA]. ' +
+            'Target: [G1(m), RGBA(m), TUNNEL_WARP], [G2]. ' +
+            'User:   [G2], [G1(m), TUNNEL_WARP(m), RGBA]. ' +
             'Both a whole-group swap AND an internal modifier shuffle. Should pass.',
         // G1 anchor: [0..10]. G2 anchor: [90..100]. Groups are commutative.
-        // RGBA and INVERT are passthroughs: internal commute is legal.
+        // RGBA (Color) and TUNNEL_WARP (Space) are commutative: internal commute is legal.
         target: [
-            meld(e('GRID', { 'Pan X': 5,  'Scale X': 10 })), meld(e('RGBA')), e('INVERT'),
+            meld(e('GRID', { 'Pan X': 5, 'Scale X': 10 })), meld(e('RGBA')), e('TUNNEL_WARP'),
             e('GRID', { 'Pan X': 95, 'Scale X': 10 }),
         ],
         user: [
             e('GRID', { 'Pan X': 95, 'Scale X': 10 }),
-            meld(e('GRID', { 'Pan X': 5,  'Scale X': 10 })), meld(e('INVERT')), e('RGBA'),
+            meld(e('GRID', { 'Pan X': 5, 'Scale X': 10 })), meld(e('TUNNEL_WARP')), e('RGBA'),
         ],
         expectMatch: true,
         expectScoreAbove: 90,
+    },
+
+    // ── Color vs Color (Illegal) ──────────────────────────────────────────
+    {
+        name: 'Color vs Color (Illegal)',
+        description: 'Swapping two Color effects (RGBA and HUE_ROTATION) is not commutative. Should fail.',
+        target: [e('RGBA'), e('HUE_ROTATION')],
+        user: [e('HUE_ROTATION'), e('RGBA')],
+        expectMatch: false,
+        expectScoreBelow: 90,
+    },
+
+    // ── Transitive Non-Commutativity (Illegal) ──────────────────────────────
+    {
+        name: 'Transitive Non-Commutativity (Illegal)',
+        description:
+            'Target: [RGBA, GRID, TUNNEL]. User: [TUNNEL, GRID, RGBA]. ' +
+            'Even though RGBA commutes with both, GRID and TUNNEL do not commute with each other. ' +
+            'Their relative order is flipped → should fail.',
+        target: [e('RGBA'), e('GRID'), e('TUNNEL_WARP')],
+        user: [e('TUNNEL_WARP'), e('GRID'), e('RGBA')],
+        expectMatch: false,
+        expectScoreBelow: 90,
+    },
+
+    // ── Soloed Modifier inside Meld Chain (Illegal) ──────────────────────────
+    {
+        name: 'Soloed Modifier inside Meld Chain (Illegal)',
+        description: 'Soloing a modifier (RGBA) inside a meld chain should incur a major penalty.',
+        target: [meld(e('GRID')), e('RGBA')],
+        user: (() => {
+            const u = [meld(e('GRID')), e('RGBA')];
+            u[1].soloed = true; // Solo the child
+            return u;
+        })(),
+        expectMatch: false,
+        expectScoreBelow: 90,
+    },
+
+    // ── Muted Modifier inside Meld Chain (Illegal) ───────────────────────────
+    {
+        name: 'Muted Modifier inside Meld Chain (Illegal)',
+        description: 'Muting a modifier (RGBA) inside a meld chain should incur a major penalty.',
+        target: [meld(e('GRID')), e('RGBA')],
+        user: (() => {
+            const u = [meld(e('GRID')), e('RGBA')];
+            u[1].muted = true; // Mute the child
+            return u;
+        })(),
+        expectMatch: false,
+        expectScoreBelow: 90,
     },
 ];
 

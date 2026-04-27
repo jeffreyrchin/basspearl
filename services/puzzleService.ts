@@ -8,8 +8,6 @@ import { EFFECT_METADATA } from '../config/effects';
  *
  * Core Model: Effects are pre-processed into "Meld Groups" before comparison.
  * A Meld Group is one anchor effect followed by zero or more melded children.
- * This allows ordering rules to be applied at the group level — swapping two
- * non-overlapping groups is legal, but breaking a group apart is not.
  */
 
 export interface PuzzleMatchResult {
@@ -18,29 +16,23 @@ export interface PuzzleMatchResult {
     message: string;
 }
 
-/**
- * A meld group: one non-melded anchor + zero or more melded children.
- * Represents a single atomic visual unit in the compositor.
- */
 interface MeldGroup {
-    anchor: EffectConfig;   // First effect — defines spatial identity.
-    members: EffectConfig[]; // All effects: [anchor, ...melded children].
+    anchor: EffectConfig;
+    members: EffectConfig[];
 }
 
-// Semantic commutativity — spatial commutativity is derived from EFFECT_METADATA.
-const PASSTHROUGH_EFFECTS = new Set<string>(['RGBA', 'INVERT', 'HUE_ROTATION']);
+// Effects that only modify pixel colors (Point Operations).
+// They commute with UV effects, but NOT with other Color effects.
+const COLOR_EFFECTS = new Set<string>(['RGBA', 'INVERT', 'HUE_ROTATION']);
 
+// Effects that warp UV coordinates or sample neighboring pixels (Spatial Operations).
 const UV_EFFECTS = new Set<GlitchEffectType>([
     'TUNNEL_WARP', 'ROTATE', 'SKEW', 'TILE', 'TRANSFORM', 'SCROLL',
     'BIT_CRUSH', 'TRI_CRUSH', 'HEX_CRUSH', 'SCREEN_SHAKE', 'BLACK_HOLE',
-    'WHITE_HOLE', 'WAVE_DISTORTION', 'BLUR',
+    'WHITE_HOLE', 'WAVE_DISTORTION', 'BLUR'
 ]);
 
 export class PuzzleService {
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Public API
-    // ─────────────────────────────────────────────────────────────────────────
 
     static evaluate(userEffects: EffectConfig[], targetEffects: EffectConfig[]): PuzzleMatchResult {
         if (userEffects.length === 0 && targetEffects.length === 0) {
@@ -77,22 +69,17 @@ export class PuzzleService {
 
         for (const effect of effects) {
             currentMembers.push(effect);
-            // If this effect is not melded to the next, it terminates the group.
             if (!effect.melded) {
                 groups.push({
-                    anchor: currentMembers[0], // Treat the first member as the spatial anchor
+                    anchor: currentMembers[0],
                     members: currentMembers
                 });
                 currentMembers = [];
             }
         }
 
-        // Fallback for trailing melded items (should not happen in valid stacks)
         if (currentMembers.length > 0) {
-            groups.push({
-                anchor: currentMembers[0],
-                members: currentMembers
-            });
+            groups.push({ anchor: currentMembers[0], members: currentMembers });
         }
         return groups;
     }
@@ -108,7 +95,7 @@ export class PuzzleService {
      */
     private static calculateBestFitGroupScore(userGroups: MeldGroup[], targetGroups: MeldGroup[]) {
         let totalScore = 0;
-        const pairedIndices = new Map<number, number>(); // targetGroupIdx → userGroupIdx
+        const pairedIndices = new Map<number, number>();
         const usedUserIndices = new Set<number>();
 
         targetGroups.forEach((target, tIdx) => {
@@ -116,7 +103,6 @@ export class PuzzleService {
             let bestMatchScore = -1;
 
             userGroups.forEach((user, uIdx) => {
-                // Groups are only comparable if their anchors are the same type.
                 if (usedUserIndices.has(uIdx) || user.anchor.type !== target.anchor.type) return;
 
                 const score = this.compareGroups(user, target);
@@ -133,7 +119,6 @@ export class PuzzleService {
             }
         });
 
-        // Penalize for unmatched groups (extra or missing at the group level)
         const lengthPenalty = Math.abs(userGroups.length - targetGroups.length) * 20;
         const normalizedScore = (totalScore / Math.max(targetGroups.length, 1)) - lengthPenalty;
 
@@ -148,21 +133,21 @@ export class PuzzleService {
     private static compareGroups(user: MeldGroup, target: MeldGroup): number {
         let memberScore = 0;
 
-        // 1. Score the anchor (member 0 is guaranteed to be same type)
+        // 1. Score Anchor
         let anchorScore = this.compareParams(user.anchor, target.anchor);
-        const anchorMutedMismatch = (user.anchor.muted ?? false) !== (target.anchor.muted ?? false);
+        const anchorMutedMismatch  = (user.anchor.muted  ?? false) !== (target.anchor.muted  ?? false);
         const anchorMeldedMismatch = (user.anchor.melded ?? false) !== (target.anchor.melded ?? false);
+        const anchorSoloedMismatch = (user.anchor.soloed ?? false) !== (target.anchor.soloed ?? false);
 
-        if (anchorMutedMismatch || anchorMeldedMismatch) {
+        if (anchorMutedMismatch || anchorMeldedMismatch || anchorSoloedMismatch) {
             anchorScore = Math.max(0, anchorScore - 60);
         }
         memberScore += anchorScore;
 
-        // 2. Score modifiers (members 1..N)
+        // 2. Score Modifiers
         const userModifiers = user.members.slice(1);
         const targetModifiers = target.members.slice(1);
-
-        const pairedModifierIndices = new Map<number, number>(); // targetModIdx -> userModIdx
+        const pairedModifierIndices = new Map<number, number>();
         const usedUserMods = new Set<number>();
 
         targetModifiers.forEach((tMod, tIdx) => {
@@ -171,17 +156,15 @@ export class PuzzleService {
 
             userModifiers.forEach((uMod, uIdx) => {
                 if (usedUserMods.has(uIdx) || uMod.type !== tMod.type) return;
-
                 let score = this.compareParams(uMod, tMod);
+                
+                const mutedMismatch  = (uMod.muted  ?? false) !== (tMod.muted  ?? false);
+                const soloedMismatch = (uMod.soloed ?? false) !== (tMod.soloed ?? false);
 
-                // Only muted matters within modifiers; melded is already 
-                // handled by the fact that they've been parsed into the same group.
-                const mutedMismatch = (uMod.muted ?? false) !== (tMod.muted ?? false);
-
-                if (mutedMismatch) {
+                if (mutedMismatch || soloedMismatch) {
                     score = Math.max(0, score - 60);
                 }
-
+                
                 if (score > bestMatchScore) {
                     bestMatchScore = score;
                     bestMatchIdx = uIdx;
@@ -195,7 +178,7 @@ export class PuzzleService {
             }
         });
 
-        // 3. Modifier Structural Penalty (Internal Commutativity Check)
+        // 3. Internal Group Commutativity
         let structuralScore = 100;
         const penaltyPerViolation = 50;
 
@@ -203,9 +186,7 @@ export class PuzzleService {
             for (let j = i + 1; j < targetModifiers.length; j++) {
                 const uIdxI = pairedModifierIndices.get(i);
                 const uIdxJ = pairedModifierIndices.get(j);
-
                 if (uIdxI === undefined || uIdxJ === undefined) continue;
-
                 if (uIdxI > uIdxJ) {
                     if (!this.areEffectsCommutative(targetModifiers[i], targetModifiers[j])) {
                         structuralScore -= penaltyPerViolation;
@@ -214,13 +195,9 @@ export class PuzzleService {
             }
         }
 
-        // Penalize for extra or missing modifiers
         const lengthPenalty = Math.abs(userModifiers.length - targetModifiers.length) * 20;
-
         const normalizedParamScore = (memberScore / Math.max(target.members.length, 1)) - lengthPenalty;
-        const internalStructuralPenalty = 100 - Math.max(0, structuralScore);
-
-        const finalGroupScore = normalizedParamScore - (internalStructuralPenalty * 0.6);
+        const finalGroupScore = normalizedParamScore - ((100 - Math.max(0, structuralScore)) * 0.6);
 
         return Math.max(0, finalGroupScore);
     }
@@ -229,10 +206,11 @@ export class PuzzleService {
     // Order Validity & Commutativity
     // ─────────────────────────────────────────────────────────────────────────
 
-    private static checkGroupOrderValidity(
-        targetGroups: MeldGroup[],
-        pairedIndices: Map<number, number>,
-    ): number {
+    /**
+     * Checks if the order of matched groups is legal based on anchor commutativity.
+     * Within-group ordering is handled by compareGroups.
+     */
+    private static checkGroupOrderValidity(targetGroups: MeldGroup[], pairedIndices: Map<number, number>): number {
         let score = 100;
         const penaltyPerViolation = 50;
 
@@ -240,9 +218,7 @@ export class PuzzleService {
             for (let j = i + 1; j < targetGroups.length; j++) {
                 const userIdxI = pairedIndices.get(i);
                 const userIdxJ = pairedIndices.get(j);
-
                 if (userIdxI === undefined || userIdxJ === undefined) continue;
-
                 if (userIdxI > userIdxJ) {
                     if (!this.areEffectsCommutative(targetGroups[i].anchor, targetGroups[j].anchor)) {
                         score -= penaltyPerViolation;
@@ -250,37 +226,46 @@ export class PuzzleService {
                 }
             }
         }
-
         return Math.max(0, score);
-    }
-
-    /**
-     * General commutativity check for any two effects.
-     * Rule 1 — PASSTHROUGH: RGBA/Invert can cross UV effects or each other.
-     * Rule 2 — Spatial Non-Intersection: Spatially-bounded effects that do
-     *   not overlap can be freely swapped.
-     */
-    private static areEffectsCommutative(a: EffectConfig, b: EffectConfig): boolean {
-        const isPassthroughA = PASSTHROUGH_EFFECTS.has(a.type);
-        const isPassthroughB = PASSTHROUGH_EFFECTS.has(b.type);
-
-        // Rule 1
-        if (isPassthroughA && UV_EFFECTS.has(b.type)) return true;
-        if (isPassthroughB && UV_EFFECTS.has(a.type)) return true;
-        if (isPassthroughA && isPassthroughB) return true;
-
-        // Rule 2
-        if (this.hasSpatialBounds(a.type) && this.hasSpatialBounds(b.type)) {
-            return !this.doPatternsIntersect(a, b);
-        }
-
-        return false;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // Spatial Helpers
     // ─────────────────────────────────────────────────────────────────────────
 
+    /**
+     * General commutativity check for any two effects.
+     * 
+     * Rule 1 — Color vs Space: Point-ops (color math) commute with spatial transforms.
+     * Rule 2 — Spatial Non-Intersection: Spatially-bounded patterns that do not
+     *   overlap can be freely swapped without changing the visual.
+     * 
+     * Note: Color-vs-Color effects (e.g. Invert and RGBA) are NOT commutative.
+     */
+    private static areEffectsCommutative(a: EffectConfig, b: EffectConfig): boolean {
+        const isColorA = COLOR_EFFECTS.has(a.type);
+        const isColorB = COLOR_EFFECTS.has(b.type);
+        const isSpaceA = UV_EFFECTS.has(a.type) || this.hasSpatialBounds(a.type);
+        const isSpaceB = UV_EFFECTS.has(b.type) || this.hasSpatialBounds(b.type);
+
+        // Color vs Space -> COMMUTE
+        if (isColorA && isSpaceB) return true;
+        if (isColorB && isSpaceA) return true;
+
+        // Space (Pattern) vs Space -> COMMUTE if no overlap
+        if (this.hasSpatialBounds(a.type) && this.hasSpatialBounds(b.type)) {
+            return !this.doPatternsIntersect(a, b);
+        }
+
+        // Color vs Color -> DO NOT COMMUTE
+        // Space vs Space -> DO NOT COMMUTE
+        return false;
+    }
+
+    /**
+     * Returns true if this effect type has spatial positioning params (Pan X + Scale X)
+     * according to EFFECT_METADATA. Derived directly from the schema.
+     */
     private static hasSpatialBounds(type: GlitchEffectType): boolean {
         const meta = EFFECT_METADATA[type];
         if (!meta) return false;
@@ -288,16 +273,17 @@ export class PuzzleService {
         return paramNames.has('Pan X') && paramNames.has('Scale X');
     }
 
+    /**
+     * Calculates spatial intersection between two effects using their runtime param values.
+     */
     private static doPatternsIntersect(a: EffectConfig, b: EffectConfig): boolean {
         const getBounds = (effect: EffectConfig) => {
             const get = (name: string, fallback: number) =>
                 effect.params.find(p => p.param === name)?.value ?? fallback;
-
             const panX = get('Pan X', 50);
             const panY = get('Pan Y', 50);
             const scaleX = get('Scale X', 100);
             const scaleY = get('Scale Y', 100);
-
             return {
                 left: panX - scaleX / 2,
                 right: panX + scaleX / 2,
@@ -305,10 +291,8 @@ export class PuzzleService {
                 bottom: panY + scaleY / 2,
             };
         };
-
         const bA = getBounds(a);
         const bB = getBounds(b);
-
         return !(bA.left > bB.right || bA.right < bB.left || bA.top > bB.bottom || bA.bottom < bB.top);
     }
 
@@ -316,18 +300,20 @@ export class PuzzleService {
     // Effect-Level Param Comparison
     // ─────────────────────────────────────────────────────────────────────────
 
+    /**
+     * Scores parameter similarity between two effects of the same type.
+     * Uses a graded curve: exact matches score higher than near-matches.
+     */
     private static compareParams(a: EffectConfig, b: EffectConfig): number {
         let matchCount = 0;
         a.params.forEach((pA, idx) => {
             const pB = b.params[idx];
             if (!pB) return;
-
             const diff = Math.abs(pA.value - pB.value);
-            if (diff === 0) matchCount += 100; // Perfect
-            else if (diff <= 5) matchCount += 75;  // Within tolerance
-            else if (diff <= 15) matchCount += 50;  // Close
+            if (diff === 0) matchCount += 100;
+            else if (diff <= 5) matchCount += 75;
+            else if (diff <= 15) matchCount += 50;
         });
-
         return matchCount / a.params.length;
     }
 
