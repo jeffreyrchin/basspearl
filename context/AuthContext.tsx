@@ -9,6 +9,7 @@ import {
     updateProfile
 } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
+import { useProgressStore } from '../store/useProgressStore';
 
 interface AuthContextType {
     user: User | null;
@@ -32,15 +33,20 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const loadProgress = useProgressStore(s => s.loadProgress);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setUser(user);
             setIsLoading(false);
+            // Load cloud progress (and merge any local guest progress) on sign-in
+            if (user) {
+                await loadProgress(user.uid);
+            }
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [loadProgress]);
 
     const signInWithGoogle = async () => {
         try {

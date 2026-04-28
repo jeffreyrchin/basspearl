@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useEffectStore } from '../store/useEffectStore';
 import { PUZZLES } from '../config/puzzles';
-
 import { PuzzleMatchResult } from '../services/puzzleService';
+import { useAuth } from '../context/AuthContext';
+import { useProgressStore } from '../store/useProgressStore';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface SuccessModalProps {
     result: PuzzleMatchResult;
@@ -16,6 +18,35 @@ const PuzzleSuccessModal: React.FC<SuccessModalProps> = ({ result }) => {
 
     const isMatch = result.isMatch;
     const hasNext = currentPuzzle !== null && currentPuzzle < PUZZLES.length - 1;
+
+    const { user } = useAuth();
+    const openAuth = useAuthStore(s => s.openAuth);
+    const markComplete = useProgressStore(s => s.markComplete);
+
+    const [isSaved, setIsSaved] = useState(false);
+    // Track whether user clicked "Sign in" so we can respond when they complete it
+    const wasSigningIn = useRef(false);
+
+    // Mark puzzle complete whenever a match is detected
+    useEffect(() => {
+        if (isMatch && currentPuzzle !== null) {
+            markComplete(currentPuzzle, user?.uid ?? null);
+        }
+    }, [isMatch, currentPuzzle, user?.uid, markComplete]);
+
+    // When the user completes sign-in via the AuthModal, auto-flip to saved state
+    useEffect(() => {
+        if (user && wasSigningIn.current) {
+            setIsSaved(true);
+            wasSigningIn.current = false;
+        }
+    }, [user]);
+
+    const handleSaveProgress = () => {
+        if (user) return; // Already saved, button is disabled
+        wasSigningIn.current = true;
+        openAuth('login');
+    };
 
     const handleNext = () => {
         if (hasNext) {
@@ -99,16 +130,23 @@ const PuzzleSuccessModal: React.FC<SuccessModalProps> = ({ result }) => {
                                 {hasNext && (
                                     <button
                                         onClick={handleNext}
-                                        className="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold uppercase tracking-widest text-[11px] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-indigo-600/20"
+                                        className="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold uppercase tracking-widest text-[11px] transition-all hover:scale-[1.02] active:scale-[0.98] will-change-transform shadow-lg shadow-indigo-600/20"
                                     >
                                         Next Puzzle
                                     </button>
                                 )}
                                 <button
-                                    onClick={() => setResult(null)}
-                                    className="w-full py-4 rounded-2xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white font-bold uppercase tracking-widest text-[11px] transition-all"
+                                    onClick={handleSaveProgress}
+                                    disabled={isSaved || !!user}
+                                    className={`w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-[11px] transition-all duration-200 ${isSaved || !!user
+                                        ? 'bg-emerald-600 text-white disabled:opacity-100 disabled:cursor-default shadow-[0_0_20px_rgba(5,150,105,0.4)]'
+                                        : 'bg-white/5 hover:bg-white/10 text-white disabled:opacity-60 disabled:cursor-not-allowed'
+                                        }`}
                                 >
-                                    Exit
+                                    {isSaved || !!user
+                                        ? '✓ Progress Saved'
+                                        : 'Sign in to Save Progress'
+                                    }
                                 </button>
                             </>
                         ) : (
