@@ -92,6 +92,13 @@ describe('useProgressStore', () => {
             await store().markComplete(5, 70, null);
             expect(store().completedPuzzles[5].score).toBe(90);
         });
+
+        it('tracks distinct scores for different puzzles completed sequentially', async () => {
+            await store().markComplete(1, 100, null);
+            await store().markComplete(2, 50, null);
+            expect(store().completedPuzzles[1].score).toBe(100);
+            expect(store().completedPuzzles[2].score).toBe(50);
+        });
     });
 
     // ── markComplete (Signed-in / Cloud) ───────────────────────────────────────
@@ -131,8 +138,8 @@ describe('useProgressStore', () => {
                 exists: () => true,
                 data: () => ({
                     completedPuzzles: {
-                        0: { score: 100, completedAt: 123 },
-                        1: { score: 90, completedAt: 456 }
+                        0: { score: 100, completedAt: '2023-01-01T00:00:00.000Z' },
+                        1: { score: 90, completedAt: '2023-01-02T00:00:00.000Z' }
                     }
                 }),
             });
@@ -144,16 +151,16 @@ describe('useProgressStore', () => {
         it('merges local guest progress with cloud data, taking the maximum score', async () => {
             // User played levels 0 and 1 as a guest (0 got 80, 1 got 95)
             localStorageMock.setItem('glitchbrain_completed_puzzles', JSON.stringify({
-                0: { score: 80, completedAt: 100 },
-                1: { score: 95, completedAt: 200 }
+                0: { score: 80, completedAt: '2023-01-03T00:00:00.000Z' },
+                1: { score: 95, completedAt: '2023-01-04T00:00:00.000Z' }
             }));
             // Cloud already has levels 1 and 2 (1 got 80, 2 got 100)
             mockGetDoc.mockResolvedValueOnce({
                 exists: () => true,
                 data: () => ({
                     completedPuzzles: {
-                        1: { score: 80, completedAt: 150 },
-                        2: { score: 100, completedAt: 300 }
+                        1: { score: 80, completedAt: '2023-01-01T00:00:00.000Z' },
+                        2: { score: 100, completedAt: '2023-01-02T00:00:00.000Z' }
                     }
                 }),
             });
@@ -194,8 +201,8 @@ describe('useProgressStore', () => {
     describe('syncLocalToCloud', () => {
         it('syncs existing local progress to Firestore for a new user', async () => {
             localStorageMock.setItem('glitchbrain_completed_puzzles', JSON.stringify({
-                0: { score: 100, completedAt: 123 },
-                2: { score: 85, completedAt: 456 }
+                0: { score: 100, completedAt: '2023-01-01T00:00:00.000Z' },
+                2: { score: 85, completedAt: '2023-01-02T00:00:00.000Z' }
             }));
             await store().syncLocalToCloud('user_abc');
             const [, writeData] = mockSetDoc.mock.calls[0];

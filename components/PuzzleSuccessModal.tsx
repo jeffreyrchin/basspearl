@@ -26,13 +26,14 @@ const PuzzleSuccessModal: React.FC<SuccessModalProps> = ({ result }) => {
     const [isSaved, setIsSaved] = useState(false);
     // Track whether user clicked "Sign in" so we can respond when they complete it
     const wasSigningIn = useRef(false);
+    const puzzleIdAtCapture = useRef(currentPuzzle);
 
     // Mark puzzle complete whenever a match is detected
     useEffect(() => {
-        if (isMatch && currentPuzzle !== null) {
-            markComplete(currentPuzzle, result.score, user?.uid ?? null);
+        if (isMatch && puzzleIdAtCapture.current !== null) {
+            markComplete(puzzleIdAtCapture.current, result.score, user?.uid ?? null);
         }
-    }, [isMatch, currentPuzzle, user?.uid, markComplete]);
+    }, [isMatch, user?.uid, markComplete, result.score]);
 
     // When the user completes sign-in via the AuthModal, auto-flip to saved state
     useEffect(() => {

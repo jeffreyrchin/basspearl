@@ -6,7 +6,7 @@ const LOCAL_STORAGE_KEY = 'glitchbrain_completed_puzzles';
 
 export interface PuzzleProgress {
     score: number;
-    completedAt: number;
+    completedAt: string;
 }
 
 // Helper: load from localStorage (guest progress)
@@ -82,7 +82,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
 
         if (existing && existing.score >= score) return;
 
-        const newProgress: PuzzleProgress = { score, completedAt: Date.now() };
+        const newProgress: PuzzleProgress = { score, completedAt: new Date().toISOString() };
         const updated = { ...completedPuzzles, [puzzleIndex]: newProgress };
         
         saveLocalProgress(updated);
