@@ -7,6 +7,7 @@ import { createMacroInstance } from '../constants';
 import { PUZZLES } from '../config/puzzles';
 import { EffectConfig, PuzzleConfig } from '../types';
 import { useAudioStore } from '../store/useAudioStore';
+import LoadingSpinner from './LoadingSpinner';
 
 interface PuzzleCardProps {
     puzzle: PuzzleConfig;
@@ -78,6 +79,7 @@ const PuzzlesModal: React.FC = () => {
     const loadAudioFromUrl = useAudioStore(s => s.loadAudioFromUrl);
 
     const [hoverTarget, setHoverTarget] = useState<{ el: HTMLElement; blueprint: EffectConfig[] } | null>(null);
+    const [entranceComplete, setEntranceComplete] = useState(false);
 
     const handleHoverStart = useCallback((el: HTMLElement, blueprint: EffectConfig[]) => {
         setHoverTarget({ el, blueprint });
@@ -129,6 +131,7 @@ const PuzzlesModal: React.FC = () => {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                onAnimationComplete={() => setEntranceComplete(true)}
                 data-section="modal"
                 className="relative w-full bg-slate-900/90 max-w-3xl rounded-lg border border-white/10 shadow-2xl max-h-[90vh] overflow-hidden flex flex-col"
             >
@@ -145,18 +148,29 @@ const PuzzlesModal: React.FC = () => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
-                    <div className="p-4 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-1">
-                        {PUZZLES.map((puzzle, id) => (
-                            <PuzzleCard
-                                key={id}
-                                id={id}
-                                puzzle={puzzle}
-                                onClick={() => handlePuzzleClick(id)}
-                                onHoverStart={handleHoverStart}
-                                onHoverEnd={handleHoverEnd}
-                            />
-                        ))}
-                    </div>
+                    {entranceComplete ? (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.3 }}
+                            className="p-4 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-1"
+                        >
+                            {PUZZLES.map((puzzle, id) => (
+                                <PuzzleCard
+                                    key={id}
+                                    id={id}
+                                    puzzle={puzzle}
+                                    onClick={() => handlePuzzleClick(id)}
+                                    onHoverStart={handleHoverStart}
+                                    onHoverEnd={handleHoverEnd}
+                                />
+                            ))}
+                        </motion.div>
+                    ) : (
+                        <div className="py-20">
+                            <LoadingSpinner />
+                        </div>
+                    )}
                 </div>
             </motion.div>
         </div>

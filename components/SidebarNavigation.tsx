@@ -5,6 +5,7 @@ import SidebarPipeline from './SidebarPipeline';
 import SidebarLibrary from './SidebarLibrary';
 import { loadMuxelsFile } from '@/services/sanitizeImportedEffects';
 import { canMeld, isAlreadyMelded } from '@/services/pipelineUtils';
+import LoadingSpinner from './LoadingSpinner';
 
 interface SidebarNavigationProps {
     onClose?: () => void;
@@ -232,14 +233,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                                 >
                                     <SidebarLibrary />
                                 </motion.div>
-                            ) : (
-                                <div className="h-full flex flex-col items-center justify-center gap-2">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white/60"></div>
-                                    <span className="text-[12px] font-bold text-white uppercase tracking-[0.15em]">
-                                        Loading...
-                                    </span>
-                                </div>
-                            )}
+                            ) : <LoadingSpinner />}
                         </div>
                     </motion.div>
                 )}
