@@ -6,7 +6,7 @@ export const PUZZLES: PuzzleConfig[] = [
         difficulty: 'Easy',
         macro: 'SPIRAL_GLOW',
         allowedEffects: [
-            'SPIRAL_GRADIENT', 'SPECTRAL_MAP', 'GLOW', 'RADIAL_GRADIENT', 'LINEAR_GRADIENT', 'GRID', 'RGBA', 'INVERT', 'BLUR', 'WAVE_DISTORTION', 'TUNNEL_WARP'
+            'SPIRAL_GRADIENT', 'SPECTRAL_MAP', 'GLOW'
         ]
     },
     {

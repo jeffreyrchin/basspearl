@@ -65,7 +65,7 @@ interface EffectState {
 
     isGameMode: boolean;
     isPreviewingPuzzle: boolean;
-    setIsPreviewingPuzzle: (previewing: boolean) => void;
+    toggleIsPreviewingPuzzle: () => void;
     targetPuzzleEffects: EffectConfig[];
     puzzleMatchResult: PuzzleMatchResult | null;
     checkPuzzle: () => void;
@@ -185,7 +185,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
 
     isGameMode: false,
     isPreviewingPuzzle: false,
-    setIsPreviewingPuzzle: (isPreviewingPuzzle) => set({ isPreviewingPuzzle }),
+    toggleIsPreviewingPuzzle: () => set(state => ({
+        isPreviewingPuzzle: !state.isPreviewingPuzzle
+    })),
     targetPuzzleEffects: [],
     puzzleMatchResult: null,
 
@@ -217,7 +219,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
             currentPuzzle,
             isGameMode: true,
             targetPuzzleEffects,
-            isPreviewingPuzzle: false
+            isPreviewingPuzzle: true
         });
     },
 

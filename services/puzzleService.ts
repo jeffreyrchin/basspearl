@@ -437,6 +437,6 @@ export class PuzzleService {
         if (score >= 80) return 'Match confirmed. Well done.';
         if (score >= 70) return "You're close, but the math isn't quite there.";
         if (score >= 40) return 'The essence is correct, but check your parameters.';
-        return 'Not quite. Hold W to study the goal again.';
+        return 'Not quite. Press W to study the goal again.';
     }
 }

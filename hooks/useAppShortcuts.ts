@@ -24,6 +24,9 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
     const setIsSceneHotbarOpen = useEffectStore(s => s.setIsSceneHotbarOpen);
     const activeSceneIndex = useEffectStore(s => s.activeSceneIndex);
 
+    const toggleIsPreviewingPuzzle = useEffectStore(s => s.toggleIsPreviewingPuzzle);
+    const isGameMode = useEffectStore(s => s.isGameMode);
+
     // Derived state
     const isInspectorOpen = focusStack.includes('inspector');
     const isLibraryOpen = focusStack.includes('library');
@@ -162,6 +165,13 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
                 e.preventDefault(); // Prevent page scroll down
                 if (target.tagName === 'BUTTON') target.blur(); // If a button is focused, blurring it prevents it from being natively clicked again.
                 onTogglePlay();
+                return;
+            }
+
+            // Handle W key for previewing in game mode
+            if (key === 'w' && isGameMode) {
+                if (e.repeat) return; // Prevent multiple events firing due to holding key
+                toggleIsPreviewingPuzzle();
                 return;
             }
 
