@@ -58,6 +58,39 @@ export interface TestResult {
     reason: string;
 }
 
+/**
+ * Legacy runner for the in-app PuzzleTestPage dashboard.
+ * Vitest ignores this, but the browser-based test page requires it.
+ */
+export function runAllTests(): TestResult[] {
+    return TEST_CASES.map((tc) => {
+        const result = PuzzleService.evaluate(tc.user, tc.target);
+
+        const matchOk = result.isMatch === tc.expectMatch;
+        const aboveOk = tc.expectScoreAbove === undefined || result.score >= tc.expectScoreAbove;
+        const belowOk = tc.expectScoreBelow === undefined || result.score < tc.expectScoreBelow;
+        const passed = matchOk && aboveOk && belowOk;
+
+        const reasons: string[] = [];
+        if (!matchOk) reasons.push(`isMatch was ${result.isMatch}, expected ${tc.expectMatch}`);
+        if (!aboveOk) reasons.push(`score ${result.score} < expected min ${tc.expectScoreAbove}`);
+        if (!belowOk) reasons.push(`score ${result.score} >= expected max ${tc.expectScoreBelow}`);
+
+        return {
+            name: tc.name,
+            description: tc.description,
+            passed,
+            result,
+            expected: {
+                isMatch: tc.expectMatch,
+                scoreAbove: tc.expectScoreAbove,
+                scoreBelow: tc.expectScoreBelow,
+            },
+            reason: reasons.join('; ') || 'All assertions passed.',
+        };
+    });
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Test Cases
 // ─────────────────────────────────────────────────────────────────────────────
@@ -714,34 +747,46 @@ export const TEST_CASES: TestCase[] = [
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Runner
+// Vitest Suite
 // ─────────────────────────────────────────────────────────────────────────────
+//
+// Each entry in TEST_CASES becomes its own named test.
+// We wrap this in a check so the browser doesn't crash when importing this file.
+//
+if (typeof describe !== 'undefined') {
+    describe('PuzzleService.evaluate', () => {
+        describe('Score & Match assertions', () => {
+            for (const tc of TEST_CASES) {
+                it(tc.name, () => {
+                    const result = PuzzleService.evaluate(tc.user, tc.target);
 
-export function runAllTests(): TestResult[] {
-    return TEST_CASES.map((tc) => {
-        const result = PuzzleService.evaluate(tc.user, tc.target);
+                    // isMatch must be exactly what the test case expects
+                    expect(result.isMatch).toBe(tc.expectMatch);
 
-        const matchOk = result.isMatch === tc.expectMatch;
-        const aboveOk = tc.expectScoreAbove === undefined || result.score >= tc.expectScoreAbove;
-        const belowOk = tc.expectScoreBelow === undefined || result.score < tc.expectScoreBelow;
-        const passed = matchOk && aboveOk && belowOk;
+                    // Score lower bound (if specified)
+                    if (tc.expectScoreAbove !== undefined) {
+                        expect(result.score).toBeGreaterThanOrEqual(tc.expectScoreAbove);
+                    }
 
-        const reasons: string[] = [];
-        if (!matchOk) reasons.push(`isMatch was ${result.isMatch}, expected ${tc.expectMatch}`);
-        if (!aboveOk) reasons.push(`score ${result.score} < expected min ${tc.expectScoreAbove}`);
-        if (!belowOk) reasons.push(`score ${result.score} >= expected max ${tc.expectScoreBelow}`);
+                    // Score upper bound (if specified)
+                    if (tc.expectScoreBelow !== undefined) {
+                        expect(result.score).toBeLessThan(tc.expectScoreBelow);
+                    }
+                });
+            }
+        });
 
-        return {
-            name: tc.name,
-            description: tc.description,
-            passed,
-            result,
-            expected: {
-                isMatch: tc.expectMatch,
-                scoreAbove: tc.expectScoreAbove,
-                scoreBelow: tc.expectScoreBelow,
-            },
-            reason: reasons.join('; ') || 'All assertions passed.',
-        };
+        describe('Edge cases', () => {
+            it('returns a numeric score between 0 and 100 for any input', () => {
+                const result = PuzzleService.evaluate([e('RGBA')], [e('TUNNEL_WARP')]);
+                expect(result.score).toBeGreaterThanOrEqual(0);
+                expect(result.score).toBeLessThanOrEqual(100);
+            });
+
+            it('provides non-empty feedback for every result', () => {
+                const result = PuzzleService.evaluate([e('RGBA')], [e('RGBA')]);
+                expect(result.feedback).toBeTruthy();
+            });
+        });
     });
 }
