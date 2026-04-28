@@ -30,7 +30,7 @@ const PuzzleSuccessModal: React.FC<SuccessModalProps> = ({ result }) => {
     // Mark puzzle complete whenever a match is detected
     useEffect(() => {
         if (isMatch && currentPuzzle !== null) {
-            markComplete(currentPuzzle, user?.uid ?? null);
+            markComplete(currentPuzzle, result.score, user?.uid ?? null);
         }
     }, [isMatch, currentPuzzle, user?.uid, markComplete]);
 

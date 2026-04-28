@@ -1,32 +1,37 @@
 import { create } from 'zustand';
-import { doc, getDoc, setDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const LOCAL_STORAGE_KEY = 'glitchbrain_completed_puzzles';
 
+export interface PuzzleProgress {
+    score: number;
+    completedAt: number;
+}
+
 // Helper: load from localStorage (guest progress)
-const loadLocalProgress = (): number[] => {
+const loadLocalProgress = (): Record<number, PuzzleProgress> => {
     try {
         const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
+        return raw ? JSON.parse(raw) : {};
     } catch {
-        return [];
+        return {};
     }
 };
 
 // Helper: save to localStorage
-const saveLocalProgress = (completed: number[]) => {
+const saveLocalProgress = (completed: Record<number, PuzzleProgress>) => {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(completed));
 };
 
 interface ProgressState {
-    completedPuzzles: number[];
+    completedPuzzles: Record<number, PuzzleProgress>;
 
     // Load cloud progress for a signed-in user, merging with any local guest progress
     loadProgress: (uid: string) => Promise<void>;
 
     // Mark a puzzle as complete. Saves locally always, and to cloud if user is signed in.
-    markComplete: (puzzleIndex: number, uid: string | null) => Promise<void>;
+    markComplete: (puzzleIndex: number, score: number, uid: string | null) => Promise<void>;
 
     // Sync local guest progress up to the cloud after sign-in
     syncLocalToCloud: (uid: string) => Promise<void>;
@@ -41,16 +46,26 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
         try {
             const docRef = doc(db, 'users', uid);
             const snap = await getDoc(docRef);
-            const cloudCompleted: number[] = snap.exists()
-                ? (snap.data().completedPuzzles ?? [])
-                : [];
+            const cloudCompleted: Record<number, PuzzleProgress> = snap.exists()
+                ? (snap.data().completedPuzzles ?? {})
+                : {};
 
             // Merge cloud progress with any local guest progress
             const localCompleted = loadLocalProgress();
-            const merged = Array.from(new Set([...cloudCompleted, ...localCompleted])).sort((a, b) => a - b);
+            const merged: Record<number, PuzzleProgress> = { ...cloudCompleted };
+
+            let hasNewLocalData = false;
+            for (const [key, localProgress] of Object.entries(localCompleted)) {
+                const puzzleId = Number(key);
+                const cloudProgress = merged[puzzleId];
+                if (!cloudProgress || localProgress.score > cloudProgress.score) {
+                    merged[puzzleId] = localProgress;
+                    hasNewLocalData = true;
+                }
+            }
 
             // If there was local progress to merge, push it up to the cloud
-            if (localCompleted.length > 0 && !snap.exists()) {
+            if (hasNewLocalData) {
                 await setDoc(docRef, { completedPuzzles: merged }, { merge: true });
             }
 
@@ -61,19 +76,27 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
         }
     },
 
-    markComplete: async (puzzleIndex: number, uid: string | null) => {
+    markComplete: async (puzzleIndex: number, score: number, uid: string | null) => {
         const { completedPuzzles } = get();
-        if (completedPuzzles.includes(puzzleIndex)) return;
+        const existing = completedPuzzles[puzzleIndex];
 
-        const updated = [...completedPuzzles, puzzleIndex].sort((a, b) => a - b);
+        if (existing && existing.score >= score) return;
+
+        const newProgress: PuzzleProgress = { score, completedAt: Date.now() };
+        const updated = { ...completedPuzzles, [puzzleIndex]: newProgress };
+        
         saveLocalProgress(updated);
         set({ completedPuzzles: updated });
 
         if (uid) {
             try {
                 const docRef = doc(db, 'users', uid);
-                // arrayUnion safely prevents duplicates on the cloud side
-                await setDoc(docRef, { completedPuzzles: arrayUnion(puzzleIndex), lastUpdated: serverTimestamp() }, { merge: true });
+                await setDoc(docRef, {
+                    completedPuzzles: {
+                        [puzzleIndex]: newProgress
+                    },
+                    lastUpdated: serverTimestamp()
+                }, { merge: true });
             } catch (error) {
                 console.error('Failed to save progress to Firestore:', error);
                 // Local save already succeeded, so progress is not lost
@@ -83,16 +106,16 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
 
     syncLocalToCloud: async (uid: string) => {
         const localCompleted = loadLocalProgress();
-        if (localCompleted.length === 0) return;
+        if (Object.keys(localCompleted).length === 0) return;
         try {
             const docRef = doc(db, 'users', uid);
-            await setDoc(docRef, { completedPuzzles: arrayUnion(...localCompleted), lastUpdated: serverTimestamp() }, { merge: true });
+            await setDoc(docRef, { completedPuzzles: localCompleted, lastUpdated: serverTimestamp() }, { merge: true });
         } catch (error) {
             console.error('Failed to sync local progress to cloud:', error);
         }
     },
 
     isPuzzleComplete: (puzzleIndex: number) => {
-        return get().completedPuzzles.includes(puzzleIndex);
+        return !!get().completedPuzzles[puzzleIndex];
     },
 }));
