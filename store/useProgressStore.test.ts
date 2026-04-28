@@ -197,6 +197,29 @@ describe('useProgressStore', () => {
         });
     });
 
+    // ── getPuzzleProgress ───────────────────────────────────────────────────────
+    describe('getPuzzleProgress', () => {
+        it('returns the full progress object for a completed puzzle', async () => {
+            await store().markComplete(5, 88, null);
+            const progress = store().getPuzzleProgress(5);
+            expect(progress).not.toBeNull();
+            expect(progress?.score).toBe(88);
+            expect(typeof progress?.completedAt).toBe('string');
+        });
+
+        it('returns null for an uncompleted puzzle', () => {
+            expect(store().getPuzzleProgress(10)).toBeNull();
+        });
+
+        it('reflects the highest score when multiple completions occur', async () => {
+            await store().markComplete(1, 60, null);
+            await store().markComplete(1, 95, null);
+            await store().markComplete(1, 70, null);
+            const progress = store().getPuzzleProgress(1);
+            expect(progress?.score).toBe(95);
+        });
+    });
+
     // ── syncLocalToCloud ────────────────────────────────────────────────────────
     describe('syncLocalToCloud', () => {
         it('syncs existing local progress to Firestore for a new user', async () => {

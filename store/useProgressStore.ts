@@ -37,6 +37,8 @@ interface ProgressState {
     syncLocalToCloud: (uid: string) => Promise<void>;
 
     isPuzzleComplete: (puzzleIndex: number) => boolean;
+
+    getPuzzleProgress: (puzzleIndex: number) => PuzzleProgress | null;
 }
 
 export const useProgressStore = create<ProgressState>((set, get) => ({
@@ -117,5 +119,9 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
 
     isPuzzleComplete: (puzzleIndex: number) => {
         return !!get().completedPuzzles[puzzleIndex];
+    },
+
+    getPuzzleProgress: (puzzleIndex: number) => {
+        return get().completedPuzzles[puzzleIndex] || null;
     },
 }));
