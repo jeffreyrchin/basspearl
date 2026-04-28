@@ -68,6 +68,9 @@ interface EffectState {
     toggleIsPreviewingPuzzle: () => void;
     targetPuzzleEffects: EffectConfig[];
     puzzleMatchResult: PuzzleMatchResult | null;
+    preGameEffects: EffectConfig[];
+    preGamePast: EffectConfig[][];
+    preGameFuture: EffectConfig[][];
     checkPuzzle: () => void;
     setPuzzleMatchResult: (result: PuzzleMatchResult | null) => void;
 
@@ -190,6 +193,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     })),
     targetPuzzleEffects: [],
     puzzleMatchResult: null,
+    preGameEffects: [],
+    preGamePast: [],
+    preGameFuture: [],
 
     checkPuzzle: () => {
         const { effects, targetPuzzleEffects } = get();
@@ -203,24 +209,33 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     setCurrentPuzzle: (currentPuzzle) => {
         // If exiting game mode
         if (currentPuzzle === null) {
-            set({
+            set(state => ({
                 currentPuzzle: null,
                 isGameMode: false,
                 targetPuzzleEffects: [],
-                isPreviewingPuzzle: false
-            });
+                isPreviewingPuzzle: false,
+                effects: state.preGameEffects, // Restore session
+                past: state.preGamePast,       // Restore undo history
+                future: state.preGameFuture    // Restore redo history
+            }));
             return;
         }
 
         const puzzle = PUZZLES[currentPuzzle];
         const targetPuzzleEffects = puzzle ? createMacroInstance(puzzle.macro) : [];
 
-        set({
+        set(state => ({
             currentPuzzle,
             isGameMode: true,
             targetPuzzleEffects,
+            preGameEffects: state.isGameMode ? state.preGameEffects : state.effects, // Backup current session
+            preGamePast: state.isGameMode ? state.preGamePast : state.past,          // Backup undo history
+            preGameFuture: state.isGameMode ? state.preGameFuture : state.future,    // Backup redo history
+            effects: [], // Clear effects for puzzle
+            past: [],    // Fresh undo history for puzzle
+            future: [],  // Fresh redo history for puzzle
             isPreviewingPuzzle: true
-        });
+        }));
     },
 
     activeDropdownId: null,

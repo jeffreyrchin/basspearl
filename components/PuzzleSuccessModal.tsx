@@ -108,7 +108,7 @@ const PuzzleSuccessModal: React.FC<SuccessModalProps> = ({ result }) => {
                                     onClick={() => setResult(null)}
                                     className="w-full py-4 rounded-2xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white font-bold uppercase tracking-widest text-[11px] transition-all"
                                 >
-                                    Keep Tinkering
+                                    Exit
                                 </button>
                             </>
                         ) : (
