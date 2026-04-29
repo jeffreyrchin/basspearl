@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
 import { useEffectStore } from '../store/useEffectStore';
+import { PUZZLES } from '../config/puzzles';
+
 
 const PuzzleHeader = () => {
     const currentPuzzle = useEffectStore(s => s.currentPuzzle);
@@ -7,6 +9,8 @@ const PuzzleHeader = () => {
     const isPreviewing = useEffectStore(s => s.isPreviewingPuzzle);
     const toggleIsPreviewing = useEffectStore(s => s.toggleIsPreviewingPuzzle);
     const checkPuzzle = useEffectStore(s => s.checkPuzzle);
+
+    const currentPuzzleDifficulty = currentPuzzle !== null ? PUZZLES[currentPuzzle].difficulty : '---';
 
     return (
         <div className="fixed top-8 left-0 right-0 flex justify-center pointer-events-none">
@@ -18,11 +22,15 @@ const PuzzleHeader = () => {
             >
                 {/* Puzzle Meta */}
                 <div className="flex flex-col">
-                    <span className="text-[9px] font-bold tracking-[0.2em] uppercase text-indigo-300 leading-none mb-1">
-                        Easy
+                    <span className={`text-[9px] font-bold tracking-[0.2em] uppercase
+                    ${currentPuzzleDifficulty === 'Medium' ? 'text-yellow-300' :
+                            currentPuzzleDifficulty === 'Hard' ? 'text-cyan-300' : 'text-indigo-300'
+                        }
+                    leading-none mb-1`}>
+                        {currentPuzzleDifficulty}
                     </span>
                     <span className="text-[11px] font-bold tracking-[0.1em] uppercase text-white leading-none">
-                        Puzzle {currentPuzzle + 1}
+                        {currentPuzzle !== null ? `Puzzle ${currentPuzzle + 1}` : '---'}
                     </span>
                 </div>
 

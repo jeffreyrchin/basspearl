@@ -61,7 +61,10 @@ const PuzzleCard: React.FC<PuzzleCardProps> = ({ puzzle, id, onClick, onHoverSta
 
             {/* Label */}
             <div className="absolute inset-x-0 bottom-0 p-3 z-20 text-left pointer-events-none">
-                <div className="text-[8px] font-bold uppercase tracking-[0.2em] text-indigo-300 mb-0.5">
+                <div className={`text-[8px] font-bold uppercase tracking-[0.2em] 
+                ${puzzle.difficulty === 'Medium' ? 'text-yellow-300' :
+                        puzzle.difficulty === 'Hard' ? 'text-cyan-300' : 'text-indigo-300'
+                    } mb-0.5`}>
                     {puzzle.difficulty}
                 </div>
                 <div className="text-[11px] font-bold uppercase tracking-widest text-white">
