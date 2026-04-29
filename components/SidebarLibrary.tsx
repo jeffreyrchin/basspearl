@@ -5,6 +5,7 @@ import { useEffectStore } from '../store/useEffectStore';
 import { PUZZLES } from '../config/puzzles';
 import EffectPreview from './EffectPreview';
 import HoverCanvas from './HoverCanvas';
+import { useProgressStore } from '@/store/useProgressStore';
 
 interface SidebarLibraryProps {
 }
@@ -27,6 +28,10 @@ interface LibraryCardProps {
 
 const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClick, onHoverStart, onHoverEnd }) => {
     const containerRef = useRef<HTMLDivElement>(null);
+    const isPuzzleComplete = useProgressStore(s => s.isPuzzleComplete);
+    const requiredPuzzleIdCompletedToUnlock = macroType ? MACRO_METADATA[macroType].requiredPuzzleIdCompletedToUnlock : undefined;
+    const isLocked = requiredPuzzleIdCompletedToUnlock !== undefined && !isPuzzleComplete(requiredPuzzleIdCompletedToUnlock);
+
     const blueprint = useMemo(() => {
         return macroType
             ? createMacroInstance(macroType, true)
@@ -34,10 +39,11 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
     }, [effectType, macroType]);
 
     const handleMouseEnter = useCallback(() => {
+        if (isLocked) return;
         if (containerRef.current) {
             onHoverStart(containerRef.current, blueprint);
         }
-    }, [onHoverStart, blueprint]);
+    }, [onHoverStart, blueprint, isLocked]);
 
     const label = effectType ? EFFECT_METADATA[effectType].label : MACRO_METADATA[macroType!].label;
     const isPattern = effectType && EFFECT_METADATA[effectType].category === 'Pattern';
@@ -55,26 +61,37 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
         >
             <div ref={containerRef} className="absolute inset-0 pointer-events-none">
                 {/* Static poster image - Zero WebGL */}
-                {effectType && <EffectPreview type={effectType} />}
-                {macroType && <EffectPreview macroType={macroType} />}
+                {!isLocked && effectType && <EffectPreview type={effectType} />}
+                {!isLocked && macroType && <EffectPreview macroType={macroType} />}
             </div>
 
             {/* Gradient overlay for text legibility */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none z-10" />
 
-            {/* Label */}
-            <div className="absolute inset-x-0 bottom-0 p-1.5 z-20 pointer-events-none">
-                <span className="flex items-center gap-1 text-[9px] text-left font-bold uppercase tracking-[0.15em] text-white/90 group-hover:text-white transition-colors leading-none">
-                    {isPattern && <span className="material-symbols-outlined text-red-300 !text-[12px]">grain</span>}
-                    {isModifier && <span className="material-symbols-outlined text-indigo-300 !text-[12px]">adjust</span>}
-                    {label}
-                </span>
-            </div>
+            {isLocked && (
+                <div className="absolute inset-0 bg-slate-800/40 flex flex-col items-center justify-center gap-1.5 p-3 border border-white/5">
+                    <span className="material-symbols-outlined text-white/30 !text-[18px]">lock</span>
+                    <span className="text-[10px] text-center text-white">Complete <span className="font-bold text-indigo-300">Puzzle {requiredPuzzleIdCompletedToUnlock + 1}</span> to unlock this preset</span>
+                </div>
+            )}
 
-            {/* Quick add indicator */}
-            <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-y-[-4px] group-hover:translate-y-0 pointer-events-none z-20">
-                <span className="text-sm material-symbols-outlined text-white">add</span>
-            </div>
+            {!isLocked &&
+                <>
+                    {/* Label */}
+                    <div className="absolute inset-x-0 bottom-0 p-1.5 z-20 pointer-events-none">
+                        <span className="flex items-center gap-1 text-[9px] text-left font-bold uppercase tracking-[0.15em] text-white/90 group-hover:text-white transition-colors leading-none">
+                            {isPattern && <span className="material-symbols-outlined text-red-300 !text-[12px]">grain</span>}
+                            {isModifier && <span className="material-symbols-outlined text-indigo-300 !text-[12px]">adjust</span>}
+                            {label}
+                        </span>
+                    </div>
+
+                    {/* Quick add indicator */}
+                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-y-[-4px] group-hover:translate-y-0 pointer-events-none z-20">
+                        <span className="text-sm material-symbols-outlined text-white">add</span>
+                    </div>
+                </>
+            }
 
             {/* Focus ring */}
             <div className="z-30 absolute inset-0 border-2 border-white opacity-0 group-focus-visible:opacity-100 pointer-events-none transition-opacity" />
@@ -89,14 +106,15 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = () => {
     const addMacro = useEffectStore(s => s.addMacro);
     const isGameMode = useEffectStore(s => s.isGameMode);
     const currentPuzzle = useEffectStore(s => s.currentPuzzle);
+    const isPuzzleComplete = useProgressStore(s => s.isPuzzleComplete);
     const [selectedCategory, setSelectedCategory] = useState<string>('Patterns');
 
-    // Automatically fall back to 'All' if the user starts a game while in 'Presets'
+    // Automatically switch to 'All' if the user starts a game
     useEffect(() => {
-        if (isGameMode && selectedCategory === 'Presets') {
+        if (isGameMode) {
             setSelectedCategory('All');
         }
-    }, [isGameMode, selectedCategory]);
+    }, [isGameMode]);
 
     // === Shared Hover Canvas State ===
     // Only one (element, blueprint) pair is active at a time.
@@ -155,6 +173,10 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = () => {
     };
 
     const handleAddMacro = (macroType: MacroType) => {
+        const meta = MACRO_METADATA[macroType];
+        if (meta.requiredPuzzleIdCompletedToUnlock !== undefined && !isPuzzleComplete(meta.requiredPuzzleIdCompletedToUnlock)) {
+            return;
+        }
         addMacro(macroType);
     };
 

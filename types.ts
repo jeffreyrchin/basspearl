@@ -138,6 +138,7 @@ export interface MacroMetadata {
   id: MacroType;
   label: string;
   effects: MacroEffectOverrideItem[];
+  requiredPuzzleIdCompletedToUnlock?: number;
 }
 
 export type TransitionType =

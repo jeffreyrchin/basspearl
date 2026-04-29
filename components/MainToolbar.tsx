@@ -214,13 +214,13 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                 />
 
                                 {/* Puzzles Toggle */}
-                                {/* <ToolbarRow
+                                <ToolbarRow
                                     onClick={() => setIsPuzzlesModalOpen(!isPuzzlesModalOpen)}
                                     icon="grid_view"
                                     label="Puzzles"
                                     isCollapsed={isToolbarCollapsed}
                                     isActive={isPuzzlesModalOpen}
-                                /> */}
+                                />
 
                                 {/* Inspector Toggle (Desktop only) */}
                                 <ToolbarRow
