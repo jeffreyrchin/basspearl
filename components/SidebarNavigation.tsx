@@ -76,43 +76,16 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
                 <button
-                    onClick={() => addEffectFromSidebar('IMAGE')}
-                    className="w-8 h-8 rounded-md flex items-center justify-center transition-all text-white/80 hover:text-white hover:bg-white/10"
-                    title="Add Image (O)">
-                    <span className="material-symbols-outlined !text-[22px]">image</span>
-                </button>
-                <button
-                    onClick={() => addEffectFromSidebar('RGBA')}
-                    className="w-8 h-8 rounded-md flex items-center justify-center transition-all text-white/80 hover:text-white hover:bg-white/10"
-                    title="Add Color (C)">
-                    <span className="material-symbols-outlined !text-[22px]">palette</span>
-                </button>
-                <div className="w-[1px] h-4 bg-white/10 mx-1"></div>
-                <button
-                    onClick={handleImport}
-                    className="w-8 h-8 rounded-md flex items-center justify-center transition-all text-white/80 hover:text-white hover:bg-white/10"
-                    title="Import .muxels">
-                    <span className="material-symbols-outlined">upload</span>
-                </button>
-                <button
-                    onClick={handleExport}
-                    disabled={effects.length === 0}
-                    className={`w-8 h-8 rounded-md flex items-center justify-center transition-all enabled:text-white/80 enabled:hover:text-white enabled:hover:bg-white/10 disabled:text-white/20 disabled:cursor-not-allowed`}
-                    title="Export .muxels">
-                    <span className="material-symbols-outlined">download</span>
-                </button>
-                <div className="w-[1px] h-4 bg-white/10 mx-1"></div>
-                <button
                     onClick={undo}
                     disabled={past.length === 0}
-                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all enabled:text-white/80 enabled:hover:text-white enabled:hover:bg-white/10 disabled:text-white/20 disabled:cursor-not-allowed`}
+                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed`}
                     title="Undo (Cmd+Z)">
                     <span className="material-symbols-outlined">undo</span>
                 </button>
                 <button
                     onClick={redo}
                     disabled={future.length === 0}
-                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all enabled:text-white/80 enabled:hover:text-white enabled:hover:bg-white/10 disabled:text-white/20 disabled:cursor-not-allowed`}
+                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed`}
                     title="Redo (Cmd+Shift+Z)">
                     <span className="material-symbols-outlined">redo</span>
                 </button>
@@ -120,7 +93,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             {onClose && (
                 <button
                     onClick={onClose}
-                    className="w-8 h-8 rounded-xl flex items-center justify-center transition-all bg-white/5 text-white/80 hover:text-white hover:bg-white/10 border border-white/5"
+                    className="w-8 h-8 rounded-xl flex items-center justify-center transition-all bg-white/5 text-white/90 hover:text-white hover:bg-white/10 border border-white/5"
                     title="Close Pipeline (P)">
                     <span className="material-symbols-outlined">chevron_right</span>
                 </button>
@@ -132,13 +105,33 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         <div data-section="pipeline" key="view-main" className="flex-1 flex flex-col min-h-0 pt-1 animate-in fade-in slide-in-from-right-4 duration-300 bg-slate-900/90 relative">
             {/* Header Bar */}
             <div className="h-14 border-b border-white/5 bg-slate-800 flex items-center justify-between px-3 shrink-0 relative">
-                {/* Add Effect Button */}
-                <div className="flex items-center h-full ml-1">
+                <div className="flex items-center h-full ml-1 gap-1">
+                    {/* Library Button */}
                     <button
                         onClick={() => isLibraryOpen ? removeFocus('library') : pushFocus('library')}
-                        className={`h-8 px-2 rounded-full flex items-center justify-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white transition-colors border border-indigo-400 shadow-md`}
+                        className={`h-8 px-3 mr-2 rounded-full flex items-center justify-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white transition-colors border border-indigo-400 shadow-md`}
                         title="Toggle Library (Y)">
                         <span className="material-symbols-outlined">{isLibraryOpen ? 'remove' : 'add'}</span>
+                    </button>
+
+                    {/* Add Effect Buttons */}
+                    <button
+                        onClick={() => addEffectFromSidebar('IMAGE')}
+                        className="w-9 h-8 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
+                        title="Add Image (O)">
+                        <span className="material-symbols-outlined !text-[22px]">image</span>
+                    </button>
+                    <button
+                        onClick={() => addEffectFromSidebar('RGBA')}
+                        className="w-9 h-8 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
+                        title="Add Color (C)">
+                        <span className="material-symbols-outlined !text-[22px]">palette</span>
+                    </button>
+                    <button
+                        onClick={() => addEffectFromSidebar('TRANSFORM')}
+                        className="w-9 h-8 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
+                        title="Add Move-Scale (M)">
+                        <span className="material-symbols-outlined !text-[22px]">drag_pan</span>
                     </button>
                 </div>
                 {HeaderRightControls}
@@ -195,7 +188,29 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
             {/* Pipeline List — shrinks as library panel grows */}
             <div key="pipeline-scroll" className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
-                <SidebarPipeline onLoadMuxels={handleImport} onNavigateToLibrary={() => pushFocus('library')} />
+                <SidebarPipeline onNavigateToLibrary={() => pushFocus('library')} />
+            </div>
+
+            {/* Footer Bar */}
+            <div className="h-9 flex items-center justify-center px-3 gap-2 bg-slate-800/80 shrink-0 border-t border-white/5">
+                {/* Import button */}
+                <button
+                    onClick={handleImport}
+                    className="h-6 rounded-md border border-white/5 bg-white/5 flex items-center gap-1 px-2 justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
+                    title="Import .muxels">
+                    <span className="material-symbols-outlined !text-[16px]">upload</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-widest">Import</span>
+                </button>
+
+                {/* Export button */}
+                <button
+                    onClick={handleExport}
+                    disabled={effects.length === 0}
+                    className={`h-6 rounded-md border border-white/5 bg-white/5 flex items-center gap-1 px-2 justify-center transition-all text-white/90 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed`}
+                    title="Export .muxels">
+                    <span className="material-symbols-outlined !text-[16px]">download</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-widest">Export</span>
+                </button>
             </div>
 
             {/* Library Panel — grows from bottom, pushing pipeline list up */}
@@ -204,7 +219,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                     <motion.div
                         key="library-panel"
                         initial={{ height: '0%' }}
-                        animate={{ height: '53%' }}
+                        animate={{ height: '45%' }}
                         exit={{ height: '0%' }}
                         transition={{ type: 'spring', damping: 30, stiffness: 280 }}
                         onAnimationComplete={() => setLibraryEntranceComplete(true)}
@@ -219,7 +234,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                                 className="w-7 h-7 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
                                 title="Close Library (Y)"
                             >
-                                <span className="material-symbols-outlined">close</span>
+                                <span className="material-symbols-outlined !text-[22px]">close</span>
                             </button>
                         </div>
 

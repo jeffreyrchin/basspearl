@@ -26,6 +26,35 @@ interface LibraryCardProps {
     onHoverEnd: () => void;
 }
 
+const LibraryIcon = ({ effectType, macroType }: { effectType?: GlitchEffectType; macroType?: MacroType }) => {
+    if (macroType) {
+        return <span className="material-symbols-outlined text-cyan-300 !text-[12px]">grid_view</span>;
+    }
+
+    if (!effectType) return null;
+
+    const metadata = EFFECT_METADATA[effectType];
+
+    // Explicit type-to-icon overrides
+    const overrides: Record<string, { icon: string; color: string }> = {
+        IMAGE: { icon: 'image', color: 'text-red-300' },
+        RGBA: { icon: 'palette', color: 'text-indigo-300' },
+        TRANSFORM: { icon: 'drag_pan', color: 'text-indigo-300' },
+    };
+
+    if (overrides[effectType]) {
+        const { icon, color } = overrides[effectType];
+        return <span className={`material-symbols-outlined ${color} !text-[12px] transition-colors`}>{icon}</span>;
+    }
+
+    // Category-based fallbacks
+    const isPattern = metadata?.category === 'Pattern';
+    const icon = isPattern ? 'grain' : 'adjust';
+    const color = isPattern ? 'text-red-300' : 'text-indigo-300';
+
+    return <span className={`material-symbols-outlined ${color} !text-[12px] transition-colors`}>{icon}</span>;
+};
+
 const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClick, onHoverStart, onHoverEnd }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const isPuzzleComplete = useProgressStore(s => s.isPuzzleComplete);
@@ -46,8 +75,6 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
     }, [onHoverStart, blueprint, isLocked]);
 
     const label = effectType ? EFFECT_METADATA[effectType].label : MACRO_METADATA[macroType!].label;
-    const isPattern = effectType && EFFECT_METADATA[effectType].category === 'Pattern';
-    const isModifier = effectType && EFFECT_METADATA[effectType].category === 'Modifier';
 
     return (
         <button
@@ -80,8 +107,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
                     {/* Label */}
                     <div className="absolute inset-x-0 bottom-0 p-1.5 z-20 pointer-events-none">
                         <span className="flex items-center gap-1 text-[9px] text-left font-bold uppercase tracking-[0.15em] text-white/90 group-hover:text-white transition-colors leading-none">
-                            {isPattern && <span className="material-symbols-outlined text-red-300 !text-[12px]">grain</span>}
-                            {isModifier && <span className="material-symbols-outlined text-indigo-300 !text-[12px]">adjust</span>}
+                            <LibraryIcon effectType={effectType} macroType={macroType} />
                             {label}
                         </span>
                     </div>
@@ -197,7 +223,7 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = () => {
                             <button
                                 key={category}
                                 onClick={() => setSelectedCategory(category)}
-                                className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap border ${selectedCategory === category
+                                className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all whitespace-nowrap border ${selectedCategory === category
                                     ? 'bg-white/5 text-white border-white/20'
                                     : 'text-white/60 hover:text-white border-transparent hover:bg-white/5'
                                     }`}

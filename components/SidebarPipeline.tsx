@@ -9,11 +9,10 @@ import { getEffectGroups, reorderEffectGroups } from '@/services/pipelineUtils';
 import SortableGroupItem from './SortableGroupItem';
 
 interface SidebarPipelineProps {
-    onLoadMuxels: () => void;
     onNavigateToLibrary: () => void;
 }
 
-const SidebarPipeline = ({ onLoadMuxels, onNavigateToLibrary }: SidebarPipelineProps) => {
+const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
     const effects = useEffectStore(s => s.effects);
     const setEffects = useEffectStore(s => s.setEffects);
     const selectedIds = useEffectStore(s => s.selectedIds);
@@ -119,6 +118,12 @@ const SidebarPipeline = ({ onLoadMuxels, onNavigateToLibrary }: SidebarPipelineP
                 addEffectFromSidebar('RGBA');
             }
 
+            // Add Move-Scale - M
+            else if (key === 'm') {
+                e.preventDefault();
+                addEffectFromSidebar('TRANSFORM');
+            }
+
             if (selectedIds.size === 0) return;
 
             // Delete selected effects - Backspace or Delete
@@ -164,9 +169,9 @@ const SidebarPipeline = ({ onLoadMuxels, onNavigateToLibrary }: SidebarPipelineP
     const pipelineCard = (icon: string, label: string, onClick: () => void) => (
         <button
             onClick={onClick}
-            className="group relative py-4 flex flex-col items-center justify-center rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all duration-300 hover:-translate-y-1 active:scale-[0.9] overflow-hidden"
+            className="group relative py-5 flex flex-col items-center justify-center rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all duration-300 hover:-translate-y-1 active:scale-[0.9] overflow-hidden"
         >
-            <span className={`material-symbols-outlined text-white transition-all duration-300 group-hover:scale-110 mb-3 z-10`}>
+            <span className={`material-symbols-outlined text-white/90 transition-all duration-300 group-hover:scale-110 mb-3 z-10`}>
                 {icon}
             </span>
 
@@ -182,7 +187,6 @@ const SidebarPipeline = ({ onLoadMuxels, onNavigateToLibrary }: SidebarPipelineP
         return (
             <div className="py-6 px-6 flex flex-col gap-4 select-none">
                 {pipelineCard('add_circle', 'Add Visuals', onNavigateToLibrary)}
-                {pipelineCard('upload', 'Import .muxels', onLoadMuxels)}
             </div>
         );
     }
