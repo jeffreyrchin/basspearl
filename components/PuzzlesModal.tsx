@@ -7,6 +7,7 @@ import { createMacroInstance } from '../constants';
 import { PUZZLES } from '../config/puzzles';
 import { EffectConfig, PuzzleConfig } from '../types';
 import { useAudioStore } from '../store/useAudioStore';
+import { useProgressStore } from '../store/useProgressStore';
 import LoadingSpinner from './LoadingSpinner';
 
 interface PuzzleCardProps {
@@ -19,6 +20,7 @@ interface PuzzleCardProps {
 
 const PuzzleCard: React.FC<PuzzleCardProps> = ({ puzzle, id, onClick, onHoverStart, onHoverEnd }) => {
     const containerRef = useRef<HTMLDivElement>(null);
+    const progress = useProgressStore(s => s.getPuzzleProgress(id));
     const blueprint = useMemo(() => {
         return puzzle.macro ? createMacroInstance(puzzle.macro, true) : [];
     }, [puzzle.macro]);
@@ -70,6 +72,11 @@ const PuzzleCard: React.FC<PuzzleCardProps> = ({ puzzle, id, onClick, onHoverSta
                 <div className="text-[11px] font-bold uppercase tracking-widest text-white">
                     Puzzle {id + 1}
                 </div>
+            </div>
+
+            {/* Score Badge */}
+            <div className="absolute bottom-3 right-3 z-20 text-[10px] font-mono font-bold text-white/90 bg-white/10 px-1.5 py-0.5 rounded border border-white/10 backdrop-blur-md">
+                {progress ? `${progress.score}%` : '0%'}
             </div>
         </button>
     );

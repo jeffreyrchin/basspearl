@@ -44,7 +44,6 @@ export interface TestCase {
     description: string;
     user: EffectConfig[];
     target: EffectConfig[];
-    expectMatch: boolean;
     expectScoreAbove?: number;   // score must be >= this
     expectScoreBelow?: number;   // score must be <  this
 }
@@ -54,7 +53,7 @@ export interface TestResult {
     description: string;
     passed: boolean;
     result: PuzzleMatchResult;
-    expected: { isMatch: boolean; scoreAbove?: number; scoreBelow?: number };
+    expected: { scoreAbove?: number; scoreBelow?: number };
     reason: string;
 }
 
@@ -66,13 +65,11 @@ export function runAllTests(): TestResult[] {
     return TEST_CASES.map((tc) => {
         const result = PuzzleService.evaluate(tc.user, tc.target);
 
-        const matchOk = result.isMatch === tc.expectMatch;
         const aboveOk = tc.expectScoreAbove === undefined || result.score >= tc.expectScoreAbove;
         const belowOk = tc.expectScoreBelow === undefined || result.score < tc.expectScoreBelow;
-        const passed = matchOk && aboveOk && belowOk;
+        const passed = aboveOk && belowOk;
 
         const reasons: string[] = [];
-        if (!matchOk) reasons.push(`isMatch was ${result.isMatch}, expected ${tc.expectMatch}`);
         if (!aboveOk) reasons.push(`score ${result.score} < expected min ${tc.expectScoreAbove}`);
         if (!belowOk) reasons.push(`score ${result.score} >= expected max ${tc.expectScoreBelow}`);
 
@@ -82,7 +79,6 @@ export function runAllTests(): TestResult[] {
             passed,
             result,
             expected: {
-                isMatch: tc.expectMatch,
                 scoreAbove: tc.expectScoreAbove,
                 scoreBelow: tc.expectScoreBelow,
             },
@@ -102,7 +98,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'Identical stacks with default params — should be 100%.',
         user: [e('RGBA'), e('TUNNEL_WARP')],
         target: [e('RGBA'), e('TUNNEL_WARP')],
-        expectMatch: true,
         expectScoreAbove: 95,
     },
 
@@ -113,7 +108,6 @@ export const TEST_CASES: TestCase[] = [
         // Default RGBA: Red=100 Green=100 Blue=100 Opacity=100
         user: [e('RGBA', { Red: 95 })],
         target: [e('RGBA', { Red: 100 })],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
 
@@ -124,7 +118,6 @@ export const TEST_CASES: TestCase[] = [
         // Default TUNNEL_WARP: Scale=20
         user: [e('TUNNEL_WARP', { Scale: 80 })],
         target: [e('TUNNEL_WARP')],
-        expectMatch: false,
         expectScoreBelow: 80,
     },
 
@@ -134,7 +127,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'User added a BLUR the target does not have. Should penalize.',
         target: [e('RGBA')],
         user: [e('RGBA'), e('BLUR')],
-        expectMatch: false,
         expectScoreBelow: 90,
     },
 
@@ -144,7 +136,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'User is missing a GLOW the target requires. Should penalize.',
         target: [e('RGBA'), e('GLOW')],
         user: [e('RGBA')],
-        expectMatch: false,
         expectScoreBelow: 90,
     },
 
@@ -154,7 +145,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'Edge case: two empty stacks should be a trivial match.',
         target: [],
         user: [],
-        expectMatch: true,
         expectScoreAbove: 99,
     },
 
@@ -168,7 +158,6 @@ export const TEST_CASES: TestCase[] = [
             u[1].muted = true; // Mute the BLUR
             return u;
         })(),
-        expectMatch: false,
         expectScoreBelow: 90,
     },
 
@@ -182,7 +171,6 @@ export const TEST_CASES: TestCase[] = [
             u[0].soloed = true; // Solo the RGBA
             return u;
         })(),
-        expectMatch: false,
         expectScoreBelow: 90,
     },
 
@@ -201,7 +189,6 @@ export const TEST_CASES: TestCase[] = [
             e('GRID', { 'Pan X': 60, 'Scale X': 60 }), // swapped
             e('GRID', { 'Pan X': 40, 'Scale X': 60 }),
         ],
-        expectMatch: false,
         expectScoreBelow: 90,
     },
 
@@ -211,7 +198,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'RGBA and INVERT both flank a TUNNEL_WARP in the target, and are reversed in the user. Color vs Color is NOT commutative.',
         target: [e('RGBA'), e('TUNNEL_WARP'), e('INVERT')],
         user: [e('INVERT'), e('TUNNEL_WARP'), e('RGBA')],
-        expectMatch: false,
         expectScoreBelow: 90,
     },
 
@@ -227,7 +213,6 @@ export const TEST_CASES: TestCase[] = [
             e('CELLULAR_NOISE', { 'Pan X': 95, 'Scale X': 10 }),
             e('SHAPE', { 'Pan X': 5, 'Scale X': 10 }),
         ],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
 
@@ -241,7 +226,6 @@ export const TEST_CASES: TestCase[] = [
             u[1].melded = true; // Meld the GRAIN
             return u;
         })(),
-        expectMatch: false,
         expectScoreBelow: 90,
     },
     // ── Whole Group Swap (Legal: Non-Overlapping Anchors) ─────────────────────
@@ -259,7 +243,6 @@ export const TEST_CASES: TestCase[] = [
             e('GRID', { 'Pan X': 95, 'Scale X': 10 }),
             meld(e('GRID', { 'Pan X': 5, 'Scale X': 10 })), e('RGBA'),
         ],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
 
@@ -277,7 +260,6 @@ export const TEST_CASES: TestCase[] = [
             e('GRID', { 'Pan X': 60, 'Scale X': 60 }),
             meld(e('GRID', { 'Pan X': 40, 'Scale X': 60 })), e('RGBA'),
         ],
-        expectMatch: false,
         expectScoreBelow: 90,
     },
 
@@ -289,7 +271,6 @@ export const TEST_CASES: TestCase[] = [
             'Swapping the anchor fundamentally changes the base layer. Should fail.',
         target: [meld(e('GRAIN')), e('RGBA')],
         user: [meld(e('RGBA')), e('GRAIN')],
-        expectMatch: false,
         expectScoreBelow: 90,
     },
 
@@ -302,7 +283,6 @@ export const TEST_CASES: TestCase[] = [
             'Since RGBA is passthrough, traversing TUNNEL_WARP is valid.',
         target: [meld(e('GRID')), meld(e('RGBA')), e('TUNNEL_WARP')],
         user: [meld(e('GRID')), meld(e('TUNNEL_WARP')), e('RGBA')],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
 
@@ -312,7 +292,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'Swapping two UV modifiers (e.g. SKEW and TUNNEL_WARP) that do not explicitly commute causes a structural penalty even inside a group.',
         target: [meld(e('GRID')), meld(e('SKEW')), e('TUNNEL_WARP')],
         user: [meld(e('GRID')), meld(e('TUNNEL_WARP')), e('SKEW')],
-        expectMatch: false,
         expectScoreBelow: 90,
     },
 
@@ -331,7 +310,6 @@ export const TEST_CASES: TestCase[] = [
             e('RGBA'),                                    // RGBA standalone (not melded)
             e('GRID', { 'Pan X': 95, 'Scale X': 10 }),  // GRID standalone
         ],
-        expectMatch: false,
         expectScoreBelow: 90,
     },
     // ── Deep Meta-Shuffle (Legal) ──────────────────────────────────────────
@@ -351,7 +329,6 @@ export const TEST_CASES: TestCase[] = [
             e('GRID', { 'Pan X': 95, 'Scale X': 10 }),
             meld(e('GRID', { 'Pan X': 5, 'Scale X': 10 })), meld(e('TUNNEL_WARP')), e('RGBA'),
         ],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
 
@@ -361,7 +338,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'Swapping two Color effects (RGBA and HUE_ROTATION) is not commutative. Should fail.',
         target: [e('RGBA'), e('HUE_ROTATION')],
         user: [e('HUE_ROTATION'), e('RGBA')],
-        expectMatch: false,
         expectScoreBelow: 90,
     },
 
@@ -374,7 +350,6 @@ export const TEST_CASES: TestCase[] = [
             'Their relative order is flipped → should fail.',
         target: [e('RGBA'), e('GRID'), e('TUNNEL_WARP')],
         user: [e('TUNNEL_WARP'), e('GRID'), e('RGBA')],
-        expectMatch: false,
         expectScoreBelow: 90,
     },
 
@@ -388,7 +363,6 @@ export const TEST_CASES: TestCase[] = [
             u[1].soloed = true; // Solo the child
             return u;
         })(),
-        expectMatch: false,
         expectScoreBelow: 90,
     },
 
@@ -402,7 +376,6 @@ export const TEST_CASES: TestCase[] = [
             u[1].muted = true;
             return u;
         })(),
-        expectMatch: false,
         expectScoreBelow: 80,
     },
 
@@ -412,7 +385,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'User has Red set to BASS while target is OFF. Incurs -10 penalty, scores 90. Should pass.',
         target: [e('RGBA')],
         user: [e('RGBA', { 'Red:band': 'BASS' })],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
 
@@ -422,7 +394,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'Target and User both use BASS for Red. Should be a perfect match.',
         target: [e('RGBA', { 'Red:band': 'BASS' })],
         user: [e('RGBA', { 'Red:band': 'BASS' })],
-        expectMatch: true,
         expectScoreAbove: 95,
     },
 
@@ -432,7 +403,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'Three separate parameters have the wrong band setting. Penalties stack to -30, score 70. Should fail.',
         target: [e('RGBA')],
         user: [e('RGBA', { 'Red:band': 'BASS', 'Blue:band': 'TREBLE', 'Green:band': 'BASS' })],
-        expectMatch: false,
         expectScoreBelow: 80,
     },
 
@@ -442,7 +412,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'Inside a meld chain, a single band mismatch on a modifier scores 90. Passes.',
         target: [meld(e('GRID')), e('RGBA')],
         user: [meld(e('GRID')), e('RGBA', { 'Red:band': 'BASS' })],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
 
@@ -452,7 +421,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'RGBA (BASS) and ROTATE swapped. Swapping is legal, and BASS matches BASS. Should pass.',
         target: [e('RGBA', { 'Red:band': 'BASS' }), e('ROTATE')],
         user: [e('ROTATE'), e('RGBA', { 'Red:band': 'BASS' })],
-        expectMatch: true,
         expectScoreAbove: 95,
     },
     // ── Min Mismatch (Legal) ───────────────────────
@@ -461,7 +429,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'Target Min=50 while User Min=0. Incurs -10 penalty, score 90. Passes.',
         target: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100 })],
         user: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 0, Red: 100 })],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
     // -- Multiple Min Mismatches (Illegal)
@@ -470,7 +437,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'Three separate parameters have the wrong min setting. Penalties stack to -30, score 70. Should fail.',
         target: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100, 'Blue:band': 'BASS', 'Blue:min': 50, Blue: 100, 'Green:band': 'BASS', 'Green:min': 50, Green: 100 })],
         user: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 0, Red: 100, 'Blue:band': 'BASS', 'Blue:min': 0, Blue: 100, 'Green:band': 'BASS', 'Green:min': 0, Green: 100 })],
-        expectMatch: false,
         expectScoreBelow: 80,
     },
     // -- Min Mismatch in Melded Group (Legal)
@@ -479,7 +445,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'Inside a meld chain, a single min mismatch on a modifier scores 90. Passes.',
         target: [meld(e('GRID')), e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100 })],
         user: [meld(e('GRID')), e('RGBA', { 'Red:band': 'BASS', 'Red:min': 0, Red: 100 })],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
     // ── Commutative Min Match (Legal) ──────────────────────────────────────
@@ -488,7 +453,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'RGBA (BASS) and ROTATE swapped. Swapping is legal, and Min matches Min. Should pass.',
         target: [e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100 }), e('ROTATE')],
         user: [e('ROTATE'), e('RGBA', { 'Red:band': 'BASS', 'Red:min': 50, Red: 100 })],
-        expectMatch: true,
         expectScoreAbove: 95,
     },
     // ─────────────────────────────────────────────────────────────────────────
@@ -503,7 +467,6 @@ export const TEST_CASES: TestCase[] = [
             'Inverting then Rotating is identical to Rotating then Inverting.',
         target: [e('INVERT'), e('ROTATE')],
         user: [e('ROTATE'), e('INVERT')],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
     {
@@ -511,7 +474,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'INVERT and SCROLL (Uniform Warp) should commute perfectly.',
         target: [e('INVERT'), e('SCROLL')],
         user: [e('SCROLL'), e('INVERT')],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
     {
@@ -519,7 +481,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'RGBA and BLUR should commute. Linear color math and isotropic convolution are distributive.',
         target: [e('RGBA'), e('BLUR')],
         user: [e('BLUR'), e('RGBA')],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
     {
@@ -529,7 +490,6 @@ export const TEST_CASES: TestCase[] = [
             'Inverting the image changes which pixels hit the mask threshold.',
         target: [e('INVERT'), e('LUMINANCE_MASK')],
         user: [e('LUMINANCE_MASK'), e('INVERT')],
-        expectMatch: false,
         expectScoreBelow: 80,
     },
 
@@ -545,7 +505,6 @@ export const TEST_CASES: TestCase[] = [
             e('GRID', { 'Pan X': 95, 'Scale X': 10 }),
             e('GRID', { 'Pan X': 5, 'Scale X': 10 }),
         ],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
     {
@@ -559,7 +518,6 @@ export const TEST_CASES: TestCase[] = [
             e('GRID', { 'Pan X': 55, 'Pan Y': 50, 'Scale X': 80, 'Scale Y': 80 }),
             e('GRID', { 'Pan X': 50, 'Pan Y': 50, 'Scale X': 80, 'Scale Y': 80 }),
         ],
-        expectMatch: false,
         expectScoreBelow: 80,
     },
 
@@ -572,7 +530,6 @@ export const TEST_CASES: TestCase[] = [
             'at each screen position either way.',
         target: [e('LUMINANCE_MASK'), e('ROTATE')],
         user: [e('ROTATE'), e('LUMINANCE_MASK')],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
     {
@@ -583,7 +540,6 @@ export const TEST_CASES: TestCase[] = [
             'regardless of where on the screen it is translated.',
         target: [e('LUMINANCE_MASK'), e('SCROLL')],
         user: [e('SCROLL'), e('LUMINANCE_MASK')],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
     {
@@ -594,7 +550,6 @@ export const TEST_CASES: TestCase[] = [
             'their original brightness before the mask is applied.',
         target: [e('LUMINANCE_MASK'), e('BLUR')],
         user: [e('BLUR'), e('LUMINANCE_MASK')],
-        expectMatch: false,
         expectScoreBelow: 80,
     },
     // ── Rule 4: Isotropic Filters vs Uniform Warps (Legal) ────────────────
@@ -605,7 +560,6 @@ export const TEST_CASES: TestCase[] = [
             'Uniform Warp (Pure Translation). They commute due to translation invariance.',
         target: [e('SCROLL'), e('GLOW')],
         user: [e('GLOW'), e('SCROLL')],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
 
@@ -617,7 +571,6 @@ export const TEST_CASES: TestCase[] = [
             'Boundary conditions and aspect ratio math make rotation order-dependent.',
         target: [e('GLOW'), e('ROTATE')],
         user: [e('ROTATE'), e('GLOW')],
-        expectMatch: false,
         expectScoreBelow: 80,
     },
 
@@ -627,7 +580,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'Two Uniform Warps (SCROLL + SCREEN_SHAKE) are just vector additions. Addition commutes.',
         target: [e('SCROLL'), e('SCREEN_SHAKE')],
         user: [e('SCREEN_SHAKE'), e('SCROLL')],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
 
@@ -643,7 +595,6 @@ export const TEST_CASES: TestCase[] = [
             'It should commute with Point Ops like INVERT.',
         target: [e('BIT_CRUSH', { Posterize: 0 }), e('INVERT')],
         user: [e('INVERT'), e('BIT_CRUSH', { Posterize: 0 })],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
     {
@@ -653,7 +604,6 @@ export const TEST_CASES: TestCase[] = [
             'It no longer commutes with other Point Ops (Invert).',
         target: [e('BIT_CRUSH', { Posterize: 50 }), e('INVERT')],
         user: [e('INVERT'), e('BIT_CRUSH', { Posterize: 50 })],
-        expectMatch: false,
         expectScoreBelow: 80,
     },
 
@@ -665,7 +615,6 @@ export const TEST_CASES: TestCase[] = [
             'It should commute with Adaptive Ops like LUMINANCE_MASK.',
         target: [e('BIT_CRUSH', { Posterize: 0 }), e('LUMINANCE_MASK')],
         user: [e('LUMINANCE_MASK'), e('BIT_CRUSH', { Posterize: 0 })],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
     {
@@ -675,7 +624,6 @@ export const TEST_CASES: TestCase[] = [
             'what the mask sees, making the order-dependent swap illegal.',
         target: [e('BIT_CRUSH', { Posterize: 50 }), e('LUMINANCE_MASK')],
         user: [e('LUMINANCE_MASK'), e('BIT_CRUSH', { Posterize: 50 })],
-        expectMatch: false,
         expectScoreBelow: 80,
     },
 
@@ -687,7 +635,6 @@ export const TEST_CASES: TestCase[] = [
             'It should commute with Point Ops like RGBA.',
         target: [e('TERRAIN', { Extrusion: 0 }), e('RGBA')],
         user: [e('RGBA'), e('TERRAIN', { Extrusion: 0 })],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
     {
@@ -697,7 +644,6 @@ export const TEST_CASES: TestCase[] = [
             'It becomes Strict and no longer commutes with Point Ops.',
         target: [e('TERRAIN', { Extrusion: 10 }), e('RGBA')],
         user: [e('RGBA'), e('TERRAIN', { Extrusion: 10 })],
-        expectMatch: false,
         expectScoreBelow: 80,
     },
 
@@ -709,7 +655,6 @@ export const TEST_CASES: TestCase[] = [
             'It should commute with Adaptive Ops like LUMINANCE_MASK.',
         target: [e('TERRAIN', { Extrusion: 0 }), e('LUMINANCE_MASK')],
         user: [e('LUMINANCE_MASK'), e('TERRAIN', { Extrusion: 0 })],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
     {
@@ -719,7 +664,6 @@ export const TEST_CASES: TestCase[] = [
             'It becomes Strict and no longer commutes with Adaptive Ops.',
         target: [e('TERRAIN', { Extrusion: 10 }), e('LUMINANCE_MASK')],
         user: [e('LUMINANCE_MASK'), e('TERRAIN', { Extrusion: 10 })],
-        expectMatch: false,
         expectScoreBelow: 80,
     },
 
@@ -732,7 +676,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'Rotation is cyclic. 0 and 100 are visually identical. Should score 100.',
         target: [e('ROTATE', { Rotation: 0 })],
         user: [e('ROTATE', { Rotation: 100 })],
-        expectMatch: true,
         expectScoreAbove: 99,
     },
     {
@@ -740,7 +683,6 @@ export const TEST_CASES: TestCase[] = [
         description: 'On a 0-100 loop, 5 and 95 are only 10 units apart. Should pass.',
         target: [e('ROTATE', { Rotation: 5 })],
         user: [e('ROTATE', { Rotation: 95 })],
-        expectMatch: true,
         expectScoreAbove: 90,
     },
 ];
@@ -755,13 +697,10 @@ export const TEST_CASES: TestCase[] = [
 //
 if (typeof describe !== 'undefined') {
     describe('PuzzleService.evaluate', () => {
-        describe('Score & Match assertions', () => {
+        describe('Score assertions', () => {
             for (const tc of TEST_CASES) {
                 it(tc.name, () => {
                     const result = PuzzleService.evaluate(tc.user, tc.target);
-
-                    // isMatch must be exactly what the test case expects
-                    expect(result.isMatch).toBe(tc.expectMatch);
 
                     // Score lower bound (if specified)
                     if (tc.expectScoreAbove !== undefined) {
@@ -781,11 +720,6 @@ if (typeof describe !== 'undefined') {
                 const result = PuzzleService.evaluate([e('RGBA')], [e('TUNNEL_WARP')]);
                 expect(result.score).toBeGreaterThanOrEqual(0);
                 expect(result.score).toBeLessThanOrEqual(100);
-            });
-
-            it('provides non-empty feedback for every result', () => {
-                const result = PuzzleService.evaluate([e('RGBA')], [e('RGBA')]);
-                expect(result.feedback).toBeTruthy();
             });
         });
     });

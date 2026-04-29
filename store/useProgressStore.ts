@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
+import { MIN_PUZZLE_COMPLETION_SCORE } from '../constants';
 
 const LOCAL_STORAGE_KEY = 'glitchbrain_completed_puzzles';
 
@@ -30,8 +31,8 @@ interface ProgressState {
     // Load cloud progress for a signed-in user, merging with any local guest progress
     loadProgress: (uid: string) => Promise<void>;
 
-    // Mark a puzzle as complete. Saves locally always, and to cloud if user is signed in.
-    markComplete: (puzzleIndex: number, score: number, uid: string | null) => Promise<void>;
+    // Save progress for a puzzle. Saves locally always, and to cloud if user is signed in.
+    saveProgress: (puzzleIndex: number, score: number, uid: string | null) => Promise<void>;
 
     // Sync local guest progress up to the cloud after sign-in
     syncLocalToCloud: (uid: string) => Promise<void>;
@@ -78,7 +79,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
         }
     },
 
-    markComplete: async (puzzleIndex: number, score: number, uid: string | null) => {
+    saveProgress: async (puzzleIndex: number, score: number, uid: string | null) => {
         const { completedPuzzles } = get();
         const existing = completedPuzzles[puzzleIndex];
 
@@ -118,7 +119,8 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     },
 
     isPuzzleComplete: (puzzleIndex: number) => {
-        return !!get().completedPuzzles[puzzleIndex];
+        const progress = get().completedPuzzles[puzzleIndex];
+        return !!progress && progress.score >= MIN_PUZZLE_COMPLETION_SCORE;
     },
 
     getPuzzleProgress: (puzzleIndex: number) => {

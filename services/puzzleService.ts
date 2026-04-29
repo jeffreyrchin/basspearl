@@ -11,9 +11,7 @@ import { EFFECT_METADATA } from '../config/effects';
  */
 
 export interface PuzzleMatchResult {
-    isMatch: boolean;
     score: number; // 0 to 100
-    feedback: string;
 }
 
 interface MeldGroup {
@@ -55,7 +53,7 @@ const NON_UNIFORM_WARPS = new Set<string>([
 export class PuzzleService {
     static evaluate(userEffects: EffectConfig[], targetEffects: EffectConfig[]): PuzzleMatchResult {
         if (userEffects.length === 0 && targetEffects.length === 0) {
-            return { isMatch: true, score: 100, feedback: 'Empty Match' };
+            return { score: 100 };
         }
 
         const userGroups = this.parseGroups(userEffects);
@@ -76,9 +74,7 @@ export class PuzzleService {
         const finalScore = Math.max(0, Math.round(rawScore - totalStatePenalty));
 
         return {
-            isMatch: finalScore >= 80,
             score: finalScore,
-            feedback: this.getFeedbackMessage(finalScore),
         };
     }
 
@@ -426,17 +422,5 @@ export class PuzzleService {
 
         const avgScore = totalParamScore / Math.max(a.params.length, 1);
         return { score: avgScore, penalty };
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Feedback
-    // ─────────────────────────────────────────────────────────────────────────
-
-    private static getFeedbackMessage(score: number): string {
-        if (score >= 95) return 'Perfect reconstruction!';
-        if (score >= 80) return 'Match confirmed. Well done.';
-        if (score >= 70) return "You're close, but the math isn't quite there.";
-        if (score >= 40) return 'The essence is correct, but check your parameters.';
-        return 'Not quite. Press W to study the goal again.';
     }
 }

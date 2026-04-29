@@ -6,6 +6,7 @@ import { PuzzleMatchResult } from '../services/puzzleService';
 import { useAuth } from '../context/AuthContext';
 import { useProgressStore } from '../store/useProgressStore';
 import { useAuthStore } from '../store/useAuthStore';
+import { MIN_PUZZLE_COMPLETION_SCORE } from '../constants';
 
 interface SuccessModalProps {
     result: PuzzleMatchResult;
@@ -16,24 +17,24 @@ const PuzzleSuccessModal: React.FC<SuccessModalProps> = ({ result }) => {
     const currentPuzzle = useEffectStore(s => s.currentPuzzle);
     const setCurrentPuzzle = useEffectStore(s => s.setCurrentPuzzle);
 
-    const isMatch = result.isMatch;
+    const isMatch = result.score >= MIN_PUZZLE_COMPLETION_SCORE;
     const hasNext = currentPuzzle !== null && currentPuzzle < PUZZLES.length - 1;
 
     const { user } = useAuth();
     const openAuth = useAuthStore(s => s.openAuth);
-    const markComplete = useProgressStore(s => s.markComplete);
+    const saveProgress = useProgressStore(s => s.saveProgress);
 
     const [isSaved, setIsSaved] = useState(false);
     // Track whether user clicked "Sign in" so we can respond when they complete it
     const wasSigningIn = useRef(false);
     const puzzleIdAtCapture = useRef(currentPuzzle);
 
-    // Mark puzzle complete whenever a match is detected
+    // Save puzzle progress whenever a score is evaluated
     useEffect(() => {
-        if (isMatch && puzzleIdAtCapture.current !== null) {
-            markComplete(puzzleIdAtCapture.current, result.score, user?.uid ?? null);
+        if (puzzleIdAtCapture.current !== null) {
+            saveProgress(puzzleIdAtCapture.current, result.score, user?.uid ?? null);
         }
-    }, [isMatch, user?.uid, markComplete, result.score]);
+    }, [user?.uid, saveProgress, result.score]);
 
     // When the user completes sign-in via the AuthModal, auto-flip to saved state
     useEffect(() => {
@@ -55,6 +56,14 @@ const PuzzleSuccessModal: React.FC<SuccessModalProps> = ({ result }) => {
             setResult(null);
         }
     };
+
+    const getLocalFeedback = (score: number): string => {
+        if (score >= 95) return 'Perfect reconstruction!';
+        if (score >= 80) return 'Match confirmed. Well done.';
+        if (score >= 70) return "You're close, but the math isn't quite there.";
+        if (score >= 40) return 'The essence is correct, but check your parameters.';
+        return 'Not quite. Press W to study the goal again.';
+    }
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -122,7 +131,7 @@ const PuzzleSuccessModal: React.FC<SuccessModalProps> = ({ result }) => {
                     </h2>
 
                     <p className="text-slate-400 text-sm leading-relaxed mb-8 max-w-[280px]">
-                        {result.feedback}
+                        {getLocalFeedback(result.score)}
                     </p>
 
                     <div className="flex flex-col gap-3 w-full">

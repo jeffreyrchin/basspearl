@@ -2,9 +2,8 @@ import React, { useMemo } from 'react';
 import { runAllTests, TestResult } from '../../services/puzzleService.test';
 
 const Badge: React.FC<{ pass: boolean }> = ({ pass }) => (
-    <span className={`inline-block text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${
-        pass ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-400'
-    }`}>
+    <span className={`inline-block text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${pass ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-400'
+        }`}>
         {pass ? 'PASS' : 'FAIL'}
     </span>
 );
@@ -25,12 +24,12 @@ const TestRow: React.FC<{ test: TestResult; index: number }> = ({ test, index })
 
         <div className="ml-[52px] text-[10px] space-y-0.5 font-mono">
             <div className="text-white/40">
-                Expected: match={String(test.expected.isMatch)}
-                {test.expected.scoreAbove !== undefined && `, score ≥ ${test.expected.scoreAbove}`}
-                {test.expected.scoreBelow !== undefined && `, score < ${test.expected.scoreBelow}`}
+                Expected:
+                {test.expected.scoreAbove !== undefined && ` score ≥ ${test.expected.scoreAbove}`}
+                {test.expected.scoreBelow !== undefined && ` score < ${test.expected.scoreBelow}`}
             </div>
             <div className={test.passed ? 'text-emerald-400/60' : 'text-red-400'}>
-                Got: match={String(test.result.isMatch)}, score={test.result.score}% — {test.reason}
+                Got: score={test.result.score}%
             </div>
         </div>
     </div>

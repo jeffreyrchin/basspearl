@@ -11,6 +11,8 @@ export const MASTER_ASPECT_RATIO = 16 / 9;
 export const DEFAULT_TARGET_WIDTH = 1440;
 export const MIN_TARGET_WIDTH = 960;
 
+export const MIN_PUZZLE_COMPLETION_SCORE = 80;
+
 export const TRANSITION_OPTIONS = [
   { label: 'None', value: 'none' },
   { label: 'Crossfade', value: 'crossfade' },
