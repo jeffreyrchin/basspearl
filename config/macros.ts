@@ -1489,7 +1489,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Pan X', { v: 50 }),
           o('Pan Y', { v: 50 }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'BIT_CRUSH',
@@ -1498,7 +1498,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Posterize', { v: 0, b: 'OFF' }),
           o('Noise', { v: 0, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'TERRAIN',
@@ -1516,7 +1516,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Speed X', { v: 0, b: 'OFF' }),
           o('Speed Y', { v: 0, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'RGBA',

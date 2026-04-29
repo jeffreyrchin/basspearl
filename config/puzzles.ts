@@ -2,7 +2,6 @@ import { PuzzleConfig } from '../types';
 
 export const PUZZLES: PuzzleConfig[] = [
     {
-        locked: false,
         difficulty: 'Easy',
         macro: 'SPIRAL_GLOW',
         allowedEffects: [
@@ -10,7 +9,6 @@ export const PUZZLES: PuzzleConfig[] = [
         ]
     },
     {
-        locked: false,
         difficulty: 'Easy',
         macro: 'AURORA',
         allowedEffects: [
@@ -18,7 +16,6 @@ export const PUZZLES: PuzzleConfig[] = [
         ]
     },
     {
-        locked: false,
         difficulty: 'Easy',
         macro: 'TEETH',
         allowedEffects: [
@@ -26,7 +23,6 @@ export const PUZZLES: PuzzleConfig[] = [
         ]
     },
     {
-        locked: false,
         difficulty: 'Easy',
         macro: 'SEARCHLIGHTS',
         allowedEffects: [
@@ -34,7 +30,6 @@ export const PUZZLES: PuzzleConfig[] = [
         ]
     },
     {
-        locked: false,
         difficulty: 'Easy',
         macro: 'GRAIN_TUNNEL',
         allowedEffects: [
@@ -42,7 +37,6 @@ export const PUZZLES: PuzzleConfig[] = [
         ]
     },
     {
-        locked: false,
         difficulty: 'Medium',
         macro: 'RUSH_HOUR',
         allowedEffects: [
@@ -50,7 +44,6 @@ export const PUZZLES: PuzzleConfig[] = [
         ]
     },
     {
-        locked: false,
         difficulty: 'Medium',
         macro: 'STREAKS',
         allowedEffects: [
@@ -58,7 +51,6 @@ export const PUZZLES: PuzzleConfig[] = [
         ]
     },
     {
-        locked: false,
         difficulty: 'Medium',
         macro: 'CRYOGENIC_FLUID',
         allowedEffects: [
@@ -66,7 +58,6 @@ export const PUZZLES: PuzzleConfig[] = [
         ]
     },
     {
-        locked: false,
         difficulty: 'Medium',
         macro: 'ARCS',
         allowedEffects: [
@@ -74,7 +65,6 @@ export const PUZZLES: PuzzleConfig[] = [
         ]
     },
     {
-        locked: false,
         difficulty: 'Medium',
         macro: 'LANDSCAPE',
         allowedEffects: [
@@ -82,7 +72,6 @@ export const PUZZLES: PuzzleConfig[] = [
         ]
     },
     {
-        locked: false,
         difficulty: 'Medium',
         macro: 'STORM',
         allowedEffects: [
@@ -90,7 +79,6 @@ export const PUZZLES: PuzzleConfig[] = [
         ]
     },
     {
-        locked: false,
         difficulty: 'Medium',
         macro: 'SQUARE_RIPPLES',
         allowedEffects: [
@@ -98,7 +86,6 @@ export const PUZZLES: PuzzleConfig[] = [
         ]
     },
     {
-        locked: false,
         difficulty: 'Hard',
         macro: 'DISCO_BALL',
         allowedEffects: [
@@ -106,7 +93,6 @@ export const PUZZLES: PuzzleConfig[] = [
         ]
     },
     {
-        locked: false,
         difficulty: 'Hard',
         macro: 'FLAMES',
         allowedEffects: [
@@ -114,7 +100,6 @@ export const PUZZLES: PuzzleConfig[] = [
         ]
     },
     {
-        locked: false,
         difficulty: 'Hard',
         macro: 'WAXY_STARS',
         allowedEffects: [

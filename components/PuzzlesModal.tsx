@@ -21,15 +21,19 @@ interface PuzzleCardProps {
 const PuzzleCard: React.FC<PuzzleCardProps> = ({ puzzle, id, onClick, onHoverStart, onHoverEnd }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const progress = useProgressStore(s => s.getPuzzleProgress(id));
+    const isPuzzleComplete = useProgressStore(s => s.isPuzzleComplete);
+    const isLocked = id > 0 && !isPuzzleComplete(id - 1);
+
     const blueprint = useMemo(() => {
         return puzzle.macro ? createMacroInstance(puzzle.macro, true) : [];
     }, [puzzle.macro]);
 
     const handleMouseEnter = useCallback(() => {
+        if (isLocked) return;
         if (containerRef.current && blueprint.length > 0) {
             onHoverStart(containerRef.current, blueprint);
         }
-    }, [onHoverStart, blueprint]);
+    }, [onHoverStart, blueprint, isLocked]);
 
     return (
         <button
@@ -41,25 +45,21 @@ const PuzzleCard: React.FC<PuzzleCardProps> = ({ puzzle, id, onClick, onHoverSta
             onBlur={onHoverEnd}
         >
             <div ref={containerRef} className="absolute inset-0 pointer-events-none">
-                {/* Fallback Mesh gradient if no preview/macro */}
-                {!puzzle.macro && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-pink-500/20 group-hover:scale-110 transition-transform duration-700" />
-                )}
                 {/* Static poster image - Zero WebGL */}
-                {puzzle.macro && <EffectPreview macroType={puzzle.macro} />}
+                {puzzle.macro && !isLocked ? <EffectPreview macroType={puzzle.macro} /> :
+                    /* Lock icon and gradient overlay for locked puzzles */
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-pink-500/20">
+                        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                            <span className="material-symbols-outlined !text-[32px] text-white/30">
+                                lock
+                            </span>
+                        </div>
+                    </div>
+                }
             </div>
 
             {/* Gradient overlay for text legibility */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none z-10" />
-
-            {/* Lock icon */}
-            {puzzle.locked && (
-                <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-                    <span className="material-symbols-outlined !text-[32px] text-white/30 group-hover:text-white/60 transition-all">
-                        lock
-                    </span>
-                </div>
-            )}
 
             {/* Label */}
             <div className="absolute inset-x-0 bottom-0 p-3 z-20 text-left pointer-events-none">
@@ -75,7 +75,7 @@ const PuzzleCard: React.FC<PuzzleCardProps> = ({ puzzle, id, onClick, onHoverSta
             </div>
 
             {/* Score Badge */}
-            <div className="absolute bottom-3 right-3 z-20 text-[10px] font-mono font-bold text-white/90 bg-white/10 px-1.5 py-0.5 rounded border border-white/10 backdrop-blur-md">
+            <div className={`absolute bottom-3 right-3 z-20 text-[10px] font-mono font-bold ${progress?.score >= 90 ? 'text-cyan-300' : progress?.score >= 80 ? 'text-green-300' : 'text-white/90'} bg-black/20 px-1.5 py-0.5 rounded border border-white/10`}>
                 {progress ? `${progress.score}%` : '0%'}
             </div>
         </button>
@@ -87,6 +87,7 @@ const PuzzlesModal: React.FC = () => {
     const setIsPuzzlesModalOpen = useEffectStore(s => s.setIsPuzzlesModalOpen);
     const setCurrentPuzzle = useEffectStore(s => s.setCurrentPuzzle);
     const loadAudioFromUrl = useAudioStore(s => s.loadAudioFromUrl);
+    const isPuzzleComplete = useProgressStore(s => s.isPuzzleComplete);
 
     const [hoverTarget, setHoverTarget] = useState<{ el: HTMLElement; blueprint: EffectConfig[] } | null>(null);
     const [entranceComplete, setEntranceComplete] = useState(false);
@@ -110,7 +111,8 @@ const PuzzlesModal: React.FC = () => {
     }, [isPuzzlesModalOpen, setIsPuzzlesModalOpen]);
 
     const handlePuzzleClick = (puzzleId: number) => {
-        if (PUZZLES[puzzleId].locked) return;
+        const isLocked = puzzleId > 0 && !isPuzzleComplete(puzzleId - 1);
+        if (isLocked) return;
         loadAudioFromUrl('/trip.mp3', 'Demo Track').catch(err => {
             console.error(err);
         });

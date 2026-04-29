@@ -58,7 +58,7 @@ const PuzzleSuccessModal: React.FC<SuccessModalProps> = ({ result }) => {
     };
 
     const getLocalFeedback = (score: number): string => {
-        if (score >= 95) return 'Perfect reconstruction!';
+        if (score >= 90) return 'Perfect reconstruction!';
         if (score >= 80) return 'Match confirmed. Well done.';
         if (score >= 70) return "You're close, but the math isn't quite there.";
         if (score >= 40) return 'The essence is correct, but check your parameters.';
@@ -73,7 +73,7 @@ const PuzzleSuccessModal: React.FC<SuccessModalProps> = ({ result }) => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setResult(null)}
-                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/80"
             />
 
             {/* Modal Container */}
