@@ -97,7 +97,6 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     const focusStack = useEffectStore(s => s.focusStack);
     const pushFocus = useEffectStore(s => s.pushFocus);
     const removeFocus = useEffectStore(s => s.removeFocus);
-    const isLibraryOpen = focusStack.includes('library');
     const isInspectorOpen = focusStack.includes('inspector');
     const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
     const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);

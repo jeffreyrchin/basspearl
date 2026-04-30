@@ -226,17 +226,6 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                         className="z-library flex flex-col bg-slate-900 border-t border-white/10 overflow-hidden shrink-0"
                         style={{ minHeight: 0 }}
                     >
-                        {/* Library Header */}
-                        <div className="h-10 flex items-center justify-between px-4 shrink-0 border-b border-white/5 bg-slate-800">
-                            <span className="text-[10px] font-bold text-white uppercase tracking-[0.15em]">Library</span>
-                            <button
-                                onClick={() => removeFocus('library')}
-                                className="w-7 h-7 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
-                                title="Close Library (Y)"
-                            >
-                                <span className="material-symbols-outlined !text-[22px]">close</span>
-                            </button>
-                        </div>
 
                         {/* Library Scrollable Content */}
                         <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
@@ -246,7 +235,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                                     animate={{ opacity: 1 }}
                                     transition={{ duration: 0.1 }}
                                 >
-                                    <SidebarLibrary />
+                                    <SidebarLibrary onClose={() => removeFocus('library')} />
                                 </motion.div>
                             ) : <LoadingSpinner />}
                         </div>
