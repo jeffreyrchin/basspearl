@@ -86,7 +86,6 @@ const PuzzlesModal: React.FC = () => {
     const isPuzzlesModalOpen = useEffectStore(s => s.isPuzzlesModalOpen);
     const setIsPuzzlesModalOpen = useEffectStore(s => s.setIsPuzzlesModalOpen);
     const setCurrentPuzzle = useEffectStore(s => s.setCurrentPuzzle);
-    const loadAudioFromUrl = useAudioStore(s => s.loadAudioFromUrl);
     const isPuzzleComplete = useProgressStore(s => s.isPuzzleComplete);
 
     const [hoverTarget, setHoverTarget] = useState<{ el: HTMLElement; blueprint: EffectConfig[] } | null>(null);
@@ -113,9 +112,7 @@ const PuzzlesModal: React.FC = () => {
     const handlePuzzleClick = (puzzleId: number) => {
         const isLocked = puzzleId > 0 && !isPuzzleComplete(puzzleId - 1);
         if (isLocked) return;
-        loadAudioFromUrl('/trip.mp3', 'Demo Track').catch(err => {
-            console.error(err);
-        });
+
         setCurrentPuzzle(puzzleId);
         setIsPuzzlesModalOpen(false);
     };
@@ -157,6 +154,30 @@ const PuzzlesModal: React.FC = () => {
                     >
                         <span className="material-symbols-outlined">close</span>
                     </button>
+                </div>
+
+                {/* Hero with short backstory */}
+                <div className="relative w-full h-[180px] overflow-hidden shrink-0 border-b border-white/5">
+                    {/* Background Image */}
+                    <img
+                        src="/hero.png"
+                        alt="Hero Background"
+                        className="absolute inset-0 w-full h-full object-cover opacity-40"
+                    />
+
+                    {/* Overlays for depth and legibility */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/60 to-transparent" />
+                    {/* <div className="absolute inset-0 bg-gradient-to-r from-[#0f172a] via-transparent to-transparent" /> */}
+
+                    {/* Content */}
+                    <div className="absolute inset-0 flex flex-col justify-end p-8 pb-7">
+                        <h3 className="text-2xl font-black tracking-tight text-white uppercase leading-none mb-3 italic">
+                            The Grandmaster of Imageria
+                        </h3>
+                        <p className="text-[12px] text-white/60 max-w-[420px] leading-relaxed font-medium">
+                            Imageria crowns the best audio visualizers every year. For 38 years, Professor Emeritus Malpus Mosh has dominated the ranks with his elaborate audiovisual displays and calls everyone else amateurs. You are an up-and-coming visual engineer. Recreate your envisioned show and prove him wrong.
+                        </p>
+                    </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar">

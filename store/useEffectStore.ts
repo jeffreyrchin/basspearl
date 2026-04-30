@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { EffectConfig, GlitchEffectType, MacroType, TransitionType } from '../types';
-import { INITIAL_REACTIVE_EFFECTS, createEffectInstance, createMacroInstance, INITIAL_SCENE_COUNT, DEFAULT_TRANSITION_DURATION } from '../constants';
+import { INITIAL_REACTIVE_EFFECTS, createEffectInstance, createMacroInstance, INITIAL_SCENE_COUNT, DEFAULT_TRANSITION_DURATION, DIFFICULTY_TRACKS } from '../constants';
 import { analytics } from '@/services/analytics';
 import { PUZZLES } from '../config/puzzles';
 import { PuzzleService, PuzzleMatchResult } from '../services/puzzleService';
@@ -59,6 +59,9 @@ interface EffectState {
 
     isPuzzlesModalOpen: boolean;
     setIsPuzzlesModalOpen: (open: boolean) => void;
+
+    puzzleAudio: { url: string, label: string } | null;
+    setPuzzleAudio: (audio: { url: string, label: string } | null) => void;
 
     currentPuzzle: number | null;
     setCurrentPuzzle: (puzzle: number | null) => void;
@@ -205,6 +208,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
 
     setPuzzleMatchResult: (puzzleMatchResult) => set({ puzzleMatchResult }),
 
+    puzzleAudio: null,
+    setPuzzleAudio: (audio) => set({ puzzleAudio: audio }),
+
     currentPuzzle: null,
     setCurrentPuzzle: (currentPuzzle) => {
         // If exiting game mode
@@ -216,12 +222,21 @@ export const useEffectStore = create<EffectState>((set, get) => ({
                 isPreviewingPuzzle: false,
                 effects: state.preGameEffects, // Restore session
                 past: state.preGamePast,       // Restore undo history
-                future: state.preGameFuture    // Restore redo history
+                future: state.preGameFuture,   // Restore redo history
+                puzzleAudio: null
             }));
             return;
         }
 
         const puzzle = PUZZLES[currentPuzzle];
+
+        const prevPuzzleAudio = get().puzzleAudio;
+        const newPuzzleAudio = puzzle ? DIFFICULTY_TRACKS[puzzle.difficulty] : null;
+
+        if (prevPuzzleAudio?.url !== newPuzzleAudio?.url) {
+            set({ puzzleAudio: newPuzzleAudio });
+        }
+
         const targetPuzzleEffects = puzzle ? createMacroInstance(puzzle.macro) : [];
 
         set(state => ({

@@ -13,6 +13,12 @@ export const MIN_TARGET_WIDTH = 960;
 
 export const MIN_PUZZLE_COMPLETION_SCORE = 80;
 
+export const DIFFICULTY_TRACKS = {
+  Easy: { url: '/air.mp3', label: 'Demo Track 1' },
+  Medium: { url: '/trip.mp3', label: 'Demo Track 2' },
+  Hard: { url: '/dark_wind.mp3', label: 'Demo Track 3' },
+} as const;
+
 export const TRANSITION_OPTIONS = [
   { label: 'None', value: 'none' },
   { label: 'Crossfade', value: 'crossfade' },

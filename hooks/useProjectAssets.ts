@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { analytics } from '@/services/analytics';
 import { useEffectStore } from '../store/useEffectStore';
 
@@ -18,6 +18,7 @@ export const useProjectAssets = ({
     loadAudioFromFile
 }: UseProjectAssetsProps) => {
     const effects = useEffectStore(s => s.effects);
+    const puzzleAudio = useEffectStore(s => s.puzzleAudio);
 
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
 
@@ -46,6 +47,18 @@ export const useProjectAssets = ({
             });
         }
     }, [loadAudioFromUrl, loadAudioFromFile, startMic, startTabAudio]);
+
+    const loadPuzzleAudio = useCallback(() => {
+        if (!puzzleAudio) return;
+        loadAudioFromUrl(puzzleAudio.url, puzzleAudio.label).catch(err => {
+            console.error('Failed to load puzzle audio:', err);
+        });
+    }, [loadAudioFromUrl, puzzleAudio]);
+
+    // Switch puzzle audio when puzzle difficulty changes
+    useEffect(() => {
+        if (puzzleAudio) loadPuzzleAudio();
+    }, [puzzleAudio, loadPuzzleAudio]);
 
     return {
         isLandingOpen,
