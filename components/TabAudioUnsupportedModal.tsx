@@ -1,27 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
 interface TabAudioUnsupportedModalProps {
-    isOpen: boolean;
     onClose: () => void;
 }
 
-const TabAudioUnsupportedModal: React.FC<TabAudioUnsupportedModalProps> = ({ isOpen, onClose }) => {
+const TabAudioUnsupportedModal: React.FC<TabAudioUnsupportedModalProps> = ({ onClose }) => {
     const [copied, setCopied] = useState(false);
-
-    useEffect(() => {
-        if (isOpen) {
-            setCopied(false);
-        }
-    }, [isOpen]);
 
     const handleCopy = () => {
         navigator.clipboard.writeText(window.location.href);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
-
-    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-modal flex items-center justify-center p-4">

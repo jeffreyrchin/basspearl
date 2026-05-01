@@ -359,19 +359,25 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     />
                 )}
             </AnimatePresence>
-            <TabAudioUnsupportedModal
-                isOpen={isTabAudioUnsupportedModalOpen}
-                onClose={() => setIsTabAudioUnsupportedModalOpen(false)}
-            />
-            <ExportModal
-                isOpen={isExportModalOpen}
-                onClose={closeExportModal}
-                onExport={handleActualExport}
-                onCancelExport={cancelExport}
-                isExporting={isExporting}
-                exportProgress={exportProgress}
-                exportResult={exportResult}
-            />
+            <AnimatePresence>
+                {isTabAudioUnsupportedModalOpen && (
+                    <TabAudioUnsupportedModal
+                        onClose={() => setIsTabAudioUnsupportedModalOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {isExportModalOpen && (
+                    <ExportModal
+                        onClose={closeExportModal}
+                        onExport={handleActualExport}
+                        onCancelExport={cancelExport}
+                        isExporting={isExporting}
+                        exportProgress={exportProgress}
+                        exportResult={exportResult}
+                    />
+                )}
+            </AnimatePresence>
 
             <AnimatePresence>
                 {isGameMode && <PuzzleHeader />}
