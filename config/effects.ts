@@ -453,6 +453,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
   IMAGE: {
     label: 'Image',
     category: 'Pattern',
+    defaultAspectLocked: true,
     params: [
       p('Opacity', { v: 100 }),
       p('Scale X', { v: 54 }),

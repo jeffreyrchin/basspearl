@@ -100,10 +100,11 @@ interface EffectState {
     batchMeld: () => void;
     batchUnmeld: () => void;
     updateParameter: (effectId: string, paramIndex: number, update: Partial<EffectConfig['params'][0]>) => void;
+    updateEffect: (effectId: string, updates: Partial<EffectConfig>) => void;
     updateMultipleParameters: (effectId: string, updates: { paramIndex: number, update: Partial<EffectConfig['params'][0]> }[]) => void;
 
     addEffectFromSidebar: (type: GlitchEffectType) => void;
-    setEffectAssetUrl: (effectId: string, assetUrl: string | undefined, assetName?: string) => void;
+    toggleAspectLocked: (effectId: string) => void;
     addScene: () => void;
 
     // Transitions
@@ -546,6 +547,12 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         }));
     },
 
+    updateEffect: (effectId, updates) => {
+        set((state) => ({
+            effects: state.effects.map(e => e.id === effectId ? { ...e, ...updates } : e)
+        }));
+    },
+
     updateMultipleParameters: (effectId, updates) => {
         set((state) => ({
             effects: state.effects.map((e) => {
@@ -559,9 +566,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         }));
     },
 
-    setEffectAssetUrl: (effectId, assetUrl, assetName) => {
+    toggleAspectLocked: (effectId) => {
         set((state) => ({
-            effects: state.effects.map(e => e.id === effectId ? { ...e, assetUrl, assetName } : e)
+            effects: state.effects.map(e => e.id === effectId ? { ...e, aspectLocked: !e.aspectLocked } : e)
         }));
     },
 

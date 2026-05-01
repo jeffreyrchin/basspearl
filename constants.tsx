@@ -55,6 +55,7 @@ export const createEffectInstance = (type: GlitchEffectType, isPreview?: boolean
     muted: false,
     soloed: false,
     seed,
+    aspectLocked: metadata.defaultAspectLocked,
   };
 };
 

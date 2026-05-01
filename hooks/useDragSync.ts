@@ -15,7 +15,7 @@ import { subscribeToDrag, LiveParamOverride } from '../services/dragOverride';
 export function useDragSync(
     effectId: string | undefined | null,
     paramIdx: number | undefined | null,
-    callback: (value?: number) => void
+    callback: (value?: number, min?: number) => void
 ): void;
 
 // Overload 2: Multi-Parameter Mode (Gizmo)
@@ -46,8 +46,8 @@ export function useDragSync(
                 const override = params.find(p => p.index === paramIdx);
                 if (!override) return;
 
-                if (override.value !== undefined) {
-                    callback(override.value);
+                if (override.value !== undefined || override.min !== undefined) {
+                    callback(override.value, override.min);
                 }
             } else {
                 // Mode 2: Gizmo (All Parameters)

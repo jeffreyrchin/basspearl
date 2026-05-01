@@ -56,6 +56,8 @@ export interface EffectConfig {
   seed?: number;
   assetUrl?: string;
   assetName?: string;
+  aspectLocked?: boolean;
+  aspectRatio?: number;
 }
 
 export interface EffectParamMetadata {
@@ -73,6 +75,7 @@ export interface EffectMetadata {
   label: string;
   category: EffectCategory;
   params: EffectParamMetadata[];
+  defaultAspectLocked?: boolean;
 }
 
 export type MacroType =

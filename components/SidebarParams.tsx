@@ -1,9 +1,11 @@
 import React, { useRef } from 'react';
-import { EFFECT_METADATA } from '../constants';
+import { EFFECT_METADATA, MASTER_ASPECT_RATIO } from '../constants';
 import { AdaptiveSlider } from './AdaptiveSlider';
 import { FrequencyDropdown } from './FrequencyDropdown';
 import { ColorPicker } from './ColorPicker';
 import { useEffectStore } from '@/store/useEffectStore';
+import { getSafeAspectRatio, shouldDecoupleScale, getLinkedScale } from '../services/transformMath';
+import { calculateInitialImageScale } from '../services/canvasMath';
 
 interface SidebarParamsProps { }
 
@@ -13,20 +15,49 @@ interface SidebarParamsProps { }
  */
 const SidebarParams: React.FC<SidebarParamsProps> = () => {
     const updateParameter = useEffectStore(s => s.updateParameter);
+    const updateEffect = useEffectStore(s => s.updateEffect);
     const updateMultipleParameters = useEffectStore(s => s.updateMultipleParameters);
-    const setEffectAssetUrl = useEffectStore(s => s.setEffectAssetUrl);
+    const toggleAspectLocked = useEffectStore(s => s.toggleAspectLocked);
     const commitHistory = useEffectStore(s => s.commitHistory);
     const selectedIds = useEffectStore(s => s.selectedIds);
     const effects = useEffectStore(s => s.effects);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, effectId: string) => {
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement> | { target: { files: FileList | null, value: string } }, effectId: string) => {
         const file = e.target.files?.[0];
         if (file) {
             const url = URL.createObjectURL(file);
-            setEffectAssetUrl(effectId, url, file.name);
+
+            // 1. Create a temporary image to measure dimensions
+            const img = new Image();
+            img.onload = () => {
+                const { scaleX: sX, scaleY: sY } = calculateInitialImageScale(img.naturalWidth, img.naturalHeight, MASTER_ASPECT_RATIO);
+
+                // 3. Apply updates to the store
+                const effect = useEffectStore.getState().effects.find(e => e.id === effectId);
+                if (effect) {
+                    const sxIdx = effect.params.findIndex(p => p.param === 'Scale X');
+                    const syIdx = effect.params.findIndex(p => p.param === 'Scale Y');
+
+                    if (sxIdx !== -1 && syIdx !== -1) {
+                        updateMultipleParameters(effectId, [
+                            { paramIndex: sxIdx, update: { value: sX } },
+                            { paramIndex: syIdx, update: { value: sY } }
+                        ]);
+                    }
+                }
+
+                updateEffect(effectId, {
+                    assetUrl: url,
+                    assetName: file.name,
+                    aspectLocked: true,
+                    aspectRatio: img.naturalWidth / img.naturalHeight
+                });
+            };
+            img.src = url;
+
             // Reset the input value so the same file can be re-uploaded if deleted
-            e.target.value = '';
+            if ('value' in e.target) e.target.value = '';
         }
     };
 
@@ -92,10 +123,9 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
                             onDrop={(e) => {
                                 e.preventDefault();
                                 e.currentTarget.removeAttribute('data-dragover');
-                                const file = e.dataTransfer.files?.[0];
-                                if (file && file.type.startsWith('image/')) {
-                                    const url = URL.createObjectURL(file);
-                                    setEffectAssetUrl(selectedEffect.id, url, file.name);
+                                const files = e.dataTransfer.files;
+                                if (files && files.length > 0 && files[0].type.startsWith('image/')) {
+                                    handleImageUpload({ target: { files, value: '' } } as any, selectedEffect.id);
                                 }
                             }}
                         >
@@ -136,7 +166,7 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            setEffectAssetUrl(selectedEffect.id, undefined, undefined);
+                                            updateEffect(selectedEffect.id, { assetUrl: undefined, assetName: undefined });
                                         }}
                                         className="absolute top-2 right-2 w-7 h-7 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center transition-colors"
                                         title="Remove Image"
@@ -166,9 +196,24 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
                     return (
                         <div key={paramIdx} className="py-2 flex flex-col">
                             <div className="flex justify-between items-center">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-white">
-                                    {paramMeta.name}
-                                </label>
+                                <div className="flex items-center gap-2">
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-white">
+                                        {paramMeta.name}
+                                    </label>
+
+                                    {/* Aspect Lock Toggle: Only show next to Scale X if Scale Y exists */}
+                                    {paramMeta.name === 'Scale X' && EFFECT_METADATA[selectedEffect.type].params.some(p => p.name === 'Scale Y') && (
+                                        <button
+                                            onClick={() => toggleAspectLocked(selectedEffect.id)}
+                                            className={`flex items-center justify-center p-1 rounded-md transition-all ${selectedEffect.aspectLocked ? 'text-[#22D3EE] bg-[#22D3EE]/10' : 'text-white/60 hover:text-white/80'}`}
+                                            title={selectedEffect.aspectLocked ? 'Unlock Aspect Ratio' : 'Lock Aspect Ratio'}
+                                        >
+                                            <span className="material-symbols-outlined !text-[14px]">
+                                                {selectedEffect.aspectLocked ? 'link' : 'link_off'}
+                                            </span>
+                                        </button>
+                                    )}
+                                </div>
 
                                 <FrequencyDropdown
                                     id={`${selectedEffect.id}-${paramIdx}`}
@@ -186,9 +231,68 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
                                 min={param.min}
                                 frequencyBand={param.frequencyBand}
                                 onPointerDown={() => commitHistory()}
-                                onChange={(update) => updateParameter(selectedEffect.id, paramIdx, update)}
+                                onChange={(update) => {
+                                    if (selectedEffect.aspectLocked && (update.value !== undefined || update.min !== undefined)) {
+                                        const sxIdx = EFFECT_METADATA[selectedEffect.type].params.findIndex(p => p.name === 'Scale X');
+                                        const syIdx = EFFECT_METADATA[selectedEffect.type].params.findIndex(p => p.name === 'Scale Y');
+
+                                        if (sxIdx !== -1 && syIdx !== -1) {
+                                            const currentX = selectedEffect.params[sxIdx].value;
+                                            const currentY = selectedEffect.params[syIdx].value;
+
+                                            const isDraggingX = paramIdx === sxIdx;
+                                            const shouldSync = !shouldDecoupleScale(currentX, currentY, isDraggingX);
+                                            const ratio = getSafeAspectRatio(currentX, currentY, selectedEffect.aspectRatio);
+
+                                            if (isDraggingX) {
+                                                const multiUpdate: any[] = [{ paramIndex: sxIdx, update }];
+                                                if (shouldSync) {
+                                                    if (update.value !== undefined) multiUpdate.push({ paramIndex: syIdx, update: { value: getLinkedScale(update.value, ratio, true) } });
+                                                    if (update.min !== undefined) multiUpdate.push({ paramIndex: syIdx, update: { min: getLinkedScale(update.min, ratio, true) } });
+                                                }
+                                                updateMultipleParameters(selectedEffect.id, multiUpdate);
+                                                return;
+                                            } else {
+                                                const multiUpdate: any[] = [{ paramIndex: syIdx, update }];
+                                                if (shouldSync) {
+                                                    if (update.value !== undefined) multiUpdate.push({ paramIndex: sxIdx, update: { value: getLinkedScale(update.value, ratio, false) } });
+                                                    if (update.min !== undefined) multiUpdate.push({ paramIndex: sxIdx, update: { min: getLinkedScale(update.min, ratio, false) } });
+                                                }
+                                                updateMultipleParameters(selectedEffect.id, multiUpdate);
+                                                return;
+                                            }
+                                        }
+                                    }
+                                    updateParameter(selectedEffect.id, paramIdx, update);
+                                }}
                                 effectId={selectedEffect.id}
                                 paramIdx={paramIdx}
+                                getAdditionalOverrides={(val, isMin) => {
+                                    if (!selectedEffect.aspectLocked) return [];
+                                    const sxIdx = EFFECT_METADATA[selectedEffect.type].params.findIndex(p => p.name === 'Scale X');
+                                    const syIdx = EFFECT_METADATA[selectedEffect.type].params.findIndex(p => p.name === 'Scale Y');
+                                    if (sxIdx === -1 || syIdx === -1) return [];
+
+                                    const currentX = selectedEffect.params[sxIdx].value;
+                                    const currentY = selectedEffect.params[syIdx].value;
+
+                                    const isDraggingX = paramIdx === sxIdx;
+                                    if (shouldDecoupleScale(currentX, currentY, isDraggingX)) return [];
+
+                                    const ratio = getSafeAspectRatio(currentX, currentY, selectedEffect.aspectRatio);
+
+                                    if (isDraggingX) {
+                                        return [{
+                                            index: syIdx,
+                                            [isMin ? 'min' : 'value']: getLinkedScale(val, ratio, true)
+                                        }];
+                                    } else {
+                                        return [{
+                                            index: sxIdx,
+                                            [isMin ? 'min' : 'value']: getLinkedScale(val, ratio, false)
+                                        }];
+                                    }
+                                }}
                             />
                         </div>
                     );

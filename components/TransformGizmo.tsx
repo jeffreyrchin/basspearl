@@ -1,6 +1,8 @@
 import React, { useRef, useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { useEffectStore } from '../store/useEffectStore';
-import { setDragOverride, clearDragOverride, dragOverride } from '../services/dragOverride';
+import { dragOverride, setDragOverride, clearDragOverride } from '../services/dragOverride';
+import { calculateRadialFactor, getResurrectionScales, calculateRelativeUpdate, calculateRelativeScaleUpdate, calculateRotationValue } from '../services/transformMath';
+import { calculateVirtualCanvasRect, mapPanToCSS } from '../services/canvasMath';
 import { useDragSync } from '../hooks/useDragSync';
 import { useCanvasSelection } from '../hooks/useCanvasSelection';
 import { MASTER_ASPECT_RATIO } from '../constants';
@@ -69,33 +71,8 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
             const pRect = container.getBoundingClientRect();
 
             if (pRect.width > 0 && pRect.height > 0) {
-                // ── VIRTUAL ART MAPPING (object-fit: cover) ────────────────
-                // We calculate the BOUNDS of the 16:9 art, which is likely 
-                // wider than the square window you see.
-                const ART_ASPECT = MASTER_ASPECT_RATIO;
-                const WIN_ASPECT = cRect.width / cRect.height;
-
-                let virtualW = cRect.width;
-                let virtualH = cRect.height;
-                let offsetX = 0;
-                let offsetY = 0;
-
-                if (WIN_ASPECT < ART_ASPECT) {
-                    // Window is narrower than Art. Height matches, Width is wider.
-                    virtualW = cRect.height * ART_ASPECT;
-                    offsetX = (cRect.width - virtualW) / 2;
-                } else {
-                    // Window is taller than Art. Width matches, Height is taller.
-                    virtualH = cRect.width / ART_ASPECT;
-                    offsetY = (cRect.height - virtualH) / 2;
-                }
-
-                setCanvasRect({
-                    left: ((cRect.left + offsetX - pRect.left) / pRect.width) * 100,
-                    top: ((cRect.top + offsetY - pRect.top) / pRect.height) * 100,
-                    width: (virtualW / pRect.width) * 100,
-                    height: (virtualH / pRect.height) * 100
-                });
+                const virtualRect = calculateVirtualCanvasRect(cRect, pRect, MASTER_ASPECT_RATIO);
+                setCanvasRect(virtualRect);
             }
         };
 
@@ -128,6 +105,9 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
         scaleXIdx: -1, scaleYIdx: -1,
         rotationIdx: -1,
         xDir: 1, yDir: 1,
+        aspectLocked: false,
+        aspectRatio: 1,
+        startDistance: 1,
         siblingStarts: undefined as Map<string, { scaleX: number; scaleY: number; sxIdx: number; syIdx: number }> | undefined
     });
 
@@ -142,8 +122,9 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
             if (p.value === undefined) return;
 
             // Update gizmo
-            if (p.index === panXIdx) gizmoRef.current!.style.left = `${(p.value - 50) * 2 + 50}%`;
-            else if (p.index === panYIdx) gizmoRef.current!.style.top = `${150 - (p.value * 2)}%`;
+            const cssPos = mapPanToCSS(p.index === panXIdx ? p.value : panX, p.index === panYIdx ? p.value : panY);
+            if (p.index === panXIdx) gizmoRef.current!.style.left = `${cssPos.x}%`;
+            else if (p.index === panYIdx) gizmoRef.current!.style.top = `${cssPos.y}%`;
             else if (p.index === scaleXIdx) gizmoRef.current!.style.width = `${p.value * 2}%`;
             else if (p.index === scaleYIdx) gizmoRef.current!.style.height = `${p.value * 2}%`;
             else if (p.index === rotationIdx) gizmoRef.current!.style.transform = `translate(-50%, -50%) rotate(${p.value * 3.6}deg)`;
@@ -175,7 +156,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
             });
         }
 
-        return { currentPanX: cPanX, currentPanY: cPanY, currentScaleX: cScaleX, currentScaleY: cScaleY, currentRotation: cRot };
+        return { currentPanX: cPanX, currentPanY: cPanY, currentScaleX: cScaleX, currentScaleY: cScaleY, currentRotation: cRot, aspectLocked: freshEffect?.aspectLocked, aspectRatio: freshEffect?.aspectRatio };
     };
 
     // Only the "last selected" gizmo claims the scroll wheel to avoid conflicts
@@ -186,13 +167,13 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
     const handlePointerDown = (e: React.PointerEvent, type: TransformType) => {
         e.preventDefault();
         e.stopPropagation();
-        const { currentPanX, currentPanY, currentScaleX, currentScaleY, currentRotation } = getCurrentValues(); // 1. Capture absolute truth
+        const { currentPanX, currentPanY, currentScaleX, currentScaleY, currentRotation, aspectLocked, aspectRatio } = getCurrentValues(); // 1. Capture absolute truth
         flushGlobalScroll(); // 2. Clean up
         commitHistory();
         setDragType(type);
 
         const rect = canvasRef.current?.getBoundingClientRect() || containerRef.current?.getBoundingClientRect();
-        const corner = type !== 'pan' ? SCALE_CORNERS[type] : null;
+        const corner = type !== 'pan' && type !== 'rotate' ? SCALE_CORNERS[type] : null;
 
         const gRect = gizmoRef.current?.getBoundingClientRect();
         const cX = gRect ? gRect.left + gRect.width / 2 : 0;
@@ -214,7 +195,11 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
             scaleXIdx, scaleYIdx,
             rotationIdx,
             xDir: corner?.xDir ?? 1,
-            yDir: corner?.yDir ?? 1
+            yDir: corner?.yDir ?? 1,
+            aspectLocked: !!aspectLocked,
+            aspectRatio: aspectRatio || 1,
+            startDistance: Math.sqrt(Math.pow(e.clientX - cX, 2) + Math.pow(e.clientY - cY, 2)),
+            siblingStarts: undefined
         };
 
         // Prime the drag override so the effect doesn't jump
@@ -281,12 +266,13 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
         } else {
             setFlushGlobalScroll(() => { flushScroll(); });
             // --- First frame of scroll sequence: Initialize state for self AND siblings ---
-            const { currentScaleX, currentScaleY } = getCurrentValues();
+            const { currentScaleX, currentScaleY, aspectRatio } = getCurrentValues();
             commitHistory();
             state.scaleX = currentScaleX;
             state.scaleY = currentScaleY;
             state.scaleXIdx = scaleXIdx;
             state.scaleYIdx = scaleYIdx;
+            state.aspectRatio = aspectRatio || 1;
 
             // Capture sibling starting scales
             state.siblingStarts = new Map<string, { scaleX: number; scaleY: number; sxIdx: number; syIdx: number }>();
@@ -322,15 +308,27 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
             factor = Math.min(factor, roomX, roomY);
         }
 
-        // If shrinking, don't let factor take us below our minimum (e.g. 1)
+        // If shrinking, don't let factor take us below our minimum (e.g. 0.1)
+        // But if an axis is ALREADY at 0, don't use it to force the factor up to 100
         else {
-            const roomX = minScale / Math.max(state.scaleX, 0.001);
-            const roomY = minScale / Math.max(state.scaleY, 0.001);
+            const roomX = state.scaleX > minScale ? minScale / state.scaleX : 0;
+            const roomY = state.scaleY > minScale ? minScale / state.scaleY : 0;
             factor = Math.max(factor, roomX, roomY);
         }
 
-        state.scaleX *= factor;
-        state.scaleY *= factor;
+        // 1. Calculate the new scales
+        let newX = state.scaleX * factor;
+        let newY = state.scaleY * factor;
+
+        // Fallback for 0,0 case: allow scaling up from zero using stored ratio
+        if (state.scaleX === 0 && state.scaleY === 0 && factor > 1) {
+            const resurrection = getResurrectionScales(factor, state.aspectRatio);
+            newX = resurrection.scaleX;
+            newY = resurrection.scaleY;
+        }
+
+        state.scaleX = Math.max(0, Math.min(100, newX));
+        state.scaleY = Math.max(0, Math.min(100, newY));
 
         // --- Apply and Broadcast Factor ---
         setDragOverride(effectId, [
@@ -340,8 +338,8 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
 
         if (state.siblingStarts) {
             state.siblingStarts.forEach((sib, sibId) => {
-                sib.scaleX *= factor;
-                sib.scaleY *= factor;
+                sib.scaleX = calculateRelativeScaleUpdate(factor, sib.scaleX);
+                sib.scaleY = calculateRelativeScaleUpdate(factor, sib.scaleY);
                 setDragOverride(sibId, [
                     { index: sib.sxIdx, value: sib.scaleX },
                     { index: sib.syIdx, value: sib.scaleY }
@@ -354,7 +352,6 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
             gizmoRef.current.style.height = `${state.scaleY * 2}%`;
         }
     }, [dragType, effectId, scaleX, scaleY, scaleXIdx, scaleYIdx, commitHistory, flushScroll]);
-
 
     useEffect(() => {
         if (!dragType || !isValid || !effectId) return;
@@ -432,17 +429,13 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
                 });
 
                 // Update gizmo position
+                const cssPos = mapPanToCSS(liveValues.panX, liveValues.panY);
                 if (gizmoRef.current) {
-                    gizmoRef.current.style.left = `${(liveValues.panX - 50) * 2 + 50}%`;
-                    gizmoRef.current.style.top = `${150 - (liveValues.panY * 2)}%`;
+                    gizmoRef.current.style.left = `${cssPos.x}%`;
+                    gizmoRef.current.style.top = `${cssPos.y}%`;
                 }
             } else if (dragType === 'rotate') {
-                const currentAngle = Math.atan2(e.clientY - state.centerY, e.clientX - state.centerX);
-                const deltaAngle = (currentAngle - state.startAngle) * (180 / Math.PI);
-
-                // Rotation slider is 0-100 covering 360 degrees. 
-                // newRot = oldRot + (delta / 3.6). We use mod 100 to loop correctly.
-                liveValues.rotation = (state.rotation + (deltaAngle / 3.6) + 100) % 100;
+                liveValues.rotation = calculateRotationValue(state.centerX, state.centerY, state.startAngle, state.rotation, e.clientX, e.clientY);
 
                 setDragOverride(effectId, [
                     { index: state.rotationIdx, value: liveValues.rotation }
@@ -452,9 +445,29 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
                     gizmoRef.current.style.transform = `translate(-50%, -50%) rotate(${liveValues.rotation * 3.6}deg)`;
                 }
             } else { // Scale
-                // Update live values using the xDir/yDir multipliers
-                liveValues.scaleX = Math.max(0, Math.min(100, state.scaleX + (px * 100 * state.xDir)));
-                liveValues.scaleY = Math.max(0, Math.min(100, state.scaleY + (py * 100 * state.yDir)));
+                if (state.aspectLocked) {
+                    // --- Distance-Based Proportional Scaling ---
+                    // This eliminates "teleporting" by using a single radial factor 
+                    // instead of switching between X and Y axis deltas.
+                    const factor = calculateRadialFactor(state.centerX, state.centerY, state.startX, state.startY, e.clientX, e.clientY);
+
+                    let newX = state.scaleX * factor;
+                    let newY = state.scaleY * factor;
+
+                    // Fallback for 0,0 case: allow growing from zero using stored ratio
+                    if (state.scaleX === 0 && state.scaleY === 0 && factor > 1) {
+                        const resurrection = getResurrectionScales(factor, state.aspectRatio);
+                        newX = resurrection.scaleX;
+                        newY = resurrection.scaleY;
+                    }
+
+                    liveValues.scaleX = Math.max(0, Math.min(100, newX));
+                    liveValues.scaleY = Math.max(0, Math.min(100, newY));
+                } else {
+                    // --- Independent Scaling ---
+                    liveValues.scaleX = Math.max(0, Math.min(100, state.scaleX + (px * 100 * state.xDir)));
+                    liveValues.scaleY = Math.max(0, Math.min(100, state.scaleY + (py * 100 * state.yDir)));
+                }
 
                 // Update canvas directly
                 setDragOverride(effectId, [
@@ -486,8 +499,8 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
 
                 // Commit pan to all other selected siblings
                 siblingStarts.forEach(({ panX: startX, panY: startY, panXIdx: sxIdx, panYIdx: syIdx }, sibId) => {
-                    const finalX = Math.max(0, Math.min(100, startX + (liveValues.panX - state.panX)));
-                    const finalY = Math.max(0, Math.min(100, startY + (liveValues.panY - state.panY)));
+                    const finalX = calculateRelativeUpdate(liveValues.panX, startX, state.panX);
+                    const finalY = calculateRelativeUpdate(liveValues.panY, startY, state.panY);
                     updateMultipleParameters(sibId, [
                         { paramIndex: sxIdx, update: { value: finalX } },
                         { paramIndex: syIdx, update: { value: finalY } }
@@ -526,8 +539,7 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
     if (!isValid) return null;
 
     const safeBox = canvasRect || { left: 0, top: 0, width: 100, height: 100 };
-    const vPanX = (panX - 50) * 2 + 50;
-    const vPanY = 150 - (panY * 2);
+    const cssPos = mapPanToCSS(panX, panY);
 
     return (
         <div ref={containerRef} className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
@@ -546,8 +558,8 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
                     ref={gizmoRef}
                     className={`absolute pointer-events-auto cursor-move focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary group ${dragType ? '' : 'hover:z-50'}`}
                     style={{
-                        left: `${vPanX}%`,
-                        top: `${vPanY}%`,
+                        left: `${cssPos.x}%`,
+                        top: `${cssPos.y}%`,
                         width: `${scaleX * 2}%`,
                         height: `${scaleY * 2}%`,
                         transform: `translate(-50%, -50%) rotate(${rotation * 3.6}deg)`,
@@ -596,15 +608,40 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
                             className={`z-10 absolute w-7 h-7 md:w-4 md:h-4 rounded-full bg-black border border-primary ${corner.className}`}
                             onPointerDown={(e) => handlePointerDown(e, id as ScaleCornerId)}
                             onKeyPress={(key, shift) => {
-                                const { currentScaleX, currentScaleY } = getCurrentValues();
+                                const { currentScaleX, currentScaleY, aspectLocked } = getCurrentValues();
                                 flushGlobalScroll();
                                 commitHistory();
                                 const step = shift ? 5 : 1;
-                                // Keyboard arrows map logically based on mx/my multipliers
-                                if (key === 'ArrowRight') updateParameter(effectId!, scaleXIdx, { value: Math.max(0, Math.min(100, currentScaleX + step * corner.xDir)) });
-                                else if (key === 'ArrowLeft') updateParameter(effectId!, scaleXIdx, { value: Math.max(0, Math.min(100, currentScaleX - step * corner.xDir)) });
-                                else if (key === 'ArrowUp') updateParameter(effectId!, scaleYIdx, { value: Math.max(0, Math.min(100, currentScaleY - step * corner.yDir)) });
-                                else if (key === 'ArrowDown') updateParameter(effectId!, scaleYIdx, { value: Math.max(0, Math.min(100, currentScaleY + step * corner.yDir)) });
+                                const ratio = currentScaleX / Math.max(currentScaleY, 0.001);
+
+                                if (aspectLocked) {
+                                    // Proportional Keyboard Scaling
+                                    let nextX = currentScaleX;
+                                    let nextY = currentScaleY;
+
+                                    if (key === 'ArrowRight' || key === 'ArrowUp') {
+                                        nextX = Math.min(100, currentScaleX + step);
+                                        nextY = nextX / ratio;
+                                        if (nextY > 100) {
+                                            nextY = 100;
+                                            nextX = nextY * ratio;
+                                        }
+                                    } else {
+                                        nextX = Math.max(0, currentScaleX - step);
+                                        nextY = nextX / ratio;
+                                    }
+
+                                    updateMultipleParameters(effectId!, [
+                                        { paramIndex: scaleXIdx, update: { value: nextX } },
+                                        { paramIndex: scaleYIdx, update: { value: nextY } }
+                                    ]);
+                                } else {
+                                    // Independent Keyboard Scaling
+                                    if (key === 'ArrowRight') updateParameter(effectId!, scaleXIdx, { value: Math.max(0, Math.min(100, currentScaleX + step * corner.xDir)) });
+                                    else if (key === 'ArrowLeft') updateParameter(effectId!, scaleXIdx, { value: Math.max(0, Math.min(100, currentScaleX - step * corner.xDir)) });
+                                    else if (key === 'ArrowUp') updateParameter(effectId!, scaleYIdx, { value: Math.max(0, Math.min(100, currentScaleY - step * corner.yDir)) });
+                                    else if (key === 'ArrowDown') updateParameter(effectId!, scaleYIdx, { value: Math.max(0, Math.min(100, currentScaleY + step * corner.yDir)) });
+                                }
                             }}
                         />
                     ))}

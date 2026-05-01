@@ -12,6 +12,7 @@ interface AdaptiveSliderProps {
     onPointerDown?: () => void;
     effectId?: string;
     paramIdx?: number;
+    getAdditionalOverrides?: (val: number, isMin?: boolean) => { index: number, value?: number, min?: number }[];
 }
 
 type Mode = 'none' | 'left' | 'right' | 'middle';
@@ -27,7 +28,8 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     onChange,
     onPointerDown,
     effectId,
-    paramIdx
+    paramIdx,
+    getAdditionalOverrides
 }) => {
     // --- Refs for Performance & Animation ---
     const trackRef = useRef<HTMLDivElement>(null);
@@ -60,18 +62,25 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
     }, [min, value]);
 
     // --- 0. Drag Override Subscription (Direct DOM Update) ---
-    useDragSync(effectId, paramIdx, useCallback((liveValue) => {
+    useDragSync(effectId, paramIdx, useCallback((liveValue, liveMin) => {
         // Direct DOM manipulation: bypass React entirely for 60fps sliders
         if (liveValue !== undefined) {
             currentMaxRef.current = liveValue;
             if (thumbRef.current) thumbRef.current.style.left = `${liveValue}%`;
             if (valueLabelRef.current) valueLabelRef.current.innerText = Math.round(liveValue).toString();
+        }
 
-            if (trackFillRef.current) {
-                const currentLiveMin = currentMinRef.current;
-                trackFillRef.current.style.left = `${Math.min(currentLiveMin, liveValue)}%`;
-                trackFillRef.current.style.width = `${Math.abs(liveValue - currentLiveMin)}%`;
-            }
+        if (liveMin !== undefined) {
+            currentMinRef.current = liveMin;
+            if (minThumbRef.current) minThumbRef.current.style.left = `${liveMin}%`;
+            if (minLabelRef.current) minLabelRef.current.innerText = Math.round(liveMin).toString();
+        }
+
+        if (trackFillRef.current) {
+            const v = liveValue !== undefined ? liveValue : currentMaxRef.current;
+            const m = liveMin !== undefined ? liveMin : currentMinRef.current;
+            trackFillRef.current.style.left = `${Math.min(m, v)}%`;
+            trackFillRef.current.style.width = `${Math.abs(v - m)}%`;
         }
     }, []));
 
@@ -138,7 +147,9 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
 
                     // High-performance path: update the override module directly
                     if (effectId && paramIdx !== undefined) {
-                        setDragOverride(effectId, [{ index: paramIdx, min: newMin }]);
+                        const overrides = [{ index: paramIdx, min: newMin }];
+                        if (getAdditionalOverrides) overrides.push(...getAdditionalOverrides(newMin, true));
+                        setDragOverride(effectId, overrides);
                     }
                 }
             } else if (dragMode === 'right' || dragMode === 'middle') {
@@ -174,11 +185,31 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
 
                     // High-performance path: update the override module directly
                     if (effectId && paramIdx !== undefined) {
-                        setDragOverride(effectId, [{
+                        const overrides = [{
                             index: paramIdx,
                             value: newMax,
                             min: dragMode === 'middle' ? newMin : undefined
-                        }]);
+                        }];
+                        if (getAdditionalOverrides) {
+                            const additional: any[] = [];
+                            if (dragMode === 'middle') {
+                                additional.push(...getAdditionalOverrides(newMax, false));
+                                additional.push(...getAdditionalOverrides(newMin, true));
+                            } else {
+                                additional.push(...getAdditionalOverrides(newMax, false));
+                            }
+                            
+                            // Merge multiple overrides for the same index (e.g. min and max for the linked param)
+                            additional.forEach(add => {
+                                const existing = overrides.find(o => o.index === add.index);
+                                if (existing) {
+                                    Object.assign(existing, add);
+                                } else {
+                                    overrides.push(add);
+                                }
+                            });
+                        }
+                        setDragOverride(effectId, overrides);
                     }
                 }
             }
@@ -284,7 +315,10 @@ export const AdaptiveSlider: React.FC<AdaptiveSliderProps> = ({
                         currentMaxRef.current = newMax;
                         if (thumbRef.current) thumbRef.current.style.left = `${newMax}%`;
                         if (valueLabelRef.current) valueLabelRef.current.innerText = Math.round(newMax).toString();
-                        setDragOverride(effectId, [{ index: paramIdx, value: newMax }]);
+                        
+                        const overrides = [{ index: paramIdx, value: newMax }];
+                        if (getAdditionalOverrides) overrides.push(...getAdditionalOverrides(newMax, false));
+                        setDragOverride(effectId, overrides);
 
                         // Start high-performance drag
                         handleDragStart(e.clientX, 'right');
