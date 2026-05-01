@@ -3,7 +3,7 @@ export const INITIAL_REACTIVE_EFFECTS: any[] = [];
 export const MAX_PIXELS = 3840 * 2160;
 export const THUMBNAIL_SIZE = 512;
 export const INITIAL_SCENE_COUNT = 9;
-export const CONTACT_EMAIL = 'jeffreyrchin.20@gmail.com';
+export const CONTACT_EMAIL = 'legato196@gmail.com';
 
 export const DEFAULT_TRANSITION_DURATION = 0.2;
 
