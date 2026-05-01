@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { analytics } from '@/services/analytics';
 import { useEffectStore } from '../store/useEffectStore';
 
 export interface UseProjectAssetsProps {
@@ -24,16 +23,11 @@ export const useProjectAssets = ({
 
     const [isLandingOpen, setIsLandingOpen] = useState(effects.length === 0 && audioFile === null);
 
-    const handleLandingStart = useCallback((audioOption: 'upload' | 'mic' | 'demo' | 'tab', selectedAudioFile?: File) => {
+    const handleLandingStart = useCallback((audioOption: 'upload' | 'mic' | 'tab', selectedAudioFile?: File) => {
         setIsLandingOpen(false);
 
         // 1. Handle Audio Option
-        if (audioOption === 'demo') {
-            analytics.audio.demo_started();
-            loadAudioFromUrl('/trip.mp3', 'Demo Track').catch(err => {
-                console.error('Failed to load demo track:', err);
-            });
-        } else if (audioOption === 'upload' && selectedAudioFile) {
+        if (audioOption === 'upload' && selectedAudioFile) {
             loadAudioFromFile(selectedAudioFile).catch(err => {
                 console.error('Failed to load uploaded audio:', err);
             });

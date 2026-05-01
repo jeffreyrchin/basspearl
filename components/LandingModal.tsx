@@ -1,12 +1,12 @@
 import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLegalStore } from '../store/useLegalStore';
-import { useEffectStore } from '@/store/useEffectStore';
+import { useEffectStore } from '../store/useEffectStore';
 import LandingBackground from './LandingBackground';
 
 
 interface LandingModalProps {
-    onStart: (audioOption: 'demo' | 'upload' | 'mic' | 'tab', audioFile?: File) => void;
+    onStart: (audioOption: 'upload' | 'mic' | 'tab', audioFile?: File) => void;
     onClose: () => void;
     isTabAudioUnsupported?: boolean;
     openTabAudioUnsupportedModal?: () => void;
@@ -18,6 +18,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
     const openLegal = useLegalStore(e => e.openLegal);
     const isMobile = useEffectStore(e => e.isMobile);
     const setIsSidebarOpen = useEffectStore(e => e.setIsSidebarOpen);
+    const setIsPuzzlesModalOpen = useEffectStore(e => e.setIsPuzzlesModalOpen);
 
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -34,11 +35,6 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
         }
     };
 
-    const handleDemoTrack = () => {
-        onStart('demo');
-        !isMobile && setIsSidebarOpen(true);
-    };
-
     const handleExternalSource = () => {
         onStart('mic');
         !isMobile && setIsSidebarOpen(true);
@@ -53,22 +49,27 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
         !isMobile && setIsSidebarOpen(true);
     };
 
+    const handlePuzzles = () => {
+        setIsPuzzlesModalOpen(true);
+        onClose();
+    };
+
     const LandingCard: React.FC<{
         onClick: () => void;
         icon: string;
         label: string;
-        color: 'cyan' | 'red' | 'pink' | 'purple';
+        color: 'cyan' | 'red' | 'purple' | 'white';
         badge?: string;
     }> = ({ onClick, icon, label, color, badge }) => {
         const theme = {
+            white: {
+                text: 'text-white/90'
+            },
             cyan: {
                 text: 'text-cyan-400'
             },
             red: {
                 text: 'text-red-400'
-            },
-            pink: {
-                text: 'text-primary'
             },
             purple: {
                 text: 'text-purple-400'
@@ -161,7 +162,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                                 onClick={() => audioInputRef.current?.click()}
                                 icon="audio_file"
                                 label="Audio File"
-                                color="cyan"
+                                color="white"
                             />
 
                             <LandingCard
@@ -180,10 +181,10 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                             />
 
                             <LandingCard
-                                onClick={handleDemoTrack}
-                                icon="music_note"
-                                label="Demo Track"
-                                color="pink"
+                                onClick={handlePuzzles}
+                                icon="grid_view"
+                                label="Puzzles"
+                                color="cyan"
                             />
                         </div>
 
