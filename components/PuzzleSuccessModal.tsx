@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useEffectStore } from '../store/useEffectStore';
-import { PUZZLES } from '../config/puzzles';
+import { PUZZLE_ORDER } from '../config/puzzles';
 import { PuzzleMatchResult } from '../services/puzzleService';
 import { useAuth } from '../context/AuthContext';
 import { useProgressStore } from '../store/useProgressStore';
@@ -18,7 +18,12 @@ const PuzzleSuccessModal: React.FC<SuccessModalProps> = ({ result }) => {
     const setCurrentPuzzle = useEffectStore(s => s.setCurrentPuzzle);
 
     const isMatch = result.score >= MIN_PUZZLE_COMPLETION_SCORE;
-    const hasNext = currentPuzzle !== null && currentPuzzle < PUZZLES.length - 1;
+
+    const currentIndex = useMemo(() => {
+        return currentPuzzle ? PUZZLE_ORDER.indexOf(currentPuzzle) : -1;
+    }, [currentPuzzle]);
+
+    const hasNext = currentIndex !== -1 && currentIndex < PUZZLE_ORDER.length - 1;
 
     const { user } = useAuth();
     const openAuth = useAuthStore(s => s.openAuth);
@@ -52,7 +57,8 @@ const PuzzleSuccessModal: React.FC<SuccessModalProps> = ({ result }) => {
 
     const handleNext = () => {
         if (hasNext) {
-            setCurrentPuzzle(currentPuzzle + 1);
+            const nextPuzzleId = PUZZLE_ORDER[currentIndex + 1];
+            setCurrentPuzzle(nextPuzzleId);
             setResult(null);
         }
     };

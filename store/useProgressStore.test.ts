@@ -63,71 +63,71 @@ describe('useProgressStore', () => {
 
     // ── saveProgress (Guest / Offline) ──────────────────────────────────────────
     describe('saveProgress — guest mode (no uid)', () => {
-        it('adds the puzzle index and score to the in-memory state', async () => {
-            await store().saveProgress(3, 85, null);
-            expect(store().completedPuzzles[3]).toBeDefined();
-            expect(store().completedPuzzles[3].score).toBe(85);
+        it('adds the puzzle id and score to the in-memory state', async () => {
+            await store().saveProgress('SEARCHLIGHTS', 85, null);
+            expect(store().completedPuzzles['SEARCHLIGHTS']).toBeDefined();
+            expect(store().completedPuzzles['SEARCHLIGHTS'].score).toBe(85);
         });
 
         it('writes the result to localStorage', async () => {
-            await store().saveProgress(1, 95, null);
+            await store().saveProgress('AURORA', 95, null);
             const stored = JSON.parse(localStorageMock.getItem('glitchbrain_completed_puzzles')!);
-            expect(stored['1']).toBeDefined();
-            expect(stored['1'].score).toBe(95);
+            expect(stored['AURORA']).toBeDefined();
+            expect(stored['AURORA'].score).toBe(95);
         });
 
         it('does NOT call Firestore when uid is null', async () => {
-            await store().saveProgress(0, 100, null);
+            await store().saveProgress('SPIRAL_GLOW', 100, null);
             expect(mockSetDoc).not.toHaveBeenCalled();
         });
 
         it('updates the score if the new score is higher', async () => {
-            await store().saveProgress(5, 70, null);
-            await store().saveProgress(5, 90, null);
-            expect(store().completedPuzzles[5].score).toBe(90);
+            await store().saveProgress('RUSH_HOUR', 70, null);
+            await store().saveProgress('RUSH_HOUR', 90, null);
+            expect(store().completedPuzzles['RUSH_HOUR'].score).toBe(90);
         });
 
         it('does NOT update the score if the new score is lower', async () => {
-            await store().saveProgress(5, 90, null);
-            await store().saveProgress(5, 70, null);
-            expect(store().completedPuzzles[5].score).toBe(90);
+            await store().saveProgress('RUSH_HOUR', 90, null);
+            await store().saveProgress('RUSH_HOUR', 70, null);
+            expect(store().completedPuzzles['RUSH_HOUR'].score).toBe(90);
         });
 
         it('tracks distinct scores for different puzzles completed sequentially', async () => {
-            await store().saveProgress(1, 100, null);
-            await store().saveProgress(2, 50, null);
-            expect(store().completedPuzzles[1].score).toBe(100);
-            expect(store().completedPuzzles[2].score).toBe(50);
+            await store().saveProgress('AURORA', 100, null);
+            await store().saveProgress('TEETH', 50, null);
+            expect(store().completedPuzzles['AURORA'].score).toBe(100);
+            expect(store().completedPuzzles['TEETH'].score).toBe(50);
         });
     });
 
     // ── saveProgress (Signed-in / Cloud) ───────────────────────────────────────
     describe('saveProgress — signed-in mode (with uid)', () => {
         it('calls Firestore setDoc with the correct uid path', async () => {
-            await store().saveProgress(4, 100, 'user_abc');
+            await store().saveProgress('GRAIN_TUNNEL', 100, 'user_abc');
             expect(mockDoc).toHaveBeenCalledWith({}, 'users', 'user_abc');
             expect(mockSetDoc).toHaveBeenCalledOnce();
         });
 
         it('updates a specific nested field in Firestore with the new score', async () => {
-            await store().saveProgress(2, 98, 'user_abc');
+            await store().saveProgress('TEETH', 98, 'user_abc');
             const [, writeData] = mockSetDoc.mock.calls[0];
-            expect(writeData.completedPuzzles['2'].score).toBe(98);
+            expect(writeData.completedPuzzles['TEETH'].score).toBe(98);
         });
 
         it('includes a lastUpdated server timestamp in the write', async () => {
-            await store().saveProgress(6, 80, 'user_abc');
+            await store().saveProgress('STREAKS', 80, 'user_abc');
             const [, writeData] = mockSetDoc.mock.calls[0];
             expect(writeData.lastUpdated).toBe('SERVER_TIMESTAMP');
         });
 
         it('still saves locally even if Firestore throws', async () => {
             mockSetDoc.mockRejectedValueOnce(new Error('Network error'));
-            await store().saveProgress(9, 75, 'user_xyz');
+            await store().saveProgress('LANDSCAPE', 75, 'user_xyz');
             // Local state must still be updated
-            expect(store().completedPuzzles[9].score).toBe(75);
+            expect(store().completedPuzzles['LANDSCAPE'].score).toBe(75);
             const stored = JSON.parse(localStorageMock.getItem('glitchbrain_completed_puzzles')!);
-            expect(stored['9'].score).toBe(75);
+            expect(stored['LANDSCAPE'].score).toBe(75);
         });
     });
 
@@ -138,39 +138,39 @@ describe('useProgressStore', () => {
                 exists: () => true,
                 data: () => ({
                     completedPuzzles: {
-                        0: { score: 100, completedAt: '2023-01-01T00:00:00.000Z' },
-                        1: { score: 90, completedAt: '2023-01-02T00:00:00.000Z' }
+                        'SPIRAL_GLOW': { score: 100, completedAt: '2023-01-01T00:00:00.000Z' },
+                        'AURORA': { score: 90, completedAt: '2023-01-02T00:00:00.000Z' }
                     }
                 }),
             });
             await store().loadProgress('user_abc');
-            expect(store().completedPuzzles[0].score).toBe(100);
-            expect(store().completedPuzzles[1].score).toBe(90);
+            expect(store().completedPuzzles['SPIRAL_GLOW'].score).toBe(100);
+            expect(store().completedPuzzles['AURORA'].score).toBe(90);
         });
 
         it('merges local guest progress with cloud data, taking the maximum score', async () => {
-            // User played levels 0 and 1 as a guest (0 got 80, 1 got 95)
+            // User played levels as a guest
             localStorageMock.setItem('glitchbrain_completed_puzzles', JSON.stringify({
-                0: { score: 80, completedAt: '2023-01-03T00:00:00.000Z' },
-                1: { score: 95, completedAt: '2023-01-04T00:00:00.000Z' }
+                'SPIRAL_GLOW': { score: 80, completedAt: '2023-01-03T00:00:00.000Z' },
+                'AURORA': { score: 95, completedAt: '2023-01-04T00:00:00.000Z' }
             }));
-            // Cloud already has levels 1 and 2 (1 got 80, 2 got 100)
+            // Cloud already has levels
             mockGetDoc.mockResolvedValueOnce({
                 exists: () => true,
                 data: () => ({
                     completedPuzzles: {
-                        1: { score: 80, completedAt: '2023-01-01T00:00:00.000Z' },
-                        2: { score: 100, completedAt: '2023-01-02T00:00:00.000Z' }
+                        'AURORA': { score: 80, completedAt: '2023-01-01T00:00:00.000Z' },
+                        'TEETH': { score: 100, completedAt: '2023-01-02T00:00:00.000Z' }
                     }
                 }),
             });
             await store().loadProgress('user_abc');
-            // 0 should be from local (80)
-            // 1 should be max(95 from local, 80 from cloud) -> 95
-            // 2 should be from cloud (100)
-            expect(store().completedPuzzles[0].score).toBe(80);
-            expect(store().completedPuzzles[1].score).toBe(95);
-            expect(store().completedPuzzles[2].score).toBe(100);
+            // SPIRAL_GLOW should be from local (80)
+            // AURORA should be max(95 from local, 80 from cloud) -> 95
+            // TEETH should be from cloud (100)
+            expect(store().completedPuzzles['SPIRAL_GLOW'].score).toBe(80);
+            expect(store().completedPuzzles['AURORA'].score).toBe(95);
+            expect(store().completedPuzzles['TEETH'].score).toBe(100);
         });
 
         it('handles a new user with no cloud document gracefully', async () => {
@@ -188,39 +188,39 @@ describe('useProgressStore', () => {
     // ── isPuzzleComplete ────────────────────────────────────────────────────────
     describe('isPuzzleComplete', () => {
         it('returns true for a puzzle with score >= 80', async () => {
-            await store().saveProgress(0, 80, null);
-            expect(store().isPuzzleComplete(0)).toBe(true);
+            await store().saveProgress('SPIRAL_GLOW', 80, null);
+            expect(store().isPuzzleComplete('SPIRAL_GLOW')).toBe(true);
         });
 
         it('returns false for a puzzle with score < 80', async () => {
-            await store().saveProgress(1, 79, null);
-            expect(store().isPuzzleComplete(1)).toBe(false);
+            await store().saveProgress('AURORA', 79, null);
+            expect(store().isPuzzleComplete('AURORA')).toBe(false);
         });
 
         it('returns false for a puzzle not yet attempted', () => {
-            expect(store().isPuzzleComplete(99)).toBe(false);
+            expect(store().isPuzzleComplete('WAXY_STARS')).toBe(false);
         });
     });
 
     // ── getPuzzleProgress ───────────────────────────────────────────────────────
     describe('getPuzzleProgress', () => {
         it('returns the full progress object for an attempted puzzle', async () => {
-            await store().saveProgress(5, 88, null);
-            const progress = store().getPuzzleProgress(5);
+            await store().saveProgress('RUSH_HOUR', 88, null);
+            const progress = store().getPuzzleProgress('RUSH_HOUR');
             expect(progress).not.toBeNull();
             expect(progress?.score).toBe(88);
             expect(typeof progress?.completedAt).toBe('string');
         });
 
         it('returns null for an unattempted puzzle', () => {
-            expect(store().getPuzzleProgress(10)).toBeNull();
+            expect(store().getPuzzleProgress('STORM')).toBeNull();
         });
 
         it('reflects the highest score when multiple attempts occur', async () => {
-            await store().saveProgress(1, 60, null);
-            await store().saveProgress(1, 95, null);
-            await store().saveProgress(1, 70, null);
-            const progress = store().getPuzzleProgress(1);
+            await store().saveProgress('AURORA', 60, null);
+            await store().saveProgress('AURORA', 95, null);
+            await store().saveProgress('AURORA', 70, null);
+            const progress = store().getPuzzleProgress('AURORA');
             expect(progress?.score).toBe(95);
         });
     });
@@ -229,13 +229,13 @@ describe('useProgressStore', () => {
     describe('syncLocalToCloud', () => {
         it('syncs existing local progress to Firestore for a new user', async () => {
             localStorageMock.setItem('glitchbrain_completed_puzzles', JSON.stringify({
-                0: { score: 100, completedAt: '2023-01-01T00:00:00.000Z' },
-                2: { score: 85, completedAt: '2023-01-02T00:00:00.000Z' }
+                'SPIRAL_GLOW': { score: 100, completedAt: '2023-01-01T00:00:00.000Z' },
+                'TEETH': { score: 85, completedAt: '2023-01-02T00:00:00.000Z' }
             }));
             await store().syncLocalToCloud('user_abc');
             const [, writeData] = mockSetDoc.mock.calls[0];
-            expect(writeData.completedPuzzles['0'].score).toBe(100);
-            expect(writeData.completedPuzzles['2'].score).toBe(85);
+            expect(writeData.completedPuzzles['SPIRAL_GLOW'].score).toBe(100);
+            expect(writeData.completedPuzzles['TEETH'].score).toBe(85);
             expect(writeData.lastUpdated).toBe('SERVER_TIMESTAMP');
             expect(mockSetDoc).toHaveBeenCalledOnce();
         });

@@ -1,7 +1,7 @@
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useEffectStore } from '../store/useEffectStore';
-import { PUZZLES } from '../config/puzzles';
-
+import { PUZZLES, PUZZLE_ORDER } from '../config/puzzles';
 
 const PuzzleHeader = () => {
     const currentPuzzle = useEffectStore(s => s.currentPuzzle);
@@ -11,6 +11,11 @@ const PuzzleHeader = () => {
     const checkPuzzle = useEffectStore(s => s.checkPuzzle);
 
     const currentPuzzleDifficulty = currentPuzzle !== null ? PUZZLES[currentPuzzle].difficulty : '---';
+
+    const puzzleNumber = useMemo(() => {
+        if (currentPuzzle === null) return null;
+        return PUZZLE_ORDER.indexOf(currentPuzzle) + 1;
+    }, [currentPuzzle]);
 
     return (
         <div className="fixed top-8 left-0 right-0 flex justify-center pointer-events-none">
@@ -30,7 +35,7 @@ const PuzzleHeader = () => {
                         {currentPuzzleDifficulty}
                     </span>
                     <span className="text-[11px] font-bold tracking-[0.1em] uppercase text-white leading-none">
-                        {currentPuzzle !== null ? `Puzzle ${currentPuzzle + 1}` : '---'}
+                        {puzzleNumber !== null ? `Puzzle ${puzzleNumber}` : '---'}
                     </span>
                 </div>
 

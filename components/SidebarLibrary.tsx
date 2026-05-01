@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { GlitchEffectType, EffectCategory, MacroType, EffectConfig } from '../types';
 import { EFFECT_METADATA, MACRO_METADATA, createEffectInstance, createMacroInstance } from '../constants';
 import { useEffectStore } from '../store/useEffectStore';
-import { PUZZLES } from '../config/puzzles';
+import { PUZZLES, PUZZLE_ORDER } from '../config/puzzles';
 import EffectPreview from './EffectPreview';
 import HoverCanvas from './HoverCanvas';
 import { useProgressStore } from '@/store/useProgressStore';
@@ -59,8 +59,9 @@ const LibraryIcon = ({ effectType, macroType }: { effectType?: GlitchEffectType;
 const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClick, onHoverStart, onHoverEnd }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const isPuzzleComplete = useProgressStore(s => s.isPuzzleComplete);
-    const requiredPuzzleIdCompletedToUnlock = macroType ? MACRO_METADATA[macroType].requiredPuzzleIdCompletedToUnlock : undefined;
-    const isLocked = requiredPuzzleIdCompletedToUnlock !== undefined && !isPuzzleComplete(requiredPuzzleIdCompletedToUnlock);
+    const requiredPuzzleCompletedToUnlock = macroType ? MACRO_METADATA[macroType].requiredPuzzleCompletedToUnlock : undefined;
+    const isLocked = requiredPuzzleCompletedToUnlock !== undefined && !isPuzzleComplete(requiredPuzzleCompletedToUnlock);
+    const puzzleNumber = requiredPuzzleCompletedToUnlock ? PUZZLE_ORDER.indexOf(requiredPuzzleCompletedToUnlock) + 1 : -1;
 
     const blueprint = useMemo(() => {
         return macroType
@@ -100,7 +101,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClic
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-pink-500/20">
                     <div className="absolute inset-0 bg-slate-800/40 flex flex-col items-center justify-center gap-1.5 p-3 border border-white/5">
                         <span className="material-symbols-outlined text-white/30 !text-[18px]">lock</span>
-                        <span className="text-[10px] text-center text-white">Complete <span className="font-bold text-indigo-300">Puzzle {requiredPuzzleIdCompletedToUnlock + 1}</span> to unlock this preset</span>
+                        <span className="text-[10px] text-center text-white">Complete <span className="font-bold text-indigo-300">Puzzle {puzzleNumber}</span> to unlock this preset</span>
                     </div>
                 </div>
             )}
@@ -226,7 +227,7 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onClose }) => {
 
     const handleAddMacro = (macroType: MacroType) => {
         const meta = MACRO_METADATA[macroType];
-        if (meta.requiredPuzzleIdCompletedToUnlock !== undefined && !isPuzzleComplete(meta.requiredPuzzleIdCompletedToUnlock)) {
+        if (meta.requiredPuzzleCompletedToUnlock !== undefined && !isPuzzleComplete(meta.requiredPuzzleCompletedToUnlock)) {
             setIsPuzzlesModalOpen(true);
             return;
         }

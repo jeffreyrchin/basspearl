@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { EffectConfig, GlitchEffectType, MacroType, TransitionType } from '../types';
+import { EffectConfig, GlitchEffectType, MacroType, TransitionType, PuzzleType } from '../types';
 import { INITIAL_REACTIVE_EFFECTS, createEffectInstance, createMacroInstance, INITIAL_SCENE_COUNT, DEFAULT_TRANSITION_DURATION, DIFFICULTY_TRACKS } from '../constants';
 import { analytics } from '@/services/analytics';
 import { PUZZLES } from '../config/puzzles';
@@ -63,8 +63,8 @@ interface EffectState {
     puzzleAudio: { url: string, label: string } | null;
     setPuzzleAudio: (audio: { url: string, label: string } | null) => void;
 
-    currentPuzzle: number | null;
-    setCurrentPuzzle: (puzzle: number | null) => void;
+    currentPuzzle: PuzzleType | null;
+    setCurrentPuzzle: (puzzle: PuzzleType | null) => void;
 
     isGameMode: boolean;
     isPreviewingPuzzle: boolean;

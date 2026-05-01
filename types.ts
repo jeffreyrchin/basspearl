@@ -141,7 +141,7 @@ export interface MacroMetadata {
   id: MacroType;
   label: string;
   effects: MacroEffectOverrideItem[];
-  requiredPuzzleIdCompletedToUnlock?: number;
+  requiredPuzzleCompletedToUnlock?: PuzzleType;
 }
 
 export type TransitionType =
@@ -151,7 +151,24 @@ export type TransitionType =
   'flash' |
   'zoom_fade';
 
-export interface PuzzleConfig {
+export type PuzzleType =
+  'SPIRAL_GLOW' |
+  'AURORA' |
+  'TEETH' |
+  'SEARCHLIGHTS' |
+  'GRAIN_TUNNEL' |
+  'RUSH_HOUR' |
+  'STREAKS' |
+  'CRYOGENIC_FLUID' |
+  'ARCS' |
+  'LANDSCAPE' |
+  'STORM' |
+  'SQUARE_RIPPLES' |
+  'DISCO_BALL' |
+  'FLAMES' |
+  'WAXY_STARS';
+
+export interface PuzzleMetadata {
   difficulty: 'Easy' | 'Medium' | 'Hard';
   macro: MacroType;
   allowedEffects?: GlitchEffectType[];

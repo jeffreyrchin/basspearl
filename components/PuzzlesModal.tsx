@@ -4,25 +4,31 @@ import { useEffectStore } from '../store/useEffectStore';
 import EffectPreview from './EffectPreview';
 import HoverCanvas from './HoverCanvas';
 import { createMacroInstance } from '../constants';
-import { PUZZLES } from '../config/puzzles';
-import { EffectConfig, PuzzleConfig } from '../types';
-import { useAudioStore } from '../store/useAudioStore';
+import { PUZZLES, PUZZLE_ORDER } from '../config/puzzles';
+import { EffectConfig, PuzzleMetadata, PuzzleType } from '../types';
 import { useProgressStore } from '../store/useProgressStore';
 import LoadingSpinner from './LoadingSpinner';
 
 interface PuzzleCardProps {
-    puzzle: PuzzleConfig;
-    id: number;
+    puzzle: PuzzleMetadata;
+    puzzleId: PuzzleType;
+    index: number;
     onClick: () => void;
     onHoverStart: (el: HTMLElement, blueprint: EffectConfig[]) => void;
     onHoverEnd: () => void;
 }
 
-const PuzzleCard: React.FC<PuzzleCardProps> = ({ puzzle, id, onClick, onHoverStart, onHoverEnd }) => {
+const PuzzleCard: React.FC<PuzzleCardProps> = ({ puzzle, puzzleId, index, onClick, onHoverStart, onHoverEnd }) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const progress = useProgressStore(s => s.getPuzzleProgress(id));
+    const progress = useProgressStore(s => s.getPuzzleProgress(puzzleId));
     const isPuzzleComplete = useProgressStore(s => s.isPuzzleComplete);
-    const isLocked = id > 0 && !isPuzzleComplete(id - 1);
+
+    // Unlocked if it's the first puzzle or the previous one is complete
+    const isLocked = useMemo(() => {
+        if (index === 0) return false;
+        const prevPuzzleId = PUZZLE_ORDER[index - 1];
+        return !isPuzzleComplete(prevPuzzleId);
+    }, [index, isPuzzleComplete]);
 
     const blueprint = useMemo(() => {
         return puzzle.macro ? createMacroInstance(puzzle.macro, true) : [];
@@ -70,7 +76,7 @@ const PuzzleCard: React.FC<PuzzleCardProps> = ({ puzzle, id, onClick, onHoverSta
                     {puzzle.difficulty}
                 </div>
                 <div className="text-[11px] font-bold uppercase tracking-widest text-white">
-                    Puzzle {id + 1}
+                    Puzzle {index + 1}
                 </div>
             </div>
 
@@ -110,9 +116,11 @@ const PuzzlesModal: React.FC = () => {
         return () => window.removeEventListener('keydown', handleEscape);
     }, [isPuzzlesModalOpen, setIsPuzzlesModalOpen]);
 
-    const handlePuzzleClick = (puzzleId: number) => {
-        const isLocked = puzzleId > 0 && !isPuzzleComplete(puzzleId - 1);
-        if (isLocked) return;
+    const handlePuzzleClick = (puzzleId: PuzzleType, index: number) => {
+        if (index > 0) {
+            const prevPuzzleId = PUZZLE_ORDER[index - 1];
+            if (!isPuzzleComplete(prevPuzzleId)) return;
+        }
 
         setCurrentPuzzle(puzzleId);
         setIsPuzzlesModalOpen(false);
@@ -190,16 +198,20 @@ const PuzzlesModal: React.FC = () => {
                             transition={{ duration: 0.3 }}
                             className="p-4 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-1"
                         >
-                            {PUZZLES.map((puzzle, id) => (
-                                <PuzzleCard
-                                    key={id}
-                                    id={id}
-                                    puzzle={puzzle}
-                                    onClick={() => handlePuzzleClick(id)}
-                                    onHoverStart={handleHoverStart}
-                                    onHoverEnd={handleHoverEnd}
-                                />
-                            ))}
+                            {PUZZLE_ORDER.map((puzzleId, index) => {
+                                const puzzle = PUZZLES[puzzleId];
+                                return (
+                                    <PuzzleCard
+                                        key={puzzleId}
+                                        index={index}
+                                        puzzleId={puzzleId}
+                                        puzzle={puzzle}
+                                        onClick={() => handlePuzzleClick(puzzleId, index)}
+                                        onHoverStart={handleHoverStart}
+                                        onHoverEnd={handleHoverEnd}
+                                    />
+                                );
+                            })}
                         </motion.div>
                     ) : (
                         <div className="py-20">

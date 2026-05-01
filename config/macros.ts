@@ -133,7 +133,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   LANDSCAPE: {
     id: 'LANDSCAPE',
     label: 'Landscape',
-    requiredPuzzleIdCompletedToUnlock: 9,
+    requiredPuzzleCompletedToUnlock: 'LANDSCAPE',
     effects: [
       {
         type: 'GRAIN',
@@ -390,6 +390,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   CELL_MESH: {
     id: 'CELL_MESH',
     label: 'Cell Mesh',
+    requiredPuzzleCompletedToUnlock: 'DISCO_BALL',
     effects: [
       {
         type: 'ORGANIC_NOISE',
@@ -517,7 +518,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   CRYOGENIC_FLUID: {
     id: 'CRYOGENIC_FLUID',
     label: 'Cryogenic Fluid',
-    requiredPuzzleIdCompletedToUnlock: 7,
+    requiredPuzzleCompletedToUnlock: 'CRYOGENIC_FLUID',
     effects: [
       {
         type: 'SHAPE',
@@ -570,7 +571,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   DISCO_BALL: {
     id: 'DISCO_BALL',
     label: 'Disco Ball',
-    requiredPuzzleIdCompletedToUnlock: 12,
+    requiredPuzzleCompletedToUnlock: 'DISCO_BALL',
     effects: [
       {
         type: 'GRAIN',
@@ -629,7 +630,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   STREAKS: {
     id: 'STREAKS',
     label: 'Streaks',
-    requiredPuzzleIdCompletedToUnlock: 6,
+    requiredPuzzleCompletedToUnlock: 'STREAKS',
     effects: [
       {
         type: 'GRID',
@@ -920,7 +921,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   ARCS: {
     id: 'ARCS',
     label: 'Arcs',
-    requiredPuzzleIdCompletedToUnlock: 8,
+    requiredPuzzleCompletedToUnlock: 'ARCS',
     effects: [
       {
         type: 'GRAIN',
@@ -972,7 +973,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   GRAIN_TUNNEL: {
     id: 'GRAIN_TUNNEL',
     label: 'Grain Tunnel',
-    requiredPuzzleIdCompletedToUnlock: 4,
+    requiredPuzzleCompletedToUnlock: 'GRAIN_TUNNEL',
     effects: [
       {
         type: 'GRAIN',
@@ -1015,6 +1016,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   LIGHT_TUNNEL: {
     id: 'LIGHT_TUNNEL',
     label: 'Light Tunnel',
+    requiredPuzzleCompletedToUnlock: 'GRAIN_TUNNEL',
     effects: [
       {
         type: 'CELLULAR_NOISE',
@@ -1062,6 +1064,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   CLOUDS: {
     id: 'CLOUDS',
     label: 'Clouds',
+    requiredPuzzleCompletedToUnlock: 'STORM',
     effects: [
       {
         type: 'CELLULAR_NOISE',
@@ -1215,6 +1218,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   CELLULAR_MATRIX: {
     id: 'CELLULAR_MATRIX',
     label: 'Cellular Matrix',
+    requiredPuzzleCompletedToUnlock: 'RUSH_HOUR',
     effects: [
       {
         type: 'CELLULAR_NOISE',
@@ -1272,6 +1276,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   SMOKE: {
     id: 'SMOKE',
     label: 'Smoke',
+    requiredPuzzleCompletedToUnlock: 'RUSH_HOUR',
     effects: [
       {
         type: 'ORGANIC_NOISE',
@@ -1485,7 +1490,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   SQUARE_RIPPLES: {
     id: 'SQUARE_RIPPLES',
     label: 'Square Ripples',
-    requiredPuzzleIdCompletedToUnlock: 11,
+    requiredPuzzleCompletedToUnlock: 'SQUARE_RIPPLES',
     effects: [
       {
         type: 'RADIAL_GRADIENT',
@@ -1588,7 +1593,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   SEARCHLIGHTS: {
     id: 'SEARCHLIGHTS',
     label: 'Searchlights',
-    requiredPuzzleIdCompletedToUnlock: 3,
+    requiredPuzzleCompletedToUnlock: 'SEARCHLIGHTS',
     effects: [
       {
         type: 'SPIRAL_GRADIENT',
@@ -1638,7 +1643,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   WAXY_STARS: {
     id: 'WAXY_STARS',
     label: 'Waxy Stars',
-    requiredPuzzleIdCompletedToUnlock: 14,
+    requiredPuzzleCompletedToUnlock: 'WAXY_STARS',
     effects: [
       {
         type: 'SHAPE',
@@ -1699,7 +1704,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   SPIRAL_GLOW: {
     id: 'SPIRAL_GLOW',
     label: 'Spiral Glow',
-    requiredPuzzleIdCompletedToUnlock: 0,
+    requiredPuzzleCompletedToUnlock: 'SPIRAL_GLOW',
     effects: [
       {
         type: 'SPIRAL_GRADIENT',
@@ -1737,7 +1742,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   RUSH_HOUR: {
     id: 'RUSH_HOUR',
     label: 'Rush Hour',
-    requiredPuzzleIdCompletedToUnlock: 5,
+    requiredPuzzleCompletedToUnlock: 'RUSH_HOUR',
     effects: [
       {
         type: 'GRAIN',
@@ -1926,7 +1931,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   STORM: {
     id: 'STORM',
     label: 'Storm',
-    requiredPuzzleIdCompletedToUnlock: 10,
+    requiredPuzzleCompletedToUnlock: 'STORM',
     effects: [
       {
         type: 'ORGANIC_NOISE',
@@ -1975,7 +1980,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   TEETH: {
     id: 'TEETH',
     label: 'Teeth',
-    requiredPuzzleIdCompletedToUnlock: 2,
+    requiredPuzzleCompletedToUnlock: 'TEETH',
     effects: [
       {
         type: 'CELLULAR_NOISE',
@@ -2075,7 +2080,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   AURORA: {
     id: 'AURORA',
     label: 'Aurora',
-    requiredPuzzleIdCompletedToUnlock: 1,
+    requiredPuzzleCompletedToUnlock: 'AURORA',
     effects: [
       {
         type: 'ORGANIC_NOISE',
@@ -2132,7 +2137,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   FLAMES: {
     id: 'FLAMES',
     label: 'Flames',
-    requiredPuzzleIdCompletedToUnlock: 13,
+    requiredPuzzleCompletedToUnlock: 'FLAMES',
     effects: [
       {
         type: 'ORGANIC_NOISE',
