@@ -58,9 +58,9 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
         onClick: () => void;
         icon: string;
         label: string;
+        description: string;
         color: 'cyan' | 'red' | 'purple' | 'white';
-        badge?: string;
-    }> = ({ onClick, icon, label, color, badge }) => {
+    }> = ({ onClick, icon, label, description, color }) => {
         const theme = {
             white: {
                 text: 'text-white/90'
@@ -79,7 +79,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
         return (
             <button
                 onClick={onClick}
-                className={`flex-1 rounded-2xl bg-black/40 hover:bg-black/50 transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-2 sm:p-4 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 shadow-2xl relative overflow-hidden`}
+                className={`flex-1 rounded-2xl bg-black/40 hover:bg-black/50 transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-4 sm:p-8 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 shadow-2xl relative overflow-hidden`}
             >
                 <div className={`absolute -inset-2 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
@@ -90,11 +90,9 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                     <span className="text-[11px] sm:text-[14px] font-medium uppercase tracking-[0.15em] text-white/90 group-hover:text-white transition-colors">
                         {label}
                     </span>
-                    {badge && (
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-[#A855F7] mt-1 bg-[#A855F7]/10 px-2 py-0.5 rounded border border-[#A855F7]/20 group-hover:bg-[#A855F7]/20 transition-all">
-                            {badge}
-                        </span>
-                    )}
+                    <span className="text-[8px] sm:text-[10px] font-medium uppercase tracking-[0.15em] text-white/60 group-hover:text-white transition-colors">
+                        {description}
+                    </span>
                 </div>
             </button>
         );
@@ -118,7 +116,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ type: 'spring', damping: 50, stiffness: 1000 }}
                 data-section="modal"
-                className="relative w-[95vw] max-w-4xl bg-[#0a0a1a] rounded-2xl border border-white/5 max-h-[90vh] overflow-hidden custom-scrollbar flex flex-col items-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+                className="relative w-[80vw] max-w-4xl bg-[#0a0a1a] rounded-2xl border border-white/5 max-h-[90vh] overflow-hidden custom-scrollbar flex flex-col items-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
             >
                 {/* Aurora Background */}
                 <LandingBackground />
@@ -162,6 +160,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                                 onClick={() => audioInputRef.current?.click()}
                                 icon="audio_file"
                                 label="Audio File"
+                                description="Upload from your device"
                                 color="white"
                             />
 
@@ -169,6 +168,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                                 onClick={handleExternalSource}
                                 icon="mic"
                                 label="Microphone"
+                                description="Stream mic or computer audio"
                                 color="red"
                             />
 
@@ -176,14 +176,15 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                                 onClick={handleTabAudio}
                                 icon="present_to_all"
                                 label="Tab Audio"
+                                description="Stream from your browser tab"
                                 color="purple"
-                                badge={isTabAudioUnsupported ? 'Unsupported Browser' : undefined}
                             />
 
                             <LandingCard
                                 onClick={handlePuzzles}
                                 icon="grid_view"
                                 label="Puzzles"
+                                description="Learn how the app works"
                                 color="cyan"
                             />
                         </div>

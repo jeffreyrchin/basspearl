@@ -167,7 +167,7 @@ const PuzzlesModal: React.FC = () => {
                 </div>
 
                 {/* Hero with short backstory */}
-                <div className="relative w-full h-[180px] overflow-hidden shrink-0 border-b border-white/5">
+                <div className="relative w-full h-[220px] sm:h-[180px] overflow-hidden shrink-0 border-b border-white/5">
                     {/* Background Image */}
                     <img
                         src="/hero.png"
@@ -180,8 +180,8 @@ const PuzzlesModal: React.FC = () => {
                     {/* <div className="absolute inset-0 bg-gradient-to-r from-[#0f172a] via-transparent to-transparent" /> */}
 
                     {/* Content */}
-                    <div className="absolute inset-0 flex flex-col justify-end p-8 pb-7">
-                        <h3 className="text-2xl font-black tracking-tight text-white uppercase leading-none mb-3 italic">
+                    <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-8 pb-7">
+                        <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white uppercase leading-none mb-3 italic">
                             The Grandmaster of Imageria
                         </h3>
                         <p className="text-[12px] text-white/60 max-w-[420px] leading-relaxed font-medium">
