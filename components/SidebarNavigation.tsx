@@ -116,13 +116,13 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                         <span className="material-symbols-outlined">{isLibraryOpen ? 'remove' : 'add'}</span>
                     </button>
 
-                    {/* Add Effect Buttons / Check Solution */}
+                    {/* Add Effect Buttons / Submit Solution */}
                     {isGameMode ? (
                         <button
                             onClick={checkPuzzle}
                             className="flex items-center h-8 px-4 ml-1 rounded-full bg-indigo-500 hover:bg-indigo-400 border border-indigo-400 text-white text-[10px] md:text-[11px] font-semibold uppercase tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)]"
                         >
-                            Check Solution
+                            Submit Solution
                         </button>
                     ) : (
                         <>
