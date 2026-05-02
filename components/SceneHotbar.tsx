@@ -1,7 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffectStore } from '../store/useEffectStore';
-import { TRANSITION_OPTIONS } from '../constants';
+import { useProStore } from '@/store/useProStore';
+import { MAX_FREE_SCENES, TRANSITION_OPTIONS } from '../constants';
 
 const SceneHotbar: React.FC = () => {
     const isSceneHotbarOpen = useEffectStore(s => s.isSceneHotbarOpen);
@@ -10,6 +11,9 @@ const SceneHotbar: React.FC = () => {
     const liveEffects = useEffectStore(s => s.effects);
     const switchScene = useEffectStore(s => s.switchScene);
     const addScene = useEffectStore(s => s.addScene);
+    const isPro = useProStore(s => s.isPro);
+    const openProModal = useProStore(s => s.openProModal);
+    const canAddScene = isPro || scenes.length < MAX_FREE_SCENES;
 
     // Global transition state
     const transitionType = useEffectStore(s => s.transitionType);
@@ -172,12 +176,17 @@ const SceneHotbar: React.FC = () => {
                             })}
 
                             <button
-                                onClick={() => addScene()}
-                                title="Add New Scene"
+                                onClick={() => canAddScene ? addScene() : openProModal()}
+                                title={canAddScene ? "Add New Scene" : "Pro Required for Additional Scenes"}
                                 tabIndex={0}
-                                className="shrink-0 w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white hover:bg-white/10 hover:border-white/25 transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+                                className="relative shrink-0 w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white hover:bg-white/10 hover:border-white/25 transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
                             >
                                 <span className="material-symbols-outlined !text-[20px]">add</span>
+                                {!canAddScene && (
+                                    <div className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-slate-900 flex items-center justify-center">
+                                        <span className="material-symbols-outlined !text-[10px] text-primary">lock</span>
+                                    </div>
+                                )}
                             </button>
                         </div>
 

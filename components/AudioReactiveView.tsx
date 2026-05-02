@@ -13,6 +13,7 @@ import TabAudioUnsupportedModal from './TabAudioUnsupportedModal';
 import SceneHotbar from './SceneHotbar';
 import PuzzleSuccessModal from './PuzzleSuccessModal';
 import PuzzleHelpModal from './PuzzleHelpModal';
+import ProModal from './ProModal';
 import { Footer } from './Footer';
 import { analytics } from '@/services/analytics';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
@@ -23,6 +24,7 @@ import { useProjectAssets } from '@/hooks/useProjectAssets';
 import { useRenderLoop } from '@/hooks/useRenderLoop';
 import { useCanvasSelection } from '@/hooks/useCanvasSelection';
 import { useEffectStore } from '../store/useEffectStore';
+import { useProStore } from '@/store/useProStore';
 import { AnimatePresence, motion } from 'framer-motion';
 import TransformGizmoLayer from './TransformGizmoLayer';
 
@@ -43,6 +45,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const puzzleMatchResult = useEffectStore(s => s.puzzleMatchResult);
     const isPreviewingPuzzle = useEffectStore(s => s.isPreviewingPuzzle);
     const isPuzzleHelpModalOpen = useEffectStore(s => s.isPuzzleHelpModalOpen);
+    const isProModalOpen = useProStore(s => s.isProModalOpen);
 
     const [isTabAudioUnsupportedModalOpen, setIsTabAudioUnsupportedModalOpen] = useState(false);
     const isTabAudioUnsupported = typeof navigator !== 'undefined' && (
@@ -395,6 +398,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
             <AnimatePresence>
                 {isPuzzleHelpModalOpen && <PuzzleHelpModal />}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {isProModalOpen && <ProModal />}
             </AnimatePresence>
 
             <AnimatePresence>

@@ -7,6 +7,7 @@ import { createMacroInstance } from '../constants';
 import { PUZZLES, PUZZLE_ORDER } from '../config/puzzles';
 import { EffectConfig, PuzzleMetadata, PuzzleType } from '../types';
 import { useProgressStore } from '../store/useProgressStore';
+import { useProStore } from '../store/useProStore';
 import LoadingSpinner from './LoadingSpinner';
 
 interface PuzzleCardProps {
@@ -22,13 +23,15 @@ const PuzzleCard: React.FC<PuzzleCardProps> = ({ puzzle, puzzleId, index, onClic
     const containerRef = useRef<HTMLDivElement>(null);
     const progress = useProgressStore(s => s.getPuzzleProgress(puzzleId));
     const isPuzzleComplete = useProgressStore(s => s.isPuzzleComplete);
+    const isPro = useProStore(s => s.isPro);
 
     // Unlocked if it's the first puzzle or the previous one is complete
     const isLocked = useMemo(() => {
+        if (isPro) return false;
         if (index === 0) return false;
         const prevPuzzleId = PUZZLE_ORDER[index - 1];
         return !isPuzzleComplete(prevPuzzleId);
-    }, [index, isPuzzleComplete]);
+    }, [index, isPuzzleComplete, isPro]);
 
     const blueprint = useMemo(() => {
         return puzzle.macro ? createMacroInstance(puzzle.macro, true) : [];
@@ -93,6 +96,7 @@ const PuzzlesModal: React.FC = () => {
     const setIsPuzzlesModalOpen = useEffectStore(s => s.setIsPuzzlesModalOpen);
     const setCurrentPuzzle = useEffectStore(s => s.setCurrentPuzzle);
     const isPuzzleComplete = useProgressStore(s => s.isPuzzleComplete);
+    const isPro = useProStore(s => s.isPro);
     const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
     const isMobile = useEffectStore(s => s.isMobile);
 
@@ -118,7 +122,7 @@ const PuzzlesModal: React.FC = () => {
     }, [isPuzzlesModalOpen, setIsPuzzlesModalOpen]);
 
     const handlePuzzleClick = (puzzleId: PuzzleType, index: number) => {
-        if (index > 0) {
+        if (index > 0 && !isPro) {
             const prevPuzzleId = PUZZLE_ORDER[index - 1];
             if (!isPuzzleComplete(prevPuzzleId)) return;
         }

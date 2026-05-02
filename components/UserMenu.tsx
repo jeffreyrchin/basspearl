@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useProStore } from '@/store/useProStore';
 import { motion } from 'framer-motion';
 
 interface UserMenuProps {
@@ -11,6 +12,8 @@ const UserMenu: React.FC<UserMenuProps> = () => {
     const { user, signOut, isLoading } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const { openAuth } = useAuthStore();
+    const isPro = useProStore(s => s.isPro);
+    const openProModal = useProStore(s => s.openProModal);
     const triggerRef = useRef<HTMLButtonElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -94,13 +97,26 @@ const UserMenu: React.FC<UserMenuProps> = () => {
                 </div>
             </div>
 
-            {/* Pro Badge */}
-            {/* <div className="p-4 border-b border-white/5">
-                <div className="flex items-center gap-2 text-primary">
-                    <span className="material-symbols-outlined text-[18px]">all_inclusive</span>
-                    <span className="text-xs font-bold uppercase tracking-widest">Unlimited Uploads</span>
-                </div>
-            </div> */}
+            {/* Pro Badge / Buy Pro */}
+            <div className="p-4 border-b border-white/5">
+                {isPro ? (
+                    <div className="flex items-center gap-2 text-primary">
+                        <span className="material-symbols-outlined text-[18px]">workspace_premium</span>
+                        <span className="text-xs font-bold uppercase tracking-widest">Lifetime Pro User</span>
+                    </div>
+                ) : (
+                    <button
+                        onClick={() => {
+                            setIsOpen(false);
+                            openProModal();
+                        }}
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/80 hover:to-purple-600/80 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">workspace_premium</span>
+                        Buy Lifetime Pro
+                    </button>
+                )}
+            </div>
 
             {/* Actions */}
             <div className="p-2">

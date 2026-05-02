@@ -50,9 +50,8 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
         try {
             const docRef = doc(db, 'users', uid);
             const snap = await getDoc(docRef);
-            const cloudCompleted: Record<string, PuzzleProgress> = snap.exists()
-                ? (snap.data().completedPuzzles ?? {})
-                : {};
+            const data = snap.exists() ? snap.data() : {};
+            const cloudCompleted: Record<string, PuzzleProgress> = data.completedPuzzles ?? {};
 
             // Merge cloud progress with any local guest progress
             const localCompleted = loadLocalProgress();

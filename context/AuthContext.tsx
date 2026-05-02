@@ -10,6 +10,7 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 import { useProgressStore } from '../store/useProgressStore';
+import { useProStore } from '../store/useProStore';
 
 interface AuthContextType {
     user: User | null;
@@ -34,14 +35,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const loadProgress = useProgressStore(s => s.loadProgress);
+    const loadProStatus = useProStore(s => s.loadProStatus);
+    const initPaymentListener = useProStore(s => s.initPaymentListener);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setUser(user);
             setIsLoading(false);
             // Load cloud progress (and merge any local guest progress) on sign-in
+            // Load pro status on sign-in
             if (user) {
-                await loadProgress(user.uid);
+                await Promise.all([
+                    loadProgress(user.uid),
+                    loadProStatus(user.uid)
+                ]);
+                initPaymentListener(user.uid);
             }
         });
 

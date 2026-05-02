@@ -6,6 +6,7 @@ import { PUZZLES, PUZZLE_ORDER } from '../config/puzzles';
 import EffectPreview from './EffectPreview';
 import HoverCanvas from './HoverCanvas';
 import { useProgressStore } from '@/store/useProgressStore';
+import { useProStore } from '@/store/useProStore';
 
 interface SidebarLibraryProps {
     onClose: () => void;
@@ -59,8 +60,9 @@ const LibraryIcon = ({ effectType, macroType }: { effectType?: GlitchEffectType;
 const LibraryCard: React.FC<LibraryCardProps> = ({ effectType, macroType, onClick, onHoverStart, onHoverEnd }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const isPuzzleComplete = useProgressStore(s => s.isPuzzleComplete);
+    const isPro = useProStore(s => s.isPro);
     const requiredPuzzleCompletedToUnlock = macroType ? MACRO_METADATA[macroType].requiredPuzzleCompletedToUnlock : undefined;
-    const isLocked = requiredPuzzleCompletedToUnlock !== undefined && !isPuzzleComplete(requiredPuzzleCompletedToUnlock);
+    const isLocked = !isPro && requiredPuzzleCompletedToUnlock !== undefined && !isPuzzleComplete(requiredPuzzleCompletedToUnlock);
     const puzzleNumber = requiredPuzzleCompletedToUnlock ? PUZZLE_ORDER.indexOf(requiredPuzzleCompletedToUnlock) + 1 : -1;
 
     const blueprint = useMemo(() => {
@@ -137,6 +139,7 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onClose }) => {
     const isGameMode = useEffectStore(s => s.isGameMode);
     const currentPuzzle = useEffectStore(s => s.currentPuzzle);
     const isPuzzleComplete = useProgressStore(s => s.isPuzzleComplete);
+    const isPro = useProStore(s => s.isPro);
     const setIsPuzzlesModalOpen = useEffectStore(s => s.setIsPuzzlesModalOpen);
     const [selectedCategory, setSelectedCategory] = useState<string>('Patterns');
     const [searchQuery, setSearchQuery] = useState('');
@@ -227,7 +230,7 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onClose }) => {
 
     const handleAddMacro = (macroType: MacroType) => {
         const meta = MACRO_METADATA[macroType];
-        if (meta.requiredPuzzleCompletedToUnlock !== undefined && !isPuzzleComplete(meta.requiredPuzzleCompletedToUnlock)) {
+        if (!isPro && meta.requiredPuzzleCompletedToUnlock !== undefined && !isPuzzleComplete(meta.requiredPuzzleCompletedToUnlock)) {
             setIsPuzzlesModalOpen(true);
             return;
         }

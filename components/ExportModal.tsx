@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { calculateExportDimensions } from '@/services/exportService';
+import { useProStore } from '@/store/useProStore';
 import { motion } from 'framer-motion';
 
 interface ExportModalProps {
@@ -21,6 +22,8 @@ const ExportModal: React.FC<ExportModalProps> = ({
 }) => {
     const [fps, setFps] = useState<number>(30);
     const [resolution, setResolution] = useState<number>(1920);
+    const isPro = useProStore(s => s.isPro);
+    const openProModal = useProStore(s => s.openProModal);
 
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
@@ -114,22 +117,28 @@ const ExportModal: React.FC<ExportModalProps> = ({
                                 Resolution
                             </label>
                             <div className="flex flex-col gap-2">
-                                {resolutionOptions.map((option) => (
-                                    <button
-                                        key={option.value}
-                                        onClick={() => setResolution(option.value)}
-                                        disabled={isExporting}
-                                        className={`px-4 py-3 rounded-lg border text-xs font-medium transition-all flex items-center justify-between ${resolution === option.value
-                                            ? 'bg-white/20 border-white/30'
-                                            : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/10'
-                                            } ${isExporting ? 'opacity-40 cursor-not-allowed' : ''}`}
-                                    >
-                                        <span>{option.label}</span>
-                                        <span className={`text-[10px] font-medium text-white/60`}>
-                                            {option.desc}
-                                        </span>
-                                    </button>
-                                ))}
+                                {resolutionOptions.map((option) => {
+                                    const isLocked = !isPro && option.value > 1920;
+                                    return (
+                                        <button
+                                            key={option.value}
+                                            onClick={() => isLocked ? openProModal() : setResolution(option.value)}
+                                            disabled={isExporting}
+                                            className={`px-4 py-3 rounded-lg border text-xs font-medium transition-all flex items-center justify-between ${resolution === option.value
+                                                ? 'bg-white/20 border-white/30'
+                                                : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/10'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <span>{option.label}</span>
+                                                {isLocked && <span className="material-symbols-outlined !text-xs text-indigo-300" title="Requires Lifetime Pro">lock</span>}
+                                            </div>
+                                            <span className={`text-[10px] font-medium text-white/60`}>
+                                                {option.desc}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>}
