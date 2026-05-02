@@ -60,6 +60,9 @@ interface EffectState {
     isPuzzlesModalOpen: boolean;
     setIsPuzzlesModalOpen: (open: boolean) => void;
 
+    isPuzzleHelpModalOpen: boolean;
+    setIsPuzzleHelpModalOpen: (open: boolean) => void;
+
     puzzleAudio: { url: string, label: string } | null;
     setPuzzleAudio: (audio: { url: string, label: string } | null) => void;
 
@@ -189,6 +192,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
 
     isPuzzlesModalOpen: false,
     setIsPuzzlesModalOpen: (isPuzzlesModalOpen) => set({ isPuzzlesModalOpen }),
+
+    isPuzzleHelpModalOpen: false,
+    setIsPuzzleHelpModalOpen: (isPuzzleHelpModalOpen) => set({ isPuzzleHelpModalOpen }),
 
     isGameMode: false,
     isPreviewingPuzzle: false,

@@ -40,6 +40,8 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     const isMelded = useMemo(() => isAlreadyMelded(effects, selectedIds), [effects, selectedIds]);
 
     const addEffectFromSidebar = useEffectStore(s => s.addEffectFromSidebar);
+    const checkPuzzle = useEffectStore(s => s.checkPuzzle);
+    const isGameMode = useEffectStore(s => s.isGameMode);
 
     const handleExport = () => {
         const dataStr = JSON.stringify(effects, null, 2);
@@ -114,25 +116,36 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                         <span className="material-symbols-outlined">{isLibraryOpen ? 'remove' : 'add'}</span>
                     </button>
 
-                    {/* Add Effect Buttons */}
-                    <button
-                        onClick={() => addEffectFromSidebar('IMAGE')}
-                        className="w-9 h-8 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
-                        title="Add Image (O)">
-                        <span className="material-symbols-outlined !text-[22px]">image</span>
-                    </button>
-                    <button
-                        onClick={() => addEffectFromSidebar('RGBA')}
-                        className="w-9 h-8 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
-                        title="Add Color (C)">
-                        <span className="material-symbols-outlined !text-[22px]">palette</span>
-                    </button>
-                    <button
-                        onClick={() => addEffectFromSidebar('TRANSFORM')}
-                        className="w-9 h-8 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
-                        title="Add Move-Scale (M)">
-                        <span className="material-symbols-outlined !text-[22px]">drag_pan</span>
-                    </button>
+                    {/* Add Effect Buttons / Check Solution */}
+                    {isGameMode ? (
+                        <button
+                            onClick={checkPuzzle}
+                            className="flex items-center h-8 px-4 ml-1 rounded-full bg-indigo-500 hover:bg-indigo-400 border border-indigo-400 text-white text-[10px] md:text-[11px] font-semibold uppercase tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)]"
+                        >
+                            Check Solution
+                        </button>
+                    ) : (
+                        <>
+                            <button
+                                onClick={() => addEffectFromSidebar('IMAGE')}
+                                className="w-9 h-8 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
+                                title="Add Image (O)">
+                                <span className="material-symbols-outlined !text-[22px]">image</span>
+                            </button>
+                            <button
+                                onClick={() => addEffectFromSidebar('RGBA')}
+                                className="w-9 h-8 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
+                                title="Add Color (C)">
+                                <span className="material-symbols-outlined !text-[22px]">palette</span>
+                            </button>
+                            <button
+                                onClick={() => addEffectFromSidebar('TRANSFORM')}
+                                className="w-9 h-8 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
+                                title="Add Move-Scale (M)">
+                                <span className="material-symbols-outlined !text-[22px]">drag_pan</span>
+                            </button>
+                        </>
+                    )}
                 </div>
                 {HeaderRightControls}
             </div>
