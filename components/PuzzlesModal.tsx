@@ -94,6 +94,7 @@ const PuzzlesModal: React.FC = () => {
     const setCurrentPuzzle = useEffectStore(s => s.setCurrentPuzzle);
     const isPuzzleComplete = useProgressStore(s => s.isPuzzleComplete);
     const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
+    const isMobile = useEffectStore(s => s.isMobile);
 
     const [hoverTarget, setHoverTarget] = useState<{ el: HTMLElement; blueprint: EffectConfig[] } | null>(null);
     const [entranceComplete, setEntranceComplete] = useState(false);
@@ -124,7 +125,7 @@ const PuzzlesModal: React.FC = () => {
 
         setCurrentPuzzle(puzzleId);
         setIsPuzzlesModalOpen(false);
-        setIsSidebarOpen(true);
+        !isMobile && setIsSidebarOpen(true);
     };
 
     return (

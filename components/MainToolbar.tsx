@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useEffectStore } from '../store/useEffectStore';
 
@@ -106,9 +106,14 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     const isPuzzlesModalOpen = useEffectStore(s => s.isPuzzlesModalOpen);
     const setIsPuzzlesModalOpen = useEffectStore(s => s.setIsPuzzlesModalOpen);
     const isGameMode = useEffectStore(s => s.isGameMode);
+    const isMobile = useEffectStore(s => s.isMobile);
 
     const constraintsRef = useRef(null);
     const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
+
+    useEffect(() => {
+        setIsToolbarCollapsed(isMobile);
+    }, [isMobile]);
 
     return (
         <div className="absolute inset-0 z-toolbar pointer-events-none overflow-hidden" ref={constraintsRef}>
