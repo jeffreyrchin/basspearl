@@ -1,29 +1,26 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import crypto from 'node:crypto';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
-const mockSet = vi.fn().mockResolvedValue(undefined);
-const mockDoc = vi.fn(() => ({ set: mockSet }));
-const mockCollection = vi.fn(() => ({ doc: mockDoc }));
-
-vi.mock('firebase-admin/app', () => ({
-    initializeApp: vi.fn(),
-    cert: vi.fn(),
-    getApps: vi.fn(() => [])
-}));
-
-vi.mock('firebase-admin/firestore', () => ({
-    getFirestore: vi.fn(() => ({
-        collection: mockCollection
-    }))
-}));
+const mockFetch = vi.fn();
+vi.stubGlobal('fetch', mockFetch);
 
 // Import the function after setting up mocks
 const { onRequestPost } = await import('./lemonsqueezy');
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const SECRET = 'test_secret';
-const SERVICE_ACCOUNT = JSON.stringify({ project_id: 'test' });
+const SERVICE_ACCOUNT = JSON.stringify({ 
+    project_id: 'test_project',
+    client_email: 'test@test.com',
+    private_key: 'test_key' 
+});
+
+// We'll use vi.spyOn for crypto instead of vi.mock to avoid import binding issues
+vi.spyOn(crypto, 'createSign').mockImplementation(() => ({
+    update: vi.fn(),
+    sign: vi.fn(() => 'mock_jwt_signature')
+}) as any);
 
 function generateSignature(payloadStr: string, secret: string) {
     return crypto.createHmac('sha256', secret).update(payloadStr).digest('hex');
@@ -53,9 +50,25 @@ function createMockContext(payload: any, signatureOverride?: string, secretOverr
 }
 
 // ── Tests ────────────────────────────────────────────────────────────────────
-describe('Lemon Squeezy Webhook', () => {
+describe('Lemon Squeezy Webhook (REST API)', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        
+        // Default fetch mocks
+        mockFetch.mockImplementation(async (url: string) => {
+            if (url.includes('oauth2.googleapis.com')) {
+                return {
+                    ok: true,
+                    json: async () => ({ access_token: 'mock_access_token' })
+                };
+            }
+            if (url.includes('firestore.googleapis.com')) {
+                return {
+                    ok: true
+                };
+            }
+            return { ok: false };
+        });
     });
 
     describe('Security & Validation', () => {
@@ -93,7 +106,7 @@ describe('Lemon Squeezy Webhook', () => {
             const response = await onRequestPost(context);
             expect(response.status).toBe(200);
             expect(await response.text()).toBe('Event ignored');
-            expect(mockSet).not.toHaveBeenCalled();
+            expect(mockFetch).not.toHaveBeenCalled();
         });
 
         it('returns 400 if uid is missing from custom_data', async () => {
@@ -109,14 +122,14 @@ describe('Lemon Squeezy Webhook', () => {
             const response = await onRequestPost(context);
             expect(response.status).toBe(400);
             expect(await response.text()).toBe('No user ID provided');
-            expect(mockSet).not.toHaveBeenCalled();
+            expect(mockFetch).not.toHaveBeenCalled();
             
             consoleSpy.mockRestore();
         });
     });
 
     describe('Database Updates', () => {
-        it('successfully updates user document when payload is valid', async () => {
+        it('successfully updates user document via fetch when payload is valid', async () => {
             const payload = { 
                 meta: { 
                     event_name: 'order_created',
@@ -130,9 +143,41 @@ describe('Lemon Squeezy Webhook', () => {
             expect(response.status).toBe(200);
             expect(await response.text()).toBe('Webhook processed successfully');
             
-            expect(mockCollection).toHaveBeenCalledWith('users');
-            expect(mockDoc).toHaveBeenCalledWith('user_xyz123');
-            expect(mockSet).toHaveBeenCalledWith({ isPro: true }, { merge: true });
+            // Should call token endpoint first
+            expect(mockFetch).toHaveBeenNthCalledWith(1, 'https://oauth2.googleapis.com/token', expect.objectContaining({
+                method: 'POST'
+            }));
+            
+            // Should call Firestore endpoint second
+            expect(mockFetch).toHaveBeenNthCalledWith(2, 'https://firestore.googleapis.com/v1/projects/test_project/databases/(default)/documents/users/user_xyz123?updateMask.fieldPaths=isPro', expect.objectContaining({
+                method: 'PATCH',
+                headers: {
+                    'Authorization': 'Bearer mock_access_token',
+                    'Content-Type': 'application/json'
+                },
+                body: expect.stringContaining('"booleanValue":true')
+            }));
+        });
+        
+        it('handles fetch errors gracefully', async () => {
+            mockFetch.mockImplementation(async (url: string) => {
+                if (url.includes('firestore.googleapis.com')) {
+                    return { ok: false, text: async () => 'Permission denied' };
+                }
+                if (url.includes('oauth2.googleapis.com')) {
+                    return { ok: true, json: async () => ({ access_token: 'token' }) };
+                }
+            });
+            
+            const payload = { meta: { event_name: 'order_created', custom_data: { uid: 'user1' } } };
+            const context = createMockContext(payload);
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            
+            const response = await onRequestPost(context);
+            expect(response.status).toBe(500);
+            expect(consoleSpy).toHaveBeenCalled();
+            
+            consoleSpy.mockRestore();
         });
     });
 });
