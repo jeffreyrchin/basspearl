@@ -49,7 +49,7 @@ const LegalConsentModal = () => {
                 <div className="flex-1 overflow-y-auto p-6 space-y-8 text-white/80 text-sm leading-relaxed custom-scrollbar">
                     <section>
                         <h1 className="text-2xl font-bold text-white mb-2">Privacy Policy</h1>
-                        <p className="text-white/60 mb-6 text-xs">Last Updated: April 12, 2026</p>
+                        <p className="text-white/60 mb-6 text-xs">Last Updated: May 2, 2026</p>
 
                         <div className="space-y-6">
                             <div>
@@ -156,7 +156,8 @@ const LegalConsentModal = () => {
                                 <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">14. Third-Party Services</h3>
                                 <p>We use the following third-party services to operate our website. By using our service, you agree to their respective terms.</p>
                                 <ul className="list-disc pl-5 mt-2 space-y-1 text-white/60">
-                                    <li><strong>Google Firebase:</strong> Used for authentication. <a href="https://firebase.google.com/terms" className="text-primary hover:underline">Firebase Terms</a>.</li>
+                                    <li><strong>Lemon Squeezy:</strong> Used as our payment processor and Merchant of Record. They handle all payment data securely. We do not store or process your credit card information on our servers. <a href="https://www.lemonsqueezy.com/privacy" className="text-primary hover:underline">Lemon Squeezy Privacy Policy</a>.</li>
+                                    <li><strong>Google Firebase:</strong> Used for authentication and cloud data storage. <a href="https://firebase.google.com/terms" className="text-primary hover:underline">Firebase Terms</a>.</li>
                                     <li><strong>Google Analytics (GA4):</strong> Used for usage telemetry and performance monitoring. <a href="https://policies.google.com/privacy" className="text-primary hover:underline">Google Privacy Policy</a>.</li>
                                     <li><strong>Cloudflare: </strong>Used for content delivery and DDoS protection. Cloudflare may collect certain information such as
                                         IP addresses, system configuration information, and other
@@ -192,7 +193,7 @@ const LegalConsentModal = () => {
 
                     <section>
                         <h1 className="text-2xl font-bold text-white mb-2">Terms of Service</h1>
-                        <p className="text-white/60 mb-6 text-xs">Last Updated: April 12, 2026</p>
+                        <p className="text-white/60 mb-6 text-xs">Last Updated: May 2, 2026</p>
 
                         <div className="space-y-6">
                             <div className="bg-[#ff4444]/10 border border-[#ff4444]/20 rounded-lg p-4">
@@ -244,42 +245,48 @@ const LegalConsentModal = () => {
                             </div>
 
                             <div>
-                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">8. Third-Party Services</h3>
-                                <p>The Service may use third-party services (such as Firebase) that declare their own Terms of Service. By using the Service, you acknowledge and agree that Muxels is not responsible for the availability of such external sites or resources.</p>
+                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">8. Payments and Pro Features</h3>
+                                <p>Muxels offers a "Lifetime Pro" tier which is a one-time payment for permanent access to premium features (including 4K exports and unlimited scene slots). All payments are processed via Lemon Squeezy, our Merchant of Record. By making a purchase, you agree to Lemon Squeezy's <a href="https://www.lemonsqueezy.com/terms" className="text-primary hover:underline">Terms of Service</a>.</p>
+                                <p className="mt-2"><strong>Refund Policy:</strong> Due to the digital nature of Pro features and the immediate unlocking of software capabilities upon purchase, all sales are final. Refunds are only issued at our sole discretion or as required by local law.</p>
                             </div>
 
                             <div>
-                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">9. Disclaimers</h3>
+                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">9. Third-Party Services</h3>
+                                <p>The Service may use third-party services (such as Firebase and Lemon Squeezy) that declare their own Terms of Service. By using the Service, you acknowledge and agree that Muxels is not responsible for the availability of such external sites or resources.</p>
+                            </div>
+
+                            <div>
+                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">10. Disclaimers</h3>
                                 <p>Your use of the Service is at your sole risk. The Service is provided on an "AS IS" and "AS AVAILABLE" basis. The Service is provided without warranties of any kind.</p>
                             </div>
 
                             <div>
-                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">10. Limitation of Liability</h3>
+                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">11. Limitation of Liability</h3>
                                 <p>In no event shall Muxels, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses. In no event shall Muxels' total liability to you for all damages, losses, and causes of action exceed the amount you have paid Muxels in the last six (6) months, or, if greater, one hundred dollars ($100).</p>
                             </div>
 
                             <div>
-                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">11. Indemnification</h3>
+                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">12. Indemnification</h3>
                                 <p>You agree to defend, indemnify and hold harmless Muxels and its licensee and licensors, and their employees, contractors, agents, officers and directors, from and against any and all claims, damages, obligations, losses, liabilities, costs or debt, and expenses.</p>
                             </div>
 
                             <div>
-                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">12. DMCA and Copyright</h3>
+                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">13. DMCA and Copyright</h3>
                                 <p>We respect the intellectual property rights of others. It is our policy to respond to any claim that Content posted on the Service infringes the copyright or other intellectual property infringement of any person.</p>
                             </div>
 
                             <div>
-                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">13. Termination</h3>
+                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">14. Termination</h3>
                                 <p>We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.</p>
                             </div>
 
                             <div>
-                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">14. Dispute Resolution</h3>
+                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">15. Dispute Resolution</h3>
                                 <p>If you have any concern or dispute about the Service, you agree to first try to resolve the dispute informally by contacting Muxels.</p>
                             </div>
 
                             <div>
-                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">15. Arbitration Agreement</h3>
+                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">16. Arbitration Agreement</h3>
                                 <p>For any dispute you have with Muxels, you agree to first simply contact us and attempt to resolve the dispute with us informally. If Muxels has not been able to resolve the dispute with you informally, we each agree to resolve any claim, dispute, or controversy via binding arbitration.</p>
                                 <p className="mt-2 text-white/60 text-xs bg-white/5 p-3 rounded">
                                     <strong>Opt-Out:</strong> You may opt-out of this Agreement to arbitrate by sending a written notice to <a href={`mailto:${CONTACT_EMAIL}`}><span className="text-primary">{CONTACT_EMAIL}</span></a> with the subject line "Arbitration Opt-Out". We will respond to your request within 30 days. Your notice must include your name and address, the email address used to set up your account (if you have one), and an unequivocal statement that you want to opt-out of this arbitration agreement.
@@ -287,27 +294,27 @@ const LegalConsentModal = () => {
                             </div>
 
                             <div>
-                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">16. Class Action Waiver</h3>
+                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">17. Class Action Waiver</h3>
                                 <p>You agree that any arbitration or proceeding shall be limited to the dispute between us and you individually. To the full extent permitted by law, (i) no arbitration or proceeding shall be joined with any other; (ii) there is no right or authority for any dispute to be arbitrated or resolved on a class action-basis or to utilize class action procedures; and (iii) there is no right or authority for any dispute to be brought in a purported representative capacity on behalf of the general public or any other persons.</p>
                             </div>
 
                             <div>
-                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">17. Governing Law and Venue</h3>
+                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">18. Governing Law and Venue</h3>
                                 <p>These Terms shall be governed and construed in accordance with the laws of Washington, United States, without regard to its conflict of law provisions.</p>
                             </div>
 
                             <div>
-                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">18. Changes to Terms</h3>
+                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">19. Changes to Terms</h3>
                                 <p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. By continuing to access or use our Service after those revisions become effective, you agree to be bound by the revised terms.</p>
                             </div>
 
                             <div>
-                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">19. Miscellaneous</h3>
+                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">20. Miscellaneous</h3>
                                 <p>If any provision of these Terms is held to be invalid or unenforceable by a court, the remaining provisions of these Terms will remain in effect. These Terms constitute the entire agreement between us regarding our Service.</p>
                             </div>
 
                             <div>
-                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">20. Contact Information</h3>
+                                <h3 className="text-white font-bold uppercase tracking-widest mb-2 text-xs">21. Contact Information</h3>
                                 <p>If you have any questions about these Terms, please contact us at <a href={`mailto:${CONTACT_EMAIL}`}><span className="text-primary">{CONTACT_EMAIL}</span></a>.</p>
                             </div>
                         </div>
