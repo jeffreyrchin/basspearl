@@ -23,7 +23,9 @@
   --z-index-window: 100;
   --z-index-overlay: 200;
   --z-index-modal: 201;
-  --z-index-legal: 202;
+  --z-index-pro-modal: 202;
+  --z-index-auth-modal: 203;
+  --z-index-legal: 204;
 }
 
 /* Mixins and Plugins */
