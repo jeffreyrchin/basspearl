@@ -27,58 +27,70 @@ const Shortcut: React.FC<{ keys: (string | string[])[]; description: string }> =
     );
 };
 
+const InlineIcon: React.FC<{ icon: string; size?: number }> = ({ icon, size = 18 }) => (
+    <span
+        className="material-symbols-outlined align-middle bg-white/10 rounded px-1 pb-0.5 mx-0.5 shadow-sm"
+        style={{ fontSize: `${size}px` }}
+    >
+        {icon}
+    </span>
+);
+
 const HelpContent: React.FC = () => {
     return (
         <div className="max-w-4xl mx-auto space-y-12">
             {/* Getting Started */}
             <section className="space-y-4">
                 <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-primary active-glow">Getting Started</h2>
-                <div className="space-y-8">
-                    <div className="space-y-3">
-                        <p className="text-white text-base leading-relaxed">
-                            <span className="font-bold text-white">1. Select audio source:</span> In the main toolbar, click <span className="material-symbols-outlined">audio_file</span>, <span className="material-symbols-outlined">mic</span>, or <span className="material-symbols-outlined">present_to_all</span> to select your audio source. If you have a virtual audio driver installed such as BlackHole or Voicemeeter, you can select the microphone to route audio to Muxels from any application on your device.
+                <div className="space-y-8 glass-panel p-6 sm:p-8 rounded-2xl border border-white/5">
+                    <div className="space-y-6">
+                        <p className="text-white/90 text-base leading-relaxed">
+                            <span className="font-bold text-white">1. Select audio source:</span> In the main toolbar on the left, click <InlineIcon icon="audio_file" />, <InlineIcon icon="mic" />, or <InlineIcon icon="present_to_all" /> to select your audio source. If you have a virtual audio driver installed such as BlackHole or Voicemeeter, you can select the microphone to route audio to Muxels from any application on your device.
                         </p>
-                        <p className="text-white text-base leading-relaxed">
-                            <span className="font-bold text-white">2. Add effects:</span> To add visual effects, click <span className="material-symbols-outlined">add_circle</span> in the main toolbar to open the library. Click on an effect to add it to your visualizer.
-                        </p>
-                        <p className="text-white text-base leading-relaxed">
-                            <span className="font-bold text-white">3. Adjust effects:</span> Click <span className="material-symbols-outlined">format_list_bulleted</span> in the main toolbar to open the sidebar where you can view your added effects.
+                        <p className="text-white/90 text-base leading-relaxed">
+                            <span className="font-bold text-white">2. Add effects:</span> To add visual effects, open the sidebar by clicking the <InlineIcon icon="format_list_bulleted" /> icon in the main toolbar on the left. In the sidebar, click “Add Visuals” to open the effect library. In the effect library, click the search button (<InlineIcon icon="search" />) to search for effects by name, or click the header tabs to filter effects by category. Click on an effect card to add it to your scene.
                         </p>
                     </div>
 
-                    <ul className="space-y-6 list-none">
-                        <li className="relative pl-6 space-y-1 before:content-[''] before:absolute before:left-0 before:top-1.5 before:w-1.5 before:h-1.5 before:bg-primary before:rounded-full">
-                            <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-white">Reordering effects:</h3>
-                            <p className="text-white/70 text-sm leading-relaxed">
-                                Effects and effect groups can be reordered by dragging the drag handles (<span className="material-symbols-outlined">drag_indicator</span>) in the effect cards.
+                    <div className="h-px w-full bg-white/5 my-6" />
+
+                    <ul className="space-y-6 list-none sm:pl-2">
+                        <li className="relative pl-6 space-y-1.5 before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:bg-primary before:rounded-full">
+                            <h3 className="text-[12px] font-bold uppercase tracking-[0.2em] text-white">Reordering effects:</h3>
+                            <p className="text-white/80 text-sm leading-relaxed">
+                                Effects and effect groups can be reordered by dragging the icons on the left of the sidebar.
                             </p>
                         </li>
 
-                        <li className="relative pl-6 space-y-1 before:content-[''] before:absolute before:left-0 before:top-1.5 before:w-1.5 before:h-1.5 before:bg-primary before:rounded-full">
-                            <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-white">Creating effect groups:</h3>
-                            <p className="text-white/70 text-sm leading-relaxed">
-                                Select a contiguous group of effects to enable to the "Group" button (<span className="material-symbols-outlined">group_work</span>) in the sidebar toolbar. Grouping effects isolates them from the rest of the effect pipeline.
+                        <li className="relative pl-6 space-y-1.5 before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:bg-primary before:rounded-full">
+                            <h3 className="text-[12px] font-bold uppercase tracking-[0.2em] text-white">Creating effect groups:</h3>
+                            <p className="text-white/80 text-sm leading-relaxed">
+                                Select a contiguous group of effects to enable to the "Group" button (<InlineIcon icon="group_work" size={16} />) in the sidebar header. Grouping effects isolates them from the rest of the effect pipeline.
                             </p>
                         </li>
 
-                        <li className="relative pl-6 space-y-1 before:content-[''] before:absolute before:left-0 before:top-1.5 before:w-1.5 before:h-1.5 before:bg-primary before:rounded-full">
-                            <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-white">Effect card buttons:</h3>
-                            <p className="text-white/70 text-sm leading-relaxed">
-                                In each effect card, toggle the <span className="material-symbols-outlined">pill</span> icon to solo/unsolo an effect, and toggle the <span className="material-symbols-outlined">visibility</span> icon to show/hide an effect. Double-clicking an effect card opens the inspector.
+                        <li className="relative pl-6 space-y-1.5 before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:bg-primary before:rounded-full">
+                            <h3 className="text-[12px] font-bold uppercase tracking-[0.2em] text-white">Effect card buttons:</h3>
+                            <p className="text-white/80 text-sm leading-relaxed">
+                                In each effect card, toggle the <InlineIcon icon="visibility" size={16} /> icon to show/hide an effect. Holding Alt (or Option on Mac) while clicking the eye icon will solo/unsolo the effect. Click the <InlineIcon icon="tune" size={16} /> icon or double-click the effect card to open the inspector. Click the <InlineIcon icon="delete" size={16} /> icon to remove an effect.
                             </p>
                         </li>
 
-                        <li className="relative pl-6 space-y-1 before:content-[''] before:absolute before:left-0 before:top-1.5 before:w-1.5 before:h-1.5 before:bg-primary before:rounded-full">
-                            <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-white">Effect parameters:</h3>
-                            <p className="text-white/70 text-sm leading-relaxed">
-                                In the inspector, parameter levels can be adjusted by moving the slider handles. Select a frequency band in the dropdown menu above a parameter slider to sync the parameter to a frequency band. When a frequency band is selected, the frequency band will control the parameter level between the two slider handles. When “Off” is selected, the parameter level will be fixed.
+                        <li className="relative pl-6 space-y-1.5 before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:bg-primary before:rounded-full">
+                            <h3 className="text-[12px] font-bold uppercase tracking-[0.2em] text-white">Effect parameters:</h3>
+                            <p className="text-white/80 text-sm leading-relaxed">
+                                In the inspector, parameter levels can be adjusted by moving the slider handles. Select a frequency band in the dropdown menu above a parameter slider to sync the parameter to a frequency band. When a frequency band is selected, the selected frequency will control the parameter level between the two slider handles. When “Off” is selected, the parameter level will be fixed.
                             </p>
                         </li>
                     </ul>
 
-                    <p className="text-white text-base leading-relaxed">
-                        <span className="font-bold text-white">4. Export video:</span> Click the <span className="material-symbols-outlined">download</span> button in the main toolbar to export your creation as an MP4 video.
-                    </p>
+                    <div className="h-px w-full bg-white/5 my-6" />
+
+                    <div className="pt-2">
+                        <p className="text-white/90 text-base leading-relaxed">
+                            <span className="font-bold text-white">4. Export video:</span> Click the <InlineIcon icon="download" /> button in the main toolbar on the left to export your creation as an MP4 video.
+                        </p>
+                    </div>
                 </div>
             </section>
 
@@ -135,6 +147,14 @@ const HelpContent: React.FC = () => {
                             <Shortcut keys={[']']} description="Next Scene" />
                             <Shortcut keys={['Mod', 'Z']} description="Undo" />
                             <Shortcut keys={['Mod', 'Shift', 'Z']} description="Redo" />
+                        </div>
+                    </div>
+
+                    {/* Puzzles */}
+                    <div className="space-y-4">
+                        <h3 className="text-[11px] font-bold uppercase tracking-widest text-white border-b border-white/5 pb-2">Puzzles</h3>
+                        <div className="space-y-3">
+                            <Shortcut keys={['W']} description="Toggle Preview" />
                         </div>
                     </div>
                 </div>
