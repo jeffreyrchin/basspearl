@@ -126,7 +126,7 @@ const PuzzleSuccessModal: React.FC<SuccessModalProps> = ({ result }) => {
                             >
                                 {result.score}%
                             </motion.span>
-                            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest leading-none">Match</span>
+                            <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest leading-none">Match</span>
                         </div>
                     </div>
 

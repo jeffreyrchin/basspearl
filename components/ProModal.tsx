@@ -50,7 +50,7 @@ const ProModal: React.FC = () => {
                             { text: 'Unlimited 4K-Res Exports' },
                             { text: 'Unlimited Scene Slots' }
                         ].map((feature, i) => (
-                            <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white/5 border border-white/5">
+                            <div key={i} className="flex items-center gap-3 px-5 py-3 rounded-lg bg-white/5 border border-white/5">
                                 <span className="material-symbols-outlined text-indigo-300 !text-[20px]">check_circle</span>
                                 <span className="text-xs font-bold text-white uppercase tracking-wider">{feature.text}</span>
                             </div>
@@ -60,9 +60,10 @@ const ProModal: React.FC = () => {
                     <div className="pt-4 border-t border-white/10">
                         <button
                             onClick={() => user ? buyPro(user.uid) : openAuth('login')}
-                            className="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-purple-600 text-white font-bold text-sm uppercase tracking-widest transition-all duration-300 hover:scale-105 active:scale-[0.98]"
+                            className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-gradient-to-r from-primary to-purple-600 text-white font-bold text-sm uppercase tracking-widest transition-all duration-300 hover:scale-105 active:scale-[0.98]"
                         >
-                            {user ? 'Get Lifetime Pro - $49' : 'Login to Upgrade'}
+                            <span className="material-symbols-outlined">workspace_premium</span>
+                            {user ? 'Get Lifetime Pro - $39' : 'Sign in to Upgrade'}
                         </button>
                         <button
                             onClick={closeProModal}

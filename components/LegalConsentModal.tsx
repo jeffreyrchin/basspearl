@@ -1,37 +1,46 @@
 import React, { useEffect } from 'react';
 import { useLegalStore } from '../store/useLegalStore';
 import { CONTACT_EMAIL } from '../constants';
+import { motion } from 'framer-motion';
 
 const LegalConsentModal = () => {
-    const { isLegalOpen, closeLegal } = useLegalStore();
+    const closeLegal = useLegalStore((s) => s.closeLegal);
 
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isLegalOpen) {
+            if (e.key === 'Escape') {
                 closeLegal();
             }
         };
         window.addEventListener('keydown', handleEscape);
         return () => window.removeEventListener('keydown', handleEscape);
-    }, [isLegalOpen, closeLegal]);
-
-    if (!isLegalOpen) return null;
+    }, [closeLegal]);
 
     return (
         <div className="fixed inset-0 z-legal flex items-center justify-center p-4">
             {/* Backdrop */}
-            <div
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 className="absolute inset-0 bg-black/80"
                 onClick={() => closeLegal()}
             />
 
-            <div data-section="modal" className="relative w-full max-w-2xl glass-panel rounded-2xl border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-300 flex flex-col max-h-[80vh]">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                data-section="modal"
+                className="relative w-full max-w-2xl glass-panel rounded-2xl border border-white/10 overflow-hidden flex flex-col max-h-[80vh] shadow-2xl"
+            >
                 {/* Header */}
                 <div className="p-6 border-b border-white/10 shrink-0 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <h2 className="text-2xl font-bold uppercase tracking-wider bg-gradient-to-r from-indigo-300 to-indigo-200 bg-clip-text text-transparent">Privacy & Terms</h2>
                     </div>
-                    <button onClick={closeLegal} className="text-white/40 hover:text-white transition-colors">
+                    <button onClick={closeLegal} className="text-white/60 hover:text-white transition-colors">
                         <span className="material-symbols-outlined">close</span>
                     </button>
                 </div>
@@ -310,13 +319,13 @@ const LegalConsentModal = () => {
                     <div className="flex justify-end gap-3">
                         <button
                             onClick={closeLegal}
-                            className="px-6 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-white/60 font-bold text-xs uppercase tracking-widest transition-all"
+                            className="px-6 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-white/60 hover:text-white font-bold text-xs uppercase tracking-widest transition-all"
                         >
                             Close
                         </button>
                     </div>
                 </div>
-            </div>
+            </motion.div>
         </div>
     );
 };

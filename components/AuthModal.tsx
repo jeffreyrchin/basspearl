@@ -3,10 +3,13 @@ import { useAuth } from '../context/AuthContext';
 import { useLegalStore } from '../store/useLegalStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { analytics } from '../services/analytics';
+import { motion } from 'framer-motion';
 
 const AuthModal = () => {
-    const { openLegal } = useLegalStore();
-    const { isAuthOpen, authMode, closeAuth, setAuthMode } = useAuthStore();
+    const openLegal = useLegalStore((s) => s.openLegal);
+    const closeAuth = useAuthStore((s) => s.closeAuth);
+    const setAuthMode = useAuthStore((s) => s.setAuthMode);
+    const authMode = useAuthStore((s) => s.authMode);
     const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -17,24 +20,20 @@ const AuthModal = () => {
     const [agreedToTerms, setAgreedToTerms] = useState(false);
 
     useEffect(() => {
-        if (isAuthOpen) {
-            setError(null);
-            setAgreedToTerms(false);
-            analytics.auth.view(authMode);
-        }
-    }, [isAuthOpen, authMode]);
+        setError(null);
+        setAgreedToTerms(false);
+        analytics.auth.view(authMode);
+    }, [authMode]);
 
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isAuthOpen) {
+            if (e.key === 'Escape') {
                 closeAuth();
             }
         };
         window.addEventListener('keydown', handleEscape);
         return () => window.removeEventListener('keydown', handleEscape);
-    }, [isAuthOpen, closeAuth]);
-
-    if (!isAuthOpen) return null;
+    }, [closeAuth]);
 
     const handleGoogleSignIn = async () => {
         setIsLoading(true);
@@ -105,17 +104,27 @@ const AuthModal = () => {
     };
 
     return (
-        <div className="fixed inset-0 z-modal flex items-center justify-center">
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4">
             {/* Backdrop */}
-            <div
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 className="absolute inset-0 bg-black/80"
                 onClick={closeAuth}
             />
 
             {/* Modal */}
-            <div data-section="modal" className="relative w-full max-w-md mx-4 glass-panel rounded-3xl border border-white/10 max-h-[90vh] overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-300">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                data-section="modal"
+                className="relative w-full max-w-md glass-panel rounded-3xl border border-white/10 max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl"
+            >
                 {/* Header Gradient */}
-                <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-primary/20 to-transparent pointer-events-none" />
+                <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
 
                 {/* Close Button */}
                 <button
@@ -130,10 +139,10 @@ const AuthModal = () => {
                     <h2 className="text-3xl font-bold text-center tracking-tight uppercase mb-1">
                         {authMode === 'login' ? 'Welcome Back' : 'Join Muxels'}
                     </h2>
-                    <p className="text-white/40 text-center text-sm mb-8">
+                    <p className="text-white/60 text-center text-sm mb-8">
                         {authMode === 'login'
-                            ? 'Sign in for unlimited exports'
-                            : 'Create an account for unlimited exports'}
+                            ? 'Sign in to access Pro features'
+                            : 'Create an account to access Pro features'}
                     </p>
 
                     {/* Google Button */}
@@ -153,16 +162,16 @@ const AuthModal = () => {
 
                     {/* Divider */}
                     <div className="flex items-center gap-4 mb-6">
-                        <div className="flex-1 h-px bg-white/10" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">or</span>
-                        <div className="flex-1 h-px bg-white/10" />
+                        <div className="flex-1 h-px bg-white/20" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">or</span>
+                        <div className="flex-1 h-px bg-white/20" />
                     </div>
 
                     {/* Email Form */}
                     <form onSubmit={handleEmailSubmit} className="space-y-4">
                         {authMode === 'signup' && (
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2">
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-white/60 mb-2">
                                     Display Name
                                 </label>
                                 <input
@@ -170,13 +179,13 @@ const AuthModal = () => {
                                     value={displayName}
                                     onChange={(e) => setDisplayName(e.target.value)}
                                     placeholder="Your name"
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
                                 />
                             </div>
                         )}
 
                         <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2">
+                            <label className="block text-[10px] font-bold uppercase tracking-widest text-white/60 mb-2">
                                 Email Address
                             </label>
                             <input
@@ -185,12 +194,12 @@ const AuthModal = () => {
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="you@example.com"
                                 required
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2">
+                            <label className="block text-[10px] font-bold uppercase tracking-widest text-white/60 mb-2">
                                 Password
                             </label>
                             <div className="relative">
@@ -201,12 +210,12 @@ const AuthModal = () => {
                                     placeholder="••••••••"
                                     required
                                     minLength={6}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-12 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-12 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors pt-2"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/80 transition-colors pt-2"
                                 >
                                     <span className="material-symbols-outlined text-[20px]">
                                         {showPassword ? 'visibility_off' : 'visibility'}
@@ -256,7 +265,7 @@ const AuthModal = () => {
                         <button
                             type="submit"
                             disabled={isLoading || (authMode === 'signup' && !agreedToTerms)}
-                            className={`w-full py-3.5 rounded-xl bg-black border border-primary hover:bg-primary/30 text-white font-bold text-sm uppercase tracking-widest cyber-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${authMode === 'signup' && !agreedToTerms ? 'opacity-50 grayscale' : ''}`}
+                            className={`w-full py-3.5 rounded-xl bg-primary/10 border border-primary hover:bg-primary/30 text-white font-bold text-sm uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${authMode === 'signup' && !agreedToTerms ? 'opacity-50 grayscale' : ''}`}
                         >
                             {isLoading ? (
                                 <>
@@ -270,7 +279,7 @@ const AuthModal = () => {
                     </form>
 
                     {/* Toggle Mode */}
-                    <p className="text-center text-white/40 text-sm mt-6">
+                    <p className="text-center text-white/60 text-sm mt-6">
                         {authMode === 'login' ? "Don't have an account?" : 'Already have an account?'}
                         <button
                             onClick={toggleMode}
@@ -280,7 +289,7 @@ const AuthModal = () => {
                         </button>
                     </p>
                 </div>
-            </div>
+            </motion.div>
         </div>
     );
 };

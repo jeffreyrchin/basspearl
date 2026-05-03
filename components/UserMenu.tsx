@@ -43,7 +43,7 @@ const UserMenu: React.FC<UserMenuProps> = () => {
                     onClick={() => openAuth('login')}
                     className="text-sm font-bold uppercase tracking-widest text-white/70 hover:text-white transition-colors"
                 >
-                    Login
+                    Sign in
                 </button>
                 <button
                     onClick={() => openAuth('signup')}

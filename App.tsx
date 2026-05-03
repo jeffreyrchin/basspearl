@@ -2,15 +2,23 @@ import { Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { useEffectStore } from './store/useEffectStore';
+import { useAuthStore } from './store/useAuthStore';
+import { useLegalStore } from './store/useLegalStore';
+import { useProStore } from './store/useProStore';
+import { AnimatePresence } from 'framer-motion';
 import AboutPage from './components/AboutPage';
 import HelpPage from './components/HelpPage';
 import AudioReactiveView from './components/AudioReactiveView';
 import AuthModal from './components/AuthModal';
 import LegalConsentModal from './components/LegalConsentModal';
+import ProModal from './components/ProModal';
 import PuzzleTestPage from './components/content/PuzzleTestPage';
 
 const App = () => {
   const setIsMobile = useEffectStore((s) => s.setIsMobile);
+  const isAuthOpen = useAuthStore((s) => s.isAuthOpen);
+  const isLegalOpen = useLegalStore((s) => s.isLegalOpen);
+  const isProModalOpen = useProStore((s) => s.isProModalOpen);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -27,8 +35,15 @@ const App = () => {
         <Route path="/help" element={<HelpPage />} />
         <Route path="/puzzle-service-test" element={<PuzzleTestPage />} />
       </Routes>
-      <LegalConsentModal />
-      <AuthModal />
+      <AnimatePresence>
+        {isLegalOpen && <LegalConsentModal />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {isAuthOpen && <AuthModal />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {isProModalOpen && <ProModal />}
+      </AnimatePresence>
     </AuthProvider>
   );
 };

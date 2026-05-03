@@ -13,5 +13,5 @@ export const useAuthStore = create<AuthStore>((set) => ({
     authMode: 'login',
     setAuthMode: (mode) => set({ authMode: mode }),
     openAuth: (mode) => set({ isAuthOpen: true, authMode: mode }),
-    closeAuth: () => set({ isAuthOpen: false, authMode: 'login' })
+    closeAuth: () => set({ isAuthOpen: false })
 }));
