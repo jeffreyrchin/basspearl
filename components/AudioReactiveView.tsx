@@ -410,10 +410,10 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                         transition={{ duration: 0.3 }}
                         onClick={() => setIsUiHidden(false)}
                         tabIndex={0}
-                        className="fixed top-4 right-4 z-fab p-3 bg-slate-900/90 text-white/80 hover:text-white rounded-xl border border-white/5 transition-all duration-300 cursor-pointer flex items-center justify-center group shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                        className="fixed top-4 right-4 z-fab p-3 bg-slate-900/90 text-white/80 hover:text-white rounded-xl border border-white/5 cursor-pointer flex items-center justify-center group shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black transition-colors"
                         title="Show UI (H, Tab, or Esc)"
                     >
-                        <span className="material-symbols-outlined text-xl group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">visibility</span>
+                        <span className="material-symbols-outlined">visibility</span>
                     </motion.button>
                 )}
             </AnimatePresence>
