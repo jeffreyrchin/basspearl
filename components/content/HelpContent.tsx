@@ -88,7 +88,7 @@ const HelpContent: React.FC = () => {
 
                     <div className="pt-2">
                         <p className="text-white/90 text-base leading-relaxed">
-                            <span className="font-bold text-white">4. Export video:</span> Click the <InlineIcon icon="download" /> button in the main toolbar on the left to export your creation as an MP4 video.
+                            <span className="font-bold text-white">3. Export video:</span> Click the <InlineIcon icon="download" /> button in the main toolbar on the left to export your creation as an MP4 video. Note: this feature is only available when an audio file is selected.
                         </p>
                     </div>
                 </div>
