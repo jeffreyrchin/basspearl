@@ -8,7 +8,6 @@ const InspectorWindow: React.FC = () => {
     const focusStack = useEffectStore(s => s.focusStack);
     const pushFocus = useEffectStore(s => s.pushFocus);
     const removeFocus = useEffectStore(s => s.removeFocus);
-    const isInspectorOpen = focusStack.includes('inspector');
 
     const setActiveDropdownId = useEffectStore(s => s.setActiveDropdownId);
 
@@ -33,8 +32,6 @@ const InspectorWindow: React.FC = () => {
     const [winHeight, setWinHeight] = useState(initialHeight);
     const [winX] = useState(window.innerWidth - initialWidth - 16); // 16 to align with right edge of effect/layer cards
     const [winY] = useState(window.innerHeight - initialHeight - 110); // 110 to position above the playback scrubber
-
-    if (!isInspectorOpen) return null;
 
     let metadata = null;
     if (selectedIds.size === 1) {
@@ -115,8 +112,10 @@ const InspectorWindow: React.FC = () => {
             onPointerDown={() => {
                 pushFocus('inspector');
             }}
-            initial={{ opacity: 0, scale: 0.95, y: 0 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
             style={{
                 position: 'absolute',
                 top: winY,

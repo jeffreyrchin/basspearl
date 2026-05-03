@@ -33,6 +33,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const effects = useEffectStore(s => s.effects);
     const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
     const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
+    const isInspectorOpen = useEffectStore(s => s.focusStack.includes('inspector'));
     const clearSelection = useEffectStore(s => s.clearSelection);
     const isUiHidden = useEffectStore(s => s.isUiHidden);
     const setIsUiHidden = useEffectStore(s => s.setIsUiHidden);
@@ -314,7 +315,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     />
                 )}
 
-                <InspectorWindow />
+                <AnimatePresence>
+                    {isInspectorOpen && <InspectorWindow />}
+                </AnimatePresence>
             </div>
 
             {/* Bottom UI Overlay */}
