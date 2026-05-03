@@ -136,8 +136,16 @@ textarea {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(129, 140, 248, 1);
   border-radius: 10px;
+}
+
+/* Only apply to Firefox, or browsers that don't support webkit scrollbars */
+.custom-scrollbar {
+  @supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(129, 140, 248, 1) rgba(255, 255, 255, 0.02);
+  }
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */

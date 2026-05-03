@@ -27,7 +27,7 @@ const PuzzleHelpModal: React.FC = () => {
                 <div className="absolute top-0 left-0 right-0 h-1 bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.8)]" />
 
                 <div className="p-8 flex flex-col items-center text-center overflow-y-auto overflow-x-hidden custom-scrollbar flex-1 min-h-0">
-                    <div className="mb-6 w-16 h-16 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/50">
+                    <div className="mb-6 w-16 h-16 shrink-0 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/50">
                         <span className="material-symbols-outlined text-4xl text-indigo-400">help</span>
                     </div>
 
