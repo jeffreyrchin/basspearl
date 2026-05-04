@@ -317,6 +317,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Spin Speed X', { v: 25 }),
       p('Spin Speed Y', { v: 0 }),
       p('Spin Speed Z', { v: 0 }),
+      p('Seam Blend', { v: 0 }),
     ],
   },
   TERRAIN_RING: {
@@ -333,6 +334,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Spin Speed Y', { v: 0 }),
       p('Spin Speed Z', { v: 0 }),
       p('Tube Width', { v: 30 }),
+      p('Seam Blend', { v: 0 }),
     ],
   },
   CHECKERBOARD: {

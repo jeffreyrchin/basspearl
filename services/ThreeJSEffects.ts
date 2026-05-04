@@ -9,14 +9,32 @@ export interface IThreeJSEffect {
     dispose: () => void;
 }
 
+const SEAMLESS_BLEND_GLSL = `
+    vec4 getBlendedColor(sampler2D img, vec2 uv, float blend, float lod) {
+        vec2 tileFrac = fract(uv);
+        vec2 ghostUv  = uv + 0.5;
+        float wx = (blend < 1.0) ? smoothstep(blend, 1.0, abs(tileFrac.x - 0.5) * 2.0) : 0.0;
+        float wy = (blend < 1.0) ? smoothstep(blend, 1.0, abs(tileFrac.y - 0.5) * 2.0) : 0.0;
+        
+        vec4 c1 = textureLod(img, uv,                    lod);
+        vec4 c2 = textureLod(img, vec2(ghostUv.x, uv.y), lod);
+        vec4 c3 = textureLod(img, vec2(uv.x, ghostUv.y), lod);
+        vec4 c4 = textureLod(img, ghostUv,               lod);
+        return mix(mix(c1, c2, wx), mix(c3, c4, wx), wy);
+    }
+`;
+
 const TERRAIN_SPHERE_VERT = `
     uniform sampler2D u_image;
     uniform float u_extrusion;
     uniform float u_res;
+    uniform float u_tileBlend;
 
     out vec2 vUv;
     out vec4 vTexColor;
     out float vFaceAlpha;
+
+    ${SEAMLESS_BLEND_GLSL}
 
     void main() {
         // ── DYNAMIC VOXEL RESOLUTION ──────────────────────────────
@@ -30,8 +48,8 @@ const TERRAIN_SPHERE_VERT = `
         vec2 snappedUv = floor(uv * gridRes + 0.5) / gridRes;
         vec2 samplingUv = mix(snappedUv, uv, isFlat);
 
-        // ── SAMPLING & HEIGHT ─────────────────────────────────────
-        vTexColor = texture(u_image, samplingUv);
+        // ── 4-WAY SEAMLESS SAMPLING ───────────────────────────────
+        vTexColor = getBlendedColor(u_image, samplingUv, u_tileBlend, 0.0);
         float heightVal = dot(vTexColor.rgb, vec3(0.333));
 
         // ── DISPLACE ALONG NORMAL ──────────────────────────────
@@ -57,10 +75,13 @@ const TERRAIN_RING_VERT = `
     uniform float u_extrusion;
     uniform float u_res;
     uniform float u_thickness;
+    uniform float u_tileBlend;
 
     out vec2 vUv;
     out vec4 vTexColor;
     out float vFaceAlpha;
+
+    ${SEAMLESS_BLEND_GLSL}
 
     void main() {
         // ── DYNAMIC VOXEL RESOLUTION ──────────────────────────────
@@ -70,8 +91,8 @@ const TERRAIN_RING_VERT = `
         vec2 snappedUv = floor(uv * gridRes + 0.5) / gridRes;
         vec2 samplingUv = mix(snappedUv, uv, isFlat);
 
-        // ── SAMPLING & HEIGHT ─────────────────────────────────────
-        vTexColor = texture(u_image, samplingUv);
+        // ── 4-WAY SEAMLESS SAMPLING ───────────────────────────────
+        vTexColor = getBlendedColor(u_image, samplingUv, u_tileBlend, 0.0);
         float heightVal = dot(vTexColor.rgb, vec3(0.333));
 
         // ── DISPLACE ALONG NORMAL ──────────────────────────────
@@ -110,6 +131,7 @@ const createDisplacedShapeEffect = (
             u_image: { value: null },
             u_extrusion: { value: 0.0 },
             u_res: { value: 100.0 },
+            u_tileBlend: { value: 1.0 },
             ...setupUniforms
         },
         vertexShader: vertexShader,
@@ -117,15 +139,18 @@ const createDisplacedShapeEffect = (
             precision highp float;
             uniform sampler2D u_image;
             uniform float u_extrusion;
+            uniform float u_tileBlend;
             in vec2 vUv;
             in vec4 vTexColor;
             in float vFaceAlpha;
             out vec4 outColor;
 
+            ${SEAMLESS_BLEND_GLSL}
+
             void main() {
                 // Use full-res texture when extrusion is 0
                 float isFlat = step(u_extrusion, 0.01);
-                vec4 flatColor  = texture(u_image, vUv);
+                vec4 flatColor  = getBlendedColor(u_image, vUv, u_tileBlend, 0.0);
                 vec4 finalColor = mix(vTexColor, flatColor, isFlat);
 
                 outColor = vec4(finalColor.rgb, finalColor.a * vFaceAlpha);
@@ -154,7 +179,7 @@ const createDisplacedShapeEffect = (
         material,
         update: (params, texture) => {
             const p = params.params;
-            if (p && p.length >= 9) {
+            if (p && p.length >= 10) {
                 const extrusion = p[0]; // 0-100 → world units
                 const resolution = p[1]; // 0-100 → 2-512 voxel cells
                 const size = p[2]; // 0-100 → radius
@@ -184,6 +209,9 @@ const createDisplacedShapeEffect = (
                 material.uniforms.u_image.value = texture;
                 material.uniforms.u_extrusion.value = extrusion;
                 material.uniforms.u_res.value = virtualRes;
+
+                // Tile Blend
+                material.uniforms.u_tileBlend.value = 1.0 - Math.min(p[9] / 100.0, 0.999);
 
                 // Run custom updater
                 customUpdater(params, material, group);
@@ -240,6 +268,8 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 out float vWorldX;
                 out float vWorldZ;
 
+                ${SEAMLESS_BLEND_GLSL}
+
                 void main() {
                     // SECTION 1: VOXEL AND MESH SETUP
                     float gridRes = clamp(u_res, 1.0, 512.0);
@@ -265,18 +295,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                     pos.z = mix(snappedZ, position.z, isFlat);
 
                     // SECTION 4: TEXTURE SAMPLING AND HEIGHTMAP
-                    vec2 tileFrac = fract(snappedSampleUv);
-                    vec2 ghostUv  = snappedSampleUv + 0.5;
-
-                    float wx = (u_tileBlend < 1.0) ? smoothstep(u_tileBlend, 1.0, abs(tileFrac.x - 0.5) * 2.0) : 0.0;
-                    float wy = (u_tileBlend < 1.0) ? smoothstep(u_tileBlend, 1.0, abs(tileFrac.y - 0.5) * 2.0) : 0.0;
-
-                    vec4 c1 = textureLod(u_image, snappedSampleUv,                    0.0);
-                    vec4 c2 = textureLod(u_image, vec2(ghostUv.x, snappedSampleUv.y), 0.0);
-                    vec4 c3 = textureLod(u_image, vec2(snappedSampleUv.x, ghostUv.y), 0.0);
-                    vec4 c4 = textureLod(u_image, ghostUv,                            0.0);
-
-                    vTexColor = mix(mix(c1, c2, wx), mix(c3, c4, wx), wy);
+                    vTexColor = getBlendedColor(u_image, snappedSampleUv, u_tileBlend, 0.0);
                     float heightVal = dot(vTexColor.rgb, vec3(0.333));
 
                     // SECTION 5: FINAL POSITION AND WORLD TRANSFORM
@@ -298,22 +317,11 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 in float vWorldZ;
                 out vec4 outColor;
 
-                vec4 getBlendedColor(vec2 uv, float blend) {
-                    vec2 tileFrac = fract(uv);
-                    vec2 ghostUv  = uv + 0.5;
-                    float wx = (blend < 1.0) ? smoothstep(blend, 1.0, abs(tileFrac.x - 0.5) * 2.0) : 0.0;
-                    float wy = (blend < 1.0) ? smoothstep(blend, 1.0, abs(tileFrac.y - 0.5) * 2.0) : 0.0;
-                    
-                    vec4 c1 = texture(u_image, uv);
-                    vec4 c2 = texture(u_image, vec2(ghostUv.x, uv.y));
-                    vec4 c3 = texture(u_image, vec2(uv.x, ghostUv.y));
-                    vec4 c4 = texture(u_image, ghostUv);
-                    return mix(mix(c1, c2, wx), mix(c3, c4, wx), wy);
-                }
+                ${SEAMLESS_BLEND_GLSL}
 
                 void main() {
                     float isFlat = step(u_extrusion, 0.01);
-                    vec4 flatColor  = getBlendedColor(vSampleUv, u_tileBlend);
+                    vec4 flatColor  = getBlendedColor(u_image, vSampleUv, u_tileBlend, 0.0);
                     vec4 finalColor = mix(vTexColor, flatColor, isFlat);
                     
                     float h = dot(finalColor.rgb, vec3(0.333));
@@ -442,11 +450,14 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
         { u_thickness: { value: 0.0 } },
         (params, material) => {
             const p = params.params;
-            if (p.length >= 10) {
+            if (p.length >= 11) {
                 // Tube Width
                 // p[9] = 0 -> 0, p[9] = 100 -> +29.9 (0.1 + 29.9 = 30.0)
                 const thickness = (p[9] / 100.0) * 29.9;
                 material.uniforms.u_thickness.value = thickness;
+
+                // Seam Blend (overridden here due to tube width parameter)
+                material.uniforms.u_tileBlend.value = 1.0 - Math.min(p[10] / 100.0, 0.999);
             }
         }
     ),
