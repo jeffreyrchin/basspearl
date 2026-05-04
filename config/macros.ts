@@ -17,27 +17,27 @@ export const o = (
 };
 
 export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
-  FOG_VORTEX: {
-    id: 'FOG_VORTEX',
-    label: 'Fog Vortex',
+  SMOKE_VORTEX: {
+    id: 'SMOKE_VORTEX',
+    label: 'Smoke Vortex',
     effects: [
       {
         type: 'ORGANIC_NOISE',
         params: [
-          o('Scale', { v: 7, b: 'OFF' }),
+          o('Scale', { v: 30, b: 'OFF' }),
           o('Detail Level', { v: 100, b: 'OFF' }),
           o('Warp Amount', { v: 3, b: 'OFF' }),
-          o('Warp Speed', { v: 30, b: 'OFF' }),
+          o('Warp Speed', { v: 70, b: 'SUB' }, { v: 35, b: 'OFF' }),
           o('Warp Direction', { v: 0, b: 'OFF' }),
           o('Blend', { v: 100, b: 'OFF' }),
         ],
         melded: false
       },
       {
-        type: 'LUMINANCE_MASK',
+        type: 'EDGE_MASK',
         params: [
-          o('Threshold', { v: 50, b: 'OFF' }),
-          o('Feather', { v: 30, b: 'OFF' }),
+          o('Sensitivity', { v: 10, b: 'OFF' }),
+          o('Thickness', { v: 12, b: 'OFF' }),
           o('Invert', { v: 0, b: 'OFF' }),
         ],
         melded: false
@@ -46,7 +46,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'TUNNEL_WARP',
         params: [
           o('Scale', { v: 5, b: 'OFF' }),
-          o('Speed', { v: 100, b: 'SUB' }, { v: 70, b: 'OFF' }),
+          o('Speed', { v: 50, b: 'SUB' }, { v: 25, b: 'OFF' }),
           o('Twist', { v: 3, b: 'OFF' }),
         ],
         melded: false
@@ -2189,6 +2189,60 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Sensitivity', { v: 0, m: 30, b: 'SUB' }),
           o('Distance', { v: 0, b: 'OFF' }),
           o('Strength', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  FIRE_RING: {
+    id: 'FIRE_RING',
+    label: 'Fire Ring',
+    effects: [
+      {
+        type: 'ORGANIC_NOISE',
+        params: [
+          o('Scale', { v: 30 }),
+          o('Detail Level', { v: 100 }),
+          o('Warp Amount', { v: 1 }),
+          o('Warp Speed', { v: 100, b: 'SUB' }),
+          o('Warp Direction', { v: 0 }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'SPECTRAL_MAP',
+        params: [
+          o('Rainbow Density', { v: 22 }),
+          o('Color Shift', { v: 38 }),
+          o('Speed', { v: 0 }),
+          o('Intensity', { v: 100 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'TERRAIN_RING',
+        params: [
+          o('Extrusion', { v: 0 }),
+          o('Detail Level', { v: 100 }),
+          o('Size', { v: 40 }),
+          o('Offset X', { v: 0 }),
+          o('Offset Y', { v: 0 }),
+          o('Offset Z', { v: 0 }),
+          o('Spin Speed X', { v: 30, b: 'SUB' }, { v: 15, b: 'OFF' }),
+          o('Spin Speed Y', { v: 90, b: 'SUB' }, { v: 45, b: 'OFF' }),
+          o('Spin Speed Z', { v: 0 }),
+          o('Tube Width', { v: 30 }),
+          o('Seam Blend', { v: 20 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 25 }),
+          o('Distance', { v: 3 }),
+          o('Strength', { v: 100 }),
         ],
         melded: false
       }

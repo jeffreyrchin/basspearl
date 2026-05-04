@@ -79,7 +79,7 @@ export interface EffectMetadata {
 }
 
 export type MacroType =
-  'FOG_VORTEX' |
+  'SMOKE_VORTEX' |
   'RUBBER_BAND' |
   'METRO' |
   'LANDSCAPE' |
@@ -121,7 +121,8 @@ export type MacroType =
   'HEXAGON_TUNNEL' |
   'AURORA' |
   'STARFIELD_3D' |
-  'FLAMES';
+  'FLAMES' |
+  'FIRE_RING';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;
