@@ -100,31 +100,59 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'GRAIN',
         params: [
-          o('Width', { v: 75, b: 'OFF' }),
-          o('Height', { v: 75, b: 'OFF' }),
-          o('Freq X', { v: 50, b: 'OFF' }),
-          o('Freq Y', { v: 46, b: 'OFF' }),
+          o('Width', { v: 65, b: 'OFF' }),
+          o('Height', { v: 100, b: 'OFF' }),
+          o('Freq X', { v: 30, b: 'OFF' }),
+          o('Freq Y', { v: 30, b: 'OFF' }),
           o('Density', { v: 100, b: 'OFF' }),
           o('Roundness', { v: 0, b: 'OFF' }),
           o('Blend', { v: 100, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'TERRAIN',
         params: [
-          o('Extrusion', { v: 20, m: 10, b: 'SUB' }, { v: 15, m: 0, b: 'OFF' }),
+          o('Extrusion', { v: 12, m: 7, b: 'SUB' }, { v: 10, m: 0, b: 'OFF' }),
           o('Detail Level', { v: 100, b: 'OFF' }),
           o('Tile Width', { v: 100, b: 'OFF' }),
           o('Tile Height', { v: 100, b: 'OFF' }),
           o('Rotate X', { v: 0, b: 'OFF' }),
           o('Rotate Y', { v: 0, b: 'OFF' }),
           o('Rotate Z', { v: 0, b: 'OFF' }),
-          o('Elevation', { v: 50, b: 'OFF' }),
+          o('Elevation', { v: 52, b: 'OFF' }),
           o('Distance', { v: 50, b: 'OFF' }),
           o('Tile Blend', { v: 0, b: 'OFF' }),
           o('Speed X', { v: 0, b: 'OFF' }),
-          o('Speed Y', { v: 5, b: 'OFF' }),
+          o('Speed Y', { v: 100, b: 'SUB' }, { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'EDGE_MASK',
+        params: [
+          o('Sensitivity', { v: 20, b: 'OFF' }),
+          o('Thickness', { v: 7, b: 'OFF' }, { v: 15, b: 'OFF' }),
+          o('Invert', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'SPECTRAL_MAP',
+        params: [
+          o('Rainbow Density', { v: 7, b: 'OFF' }),
+          o('Color Shift', { v: 50, b: 'OFF' }),
+          o('Speed', { v: 0, b: 'OFF' }),
+          o('Intensity', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 0, b: 'OFF' }),
+          o('Distance', { v: 25, b: 'OFF' }),
+          o('Strength', { v: 100, b: 'OFF' }),
         ],
         melded: false
       }
