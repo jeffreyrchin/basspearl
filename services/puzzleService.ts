@@ -146,10 +146,13 @@ export class PuzzleService {
             }
         });
 
-        const lengthPenalty = Math.abs(userGroups.length - targetGroups.length) * 25;
+        const extraPenalty = (userGroups.length - usedUserIndices.size) * 25;
+        const missingPenalty = (targetGroups.length - usedUserIndices.size) * 25;
+        const totalLengthPenalty = extraPenalty + missingPenalty;
+
         const normalizedScore = (totalScore / Math.max(targetGroups.length, 1));
 
-        return { totalParamScore: Math.max(0, normalizedScore), pairedIndices, totalStatePenalty: totalStatePenalty + lengthPenalty };
+        return { totalParamScore: Math.max(0, normalizedScore), pairedIndices, totalStatePenalty: totalStatePenalty + totalLengthPenalty };
     }
 
     /**
@@ -233,14 +236,17 @@ export class PuzzleService {
             }
         }
 
-        const lengthPenalty = Math.abs(userModifiers.length - targetModifiers.length) * 25;
+        const extraModPenalty = (userModifiers.length - usedUserMods.size) * 25;
+        const missingModPenalty = (targetModifiers.length - usedUserMods.size) * 25;
+        const totalModPenalty = extraModPenalty + missingModPenalty;
+
         const normalizedParamScore = (memberScore / Math.max(target.members.length, 1));
 
         // Final Group Score construction (Internal Structural only)
         const internalStructuralPenalty = (100 - Math.max(0, structuralScore)) * 0.6;
         const finalGroupScore = normalizedParamScore - internalStructuralPenalty;
 
-        return { score: Math.max(0, finalGroupScore), penalty: penalty + lengthPenalty };
+        return { score: Math.max(0, finalGroupScore), penalty: penalty + totalModPenalty };
     }
 
     // ─────────────────────────────────────────────────────────────────────────

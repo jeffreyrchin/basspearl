@@ -685,6 +685,18 @@ export const TEST_CASES: TestCase[] = [
         user: [e('ROTATE', { Rotation: 95 })],
         expectScoreAbove: 90,
     },
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SCORING QUIRKS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    {
+        name: 'Duplicate Effect Penalty',
+        description: 'User adds a correct effect twice. Should be penalized for the extra effect.',
+        target: [e('TERRAIN'), e('RGBA')],
+        user: [e('TERRAIN'), e('TERRAIN')],
+        expectScoreBelow: 50,
+    },
 ];
 
 
