@@ -1,9 +1,9 @@
 import { PuzzleType, PuzzleMetadata } from '../types';
 
 export const PUZZLE_ORDER: PuzzleType[] = [
-    'SPIRAL_GLOW',
-    'AURORA',
     'TEETH',
+    'AURORA',
+    'SPIRAL_GLOW',
     'SEARCHLIGHTS',
     'GRAIN_TUNNEL',
     'RUSH_HOUR',

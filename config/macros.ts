@@ -1737,10 +1737,10 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'SPIRAL_GRADIENT',
         params: [
-          o('Feather', { v: 25 }),
+          o('Feather', { v: 50 }),
           o('Frequency', { v: 2 }),
           o('Twist', { v: 20, b: 'OFF' }),
-          o('Speed', { v: 70, m: 3, b: 'SUB' }, { v: 30, b: 'OFF' }),
+          o('Speed', { v: 30, b: 'SUB' }, { v: 15, b: 'OFF' }),
           o('Pan X', { v: 50 }),
           o('Pan Y', { v: 50 }),
         ],
@@ -1751,8 +1751,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Rainbow Density', { v: 0, b: 'OFF' }),
           o('Color Shift', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 13, b: 'OFF' }),
-          o('Intensity', { v: 100, b: 'OFF' }),
+          o('Speed', { v: 10, b: 'OFF' }),
+          o('Intensity', { v: 50, b: 'OFF' }),
         ],
         melded: false
       },
@@ -1760,7 +1760,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'GLOW',
         params: [
           o('Sensitivity', { v: 0, b: 'OFF' }),
-          o('Distance', { v: 50, b: 'OFF' }),
+          o('Distance', { v: 100, b: 'OFF' }),
           o('Strength', { v: 100, b: 'OFF' }),
         ],
         melded: false
