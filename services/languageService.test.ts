@@ -155,5 +155,62 @@ describe('LanguageService', () => {
         });
       }
     });
+
+    it('never applies jitter to structural parameters (Scale, Pan)', () => {
+      for (let i = 0; i < 20; i++) {
+        const pipeline = model.generatePipeline({ temperature: 1.0 });
+        pipeline.forEach(effect => {
+          effect.params.forEach(p => {
+            if (p.param.includes('Scale') || p.param.includes('Pan')) {
+              // With zero jitter, an interpolated value between integers (or same integers)
+              // should always have a clean decimal (at most 1 from interpolation, never random noise).
+              // Since our rounding logic is Math.round(v * 10) / 10, jitter usually creates
+              // many different decimals. Zero jitter keeps it on the clean manifold.
+              const isClean = (p.value * 10) % 1 === 0;
+              expect(isClean).toBe(true);
+            }
+          });
+        });
+      }
+    });
+
+    it('enforces a hard safety cap of 20 on all Speed parameters', () => {
+      for (let i = 0; i < 20; i++) {
+        const pipeline = model.generatePipeline({ temperature: 1.0 });
+        pipeline.forEach(effect => {
+          effect.params.forEach(p => {
+            if (p.param.includes('Speed')) {
+              expect(p.value).toBeLessThanOrEqual(20);
+            }
+          });
+        });
+      }
+    });
+
+    it('enforces a hard safety cap of 20 on LUMINANCE_MASK Threshold parameter', () => {
+      for (let i = 0; i < 20; i++) {
+        const pipeline = model.generatePipeline({ temperature: 1.0 });
+        pipeline.forEach(effect => {
+          effect.params.forEach(p => {
+            if (effect.type === "LUMINANCE_MASK" && p.param === "Threshold") {
+              expect(p.value).toBeLessThanOrEqual(20);
+            }
+          });
+        });
+      }
+    });
+
+    it('enforces a hard safety min of 3 on INFINITE_ZOOM Plane Count parameter', () => {
+      for (let i = 0; i < 20; i++) {
+        const pipeline = model.generatePipeline({ temperature: 1.0 });
+        pipeline.forEach(effect => {
+          effect.params.forEach(p => {
+            if (effect.type === "INFINITE_ZOOM" && p.param === "Plane Count") {
+              expect(p.value).toBeGreaterThanOrEqual(3);
+            }
+          });
+        });
+      }
+    });
   });
 });

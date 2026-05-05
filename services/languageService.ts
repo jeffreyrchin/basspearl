@@ -285,9 +285,28 @@ export function buildLanguageModel(): LanguageModel {
     const jitterScale = temperature * 10;
     return meta.params.map((metaParam, i) => {
       const base = baseVector[i] ?? metaParam.defaultValue;
-      const jitter = (Math.random() - 0.5) * 2 * jitterScale;
+
+      // Structural parameters (Scale, Pan) should not have jitter to avoid visual misalignment/gaps
+      const isStructural = metaParam.name.includes('Scale') || metaParam.name.includes('Pan');
+      const jitter = isStructural ? 0 : (Math.random() - 0.5) * 2 * jitterScale;
+
       const min = metaParam.defaultMin ?? 0;
-      const value = Math.max(min, Math.min(100, base + jitter));
+      let value = Math.max(min, Math.min(100, base + jitter));
+
+      // Safety: Hard cap for 'Speed' parameters to avoid strobing
+      if (metaParam.name.includes('Speed')) {
+        value = Math.min(value, 20);
+      }
+
+      // Safety: Hard cap for LUMINANCE_MASK threshold to avoid black screens
+      if (type === "LUMINANCE_MASK" && metaParam.name === "Threshold") {
+        value = Math.min(value, 20);
+      }
+
+      // Safety: Hard min for INFINITE_ZOOM plane count to avoid strobing and black screens
+      if (type === "INFINITE_ZOOM" && metaParam.name === "Plane Count") {
+        value = Math.max(value, 3);
+      }
 
       return {
         param: metaParam.name,

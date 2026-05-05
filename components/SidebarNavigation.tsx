@@ -7,6 +7,7 @@ import { loadMuxelsFile } from '@/services/sanitizeImportedEffects';
 import { mainGlitchEngine } from '@/services/glitchEngine';
 import { canMeld, isAlreadyMelded } from '@/services/pipelineUtils';
 import LoadingSpinner from './LoadingSpinner';
+import { generateAndLoad } from '../services/languageService';
 
 interface SidebarNavigationProps {
     onClose?: () => void;
@@ -213,26 +214,37 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             </div>
 
             {/* Footer Bar */}
-            <div className="h-9 flex items-center justify-center px-3 gap-2 bg-slate-800/80 shrink-0 border-t border-white/5">
-                {/* Import button */}
-                <button
-                    onClick={handleImport}
-                    className="h-6 rounded-md border border-white/5 bg-white/5 flex items-center gap-1 px-2 justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
-                    title="Import .muxels">
-                    <span className="material-symbols-outlined !text-[16px]">upload</span>
-                    <span className="text-[10px] font-semibold uppercase tracking-widest">Import</span>
-                </button>
+            {!isGameMode &&
+                <div className="h-9 flex items-center justify-center px-3 gap-2 bg-slate-800/80 shrink-0 border-t border-white/5">
+                    {/* Import button */}
+                    <button
+                        onClick={handleImport}
+                        className="h-6 rounded-md border border-white/5 bg-white/5 flex items-center gap-1 px-2 justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
+                        title="Import .muxels">
+                        <span className="material-symbols-outlined !text-[16px]">upload</span>
+                        <span className="text-[10px] font-semibold uppercase tracking-widest">Import</span>
+                    </button>
 
-                {/* Export button */}
-                <button
-                    onClick={handleExport}
-                    disabled={effects.length === 0}
-                    className={`h-6 rounded-md border border-white/5 bg-white/5 flex items-center gap-1 px-2 justify-center transition-all text-white/90 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed`}
-                    title="Export .muxels">
-                    <span className="material-symbols-outlined !text-[16px]">download</span>
-                    <span className="text-[10px] font-semibold uppercase tracking-widest">Export</span>
-                </button>
-            </div>
+                    {/* Export button */}
+                    <button
+                        onClick={handleExport}
+                        disabled={effects.length === 0}
+                        className="h-6 rounded-md border border-white/5 bg-white/5 flex items-center gap-1 px-2 justify-center transition-all text-white/90 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Export .muxels">
+                        <span className="material-symbols-outlined !text-[16px]">download</span>
+                        <span className="text-[10px] font-semibold uppercase tracking-widest">Export</span>
+                    </button>
+
+                    {/* AI Generate button */}
+                    <button
+                        onClick={() => generateAndLoad(setEffects, { temperature: 0.5 })}
+                        className="h-6 rounded-md border border-purple-500/30 bg-purple-500/10 flex items-center gap-1 px-2 justify-center transition-all text-purple-200 hover:text-white hover:bg-purple-500/20"
+                        title="Generate AI Pipeline">
+                        <span className="material-symbols-outlined !text-[16px]">magic_button</span>
+                        <span className="text-[10px] font-semibold uppercase tracking-widest">AI Gen</span>
+                    </button>
+                </div>
+            }
 
             {/* Library Panel — grows from bottom, pushing pipeline list up */}
             <AnimatePresence>
