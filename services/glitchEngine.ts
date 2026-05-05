@@ -35,6 +35,10 @@ export class GlitchEngine {
   private uIntegratedBuffer = new Float32Array(16);
   private uResolutionBuffer = new Float32Array(2);
 
+  // Phase Integration State
+  private velocityOffsets: Map<string, Float32Array> = new Map();
+  private lastConfigs: Map<string, Float32Array> = new Map();
+
   private transitionSnapshotTexture: WebGLTexture | null = null;
 
   private targetCtxMap = new WeakMap<HTMLCanvasElement, CanvasRenderingContext2D>();
@@ -305,6 +309,32 @@ export class GlitchEngine {
     // this avoids a Zustand store update + React re-render on every pointermove.
     const liveOverrides = dragOverride.overrides.get(effect.id) || null;
 
+    let offsets = this.velocityOffsets.get(effect.id);
+    let configs = this.lastConfigs.get(effect.id);
+
+    if (!offsets || !configs) {
+      offsets = new Float32Array(16);
+      configs = new Float32Array(32); // [base, range, base, range, ...]
+
+      // Initialize state to prevent teleport on frame 1
+      params.forEach((p, i) => {
+        if (meta.velocityParamIndices?.includes(i)) {
+          const override = liveOverrides?.find(o => o.index === i);
+          const finalMax = override?.value !== undefined ? override.value : p.value;
+          const finalMin = override?.min !== undefined ? override.min : p.min;
+
+          const base = p.frequencyBand !== 'OFF' ? finalMin : finalMax;
+          const range = p.frequencyBand !== 'OFF' ? (finalMax - finalMin) : 0;
+
+          configs![i * 2] = base;
+          configs![i * 2 + 1] = range;
+        }
+      });
+
+      this.velocityOffsets.set(effect.id, offsets);
+      this.lastConfigs.set(effect.id, configs);
+    }
+
     params.forEach((p, i) => {
       if (i < 16) {
         const override = liveOverrides?.find(o => o.index === i);
@@ -313,33 +343,52 @@ export class GlitchEngine {
         let finalValue = finalMax;
 
         const isVelocityParam = meta.velocityParamIndices?.includes(i);
+        const steadyTime = (currentTime || 0);
 
-        if (p.frequencyBand !== 'OFF') {
-          if (isVelocityParam) {
-            // MOTION REACTIVITY: Hybrid Clock logic
-            if (integratedReactivity) {
-              let audioClock = integratedReactivity.bass;
-              if (p.frequencyBand === 'SUB') audioClock = integratedReactivity.sub;
-              else if (p.frequencyBand === 'MID') audioClock = integratedReactivity.mid;
-              else if (p.frequencyBand === 'TREBLE') audioClock = integratedReactivity.treble;
+        if (isVelocityParam) {
+          // 1. Get current audio energy (Integral of audio)
+          let audioClock = 0;
+          if (p.frequencyBand !== 'OFF' && integratedReactivity) {
+            audioClock = integratedReactivity.bass;
+            if (p.frequencyBand === 'SUB') audioClock = integratedReactivity.sub;
+            else if (p.frequencyBand === 'MID') audioClock = integratedReactivity.mid;
+            else if (p.frequencyBand === 'TREBLE') audioClock = integratedReactivity.treble;
+          }
 
-              const range = finalMax - finalMin;
-              const steadyTime = (currentTime || 0);
+          // 2. Define speeds for this frame
+          const baseSpeed = p.frequencyBand !== 'OFF' ? finalMin : finalMax;
+          const reactiveRange = p.frequencyBand !== 'OFF' ? (finalMax - finalMin) : 0;
 
-              this.uIntegratedBuffer[i] = (finalMin * steadyTime) + (range * audioClock);
-              finalValue = 1.0;
-            }
-          } else {
-            // INSTANTANEOUS REACTIVITY: Map to smoothed amplitude values
-            if (reactivity) {
-              let energy = reactivity.bass;
-              if (p.frequencyBand === 'SUB') energy = reactivity.sub;
-              else if (p.frequencyBand === 'MID') energy = reactivity.mid;
-              else if (p.frequencyBand === 'TREBLE') energy = reactivity.treble;
+          // 3. Calculate current raw phase (ignoring offset)
+          const rawPhase = (baseSpeed * steadyTime) + (reactiveRange * audioClock);
 
-              const range = finalMax - finalMin;
-              finalValue = finalMin + (range * energy);
-            }
+          // 4. Handle Offset Compensation
+          let offset = offsets![i];
+          const lastBase = configs![i * 2];
+          const lastRange = configs![i * 2 + 1];
+
+          if (lastBase !== baseSpeed || lastRange !== reactiveRange) {
+            // PARAMETER CHANGED! Calculate new offset to pin the total phase.
+            const lastTotalPhase = (lastBase * steadyTime) + (lastRange * audioClock) + offset;
+            offset = lastTotalPhase - rawPhase;
+            offsets![i] = offset;
+          }
+
+          // 5. Store current state and output
+          configs![i * 2] = baseSpeed;
+          configs![i * 2 + 1] = reactiveRange;
+          this.uIntegratedBuffer[i] = rawPhase + offset;
+          finalValue = 1.0; // Normalize so shader sees Phase * 1.0
+        } else if (p.frequencyBand !== 'OFF') {
+          // INSTANTANEOUS REACTIVITY: Map to smoothed amplitude values
+          if (reactivity) {
+            let energy = reactivity.bass;
+            if (p.frequencyBand === 'SUB') energy = reactivity.sub;
+            else if (p.frequencyBand === 'MID') energy = reactivity.mid;
+            else if (p.frequencyBand === 'TREBLE') energy = reactivity.treble;
+
+            const range = finalMax - finalMin;
+            finalValue = finalMin + (range * energy);
           }
         }
 

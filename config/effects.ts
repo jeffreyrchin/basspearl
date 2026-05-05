@@ -192,7 +192,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Freq Y', { v: 35 }),
       p('Density', { v: 100 }),
       p('Jitter', { v: 100 }),
-      p('Speed', { v: 15 }, { v: 20, b: 'BASS' }),
+      p('Speed', { v: 15 }),
       p('Blend', { v: 100 }),
       p('Scale X', { v: 54 }),
       p('Scale Y', { v: 96 }),

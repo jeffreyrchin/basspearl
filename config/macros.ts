@@ -76,9 +76,9 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'WAVE_DISTORTION',
         params: [
-          o('Amplitude', { v: 75, m: 0, b: 'SUB' }, { v: 50, m: 10, b: 'SUB' }),
+          o('Amplitude', { v: 75, m: 0, b: 'SUB' }, { v: 30, b: 'OFF' }),
           o('Frequency', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 75, m: 0, b: 'SUB' }, { v: 50, m: 10, b: 'SUB' }),
+          o('Speed', { v: 75, m: 0, b: 'SUB' }, { v: 30, b: 'OFF' }),
         ],
         melded: false
       },
@@ -311,7 +311,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'TUNNEL_WARP',
         params: [
           o('Scale', { v: 2, b: 'OFF' }),
-          o('Speed', { v: 30, b: 'SUB' }, { v: 10, b: 'SUB' }),
+          o('Speed', { v: 30, b: 'SUB' }, { v: 5, b: 'OFF' }),
           o('Twist', { v: 0, b: 'OFF' }),
         ],
         melded: false
@@ -1639,7 +1639,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'SCROLL',
         params: [
           o('Left Speed', { v: 0, b: 'OFF' }),
-          o('Right Speed', { v: 30, b: 'SUB' }),
+          o('Right Speed', { v: 30, b: 'SUB' }, { v: 15, b: 'OFF' }),
           o('Up Speed', { v: 0, b: 'OFF' }),
           o('Down Speed', { v: 0, b: 'OFF' }),
           o('Overlap X', { v: 100, b: 'OFF' }),
