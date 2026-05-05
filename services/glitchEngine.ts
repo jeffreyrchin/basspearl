@@ -20,6 +20,12 @@ export interface GlitchRenderOptions {
   };
 }
 
+/** Serializable snapshot of the engine's phase integration state. */
+export interface EnginePhaseState {
+  offsets: Record<string, number[]>;
+  configs: Record<string, number[]>;
+}
+
 export class GlitchEngine {
   private canvas: HTMLCanvasElement;
   private gl: WebGL2RenderingContext;
@@ -416,6 +422,35 @@ export class GlitchEngine {
     } else {
       this.pipeline.applyPass(type, uniforms, !!meta.is3D, secondaryTexture);
     }
+  }
+
+  /**
+   * Returns a snapshot of the current phase integration state.
+   * Pass this to seedState() on a new engine to start rendering
+   * from the exact same visual position (WYSIWYG export).
+   */
+  public getState(): EnginePhaseState {
+    const offsets: Record<string, number[]> = {};
+    const configs: Record<string, number[]> = {};
+    this.velocityOffsets.forEach((arr, id) => { offsets[id] = Array.from(arr); });
+    this.lastConfigs.forEach((arr, id) => { configs[id] = Array.from(arr); });
+    return { offsets, configs };
+  }
+
+  /**
+   * Pre-loads phase integration state captured from another engine instance
+   * (e.g. the live preview engine) so that this engine starts rendering
+   * from the same visual position without any slider-drag teleportation.
+   */
+  public seedState(state: EnginePhaseState): void {
+    this.velocityOffsets.clear();
+    this.lastConfigs.clear();
+    Object.entries(state.offsets).forEach(([id, arr]) => {
+      this.velocityOffsets.set(id, new Float32Array(arr));
+    });
+    Object.entries(state.configs).forEach(([id, arr]) => {
+      this.lastConfigs.set(id, new Float32Array(arr));
+    });
   }
 
   public dispose() {

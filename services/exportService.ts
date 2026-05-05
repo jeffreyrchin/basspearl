@@ -6,7 +6,7 @@ import {
     AudioBufferSource,
     getFirstEncodableAudioCodec
 } from 'mediabunny';
-import { GlitchEngine } from './glitchEngine';
+import { GlitchEngine, EnginePhaseState } from './glitchEngine';
 import { EffectConfig } from '../types';
 import { MAX_PIXELS, MASTER_ASPECT_RATIO, DEFAULT_TARGET_WIDTH } from '../constants';
 
@@ -30,6 +30,8 @@ export interface ExportOptions {
     targetWidth?: number;
     onProgress?: (progress: number) => void;
     signal?: AbortSignal;
+    /** Phase state from the live engine for WYSIWYG export. */
+    engineState?: EnginePhaseState;
 }
 
 /**
@@ -119,6 +121,11 @@ export const exportVideo = async (options: ExportOptions): Promise<{ fileUrl: st
 
     // 7. Initialize Rendering Engine
     const exportEngine = new GlitchEngine();
+    // Seed with live engine state for WYSIWYG: start from the exact visual
+    // position that was visible in the preview at export time.
+    if (options.engineState) {
+        exportEngine.seedState(options.engineState);
+    }
     const totalFrames = Math.ceil(duration * fps);
 
     // Compute audio data rate dynamically from the actual map length

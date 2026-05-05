@@ -4,6 +4,7 @@ import { useEffectStore } from '../store/useEffectStore';
 import SidebarPipeline from './SidebarPipeline';
 import SidebarLibrary from './SidebarLibrary';
 import { loadMuxelsFile } from '@/services/sanitizeImportedEffects';
+import { mainGlitchEngine } from '@/services/glitchEngine';
 import { canMeld, isAlreadyMelded } from '@/services/pipelineUtils';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -44,7 +45,11 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     const isGameMode = useEffectStore(s => s.isGameMode);
 
     const handleExport = () => {
-        const dataStr = JSON.stringify(effects, null, 2);
+        const projectData = {
+            effects,
+            engineState: mainGlitchEngine.getState()
+        };
+        const dataStr = JSON.stringify(projectData, null, 2);
         const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -64,8 +69,11 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             const file = e.target.files?.[0];
             if (!file) return;
             loadMuxelsFile(file)
-                .then(sanitized => {
-                    setEffects(sanitized);
+                .then(project => {
+                    if (project.engineState) {
+                        mainGlitchEngine.seedState(project.engineState);
+                    }
+                    setEffects(project.effects);
                 })
                 .catch(err => {
                     alert(err.message);

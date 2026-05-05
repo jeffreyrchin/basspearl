@@ -177,4 +177,121 @@ describe('GlitchEngine: Teleportation Bug Test', () => {
     // The current engine teleports: jump = 100 (FAILS).
     expect(teleportDelta).toBe(0);
   });
+
+  it('should preserve visual phase across engine instances (getState/seedState roundtrip)', async () => {
+    const { GlitchEngine } = await import('./glitchEngine');
+    const engineA = new GlitchEngine();
+    const engineB = new GlitchEngine();
+
+    const effectId = 'persistence-test';
+    const effectSpeed1 = {
+      id: effectId,
+      type: 'SPECTRAL_MAP',
+      params: [
+        { param: 'Rainbow Density', value: 0.0, frequencyBand: 'OFF' },
+        { param: 'Color Shift', value: 0.0, frequencyBand: 'OFF' },
+        { param: 'Speed', value: 1.0, min: 0.0, frequencyBand: 'BASS' },
+      ],
+    } as any;
+
+    const effectSpeed2 = {
+      ...effectSpeed1,
+      params: [
+        ...effectSpeed1.params.slice(0, 2),
+        { ...effectSpeed1.params[2], value: 2.0 }
+      ]
+    };
+
+    const dummyTarget = {
+      width: 0, height: 0,
+      getContext: () => ({ drawImage: vi.fn(), fillRect: vi.fn() })
+    };
+
+    // 1. ENGINE A: Simulate a drag to create an offset
+    // Frame 1: Speed 1.0 at t=10
+    await engineA.renderToCanvas(dummyTarget as any, [effectSpeed1], {
+      currentTime: 10, integratedReactivity: { sub: 0, bass: 100, mid: 0, treble: 0 }
+    });
+    const phaseA1 = (engineA as any).uIntegratedBuffer[2]; // 1.0 * 100 = 100
+
+    // Frame 2: Move slider to 2.0 at same t=10
+    await engineA.renderToCanvas(dummyTarget as any, [effectSpeed2], {
+      currentTime: 10, integratedReactivity: { sub: 0, bass: 100, mid: 0, treble: 0 }
+    });
+    const phaseA2 = (engineA as any).uIntegratedBuffer[2]; 
+    
+    // VERIFY: phaseA2 should be 100 (pinned), NOT 200.
+    expect(phaseA2).toBe(100);
+
+    // 2. EXPORT: Copy state from Engine A to Engine B
+    const state = engineA.getState();
+    engineB.seedState(state);
+
+    // 3. ENGINE B: Render at t=10 with Speed 2.0
+    await engineB.renderToCanvas(dummyTarget as any, [effectSpeed2], {
+      currentTime: 10, integratedReactivity: { sub: 0, bass: 100, mid: 0, treble: 0 }
+    });
+    const phaseB = (engineB as any).uIntegratedBuffer[2];
+
+    console.log(`\n[STATE PERSISTENCE TEST]`);
+    console.log(`Engine A (Pinned Phase at t=10): ${phaseA2}`);
+    console.log(`Engine B (Seeded Phase at t=10): ${phaseB}`);
+
+    // Assertion: Engine B should show the EXACT same phase as Engine A
+    // If seeding works, phaseB should be 100.
+    // If seeding fails, phaseB would be 200 (raw speed * time).
+    expect(phaseB).toBe(phaseA2);
+  });
+
+  it('should maintain WYSIWYG even after sanitizing imported effects (E2E Persistence)', async () => {
+    const { GlitchEngine } = await import('./glitchEngine');
+    const { sanitizeImportedEffects } = await import('./sanitizeImportedEffects');
+    const engineA = new GlitchEngine();
+    const engineB = new GlitchEngine();
+
+    const effectId = 'e2e-persistence-id';
+    const effect = {
+      id: effectId,
+      type: 'SPECTRAL_MAP',
+      params: [
+        { param: 'Rainbow Density', value: 0.0, frequencyBand: 'OFF' },
+        { param: 'Color Shift', value: 0.0, frequencyBand: 'OFF' },
+        { param: 'Speed', value: 1.0, min: 0.0, frequencyBand: 'BASS' },
+      ],
+    } as any;
+
+    const dummyTarget = { width: 0, height: 0, getContext: () => ({ drawImage: vi.fn(), fillRect: vi.fn() }) };
+
+    // 1. ENGINE A: Create an offset
+    await engineA.renderToCanvas(dummyTarget as any, [effect], {
+      currentTime: 10, integratedReactivity: { sub: 0, bass: 100, mid: 0, treble: 0 }
+    });
+    // Change speed to 2.0 at same t=10
+    const effectChanged = { ...effect, params: [...effect.params.slice(0, 2), { ...effect.params[2], value: 2.0 }] };
+    await engineA.renderToCanvas(dummyTarget as any, [effectChanged], {
+      currentTime: 10, integratedReactivity: { sub: 0, bass: 100, mid: 0, treble: 0 }
+    });
+    const phaseA = (engineA as any).uIntegratedBuffer[2]; // Should be 100 (pinned)
+
+    // 2. SIMULATE EXPORT -> IMPORT
+    const exportedState = engineA.getState();
+    const exportedEffects = [effectChanged];
+
+    // SANITIZE (this is where the ID used to break)
+    const importedEffects = sanitizeImportedEffects(exportedEffects);
+    engineB.seedState(exportedState);
+
+    // 3. ENGINE B: Render with sanitized effects
+    await engineB.renderToCanvas(dummyTarget as any, importedEffects, {
+      currentTime: 10, integratedReactivity: { sub: 0, bass: 100, mid: 0, treble: 0 }
+    });
+    const phaseB = (engineB as any).uIntegratedBuffer[2];
+
+    console.log(`\n[E2E PERSISTENCE TEST]`);
+    console.log(`Engine A (Original): ${phaseA}`);
+    console.log(`Engine B (Imported): ${phaseB}`);
+
+    expect(phaseB).toBe(phaseA);
+    expect(importedEffects[0].id).toBe(effectId); // Verify ID preservation
+  });
 });

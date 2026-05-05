@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { exportVideo } from '@/services/exportService';
 import { analytics } from '@/services/analytics';
 import { EffectConfig } from '@/types';
+import { EnginePhaseState, mainGlitchEngine } from '@/services/glitchEngine';
 
 export interface VideoExportParams {
     options: {
@@ -54,6 +55,9 @@ export const useVideoExport = () => {
 
         try {
             analytics.export.started();
+            // Snapshot the live engine's phase state right before export so
+            // the first exported frame matches what is visible on screen.
+            const engineState: EnginePhaseState = mainGlitchEngine.getState();
             const result = await exportVideo({
                 audioBuffer: audioBuffer,
                 reactivityMap: reactivityMap,
@@ -63,7 +67,8 @@ export const useVideoExport = () => {
                 fps: options.fps,
                 targetWidth: options.resolution,
                 onProgress: (p) => setExportProgress(p * 100),
-                signal: abortControllerRef.current.signal
+                signal: abortControllerRef.current.signal,
+                engineState
             });
             analytics.export.succeeded(effects);
             setExportResult(result);

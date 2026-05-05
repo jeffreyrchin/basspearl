@@ -1,5 +1,11 @@
 import { EffectConfig, FrequencyBand, GlitchEffectType } from '../types';
 import { EFFECT_METADATA } from '../constants';
+import { EnginePhaseState } from './glitchEngine';
+
+export interface MuxelsProject {
+    effects: EffectConfig[];
+    engineState?: EnginePhaseState;
+}
 
 const VALID_BANDS: FrequencyBand[] = ['OFF', 'SUB', 'BASS', 'MID', 'TREBLE'];
 
@@ -60,7 +66,7 @@ export const sanitizeImportedEffects = (rawItems: any[]): EffectConfig[] => {
 
         // 5. Assemble the final safe object
         sanitized.push({
-            id: crypto.randomUUID(),
+            id: (typeof item.id === 'string' && item.id) ? item.id : crypto.randomUUID(),
             type: item.type as GlitchEffectType,
             params: sanitizedParams,
             muted: typeof item.muted === 'boolean' ? item.muted : false,
@@ -78,7 +84,7 @@ export const sanitizeImportedEffects = (rawItems: any[]): EffectConfig[] => {
     return sanitized;
 };
 
-export const loadMuxelsFile = async (file: File): Promise<EffectConfig[]> => {
+export const loadMuxelsFile = async (file: File): Promise<MuxelsProject> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -86,16 +92,32 @@ export const loadMuxelsFile = async (file: File): Promise<EffectConfig[]> => {
                 const content = event.target?.result as string;
                 const json = JSON.parse(content);
 
+                // Handle legacy format (just an array of effects)
                 if (Array.isArray(json)) {
                     const sanitized = sanitizeImportedEffects(json);
                     if (sanitized.length > 0) {
-                        resolve(sanitized);
+                        resolve({ effects: sanitized });
                     } else {
                         reject(new Error("No valid effects found in this .muxels file."));
                     }
-                } else {
-                    reject(new Error("Invalid .muxels file format. Expected an array of effects."));
+                    return;
                 }
+
+                // Handle new Project format
+                if (json && typeof json === 'object' && Array.isArray(json.effects)) {
+                    const sanitized = sanitizeImportedEffects(json.effects);
+                    if (sanitized.length > 0) {
+                        resolve({
+                            effects: sanitized,
+                            engineState: json.engineState
+                        });
+                    } else {
+                        reject(new Error("No valid effects found in this project file."));
+                    }
+                    return;
+                }
+
+                reject(new Error("Invalid .muxels file format."));
             } catch (err) {
                 console.error("Failed to read .muxels file:", err);
                 reject(new Error("Failed to read .muxels file."));
