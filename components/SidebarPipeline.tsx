@@ -10,9 +10,10 @@ import SortableGroupItem from './SortableGroupItem';
 
 interface SidebarPipelineProps {
     onNavigateToLibrary: () => void;
+    onAIGenerate: () => void;
 }
 
-const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
+const SidebarPipeline = ({ onNavigateToLibrary, onAIGenerate }: SidebarPipelineProps) => {
     const effects = useEffectStore(s => s.effects);
     const setEffects = useEffectStore(s => s.setEffects);
     const selectedIds = useEffectStore(s => s.selectedIds);
@@ -26,6 +27,8 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
     const activeFocus = focusStack[focusStack.length - 1];
     const pushFocus = useEffectStore(s => s.pushFocus);
     const addEffectFromSidebar = useEffectStore(s => s.addEffectFromSidebar);
+
+    const isGameMode = useEffectStore(s => s.isGameMode);
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
@@ -166,27 +169,52 @@ const SidebarPipeline = ({ onNavigateToLibrary }: SidebarPipelineProps) => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []); // Listener is attached once
 
-    const pipelineCard = (icon: string, label: string, onClick: () => void) => (
-        <button
-            onClick={onClick}
-            className="group relative py-5 flex flex-col items-center justify-center rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all duration-300 hover:-translate-y-1 active:scale-[0.9] overflow-hidden"
-        >
-            <span className={`material-symbols-outlined text-white/90 transition-all duration-300 group-hover:scale-110 mb-3 z-10`}>
-                {icon}
-            </span>
+    const pipelineCard = (icon: string, color: string, label: string, onClick: () => void) => {
+        const theme = {
+            indigo: {
+                border: 'border-indigo-500/40',
+                hoverBorder: 'hover:border-indigo-500/80',
+                background: 'bg-indigo-500/10',
+                gradient: 'from-indigo-500/20 to-transparent',
+                text: 'text-indigo-100/90',
+                iconColor: 'text-indigo-100',
+            },
+            purple: {
+                border: 'border-purple-500/40',
+                hoverBorder: 'hover:border-purple-500/80',
+                background: 'bg-purple-500/10',
+                gradient: 'from-purple-500/20 to-transparent',
+                text: 'text-purple-100/90',
+                iconColor: 'text-purple-100',
+            }
+        }[color as 'indigo' | 'purple'];
 
-            <div className="flex flex-col items-center z-10">
-                <span className="text-[11px] font-bold text-white/90 uppercase tracking-[0.15em] group-hover:text-white transition-colors">
-                    {label}
+        return (
+            <button
+                onClick={onClick}
+                className={`group relative py-6 flex flex-col items-center justify-center rounded-2xl border ${theme.background} ${theme.border} ${theme.hoverBorder} transition-all duration-300 hover:-translate-y-1 active:scale-[0.9] overflow-hidden`}
+            >
+                {/* Glossy overlay */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} opacity-50 group-hover:opacity-80 transition-opacity`} />
+
+                <span className={`material-symbols-outlined !text-[32px] ${theme.iconColor} transition-all duration-500 group-hover:scale-125 mb-4 z-10`}>
+                    {icon}
                 </span>
-            </div>
-        </button>
-    )
+
+                <div className="flex flex-col items-center z-10">
+                    <span className={`text-[12px] font-bold ${theme.text} group-hover:text-white uppercase tracking-[0.15em] transition-colors`}>
+                        {label}
+                    </span>
+                </div>
+            </button>
+        )
+    };
 
     if (effects.length === 0) {
         return (
             <div className="py-6 px-6 flex flex-col gap-4 select-none">
-                {pipelineCard('add_circle', 'Add Visuals', onNavigateToLibrary)}
+                {pipelineCard('add_circle', 'indigo', 'Add Visuals', onNavigateToLibrary)}
+                {!isGameMode && pipelineCard('magic_button', 'purple', 'AI Generate', onAIGenerate)}
             </div>
         );
     }

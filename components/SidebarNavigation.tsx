@@ -83,6 +83,10 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         input.click();
     };
 
+    const handleAIGenerate = () => {
+        generateAndLoad(setEffects, { temperature: 0.5 });
+    }
+
     const HeaderRightControls = (
         <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
@@ -210,7 +214,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
             {/* Pipeline List — shrinks as library panel grows */}
             <div key="pipeline-scroll" className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
-                <SidebarPipeline onNavigateToLibrary={() => pushFocus('library')} />
+                <SidebarPipeline onNavigateToLibrary={() => pushFocus('library')} onAIGenerate={handleAIGenerate} />
             </div>
 
             {/* Footer Bar */}
@@ -237,7 +241,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
                     {/* AI Generate button */}
                     <button
-                        onClick={() => generateAndLoad(setEffects, { temperature: 0.5 })}
+                        onClick={handleAIGenerate}
                         className="h-6 rounded-md border border-purple-500/30 bg-purple-500/10 flex items-center gap-1 px-2 justify-center transition-all text-purple-200 hover:text-white hover:bg-purple-500/20"
                         title="Generate AI Pipeline">
                         <span className="material-symbols-outlined !text-[16px]">magic_button</span>
