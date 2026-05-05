@@ -197,7 +197,7 @@ const SidebarPipeline = ({ onNavigateToLibrary, onAIGenerate }: SidebarPipelineP
                 {/* Glossy overlay */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} opacity-50 group-hover:opacity-80 transition-opacity`} />
 
-                <span className={`material-symbols-outlined !text-[32px] ${theme.iconColor} transition-all duration-500 group-hover:scale-125 mb-4 z-10`}>
+                <span className={`material-symbols-outlined !text-[32px] ${theme.iconColor} transition-all duration-500 group-hover:scale-125 group-hover:text-white mb-4 z-10`}>
                     {icon}
                 </span>
 

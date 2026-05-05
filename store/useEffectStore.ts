@@ -41,6 +41,8 @@ interface EffectState {
     // Actions
     setEffects: (effects: EffectConfig[]) => void;
 
+    clearEffects: () => void;
+
     // Selection
     toggleSelected: (id: string, multi?: boolean) => void;
     selectRange: (id: string) => void;
@@ -171,6 +173,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
             past: JSON.parse(JSON.stringify(target.past)),
             future: JSON.parse(JSON.stringify(target.future)),
             selectedIds: new Set<string>(), // Always clear selection on switch
+            activeDropdownId: null,
         });
     },
 
@@ -230,7 +233,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
                 effects: state.preGameEffects, // Restore session
                 past: state.preGamePast,       // Restore undo history
                 future: state.preGameFuture,   // Restore redo history
-                puzzleAudio: null
+                puzzleAudio: null,
+                selectedIds: new Set<string>(),
+                activeDropdownId: null,
             }));
             return;
         }
@@ -256,7 +261,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
             effects: [], // Clear effects for puzzle
             past: [],    // Fresh undo history for puzzle
             future: [],  // Fresh redo history for puzzle
-            isPreviewingPuzzle: true
+            isPreviewingPuzzle: true,
+            selectedIds: new Set<string>(),
+            activeDropdownId: null,
         }));
     },
 
@@ -272,6 +279,12 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     setEffects: (effects) => {
         get().commitHistory();
         set({ effects })
+    },
+
+    clearEffects: () => {
+        const { clearSelection, setEffects } = get();
+        clearSelection();
+        setEffects([]);
     },
 
     setIsInSelectMode: (isInSelectMode) => set({ isInSelectMode: isInSelectMode }),
@@ -328,6 +341,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         set({
             effects: previous,
             selectedIds: new Set(previous.filter(e => selectedIds.has(e.id)).map(e => e.id)),
+            activeDropdownId: null,
             past: past.slice(0, -1),
             future: [JSON.parse(JSON.stringify(effects)), ...future],
         });
@@ -340,6 +354,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         set({
             effects: next,
             selectedIds: new Set(next.filter(e => selectedIds.has(e.id)).map(e => e.id)),
+            activeDropdownId: null,
             past: [...past, JSON.parse(JSON.stringify(effects))],
             future: rest,
         });
@@ -398,6 +413,8 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         const { isMobile } = get();
         set((state) => ({
             effects: newEffects,
+            selectedIds: new Set<string>(),
+            activeDropdownId: null,
             isSidebarOpen: isMobile ? state.isSidebarOpen : true,
         }));
         if (!isMobile) get().pushFocus('pipeline');
@@ -427,7 +444,8 @@ export const useEffectStore = create<EffectState>((set, get) => ({
 
             return {
                 effects: next,
-                selectedIds: new Set<string>()
+                selectedIds: new Set<string>(),
+                activeDropdownId: null,
             };
         });
     },
@@ -487,7 +505,11 @@ export const useEffectStore = create<EffectState>((set, get) => ({
                 return acc;
             }, []);
 
-            return { effects: next, selectedIds: new Set<string>() };
+            return {
+                effects: next,
+                selectedIds: new Set<string>(),
+                activeDropdownId: null,
+            };
         });
     },
 

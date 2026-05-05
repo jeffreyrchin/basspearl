@@ -23,6 +23,7 @@
 import { MACRO_METADATA } from '../config/macros';
 import { EFFECT_METADATA } from '../config/effects';
 import { EffectConfig, GlitchEffectType, FrequencyBand, MacroMetadata } from '../types';
+import { useEffectStore } from '../store/useEffectStore';
 
 // ---------------------------------------------------------------------------
 // Internal model types
@@ -393,6 +394,7 @@ export function generateAndLoad(
 ): void {
   const model = getLanguageModel();
   const pipeline = model.generatePipeline(options);
+  useEffectStore.getState().clearSelection();
   setEffects(pipeline);
 }
 

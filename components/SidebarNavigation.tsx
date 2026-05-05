@@ -36,7 +36,9 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     const batchMeld = useEffectStore(s => s.batchMeld);
     const batchUnmeld = useEffectStore(s => s.batchUnmeld);
 
+    const clearSelection = useEffectStore(s => s.clearSelection);
     const setEffects = useEffectStore(s => s.setEffects);
+    const clearEffects = useEffectStore(s => s.clearEffects);
 
     const canMeldSelected = useMemo(() => canMeld(effects, selectedIds), [effects, selectedIds]);
     const isMelded = useMemo(() => isAlreadyMelded(effects, selectedIds), [effects, selectedIds]);
@@ -74,6 +76,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                     if (project.engineState) {
                         mainGlitchEngine.seedState(project.engineState);
                     }
+                    clearSelection();
                     setEffects(project.effects);
                 })
                 .catch(err => {
@@ -196,6 +199,16 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                         title="Delete Selected (Backspace)"
                     >
                         <span className="material-symbols-outlined !text-[16px] group-hover:scale-110 transition-transform will-change-transform">delete</span>
+                    </button>
+
+                    {/* Clear All Button */}
+                    <button
+                        onClick={clearEffects}
+                        disabled={effects.length === 0}
+                        className="w-8 h-6 border border-white/10 rounded-md flex items-center justify-center text-white bg-white/5 hover:text-red-400 hover:border-red-400/20 hover:bg-red-400/5 transition-all disabled:opacity-20 disabled:cursor-not-allowed group"
+                        title="Clear All Effects"
+                    >
+                        <span className="material-symbols-outlined !text-[18px] group-hover:scale-110 transition-transform will-change-transform">delete_sweep</span>
                     </button>
                 </div>
 
