@@ -604,8 +604,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'GRAIN',
         params: [
-          o('Width', { v: 70 }),
-          o('Height', { v: 70 }),
+          o('Width', { v: 80 }),
+          o('Height', { v: 80 }),
           o('Freq X', { v: 36 }),
           o('Freq Y', { v: 20 }),
           o('Density', { v: 100, b: 'OFF' }),
@@ -620,27 +620,27 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         melded: false
       },
       {
-        type: 'TERRAIN_SPHERE',
-        params: [
-          o('Extrusion', { v: 5, b: 'SUB' }, { v: 0, b: 'OFF' }),
-          o('Detail Level', { v: 100, b: 'OFF' }),
-          o('Size', { v: 50, b: 'OFF' }),
-          o('Offset X', { v: 0, b: 'OFF' }),
-          o('Offset Y', { v: 0, b: 'OFF' }),
-          o('Offset Z', { v: 0, b: 'OFF' }),
-          o('Spin Speed X', { v: 3, m: 0, b: 'SUB' }, { v: 18, b: 'OFF' }),
-          o('Spin Speed Y', { v: 50, m: 0, b: 'SUB' }, { v: 18, b: 'OFF' }),
-          o('Spin Speed Z', { v: 0, m: 0, b: 'OFF' }, { v: 18, b: 'OFF' }),
-        ],
-        melded: false
-      },
-      {
         type: 'SPECTRAL_MAP',
         params: [
           o('Rainbow Density', { v: 10, b: 'OFF' }),
           o('Color Shift', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 100, b: 'OFF' }),
+          o('Speed', { v: 20, b: 'OFF' }),
           o('Intensity', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'TERRAIN_SPHERE',
+        params: [
+          o('Extrusion', { v: 10, b: 'SUB' }, { v: 5, b: 'OFF' }),
+          o('Detail Level', { v: 100, b: 'OFF' }),
+          o('Size', { v: 45, b: 'OFF' }, { v: 50, b: 'OFF' }),
+          o('Offset X', { v: 0, b: 'OFF' }),
+          o('Offset Y', { v: 0, b: 'OFF' }),
+          o('Offset Z', { v: 0, b: 'OFF' }),
+          o('Spin Speed X', { v: 0, b: 'OFF' }),
+          o('Spin Speed Y', { v: 20, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Spin Speed Z', { v: 0, b: 'OFF' }),
         ],
         melded: false
       },
