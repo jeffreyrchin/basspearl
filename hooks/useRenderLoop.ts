@@ -211,10 +211,12 @@ export const useRenderLoop = ({
         if (currentTimeLabelRef.current) currentTimeLabelRef.current.innerText = audioStore.formatTime(time);
         if (scrubberRef.current) {
             scrubberRef.current.value = time.toString();
-            const percent = scrubberPercent(time, audioStore.duration);
+            // Use the live duration from the engine to avoid stale closures in the animation loop
+            const duration = mainAudioEngine.buffer?.duration || 0;
+            const percent = scrubberPercent(time, duration);
             scrubberRef.current.style.setProperty('--progress', `${percent}%`);
         }
-    }, [currentTimeLabelRef, audioStore.formatTime, scrubberRef, scrubberPercent, audioStore.duration]);
+    }, [currentTimeLabelRef, audioStore.formatTime, scrubberRef, scrubberPercent]);
 
     const animate = useCallback(async () => {
         // If engine is asleep but a transition is happening, we must wake up
@@ -227,7 +229,7 @@ export const useRenderLoop = ({
 
         const elapsed = isLiveModeRef.current
             ? audioStore.getElapsedSeconds() // Don't clamp seconds in live mode (no max duration)
-            : Math.min(audioStore.getElapsedSeconds(), audioStore.duration);
+            : Math.min(audioStore.getElapsedSeconds(), mainAudioEngine.buffer?.duration || 0);
         // Only throttle if not dragging scrubber
         if (frameCounterRef.current % 4 === 0 && !isDraggingScrubberRef.current && !isLiveModeRef.current) {
             updateScrubberUI(elapsed);
