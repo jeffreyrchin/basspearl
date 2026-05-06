@@ -1263,15 +1263,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         melded: false
       },
       {
-        type: 'EDGE_MASK',
-        params: [
-          o('Sensitivity', { v: 5, b: 'OFF' }),
-          o('Thickness', { v: 0, b: 'OFF' }),
-          o('Invert', { v: 100, b: 'OFF' }),
-        ],
-        melded: false
-      },
-      {
         type: 'INVERT',
         params: [
           o('Inversion', { v: 100, b: 'OFF' }),
@@ -1283,15 +1274,15 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         params: [
           o('Color Shift', { v: 10, b: 'OFF' }),
           o('Speed', { v: 10, b: 'OFF' }),
-          o('Vibrance', { v: 100, b: 'OFF' }),
+          o('Vibrance', { v: 50, b: 'OFF' }),
         ],
         melded: false
       },
       {
         type: 'INFINITE_ZOOM',
         params: [
-          o('Speed', { v: 100, b: 'SUB' }, { v: 15, b: 'OFF' }),
-          o('Depth', { v: 8, b: 'OFF' }),
+          o('Speed', { v: 50, b: 'SUB' }, { v: 15, b: 'OFF' }),
+          o('Depth', { v: 10, b: 'OFF' }),
           o('Spacing', { v: 40, b: 'OFF' }),
           o('Plane Count', { v: 100, b: 'OFF' }),
           o('Edge Feather', { v: 70, b: 'OFF' }),
