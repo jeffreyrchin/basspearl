@@ -94,10 +94,6 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     openExportModal,
     isExporting
 }) => {
-    const focusStack = useEffectStore(s => s.focusStack);
-    const pushFocus = useEffectStore(s => s.pushFocus);
-    const removeFocus = useEffectStore(s => s.removeFocus);
-    const isInspectorOpen = focusStack.includes('inspector');
     const isSidebarOpen = useEffectStore(s => s.isSidebarOpen);
     const setIsSidebarOpen = useEffectStore(s => s.setIsSidebarOpen);
     const setIsUiHidden = useEffectStore(s => s.setIsUiHidden);
@@ -210,11 +206,22 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                 {/* Pipeline Toggle */}
                                 <ToolbarRow
                                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                                    icon="format_list_bulleted"
-                                    label="Pipeline"
+                                    icon="add_circle"
+                                    label="Visuals"
                                     shortcut="P"
                                     isCollapsed={isToolbarCollapsed}
                                     isActive={isSidebarOpen}
+                                />
+
+                                {/* Scene Hotbar Toggle (Desktop only) */}
+                                <ToolbarRow
+                                    onClick={() => setIsSceneHotbarOpen(!isSceneHotbarOpen)}
+                                    icon="transition_push"
+                                    label="Scenes"
+                                    shortcut="K"
+                                    isCollapsed={isToolbarCollapsed}
+                                    isActive={isSceneHotbarOpen}
+                                    className={`hidden ${!isGameMode && 'lg:flex'}`}
                                 />
 
                                 {/* Puzzles Toggle */}
@@ -224,31 +231,6 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                     label="Puzzles"
                                     isCollapsed={isToolbarCollapsed}
                                     isActive={isPuzzlesModalOpen}
-                                />
-
-                                {/* Inspector Toggle (Desktop only) */}
-                                <ToolbarRow
-                                    onClick={() => {
-                                        if (isInspectorOpen) removeFocus('inspector');
-                                        else pushFocus('inspector');
-                                    }}
-                                    icon="tune"
-                                    label="Inspector"
-                                    shortcut="I"
-                                    isCollapsed={isToolbarCollapsed}
-                                    isActive={isInspectorOpen}
-                                    className="hidden lg:flex"
-                                />
-
-                                {/* Scene Hotbar Toggle (Desktop only) */}
-                                <ToolbarRow
-                                    onClick={() => setIsSceneHotbarOpen(!isSceneHotbarOpen)}
-                                    icon="keyboard_keys"
-                                    label="Scenes"
-                                    shortcut="K"
-                                    isCollapsed={isToolbarCollapsed}
-                                    isActive={isSceneHotbarOpen}
-                                    className={`hidden ${!isGameMode && 'lg:flex'}`}
                                 />
 
                                 {/* Hide UI */}

@@ -48,7 +48,7 @@ const HelpContent: React.FC = () => {
                             <span className="font-bold text-white">1. Select audio source:</span> In the main toolbar on the left, click <InlineIcon icon="audio_file" />, <InlineIcon icon="mic" />, or <InlineIcon icon="present_to_all" /> to select your audio source. If you have a virtual audio driver installed such as BlackHole or Voicemeeter, you can select the microphone to route audio to Muxels from any application on your device.
                         </p>
                         <p className="text-white/90 text-base leading-relaxed">
-                            <span className="font-bold text-white">2. Add effects:</span> To add visual effects, open the sidebar by clicking the <InlineIcon icon="format_list_bulleted" /> icon in the main toolbar on the left. In the sidebar, click “Add Visuals” to open the effect library. In the effect library, click the search button (<InlineIcon icon="search" />) to search for effects by name, or click the header tabs to filter effects by category. Click on an effect card to add it to your scene.
+                            <span className="font-bold text-white">2. Add effects:</span> To add visual effects, open the sidebar by clicking the <InlineIcon icon="add_circle" /> icon in the main toolbar on the left. In the sidebar, click “Add Visuals” to open the effect library. In the effect library, click the search button (<InlineIcon icon="search" />) to search for effects by name, or click the header tabs to filter effects by category. Click on an effect card to add it to your scene.
                         </p>
                     </div>
 
@@ -65,7 +65,7 @@ const HelpContent: React.FC = () => {
                         <li className="relative pl-6 space-y-1.5 before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:bg-primary before:rounded-full">
                             <h3 className="text-[12px] font-bold uppercase tracking-[0.2em] text-white">Creating effect groups:</h3>
                             <p className="text-white/80 text-sm leading-relaxed">
-                                Select a contiguous group of effects to enable to the "Group" button (<InlineIcon icon="group_work" size={16} />) in the sidebar header. Grouping effects isolates them from the rest of the effect pipeline.
+                                Select a contiguous group of effects to enable to the "Group" button (<InlineIcon icon="group_work" size={16} />) in the sidebar header. Grouping effects isolates them from the rest of the effect chain.
                             </p>
                         </li>
 
@@ -124,7 +124,7 @@ const HelpContent: React.FC = () => {
 
                     {/* Pipeline */}
                     <div className="space-y-4">
-                        <h3 className="text-[11px] font-bold uppercase tracking-widest text-white border-b border-white/5 pb-2">Pipeline & Effects</h3>
+                        <h3 className="text-[11px] font-bold uppercase tracking-widest text-white border-b border-white/5 pb-2">Sidebar</h3>
                         <div className="space-y-3">
                             <Shortcut keys={['Mod', 'A']} description="Select All Effects" />
                             <Shortcut keys={['Mod', 'D']} description="Duplicate Selected" />

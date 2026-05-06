@@ -112,7 +112,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 <button
                     onClick={onClose}
                     className="w-8 h-8 rounded-xl flex items-center justify-center transition-all bg-white/5 text-white/90 hover:text-white hover:bg-white/10 border border-white/5"
-                    title="Close Pipeline (P)">
+                    title="Close Sidebar (P)">
                     <span className="material-symbols-outlined">chevron_right</span>
                 </button>
             )}
@@ -256,7 +256,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                     <button
                         onClick={handleAIGenerate}
                         className="group relative h-6 rounded-md overflow-hidden flex items-center gap-1 px-2 justify-center transition-all duration-300 hover:scale-110 active:scale-95 text-white border-transparent will-change-transform"
-                        title="Generate AI Pipeline">
+                        title="AI Generate">
 
                         {/* Smooth Rainbow Rotating Gradient */}
                         <div className="absolute inset-0 z-0 pointer-events-none rounded-md">
