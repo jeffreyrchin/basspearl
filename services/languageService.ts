@@ -56,6 +56,8 @@ interface EffectModel {
 export interface LanguageModel {
   /** Generate a complete EffectConfig[] pipeline. */
   generatePipeline(options?: GenerateOptions): EffectConfig[];
+  /** Generate parameters for a specific effect type in context. */
+  sampleParams(type: GlitchEffectType, temperature: number, pipelineContext?: EffectConfig[]): EffectConfig['params'];
   /** List of all Pattern-category effect types seen in presets. */
   knownPatterns: GlitchEffectType[];
 }
@@ -241,15 +243,102 @@ export function buildLanguageModel(): LanguageModel {
     return weightedSample(candidates, weights, temperature);
   }
 
+  // ---------------------------------------------------------------------------
+  // Pipeline-Context Constraints
+  // ---------------------------------------------------------------------------
+
+  /**
+   * "Amorphous" pattern types — soft, fluid textures with no hard edges.
+   * EDGE_MASK (Outline) after these tends to create noisy/overloaded results
+   * if Sensitivity is too high or Thickness too low.
+   */
+  const AMORPHOUS_PATTERNS = new Set<GlitchEffectType>([
+    'ORGANIC_NOISE', // Plasma
+    'CELLULAR_NOISE', // Cells
+  ]);
+
+  /**
+   * Resolve absolute per-param constraints based on the pipeline built so far.
+   * Returns { paramName -> { max?, min? } } overrides applied in Phase 1.
+   */
+  function resolveConstraints(
+    type: GlitchEffectType,
+    pipelineContext: EffectConfig[]
+  ): Record<string, { max?: number; min?: number }> {
+    const constraints: Record<string, { max?: number; min?: number }> = {};
+
+    // Rule 2: DEEP_FRY (Color Burn) — if pipeline contains any pattern with Blend <= 50,
+    // cap Heat at 30 to prevent black screens.
+    if (type === 'DEEP_FRY') {
+      const hasLowBlend = pipelineContext.some(e => {
+        const blendParam = e.params.find(p => p.param === 'Blend');
+        return blendParam !== undefined && blendParam.value <= 50;
+      });
+      if (hasLowBlend) {
+        constraints['Heat'] = { max: 30 };
+      }
+    }
+
+    return constraints;
+  }
+
+  /**
+   * Apply cross-parameter relative constraints after all values are computed (Phase 2).
+   * Mutates paramValues in-place.
+   *
+   * Rule 1: EDGE_MASK after amorphous patterns: Thickness >= Sensitivity - 3
+   * Rule 3: Sole Pattern in pipeline: Blend = 100%
+   */
+  function applyRelativeConstraints(
+    type: GlitchEffectType,
+    pipelineContext: EffectConfig[],
+    paramValues: number[],
+    meta: import('../types').EffectMetadata,
+  ): void {
+    // Rule 1: EDGE_MASK — enforce thickness to be >= Sensitivity - 3 when amorphous patterns are present.
+    if (type === 'EDGE_MASK') {
+      const thickIdx = meta.params.findIndex(p => p.name === 'Thickness');
+      const sensIdx = meta.params.findIndex(p => p.name === 'Sensitivity');
+
+      if (thickIdx !== -1 && sensIdx !== -1) {
+        // Relative Constraint: If pipeline contains amorphous patterns,
+        // we need higher thickness to keep the outline defined.
+        const hasAmorphous = pipelineContext.some(e => AMORPHOUS_PATTERNS.has(e.type as GlitchEffectType));
+        if (hasAmorphous) {
+          // Round to 1dp to match the rounding applied to all stored param values,
+          // preventing floating-point drift (e.g. 4.7 - 3 = 1.7000000000000002).
+          const minThickness = Math.round((paramValues[sensIdx] - 3) * 10) / 10;
+          paramValues[thickIdx] = Math.max(paramValues[thickIdx], minThickness);
+        }
+      }
+    }
+
+    // Rule 3: If this is the only Pattern in the pipeline, force Blend = 100%
+    // so the canvas is always fully covered.
+    if (meta.category === 'Pattern') {
+      const hasOtherPattern = pipelineContext.some(
+        e => EFFECT_METADATA[e.type as GlitchEffectType]?.category === 'Pattern'
+      );
+      if (!hasOtherPattern) {
+        const blendIdx = meta.params.findIndex(p => p.name === 'Blend');
+        if (blendIdx !== -1) paramValues[blendIdx] = 100;
+      }
+    }
+  }
+
   /**
    * Generate parameter values for a given effect type.
-   * Strategy: sample two observed preset vectors and linearly interpolate between them,
-   * then apply a small Gaussian jitter. This keeps params "on the manifold" of
-   * real-world preset values rather than being uniformly random.
+   *
+   * Uses a two-phase constraint system:
+   *   Phase 1 — independent per-param values (interpolation + jitter + absolute caps)
+   *   Phase 2 — cross-param relative constraints (applied after all values are known)
+   *
+   * @param pipelineContext - Effects generated so far; used for cross-effect constraint resolution.
    */
   function sampleParams(
     type: GlitchEffectType,
     temperature: number,
+    pipelineContext: EffectConfig[] = [],
   ): EffectConfig['params'] {
     const meta = EFFECT_METADATA[type];
     if (!meta) return [];
@@ -273,49 +362,47 @@ export function buildLanguageModel(): LanguageModel {
       const idxA = Math.floor(Math.random() * observations.length);
       let idxB = Math.floor(Math.random() * (observations.length - 1));
       if (idxB >= idxA) idxB += 1;
-
       const vecA = observations[idxA];
       const vecB = observations[idxB];
-      baseBands = [...bandObservations[idxA]]; // Inherit frequency bands from one of the parents
-
-      const t = Math.random(); // interpolation factor
+      baseBands = [...bandObservations[idxA]];
+      const t = Math.random();
       baseVector = vecA.map((a, i) => a + t * ((vecB[i] ?? a) - a));
     }
 
-    // Apply jitter proportional to temperature (±10% of the param range at temp=1)
+    const activeConstraints = resolveConstraints(type, pipelineContext);
     const jitterScale = temperature * 10;
-    return meta.params.map((metaParam, i) => {
-      const base = baseVector[i] ?? metaParam.defaultValue;
 
+    // PHASE 1: Compute all parameter values independently
+    const paramValues: number[] = meta.params.map((metaParam, i) => {
+      const base = baseVector[i] ?? metaParam.defaultValue;
       // Structural parameters (Scale, Pan) should not have jitter to avoid visual misalignment/gaps
       const isStructural = metaParam.name.includes('Scale') || metaParam.name.includes('Pan');
       const jitter = isStructural ? 0 : (Math.random() - 0.5) * 2 * jitterScale;
-
       const min = metaParam.defaultMin ?? 0;
       let value = Math.max(min, Math.min(100, base + jitter));
-
       // Safety: Hard cap for 'Speed' parameters to avoid strobing
-      if (metaParam.name.includes('Speed')) {
-        value = Math.min(value, 20);
-      }
-
+      if (metaParam.name.includes('Speed')) value = Math.min(value, 20);
       // Safety: Hard cap for LUMINANCE_MASK threshold to avoid black screens
-      if (type === "LUMINANCE_MASK" && metaParam.name === "Threshold") {
-        value = Math.min(value, 20);
-      }
-
+      if (type === 'LUMINANCE_MASK' && metaParam.name === 'Threshold') value = Math.min(value, 20);
       // Safety: Hard min for INFINITE_ZOOM plane count to avoid strobing and black screens
-      if (type === "INFINITE_ZOOM" && metaParam.name === "Plane Count") {
-        value = Math.max(value, 3);
-      }
+      if (type === 'INFINITE_ZOOM' && metaParam.name === 'Plane Count') value = Math.max(value, 3);
 
-      return {
-        param: metaParam.name,
-        value: Math.round(value * 10) / 10,
-        min,
-        frequencyBand: baseBands[i] ?? metaParam.defaultBand as FrequencyBand,
-      };
+      const constraint = activeConstraints[metaParam.name];
+      if (constraint?.max !== undefined) value = Math.min(value, constraint.max);
+      if (constraint?.min !== undefined) value = Math.max(value, constraint.min);
+
+      return value;
     });
+
+    // PHASE 2: Apply cross-param relative constraints
+    applyRelativeConstraints(type, pipelineContext, paramValues, meta);
+
+    return meta.params.map((metaParam, i) => ({
+      param: metaParam.name,
+      value: Math.round(paramValues[i] * 10) / 10,
+      min: metaParam.defaultMin ?? 0,
+      frequencyBand: baseBands[i] ?? metaParam.defaultBand as FrequencyBand,
+    }));
   }
 
   // ---------------------------------------------------------------------------
@@ -358,7 +445,7 @@ export function buildLanguageModel(): LanguageModel {
       pipeline.push({
         id: crypto.randomUUID(),
         type: nextType,
-        params: sampleParams(nextType, temperature),
+        params: sampleParams(nextType, temperature, pipeline), // pass context for cross-effect constraints
         muted: false,
         soloed: false,
         seed: Math.floor(Math.random() * 10000),
@@ -370,7 +457,7 @@ export function buildLanguageModel(): LanguageModel {
     return pipeline;
   }
 
-  return { generatePipeline, knownPatterns };
+  return { generatePipeline, sampleParams, knownPatterns };
 }
 
 // ---------------------------------------------------------------------------

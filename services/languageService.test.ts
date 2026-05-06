@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { getLanguageModel, buildLanguageModel } from './languageService';
 import { EFFECT_METADATA } from '../config/effects';
 import { MACRO_METADATA } from '../config/macros';
-import { GlitchEffectType, MacroMetadata } from '../types';
+import { EffectConfig, GlitchEffectType, MacroMetadata } from '../types';
 
 describe('LanguageService', () => {
   it('builds the model without crashing', () => {
@@ -93,7 +93,7 @@ describe('LanguageService', () => {
 
     it('never generates an effect type that does not exist in the training data', () => {
       const vocabulary = new Set<string>();
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < 100; i++) {
         model.generatePipeline().forEach(e => vocabulary.add(e.type));
       }
 
@@ -145,7 +145,7 @@ describe('LanguageService', () => {
         });
       });
 
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 100; i++) {
         const pipeline = model.generatePipeline();
         pipeline.forEach(effect => {
           effect.params.forEach(p => {
@@ -157,59 +157,136 @@ describe('LanguageService', () => {
     });
 
     it('never applies jitter to structural parameters (Scale, Pan)', () => {
-      for (let i = 0; i < 20; i++) {
-        const pipeline = model.generatePipeline({ temperature: 1.0 });
-        pipeline.forEach(effect => {
-          effect.params.forEach(p => {
-            if (p.param.includes('Scale') || p.param.includes('Pan')) {
-              // With zero jitter, an interpolated value between integers (or same integers)
-              // should always have a clean decimal (at most 1 from interpolation, never random noise).
-              // Since our rounding logic is Math.round(v * 10) / 10, jitter usually creates
-              // many different decimals. Zero jitter keeps it on the clean manifold.
-              const isClean = (p.value * 10) % 1 === 0;
-              expect(isClean).toBe(true);
-            }
-          });
+      // Scale and Pan should be rock-solid to prevent visual seams or misalignment
+      for (let i = 0; i < 50; i++) {
+        // Even at max temperature, structural jitter should be 0.
+        const params = model.sampleParams('SHAPE', 1.0);
+        params.forEach(p => {
+          if (p.param.includes('Scale') || p.param.includes('Pan')) {
+            // Our interpolation logic uses Math.random() for the vector, 
+            // but if jitter is 0, the value should be exactly the base vector.
+            // Since our base observations are integers, the result of 
+            // lerp(a, b, t) where a,b are ints and t is random will have at most 1 decimal place 
+            // due to our rounding logic (Math.round(v * 10) / 10).
+            // Jittered values would be arbitrary floats that don't land on clean decimals.
+            const isClean = Math.abs((p.value * 10) % 1) < 0.0001;
+            expect(isClean).toBe(true);
+          }
         });
       }
     });
 
+    it('increases parameter variance as temperature increases', () => {
+      const type = 'GRAIN';
+
+      const getVariance = (temp: number) => {
+        const samples: number[] = [];
+        // Increase sample size to stabilize the statistical measure
+        for (let i = 0; i < 500; i++) {
+          const p = model.sampleParams(type, temp).find(p => p.param === 'Freq X');
+          if (p) samples.push(p.value);
+        }
+        const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
+        return samples.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / samples.length;
+      };
+
+      const lowVar = getVariance(0.0);
+      const highVar = getVariance(1.0);
+
+      // High temperature should produce more variance than zero temperature
+      // (Variance at temp=0 is just the variance of picking different pairs of observations,
+      // while temp=1 adds significant Gaussian jitter).
+      expect(highVar).toBeGreaterThan(lowVar);
+    });
+
     it('enforces a hard safety cap of 20 on all Speed parameters', () => {
-      for (let i = 0; i < 20; i++) {
-        const pipeline = model.generatePipeline({ temperature: 1.0 });
-        pipeline.forEach(effect => {
-          effect.params.forEach(p => {
-            if (p.param.includes('Speed')) {
-              expect(p.value).toBeLessThanOrEqual(20);
-            }
-          });
+      // Pick an effect known to have a Speed parameter
+      for (let i = 0; i < 50; i++) {
+        const params = model.sampleParams('WAVE_DISTORTION', 1.0);
+        params.forEach(p => {
+          if (p.param.includes('Speed')) expect(p.value).toBeLessThanOrEqual(20);
         });
       }
     });
 
     it('enforces a hard safety cap of 20 on LUMINANCE_MASK Threshold parameter', () => {
-      for (let i = 0; i < 20; i++) {
-        const pipeline = model.generatePipeline({ temperature: 1.0 });
-        pipeline.forEach(effect => {
-          effect.params.forEach(p => {
-            if (effect.type === "LUMINANCE_MASK" && p.param === "Threshold") {
-              expect(p.value).toBeLessThanOrEqual(20);
-            }
-          });
-        });
+      for (let i = 0; i < 50; i++) {
+        const params = model.sampleParams('LUMINANCE_MASK', 1.0);
+        const threshold = params.find(p => p.param === 'Threshold');
+        if (threshold) expect(threshold.value).toBeLessThanOrEqual(20);
       }
     });
 
     it('enforces a hard safety min of 3 on INFINITE_ZOOM Plane Count parameter', () => {
-      for (let i = 0; i < 20; i++) {
-        const pipeline = model.generatePipeline({ temperature: 1.0 });
-        pipeline.forEach(effect => {
-          effect.params.forEach(p => {
-            if (effect.type === "INFINITE_ZOOM" && p.param === "Plane Count") {
-              expect(p.value).toBeGreaterThanOrEqual(3);
-            }
-          });
-        });
+      for (let i = 0; i < 50; i++) {
+        const params = model.sampleParams('INFINITE_ZOOM', 1.0);
+        const planes = params.find(p => p.param === 'Plane Count');
+        if (planes) expect(planes.value).toBeGreaterThanOrEqual(3);
+      }
+    });
+
+    it('enforces EDGE_MASK Thickness constraints (Relative rule: Thickness >= Sensitivity - 3)', () => {
+      const mockPipeline: EffectConfig[] = [
+        { id: 'p1', type: 'ORGANIC_NOISE', params: [] }
+      ];
+
+      for (let i = 0; i < 100; i++) {
+        const params = model.sampleParams('EDGE_MASK', 1.0, mockPipeline);
+        const sensitivity = params.find(p => p.param === 'Sensitivity');
+        const thickness = params.find(p => p.param === 'Thickness');
+
+        if (sensitivity && thickness) {
+          const expectedMin = Math.round((sensitivity.value - 3) * 10) / 10;
+          expect(thickness.value).toBeGreaterThanOrEqual(expectedMin);
+        }
+      }
+    });
+
+    it('forces sole Pattern Blend to 100% when no other Pattern is in the pipeline', () => {
+      for (let i = 0; i < 50; i++) {
+        // Empty context means this will be the first pattern
+        const params = model.sampleParams('GRAIN', 1.0, []);
+        const blend = params.find(p => p.param === 'Blend');
+        if (blend) expect(blend.value).toBe(100);
+      }
+    });
+
+    it('allows Pattern Blend to be < 100% when another pattern is already present', () => {
+      const mockPipeline: EffectConfig[] = [
+        { id: 'p1', type: 'GRAIN', params: [] }
+      ];
+
+      let foundLowBlend = false;
+      for (let i = 0; i < 100; i++) {
+        const params = model.sampleParams('SHAPE', 1.0, mockPipeline);
+        const blend = params.find(p => p.param === 'Blend');
+        if (blend && blend.value < 100) {
+          foundLowBlend = true;
+          break;
+        }
+      }
+      expect(foundLowBlend).toBe(true);
+    });
+
+    it('caps DEEP_FRY Heat ≤ 30 when a low-Blend pattern exists in the pipeline', () => {
+      // Manually construct a context that triggers the rule
+      const mockPipeline: EffectConfig[] = [
+        {
+          id: 'test-1',
+          type: 'ORGANIC_NOISE',
+          params: [
+            { param: 'Blend', value: 10, min: 0, frequencyBand: 'BASS' }
+          ]
+        }
+      ];
+
+      // Run multiple samples to ensure the constraint is always enforced
+      for (let i = 0; i < 50; i++) {
+        const params = model.sampleParams('DEEP_FRY', 1.0, mockPipeline);
+        const heat = params.find(p => p.param === 'Heat');
+        if (heat) {
+          expect(heat.value).toBeLessThanOrEqual(30);
+        }
       }
     });
   });
