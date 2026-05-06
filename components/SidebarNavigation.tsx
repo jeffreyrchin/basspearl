@@ -255,10 +255,18 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                     {/* AI Generate button */}
                     <button
                         onClick={handleAIGenerate}
-                        className="h-6 rounded-md border border-purple-500/30 bg-purple-500/10 flex items-center gap-1 px-2 justify-center transition-all text-purple-200 hover:text-white hover:bg-purple-500/20"
+                        className="group relative h-6 rounded-md overflow-hidden flex items-center gap-1 px-2 justify-center transition-all duration-300 hover:scale-110 active:scale-95 text-white border-transparent will-change-transform"
                         title="Generate AI Pipeline">
-                        <span className="material-symbols-outlined !text-[16px]">magic_button</span>
-                        <span className="text-[10px] font-semibold uppercase tracking-widest">AI Gen</span>
+
+                        {/* Smooth Rainbow Rotating Gradient */}
+                        <div className="absolute inset-0 z-0 pointer-events-none rounded-md">
+                            <div className="houdini-rainbow-border" />
+                            {/* Themed tint overlay */}
+                            <div className="absolute inset-0 bg-purple-500/10 z-0 opacity-40 rounded-md" />
+                        </div>
+
+                        <span className="material-symbols-outlined !text-[14px] z-10 transition-transform group-hover:scale-110">magic_button</span>
+                        <span className="text-[9px] font-bold uppercase tracking-widest z-10">AI Gen</span>
                     </button>
                 </div>
             }

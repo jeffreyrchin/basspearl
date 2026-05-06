@@ -169,7 +169,7 @@ const SidebarPipeline = ({ onNavigateToLibrary, onAIGenerate }: SidebarPipelineP
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []); // Listener is attached once
 
-    const pipelineCard = (icon: string, color: string, label: string, onClick: () => void) => {
+    const pipelineCard = (icon: string, color: string, label: string, onClick: () => void, hasRainbowBorder?: boolean) => {
         const theme = {
             indigo: {
                 border: 'border-indigo-500/40',
@@ -192,16 +192,25 @@ const SidebarPipeline = ({ onNavigateToLibrary, onAIGenerate }: SidebarPipelineP
         return (
             <button
                 onClick={onClick}
-                className={`group relative py-6 flex flex-col items-center justify-center rounded-2xl border ${theme.background} ${theme.border} ${theme.hoverBorder} transition-all duration-300 hover:-translate-y-1 active:scale-[0.9] overflow-hidden`}
+                className={`group relative py-6 flex flex-col items-center justify-center rounded-2xl border ${hasRainbowBorder ? 'border-transparent' : `${theme.background} ${theme.border} ${theme.hoverBorder}`} transition-all duration-300 hover:-translate-y-1 active:scale-[0.9] overflow-hidden will-change-transform`}
             >
-                {/* Glossy overlay */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} opacity-50 group-hover:opacity-80 transition-opacity`} />
+                {hasRainbowBorder && (
+                    <div className="absolute inset-0 z-0 rounded-2xl pointer-events-none">
+                        {/* CSS Houdini Native Hardware Animated Border */}
+                        <div className="houdini-rainbow-border" />
+                        {/* Themed background tint overlay */}
+                        <div className={`absolute inset-0 ${theme.background} z-0 opacity-40 rounded-2xl`} />
+                    </div>
+                )}
 
-                <span className={`material-symbols-outlined !text-[32px] ${theme.iconColor} transition-all duration-500 group-hover:scale-125 group-hover:text-white mb-4 z-10`}>
+                {/* Glossy overlay */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} opacity-50 group-hover:opacity-80 transition-opacity z-10`} />
+
+                <span className={`material-symbols-outlined !text-[32px] ${theme.iconColor} transition-all duration-500 group-hover:scale-125 group-hover:text-white mb-4 z-20`}>
                     {icon}
                 </span>
 
-                <div className="flex flex-col items-center z-10">
+                <div className="flex flex-col items-center z-20">
                     <span className={`text-[12px] font-bold ${theme.text} group-hover:text-white uppercase tracking-[0.15em] transition-colors`}>
                         {label}
                     </span>
@@ -214,7 +223,7 @@ const SidebarPipeline = ({ onNavigateToLibrary, onAIGenerate }: SidebarPipelineP
         return (
             <div className="py-6 px-6 flex flex-col gap-4 select-none">
                 {pipelineCard('add_circle', 'indigo', 'Add Visuals', onNavigateToLibrary)}
-                {!isGameMode && pipelineCard('magic_button', 'purple', 'AI Generate', onAIGenerate)}
+                {!isGameMode && pipelineCard('magic_button', 'purple', 'AI Generate', onAIGenerate, true)}
             </div>
         );
     }

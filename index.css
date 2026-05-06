@@ -340,3 +340,35 @@ textarea {
 .animate-gradient-move {
   animation: gradient-move 3s linear infinite;
 }
+
+@property --grad-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes houdini-spin {
+  from {
+    --grad-angle: 0deg;
+  }
+
+  to {
+    --grad-angle: 360deg;
+  }
+}
+
+.houdini-rainbow-border {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  /* Border thickness */
+  background: conic-gradient(from var(--grad-angle), #00fff2, #7d00ff, #ff00c1, #ffae00, #00fff2);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: houdini-spin 4s linear infinite;
+  pointer-events: none;
+}
