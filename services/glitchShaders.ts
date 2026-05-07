@@ -1588,6 +1588,294 @@ void main() {
 }
 `;
 
+export const POLKA_DOTS_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[9]; // [shape size, grid size, feather, scaleX, scaleY, panX, panY, rotation, blend]
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+${GLSL_TRANSFORM}
+${GLSL_HYBRID_FREQ}
+
+void main() {
+    TR tr = getTransform_(v_texCoord, u_params[3], u_params[4], u_params[5], u_params[6], u_params[7], u_resolution);
+    float size = u_params[0] / 100.0 * 0.5;
+    float freq = getHybridFreq(u_params[1] / 100.0);
+    float feather = max(u_params[2] / 100.0 * 0.5, 0.001);
+    float blend = u_params[8] / 100.0;
+
+    // Center the scale to avoid strobing/jumping when adjusting frequency
+    vec2 uv = (tr.localUV - 0.5) * freq;
+    vec2 gv = fract(uv) - 0.5;
+    float dist = length(gv);
+    float mask = smoothstep(size, size - feather, dist);
+    
+    vec4 src = texture(u_image, v_texCoord);
+    float alpha = mask * blend * tr.mask;
+    outColor = vec4(mix(src.rgb, vec3(1.0), alpha), mix(src.a, 1.0, alpha));
+}
+`;
+
+export const BRICK_WALL_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[9]; // [spacing, freqX, freqY, scaleX, scaleY, panX, panY, rotation, blend]
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+${GLSL_TRANSFORM}
+${GLSL_HYBRID_FREQ}
+
+void main() {
+    TR tr = getTransform_(v_texCoord, u_params[3], u_params[4], u_params[5], u_params[6], u_params[7], u_resolution);
+    float spacing = u_params[0] / 100.0 * 0.2;
+    float freqX = getHybridFreq(u_params[1] / 100.0);
+    float freqY = getHybridFreq(u_params[2] / 100.0);
+    float blend = u_params[8] / 100.0;
+
+    // Center the scale to avoid strobing/jumping when adjusting frequency
+    vec2 uv = (tr.localUV - 0.5) * vec2(freqX, freqY);
+    uv.x += step(1.0, mod(uv.y, 2.0)) * 0.5;
+    vec2 f = fract(uv);
+    float mask = step(spacing, f.x) * step(spacing, f.y);
+    
+    vec4 src = texture(u_image, v_texCoord);
+    float alpha = mask * blend * tr.mask;
+    outColor = vec4(mix(src.rgb, vec3(1.0), alpha), mix(src.a, 1.0, alpha));
+}
+`;
+
+export const DIAMOND_GRID_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[9]; // [shape size, grid size, feather, scaleX, scaleY, panX, panY, rotation, blend]
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+${GLSL_TRANSFORM}
+${GLSL_HYBRID_FREQ}
+
+void main() {
+    TR tr = getTransform_(v_texCoord, u_params[3], u_params[4], u_params[5], u_params[6], u_params[7], u_resolution);
+    float size = u_params[0] / 100.0 * 0.5;
+    float freq = getHybridFreq(u_params[1] / 100.0);
+    float feather = max(u_params[2] / 100.0 * 0.5, 0.001);
+    float blend = u_params[8] / 100.0;
+
+    // Center the scale to avoid strobing/jumping when adjusting frequency
+    vec2 uv = (tr.localUV - 0.5) * freq;
+    vec2 gv = fract(uv) - 0.5;
+    float dist = abs(gv.x) + abs(gv.y);
+    float mask = smoothstep(size, size - feather, dist);
+    
+    vec4 src = texture(u_image, v_texCoord);
+    float alpha = mask * blend * tr.mask;
+    outColor = vec4(mix(src.rgb, vec3(1.0), alpha), mix(src.a, 1.0, alpha));
+}
+`;
+
+export const TRIANGLE_GRID_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[9]; // [size, frequency, feather, scaleX, scaleY, panX, panY, rotation, blend]
+uniform vec2 u_resolution;
+in vec2 v_texCoord;
+out vec4 outColor;
+${GLSL_TRANSFORM}
+${GLSL_HYBRID_FREQ}
+
+void main() {
+    TR tr = getTransform_(v_texCoord, u_params[3], u_params[4], u_params[5], u_params[6], u_params[7], u_resolution);
+    float size = u_params[0] / 100.0 * 0.17;
+    float freq = getHybridFreq(u_params[1] / 100.0);
+    float feather = max(u_params[2] / 100.0 * 0.2, 0.001);
+    float blend = u_params[8] / 100.0;
+
+    vec2 s = vec2(1, 1.7320508); // 1.732 = sqrt(3)
+    // Center the scale to avoid strobing/jumping when adjusting frequency
+    vec2 uv = (tr.localUV - 0.5) * freq * s;
+    
+    vec4 hexId = floor(vec4(uv, uv - vec2(0.5, 0.5))) + 0.5;
+    vec4 hexUv = vec4(uv, uv - vec2(0.5, 0.5)) - hexId;
+    
+    vec2 gv = dot(hexUv.xy, hexUv.xy) < dot(hexUv.zw, hexUv.zw) ? hexUv.xy : hexUv.zw;
+    
+    float x = abs(gv.x);
+    float y = gv.y;
+    // Triangle SDF approximation
+    float dist = max(x * 0.866025 + y * 0.5, -y);
+    float mask = smoothstep(size, size - feather, dist);
+    
+    vec4 src = texture(u_image, v_texCoord);
+    float alpha = mask * blend * tr.mask;
+    outColor = vec4(mix(src.rgb, vec3(1.0), alpha), mix(src.a, 1.0, alpha));
+}
+`;
+
+export const TRUCHET_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[8]; // [thickness, frequency, scaleX, scaleY, panX, panY, rotation, blend]
+uniform vec2 u_resolution;
+uniform float u_seed;
+in vec2 v_texCoord;
+out vec4 outColor;
+${GLSL_TRANSFORM}
+${GLSL_HASH}
+${GLSL_HYBRID_FREQ}
+
+void main() {
+    TR tr = getTransform_(v_texCoord, u_params[2], u_params[3], u_params[4], u_params[5], u_params[6], u_resolution);
+    float thickness = max(u_params[0] / 100.0, 0.01);
+    float freq = getHybridFreq(u_params[1] / 100.0);
+    float blend = u_params[7] / 100.0;
+
+    // Center the scale to avoid strobing/jumping when adjusting frequency
+    vec2 uv = (tr.localUV - 0.5) * freq;
+    vec2 gv = fract(uv) - 0.5;
+    vec2 id = floor(uv);
+    
+    float n = hash(id, u_seed);
+    gv.x *= (step(n, 0.5) * 2.0 - 1.0);
+    
+    float d = abs(abs(gv.x + gv.y) - 0.5);
+    float mask = smoothstep(thickness, 0.0, d);
+    
+    vec4 src = texture(u_image, v_texCoord);
+    float alpha = mask * blend * tr.mask;
+    outColor = vec4(mix(src.rgb, vec3(1.0), alpha), mix(src.a, 1.0, alpha));
+}
+`;
+
+export const KALEIDOSCOPE_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[4]; // [segments, zoom, speed, blend]
+uniform vec2 u_resolution;
+uniform float u_integrated_values[8];
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    float segments = max(floor(u_params[0]), 1.0);
+    float zoom = max(u_params[1] / 100.0 * 3.0, 0.01);
+    float speed = u_params[2] / 100.0;
+    float blend = u_params[3] / 100.0;
+    float time = u_integrated_values[2] * speed;
+
+    float aspect = u_resolution.x / u_resolution.y;
+    vec2 uv = (v_texCoord - 0.5) / zoom;
+    uv.x *= aspect;
+    
+    float r = length(uv);
+    float a = atan(uv.y, uv.x) + time;
+    
+    float angle = 6.28318 / segments;
+    a = mod(a, angle);
+    a = abs(a - angle * 0.5);
+    
+    // Polar back to Cartesian
+    vec2 kCoord = vec2(cos(a), sin(a)) * r;
+    
+    // Rotate the "pieces" inside the mirrors independently
+    float rot = time * 0.5;
+    float cr = cos(rot), sr = sin(rot);
+    kCoord = mat2(cr, -sr, sr, cr) * kCoord;
+    
+    vec2 kUV = kCoord;
+    kUV.x /= aspect;
+    
+    // Combine linear drift with internal rotation
+    kUV += 0.5 + vec2(time * 0.15, time * 0.1);
+    
+    // Mirrored Repeat sampling for a cleaner look
+    vec2 mirroredUV = abs(mod(kUV, 2.0) - 1.0);
+    vec4 tex = texture(u_image, mirroredUV);
+    
+    vec4 src = texture(u_image, v_texCoord);
+    outColor = mix(src, tex, blend);
+}
+`;
+
+export const CIRCUIT_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[3]; // [density, grid size, blend]
+uniform vec2 u_resolution;
+uniform float u_seed;
+in vec2 v_texCoord;
+out vec4 outColor;
+${GLSL_HASH}
+
+void main() {
+    float density = u_params[0] / 100.0;
+    float gridSize = 10.0 + u_params[1] / 100.0 * 30.0;
+    float blend = u_params[2] / 100.0;
+
+    float aspect = u_resolution.x / u_resolution.y;
+    vec2 uv = v_texCoord * gridSize;
+    uv.x *= aspect;
+    
+    vec2 id = floor(uv);
+    vec2 gv = fract(uv) - 0.5;
+    
+    float n = hash(id, u_seed);
+    float th = 0.05;
+    
+    // Use large integer offsets to decouple direction/dot hashes from density
+    float dir = hash(id + vec2(17.0, 31.0), u_seed);
+    float vLine = smoothstep(th + 0.02, th, abs(gv.x)); 
+    float hLine = smoothstep(th + 0.02, th, abs(gv.y));
+    float lineMask = mix(hLine, vLine, step(0.5, dir));
+    
+    float dotHash = hash(id + vec2(43.0, 59.0), u_seed);
+    float dotMask = smoothstep(th * 4.0, th * 3.0, length(gv)) * step(0.7, dotHash);
+    
+    float mask = max(lineMask, dotMask) * step(n, density);
+    
+    vec4 src = texture(u_image, v_texCoord);
+    outColor = vec4(mix(src.rgb, vec3(1.0), mask * blend), mix(src.a, 1.0, mask * blend));
+}
+`;
+
+export const CAUSTICS_SHADER = `#version 300 es
+precision highp float;
+uniform sampler2D u_image;
+uniform float u_params[4]; // [intensity, zoom, speed, blend]
+uniform float u_integrated_values[8];
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    float intensity = u_params[0] / 100.0;
+    float zoom = (1.0 - u_params[1] / 100.0) * 6.28318;
+    float speed = u_params[2] / 100.0;
+    float blend = u_params[3] / 100.0;
+    float time = u_integrated_values[2] * speed;
+
+    vec2 uv = v_texCoord * zoom;
+    vec2 p = uv - 250.0;
+    
+    vec2 i = vec2(p);
+    float c = 1.0;
+    float inten = .005;
+
+    for (int n = 0; n < 5; n++) {
+        float t = time * (1.0 - (3.5 / float(n+1)));
+        i = p + vec2(cos(t - i.x) + sin(t + i.y), sin(t - i.y) + cos(t + i.x));
+        c += 1.0 / length(vec2(p.x / (sin(i.x+t)/inten), p.y / (cos(i.y+t)/inten)));
+    }
+    
+    c /= 5.0;
+    c = 1.17-pow(c, 1.4);
+    float mask = clamp(pow(abs(c), 8.0) * intensity, 0.0, 1.0);
+    
+    vec4 src = texture(u_image, v_texCoord);
+    outColor = vec4(mix(src.rgb, vec3(1.0), mask * blend), mix(src.a, 1.0, mask * blend));
+}
+`;
+
 export interface ShaderDefinition {
     name: string;
     fragmentSource: string;
@@ -1641,4 +1929,12 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     TERRAIN_RING: { name: 'TERRAIN_RING', fragmentSource: '', velocityParamIndices: [6, 7, 8], is3D: true },
     IMAGE: { name: 'IMAGE', fragmentSource: IMAGE_SHADER },
     PARTICLES: { name: 'PARTICLES', fragmentSource: '', velocityParamIndices: [4, 5], is3D: true },
+    POLKA_DOTS: { name: 'POLKA_DOTS', fragmentSource: POLKA_DOTS_SHADER },
+    BRICK_WALL: { name: 'BRICK_WALL', fragmentSource: BRICK_WALL_SHADER },
+    DIAMOND_GRID: { name: 'DIAMOND_GRID', fragmentSource: DIAMOND_GRID_SHADER },
+    TRIANGLE_GRID: { name: 'TRIANGLE_GRID', fragmentSource: TRIANGLE_GRID_SHADER },
+    TRUCHET: { name: 'TRUCHET', fragmentSource: TRUCHET_SHADER },
+    KALEIDOSCOPE: { name: 'KALEIDOSCOPE', fragmentSource: KALEIDOSCOPE_SHADER, velocityParamIndices: [2] },
+    CIRCUIT: { name: 'CIRCUIT', fragmentSource: CIRCUIT_SHADER },
+    CAUSTICS: { name: 'CAUSTICS', fragmentSource: CAUSTICS_SHADER, velocityParamIndices: [2] },
 };

@@ -42,7 +42,15 @@ export type GlitchEffectType =
   | 'HEX_CRUSH'
   | 'SPIRAL_GRADIENT'
   | 'IMAGE'
-  | 'PARTICLES';
+  | 'PARTICLES'
+  | 'POLKA_DOTS'
+  | 'BRICK_WALL'
+  | 'DIAMOND_GRID'
+  | 'TRIANGLE_GRID'
+  | 'TRUCHET'
+  | 'KALEIDOSCOPE'
+  | 'CIRCUIT'
+  | 'CAUSTICS'
 
 export type FrequencyBand = 'OFF' | 'SUB' | 'BASS' | 'MID' | 'TREBLE';
 
