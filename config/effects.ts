@@ -24,8 +24,8 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     label: 'Color Separate',
     category: 'Modifier',
     params: [
-      p('Offset', { v: 20 }, { v: 100, b: 'SUB' }),
-      p('Vertical Tear', { v: 20 }, { v: 100, b: 'SUB' }),
+      p('Shift X', { v: 20 }, { v: 100, b: 'SUB' }),
+      p('Shift Y', { v: 20 }, { v: 100, b: 'SUB' }),
     ],
   },
   DATA_CORRUPTION: {

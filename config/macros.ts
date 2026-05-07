@@ -1846,8 +1846,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
       {
         type: 'CHANNEL_SHIFT',
         params: [
-          o('Offset', { v: 15, b: 'OFF' }),
-          o('Vertical Tear', { v: 15, b: 'OFF' }),
+          o('Shift X', { v: 15, b: 'OFF' }),
+          o('Shift Y', { v: 15, b: 'OFF' }),
         ],
         melded: false
       },

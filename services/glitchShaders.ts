@@ -69,14 +69,6 @@ uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
 
-// Branchless (no if/else) sampling that returns transparent black outside 0..1 range (eliminates streaks)
-vec4 sampleTexture(sampler2D tex, vec2 uv) {
-    // Returns 1.0 if inside [0, 1], 0.0 if outside
-    vec2 inside = step(vec2(0.0), uv) * step(uv, vec2(1.0));
-    float isVisible = inside.x * inside.y;
-    return texture(tex, uv) * isVisible;
-}
-
 void main() {
     vec2 pixelSize = 1.0 / u_resolution;
     
@@ -87,14 +79,35 @@ void main() {
     float shiftX = u_params[0] * 0.1 * u_unit * pixelSize.x;
     float shiftY = u_params[1] * 0.1 * u_unit * pixelSize.y;
     
-    vec4 color = sampleTexture(u_image, v_texCoord);
-    vec4 sampR = sampleTexture(u_image, v_texCoord - vec2(shiftX, shiftY));
-    vec4 sampB = sampleTexture(u_image, v_texCoord + vec2(shiftX, shiftY));
+    vec2 uvR = v_texCoord - vec2(shiftX, shiftY);
+    vec2 uvB = v_texCoord + vec2(shiftX, shiftY);
+
+    // Calculate feathered visibility masks (0.0 at edge, 1.0 after 'feather' distance)
+    // This removes the "hard boundary" by smoothly fading the shift into the original image.
+    float feather = 0.05; 
+    vec2 inR = smoothstep(vec2(0.0), vec2(feather), uvR) * smoothstep(vec2(0.0), vec2(feather), 1.0 - uvR);
+    float visR = inR.x * inR.y;
     
-    // Composite alpha ensures ghosts stay visible and solid when melded
-    float finalAlpha = max(color.a, max(sampR.a, sampB.a));
+    vec2 inB = smoothstep(vec2(0.0), vec2(feather), uvB) * smoothstep(vec2(0.0), vec2(feather), 1.0 - uvB);
+    float visB = inB.x * inB.y;
+
+    // Primary samples
+    vec4 color = texture(u_image, v_texCoord);
+    vec4 sampR = texture(u_image, uvR);
+    vec4 sampB = texture(u_image, uvB);
+
+    // Fallback logic
+    // If the shifted sample is near or outside the frame, we smoothly mix 
+    // in the original center color for that channel.
+    float r = mix(color.r, sampR.r, visR);
+    float b = mix(color.b, sampB.b, visB);
     
-    outColor = vec4(sampR.r, color.g, sampB.b, finalAlpha);
+    // Also smoothly blend the alpha fallback.
+    float alphaR = mix(color.a, sampR.a, visR);
+    float alphaB = mix(color.a, sampB.a, visB);
+    float finalAlpha = max(color.a, max(alphaR, alphaB));
+
+    outColor = vec4(r, color.g, b, finalAlpha);
 }
 `;
 
@@ -351,13 +364,6 @@ uniform vec2 u_resolution;
 in vec2 v_texCoord;
 out vec4 outColor;
 
-// Branchless (no if/else) sampling that returns transparent black outside 0..1 range (eliminates streaks)
-vec4 sampleTexture(sampler2D tex, vec2 uv) {
-    vec2 inside = step(vec2(0.0), uv) * step(uv, vec2(1.0));
-    float isVisible = inside.x * inside.y;
-    return texture(tex, uv) * isVisible;
-}
-
 void main() {
     vec2 pixelSize = 1.0 / u_resolution;
     
@@ -367,28 +373,50 @@ void main() {
     
     float bleedAmount = (u_params[0] * 0.1 * u_unit) * pixelSize.x;
     float ghostShift = (u_params[1] * 0.1 * u_unit) * pixelSize.x;
+    float feather = 0.05;
+
+    vec2 uvR = v_texCoord - vec2(bleedAmount, 0.0);
+    vec2 uvB = v_texCoord + vec2(bleedAmount, 0.0);
+
+    // Calculate feathered visibility masks
+    vec2 inR = smoothstep(vec2(0.0), vec2(feather), uvR) * smoothstep(vec2(0.0), vec2(feather), 1.0 - uvR);
+    float visR = inR.x * inR.y;
     
-    vec4 color = sampleTexture(u_image, v_texCoord);
-    vec4 sampR = sampleTexture(u_image, v_texCoord - vec2(bleedAmount, 0.0));
-    vec4 sampB = sampleTexture(u_image, v_texCoord + vec2(bleedAmount, 0.0));
-    
-    // Calculate ghost colors
-    float r = sampR.r;
-    float b = sampB.b;
+    vec2 inB = smoothstep(vec2(0.0), vec2(feather), uvB) * smoothstep(vec2(0.0), vec2(feather), 1.0 - uvB);
+    float visB = inB.x * inB.y;
+
+    // Primary samples
+    vec4 color = texture(u_image, v_texCoord);
+    vec4 sampR = texture(u_image, uvR);
+    vec4 sampB = texture(u_image, uvB);
+
+    // Fallback logic for Red and Blue
+    float r = mix(color.r, sampR.r, visR);
+    float b = mix(color.b, sampB.b, visB);
     float g = color.g;
     
-    float finalAlpha = max(color.a, max(sampR.a, sampB.a));
-    
+    float aR = mix(color.a, sampR.a, visR);
+    float aB = mix(color.a, sampB.a, visB);
+    float finalAlpha = max(color.a, max(aR, aB));
+
+    // Optional Ghosting (Green channel shift)
     if (ghostShift > 0.0) {
-        vec4 sampG = sampleTexture(u_image, v_texCoord - vec2(ghostShift, 0.0));
-        g = (g + sampG.g) / 1.5;
-        finalAlpha = max(finalAlpha, sampG.a);
+        vec2 uvG = v_texCoord - vec2(ghostShift, 0.0);
+        vec2 inG = smoothstep(vec2(0.0), vec2(feather), uvG) * smoothstep(vec2(0.0), vec2(feather), 1.0 - uvG);
+        float visG = inG.x * inG.y;
+        
+        vec4 sampG = texture(u_image, uvG);
+        float g_shifted = mix(color.g, sampG.g, visG);
+        float aG = mix(color.a, sampG.a, visG);
+        
+        // Blend the ghost green channel with the center green channel
+        g = (g + g_shifted) / 1.5;
+        finalAlpha = max(finalAlpha, aG);
     }
-    
-    outColor = vec4((color.r + r)/2.0, g, (color.b + b)/2.0, finalAlpha);
+
+    outColor = vec4(r, g, b, finalAlpha);
 }
 `;
-
 
 export const ROTATE_SHADER = `#version 300 es
 precision highp float;
