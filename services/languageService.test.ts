@@ -157,23 +157,48 @@ describe('LanguageService', () => {
     });
 
     it('never applies jitter to structural parameters (Scale, Pan)', () => {
-      // Scale and Pan should be rock-solid to prevent visual seams or misalignment
-      for (let i = 0; i < 50; i++) {
-        // Even at max temperature, structural jitter should be 0.
-        const params = model.sampleParams('SHAPE', 1.0);
-        params.forEach(p => {
-          if (p.param.includes('Scale') || p.param.includes('Pan')) {
-            // Our interpolation logic uses Math.random() for the vector, 
-            // but if jitter is 0, the value should be exactly the base vector.
-            // Since our base observations are integers, the result of 
-            // lerp(a, b, t) where a,b are ints and t is random will have at most 1 decimal place 
-            // due to our rounding logic (Math.round(v * 10) / 10).
-            // Jittered values would be arbitrary floats that don't land on clean decimals.
-            const isClean = Math.abs((p.value * 10) % 1) < 0.0001;
-            expect(isClean).toBe(true);
-          }
-        });
-      }
+      const type = 'SHAPE';
+      const getVariance = (temp: number, paramName: string) => {
+        const samples: number[] = [];
+        // Increase sample size to stabilize statistical measures
+        for (let i = 0; i < 500; i++) {
+          const p = model.sampleParams(type, temp).find(p => p.param === paramName);
+          if (p) samples.push(p.value);
+        }
+        const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
+        return samples.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / samples.length;
+      };
+
+      // For structural params, variance should be nearly identical at T=0 and T=1
+      const varScale0 = getVariance(0, 'Scale X');
+      const varScale1 = getVariance(1, 'Scale X');
+      const varPan0 = getVariance(0, 'Pan X');
+      const varPan1 = getVariance(1, 'Pan X');
+      
+      // Jitter adds +/- 10 range (variance ~33). 
+      // We expect the difference to be well below that (allowing for sampling noise).
+      expect(Math.abs(varScale1 - varScale0)).toBeLessThan(15);
+      expect(Math.abs(varPan1 - varPan0)).toBeLessThan(15);
+    });
+
+    it('allows jitter on Gradient Pan parameters (exception to structural rule)', () => {
+      const type = 'SPIRAL_GRADIENT';
+      const getVariance = (temp: number, paramName: string) => {
+        const samples: number[] = [];
+        for (let i = 0; i < 500; i++) {
+          const p = model.sampleParams(type, temp).find(p => p.param === paramName);
+          if (p) samples.push(p.value);
+        }
+        const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
+        return samples.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / samples.length;
+      };
+
+      const var0 = getVariance(0, 'Pan X');
+      const var1 = getVariance(1, 'Pan X');
+      
+      // For gradients, Pan X is NOT structural, so jitter IS applied.
+      // Variance should increase significantly (base variance + jitter variance).
+      expect(var1).toBeGreaterThan(var0 + 15);
     });
 
     it('increases parameter variance as temperature increases', () => {

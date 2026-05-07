@@ -376,7 +376,11 @@ export function buildLanguageModel(): LanguageModel {
     const paramValues: number[] = meta.params.map((metaParam, i) => {
       const base = baseVector[i] ?? metaParam.defaultValue;
       // Structural parameters (Scale, Pan) should not have jitter to avoid visual misalignment/gaps
-      const isStructural = metaParam.name.includes('Scale') || metaParam.name.includes('Pan');
+      const isStructural =
+        metaParam.name.includes('Scale X') ||
+        metaParam.name.includes('Scale Y') ||
+        metaParam.name.includes('Pan X') && type !== 'SPIRAL_GRADIENT' && type !== 'RADIAL_GRADIENT' ||
+        metaParam.name.includes('Pan Y') && type !== 'SPIRAL_GRADIENT' && type !== 'RADIAL_GRADIENT';
       const jitter = isStructural ? 0 : (Math.random() - 0.5) * 2 * jitterScale;
       const min = metaParam.defaultMin ?? 0;
       let value = Math.max(min, Math.min(100, base + jitter));

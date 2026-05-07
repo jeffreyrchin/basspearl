@@ -148,10 +148,10 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
     label: 'Shape',
     category: 'Pattern',
     params: [
-      p('Side Count', { v: 4 }, { v: 4 }),
+      p('Side Count', { v: 10 }),
       p('Pointiness', { v: 0 }),
-      p('Roundness', { v: 100 }),
-      p('Feather', { v: 0 }),
+      p('Roundness', { v: 0 }),
+      p('Feather', { v: 2 }),
       p('Blend', { v: 100 }),
       p('Scale X', { v: 18 }),
       p('Scale Y', { v: 32 }),
