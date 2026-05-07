@@ -556,14 +556,13 @@ export const TransformGizmo: React.FC<TransformGizmoProps> = ({ effectId, canvas
                 {/* The actual gizmo */}
                 <div
                     ref={gizmoRef}
-                    className={`absolute pointer-events-auto cursor-move focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary group ${dragType ? '' : 'hover:z-50'}`}
+                    className={`absolute pointer-events-auto cursor-move border border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary group ${dragType ? '' : 'hover:z-50'}`}
                     style={{
                         left: `${cssPos.x}%`,
                         top: `${cssPos.y}%`,
                         width: `${scaleX * 2}%`,
                         height: `${scaleY * 2}%`,
-                        transform: `translate(-50%, -50%) rotate(${rotation * 3.6}deg)`,
-                        border: '1px solid rgba(251, 0, 255, 0.6)'
+                        transform: `translate(-50%, -50%) rotate(${rotation * 3.6}deg)`
                     }}
                     onPointerDown={(e) => handlePointerDown(e, 'pan')}
                     title="Pan"

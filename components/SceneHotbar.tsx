@@ -151,7 +151,7 @@ const SceneHotbar: React.FC = () => {
                                             relative shrink-0 w-9 h-9 flex flex-col items-center justify-center rounded-lg border transition-all outline-none
                                             focus-visible:ring-2 focus-visible:ring-primary/70
                                             ${isActive
-                                                ? 'bg-primary/20 border-primary/50 text-primary shadow-[0_0_12px_rgba(251,0,255,0.2)]'
+                                                ? 'bg-primary/20 border-primary/50 text-primary'
                                                 : 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/25'
                                             }
                                         `}

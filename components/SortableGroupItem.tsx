@@ -18,7 +18,7 @@ const EffectIcon = ({ type }: { type: GlitchEffectType }) => {
 
     // Explicit type-to-icon overrides
     const overrides: Record<string, { icon: string; color: string }> = {
-        IMAGE: { icon: 'image', color: 'text-red-300' },
+        IMAGE: { icon: 'image', color: 'text-primary' },
         RGBA: { icon: 'palette', color: 'text-indigo-300' },
         TRANSFORM: { icon: 'drag_pan', color: 'text-indigo-300' },
     };
@@ -31,7 +31,7 @@ const EffectIcon = ({ type }: { type: GlitchEffectType }) => {
     // Category-based fallbacks
     const isPattern = metadata?.category === 'Pattern';
     const icon = isPattern ? 'grain' : 'adjust';
-    const color = isPattern ? 'text-red-300' : 'text-indigo-300';
+    const color = isPattern ? 'text-primary' : 'text-indigo-300';
 
     return <span className={`material-symbols-outlined ${color} transition-colors`}>{icon}</span>;
 };

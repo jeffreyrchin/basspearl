@@ -41,13 +41,13 @@ const UserMenu: React.FC<UserMenuProps> = () => {
             <div className="flex items-center gap-4">
                 <button
                     onClick={() => openAuth('login')}
-                    className="text-sm font-bold uppercase tracking-widest text-white/70 hover:text-white transition-colors"
+                    className="text-sm font-bold uppercase tracking-widest text-white/70 hover:text-white transition-colors duration-200"
                 >
                     Sign in
                 </button>
                 <button
                     onClick={() => openAuth('signup')}
-                    className="hidden sm:block bg-black border border-primary hover:bg-primary/30 text-white px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all"
+                    className="hidden sm:block bg-black border border-primary hover:bg-primary/30 text-white px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors duration-200"
                 >
                     Sign Up
                 </button>
@@ -110,7 +110,7 @@ const UserMenu: React.FC<UserMenuProps> = () => {
                             setIsOpen(false);
                             openProModal();
                         }}
-                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/80 hover:to-purple-600/80 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all"
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-secondary to-purple-600 hover:from-secondary/80 hover:to-purple-600/80 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors duration-200"
                     >
                         <span className="material-symbols-outlined text-[18px]">workspace_premium</span>
                         Buy Lifetime Pro
@@ -145,10 +145,10 @@ const UserMenu: React.FC<UserMenuProps> = () => {
                     <img
                         src={user.photoURL}
                         alt={user.displayName || 'User'}
-                        className="size-9 rounded-full border-2 border-primary/40 hover:border-primary transition-colors object-cover"
+                        className="size-9 rounded-full ring-white transition-all duration-200 object-cover group-hover:ring-2"
                     />
                 ) : (
-                    <div className="size-9 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-xs font-bold text-white border-2 border-primary/40 hover:border-primary transition-colors">
+                    <div className="size-9 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-xs font-bold text-white ring-white transition-all duration-200 group-hover:ring-2">
                         {initials}
                     </div>
                 )}
@@ -157,7 +157,7 @@ const UserMenu: React.FC<UserMenuProps> = () => {
                     initial={{ rotate: 0 }}
                     animate={{ rotate: isOpen ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
-                    className="material-symbols-outlined text-white/60 group-hover:text-white transition-colors text-[18px]">
+                    className="material-symbols-outlined text-white/60 group-hover:text-white transition-colors duration-200">
                     expand_more
                 </motion.span>
             </button>

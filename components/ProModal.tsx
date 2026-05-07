@@ -60,7 +60,7 @@ const ProModal: React.FC = () => {
                     <div className="pt-4 border-t border-white/10">
                         <button
                             onClick={() => user ? buyPro(user.uid) : openAuth('login')}
-                            className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-gradient-to-r from-primary to-purple-600 text-white font-bold text-sm uppercase tracking-widest transition-all duration-300 hover:scale-105 active:scale-[0.98]"
+                            className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-gradient-to-r from-secondary to-purple-600 text-white font-bold text-sm uppercase tracking-widest transition-all duration-300 hover:scale-105 active:scale-[0.98]"
                         >
                             <span className="material-symbols-outlined">workspace_premium</span>
                             {user ? 'Get Lifetime Pro - $39' : 'Sign in to Upgrade'}
