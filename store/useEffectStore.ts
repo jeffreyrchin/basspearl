@@ -4,6 +4,9 @@ import { INITIAL_REACTIVE_EFFECTS, createEffectInstance, createMacroInstance, IN
 import { analytics } from '@/services/analytics';
 import { PUZZLES } from '../config/puzzles';
 import { PuzzleService, PuzzleMatchResult } from '../services/puzzleService';
+import { getLanguageModel } from '../services/languageService';
+
+type SceneBank = 'sandbox' | 'endless';
 
 interface SceneSlot {
     effects: EffectConfig[];
@@ -36,7 +39,7 @@ interface EffectState {
     activeSceneIndex: number;
     isSceneHotbarOpen: boolean;
     setIsSceneHotbarOpen: (open: boolean) => void;
-    switchScene: (index: number) => void;
+    switchScene: (index: number, targetBank?: 'sandbox' | 'endless') => void;
 
     // Actions
     setEffects: (effects: EffectConfig[]) => void;
@@ -119,6 +122,13 @@ interface EffectState {
     setTransitionDuration: (duration: number) => void;
     activeTransition: { startTime: number, fromIndex: number } | null;
     setActiveTransition: (transition: { startTime: number, fromIndex: number } | null) => void;
+
+    // Endless Mode
+    isEndlessMode: boolean;
+    endlessScenes: SceneSlot[];
+    activeEndlessIndex: number;
+    setEndlessMode: (active: boolean) => void;
+    triggerEndlessStep: () => void;
 }
 
 export const useEffectStore = create<EffectState>((set, get) => ({
@@ -140,39 +150,109 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         }));
     },
 
-    switchScene: (index: number) => {
-        const { activeSceneIndex, scenes, effects, past, future, transitionType, transitionDuration } = get();
-        if (index === activeSceneIndex) return;
-        if (index < 0 || index >= scenes.length) return;
+    // Endless Mode
+    isEndlessMode: false,
+    endlessScenes: [emptySlot(), emptySlot()],
+    activeEndlessIndex: 0,
 
+    setEndlessMode: (active: boolean) => {
+        const { isEndlessMode, activeSceneIndex, activeEndlessIndex, switchScene } = get();
+        if (active === isEndlessMode) return;
+
+        if (active) {
+            // Entering Endless Mode: Switch from sandbox bank to endless bank
+            switchScene(activeEndlessIndex, 'endless');
+        } else {
+            // Exiting Endless Mode: Switch from endless bank to sandbox bank
+            switchScene(activeSceneIndex, 'sandbox');
+        }
+    },
+
+    triggerEndlessStep: () => {
+        const { isEndlessMode, activeEndlessIndex, endlessScenes, switchScene } = get();
+        if (!isEndlessMode) return;
+
+        const nextIndex = (activeEndlessIndex + 1) % 2;
+
+        // Use the language model directly
+        const model = getLanguageModel();
+        const newEffects = model.generatePipeline({ temperature: 0.5 });
+
+        // Update the target slot in the background before switching
+        const updatedEndless = [...endlessScenes];
+        updatedEndless[nextIndex] = {
+            ...updatedEndless[nextIndex],
+            effects: newEffects,
+            past: [],
+            future: []
+        };
+
+        set({ endlessScenes: updatedEndless });
+
+        // Trigger the transition switch
+        switchScene(nextIndex, 'endless');
+    },
+
+    switchScene: (index: number, targetBank: 'sandbox' | 'endless' = 'sandbox') => {
+        const {
+            activeSceneIndex, activeEndlessIndex, isEndlessMode,
+            scenes, endlessScenes, effects, past, future,
+            transitionType
+        } = get();
+
+        const currentBank: SceneBank = isEndlessMode ? 'endless' : 'sandbox';
+        const currentIndex = isEndlessMode ? activeEndlessIndex : activeSceneIndex;
+
+        // Prevent redundant switches within the same bank
+        if (index === currentIndex && targetBank === currentBank) return;
+
+        // Prevent switching to an invalid index
+        if (index < 0 || index >= (targetBank === 'sandbox' ? scenes.length : endlessScenes.length)) return;
+
+        // 1. Park the current live state into its respective bank
+        if (currentBank === 'sandbox') {
+            const updatedScenes = [...scenes];
+            updatedScenes[activeSceneIndex] = {
+                effects: JSON.parse(JSON.stringify(effects)),
+                past: JSON.parse(JSON.stringify(past)),
+                future: JSON.parse(JSON.stringify(future)),
+                selectedIds: new Set<string>(),
+            };
+            set({ scenes: updatedScenes });
+        } else {
+            const updatedEndless = [...endlessScenes];
+            updatedEndless[activeEndlessIndex] = {
+                effects: JSON.parse(JSON.stringify(effects)),
+                past: [],
+                future: [],
+                selectedIds: new Set<string>(),
+            };
+            set({ endlessScenes: updatedEndless });
+        }
+
+        // 2. Set up the transition
         // If a transition is enabled, record the start time and the scene we are leaving
         if (transitionType !== 'none') {
             set({
                 activeTransition: {
                     startTime: performance.now(),
-                    fromIndex: activeSceneIndex
+                    fromIndex: currentIndex
                 }
             });
         }
 
-        // Park the current live state back into its slot
-        const updatedScenes = [...scenes];
-        updatedScenes[activeSceneIndex] = {
-            effects: JSON.parse(JSON.stringify(effects)),
-            past: JSON.parse(JSON.stringify(past)),
-            future: JSON.parse(JSON.stringify(future)),
-            selectedIds: new Set<string>(), // Clear selection on park
-        };
+        // 3. Load from the target bank
+        const targetSlot = targetBank === 'sandbox' ? scenes[index] : endlessScenes[index];
+        if (!targetSlot) return;
 
-        // Load the target slot
-        const target = updatedScenes[index];
         set({
-            scenes: updatedScenes,
-            activeSceneIndex: index,
-            effects: JSON.parse(JSON.stringify(target.effects)),
-            past: JSON.parse(JSON.stringify(target.past)),
-            future: JSON.parse(JSON.stringify(target.future)),
-            selectedIds: new Set<string>(), // Always clear selection on switch
+            isEndlessMode: targetBank === 'endless',
+            activeSceneIndex: targetBank === 'sandbox' ? index : activeSceneIndex,
+            activeEndlessIndex: targetBank === 'endless' ? index : activeEndlessIndex,
+            effects: JSON.parse(JSON.stringify(targetSlot.effects)),
+            past: targetBank === 'sandbox' ? JSON.parse(JSON.stringify(targetSlot.past)) : [],
+            future: targetBank === 'sandbox' ? JSON.parse(JSON.stringify(targetSlot.future)) : [],
+            selectedIds: new Set<string>(),
             activeDropdownId: null,
         });
     },
@@ -608,3 +688,8 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     activeTransition: null,
     setActiveTransition: (activeTransition) => set({ activeTransition }),
 }));
+
+// For debugging
+if (typeof window !== 'undefined') {
+    (window as any).store = useEffectStore;
+}
