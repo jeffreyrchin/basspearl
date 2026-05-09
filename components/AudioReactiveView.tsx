@@ -291,8 +291,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                     isExporting={isExporting}
                 />
 
-                {/* Scene Hotbar - centered above playback */}
-                <div className="absolute bottom-22 left-0 right-0 flex justify-center">
+                {/* Scene Hotbar */}
+                <div className="absolute top-15 left-0 right-0 flex justify-center">
                     <SceneHotbar />
                 </div>
 

@@ -24,6 +24,7 @@ const SceneHotbar: React.FC = () => {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
 
     // Update scroll indicators
     const checkScroll = () => {
@@ -84,47 +85,60 @@ const SceneHotbar: React.FC = () => {
         }
     };
 
-    const [showSettings, setShowSettings] = useState(false);
-
     return (
         <AnimatePresence>
             {isSceneHotbarOpen && (
                 <motion.div
                     layout="position"
-                    initial={{ opacity: 0, y: 8 }}
+                    initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
-                    className="group relative pointer-events-auto flex flex-col rounded-xl bg-[#0A0F1E]/95 border border-white/10 shadow-[0_12px_48px_rgba(0,0,0,0.5),0_0_20px_rgba(251,0,255,0.06)] ring-1 ring-white/5 overflow-hidden w-fit max-w-[90vw] md:max-w-[60vw]"
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                    className="pointer-events-auto flex flex-col gap-1.5 w-fit max-w-[90vw] md:max-w-[60vw]"
                     title="Scene Bar (1-9 to switch scenes, [ / ] to navigate scenes)"
                 >
-                    {/* HEADER */}
-                    <div className="h-8 flex items-center justify-between px-4 border-b border-white/5 bg-white/5">
-                        <span className="text-[10px] font-bold text-white uppercase tracking-widest select-none">Scenes</span>
-                        <button
-                            onClick={() => setShowSettings(!showSettings)}
-                            className={`flex items-center gap-1.5 transition-colors ${showSettings ? 'text-primary' : 'text-white/80 hover:text-white'}`}
-                        >
-                            <span className={`material-symbols-outlined !text-[14px] transition-transform duration-300 ${showSettings ? 'rotate-90' : ''}`}>
-                                settings
-                            </span>
-                        </button>
+                    {/* TOP ROW: actions */}
+                    <div className="flex items-center justify-between gap-2 px-5">
+                        <span className="text-[12px] font-bold text-white [text-shadow:0_1px_4px_rgba(0,0,0,0.8)] uppercase tracking-widest select-none">Scenes</span>
+                        <div className="flex items-center gap-1">
+                            {/* Add scene */}
+                            <button
+                                onClick={() => canAddScene ? addScene() : openProModal()}
+                                title={canAddScene ? 'Add New Scene' : 'Pro Required for Additional Scenes'}
+                                className="relative flex items-center justify-center bg-black/60 hover:bg-black/80 text-white hover:text-primary w-10 h-6 rounded-full text-[9px] font-bold transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                            >
+                                <span className="material-symbols-outlined !text-[16px]">add</span>
+                                {!canAddScene && (
+                                    <span className="material-symbols-outlined !text-[9px] text-primary">lock</span>
+                                )}
+                            </button>
+                            {/* Settings toggle */}
+                            <button
+                                onClick={() => setShowSettings(s => !s)}
+                                title="Scene Settings"
+                                className={`flex items-center justify-center w-10 h-6 bg-black/60 hover:bg-black/80 hover:text-primary rounded-full text-[9px] font-semibold transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary
+                                    ${showSettings ? 'text-primary' : 'text-white'}`}
+                            >
+                                <span className={`material-symbols-outlined !text-[14px] transition-transform duration-300 ${showSettings ? 'rotate-90' : ''}`}>settings</span>
+                            </button>
+                        </div>
                     </div>
 
-                    {/* SCENE BUTTONS */}
-                    <div className="relative h-12 flex items-center">
-                        {/* Left Gradient/Arrow */}
+                    {/* STRIP ROW */}
+                    <div className="relative flex items-center">
+
+                        {/* Left scroll fade + arrow */}
                         <AnimatePresence>
                             {canScrollLeft && (
                                 <motion.div
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -10 }}
-                                    className="absolute left-0 top-0 bottom-0 z-10 flex items-center pl-1 pr-8 bg-gradient-to-r from-[#0A0F1E] to-transparent pointer-events-none"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="absolute left-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-r from-black to-transparent pointer-events-none rounded-l-full"
                                 >
                                     <button
                                         onClick={() => scroll('left')}
-                                        className="pointer-events-auto w-6 h-8 flex items-center justify-center rounded-md hover:bg-white/10 text-white transition-colors"
+                                        className="pointer-events-auto flex items-center justify-center w-10 h-6 rounded-l-full bg-black/40 hover:bg-black/60 text-white hover:text-primary transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                     >
                                         <span className="material-symbols-outlined !text-[18px]">chevron_left</span>
                                     </button>
@@ -132,76 +146,54 @@ const SceneHotbar: React.FC = () => {
                             )}
                         </AnimatePresence>
 
-                        {/* Scrollable Content */}
+                        {/* Scrollable strip — dark pill backdrop ensures readability on any bg */}
                         <div
                             ref={scrollRef}
-                            className="flex items-center gap-2 px-3 h-full overflow-x-auto no-scrollbar"
+                            className="flex items-center gap-[3px] overflow-x-auto no-scrollbar px-5 py-[10px] rounded-full bg-black/80"
                         >
                             {scenes.map((slot, i) => {
                                 const isActive = i === activeSceneIndex;
                                 // For the active slot, use the live effects count (reactive); for parked slots, use the stored snapshot count
                                 const effectCount = isActive ? liveEffects.length : slot.effects.length;
+                                const hasFx = effectCount > 0;
 
                                 return (
                                     <button
                                         key={i}
                                         onClick={() => switchScene(i)}
-                                        title={`Scene ${i + 1}${effectCount > 0 ? ` (${effectCount} effect${effectCount !== 1 ? 's' : ''})` : ' (Empty)'}`}
+                                        title={`Scene ${i + 1}${hasFx ? ` · ${effectCount} effect${effectCount !== 1 ? 's' : ''}` : ' · Empty'}`}
+                                        style={{
+                                            boxShadow: isActive
+                                                ? '0 0 8px 1px rgba(var(--color-primary-rgb), 0.5), 0 2px 6px rgba(0,0,0,0.7)'
+                                                : '0 2px 4px rgba(0,0,0,0.7)'
+                                        }}
                                         className={`
-                                            relative shrink-0 w-9 h-9 flex flex-col items-center justify-center rounded-lg border transition-all outline-none
-                                            focus-visible:ring-2 focus-visible:ring-primary/70
+                                            relative shrink-0 rounded-full transition-all duration-200 outline-none
+                                            focus-visible:outline-2 focus-visible:outline-white/60
                                             ${isActive
-                                                ? 'bg-primary/20 border-primary/50 text-primary'
-                                                : 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/25'
+                                                ? 'h-[5px] w-12 bg-white hover:brightness-110'
+                                                : hasFx
+                                                    ? 'h-[5px] w-10 bg-indigo-300 hover:bg-white'
+                                                    : 'h-[5px] w-10 bg-white/35 hover:bg-white/60'
                                             }
                                         `}
-                                    >
-                                        {/* Slot Number */}
-                                        <span className="text-[15px] font-semibold leading-none">
-                                            {i + 1}
-                                        </span>
-
-                                        {/* Dot Indicator */}
-                                        <span
-                                            className={`
-                                                absolute bottom-1.5 left-1/2 -translate-x-1/2 w-2 h-0.5 rounded-full transition-all
-                                                ${effectCount > 0
-                                                    ? isActive ? 'bg-primary' : 'bg-indigo-300'
-                                                    : 'bg-transparent'
-                                                }
-                                            `}
-                                        />
-                                    </button>
+                                    />
                                 );
                             })}
-
-                            <button
-                                onClick={() => canAddScene ? addScene() : openProModal()}
-                                title={canAddScene ? "Add New Scene" : "Pro Required for Additional Scenes"}
-                                tabIndex={0}
-                                className="relative shrink-0 w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white hover:bg-white/10 hover:border-white/25 transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
-                            >
-                                <span className="material-symbols-outlined !text-[20px]">add</span>
-                                {!canAddScene && (
-                                    <div className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-slate-900 flex items-center justify-center">
-                                        <span className="material-symbols-outlined !text-[10px] text-primary">lock</span>
-                                    </div>
-                                )}
-                            </button>
                         </div>
 
-                        {/* Right Gradient/Arrow */}
+                        {/* Right scroll fade + arrow */}
                         <AnimatePresence>
                             {canScrollRight && (
                                 <motion.div
-                                    initial={{ opacity: 0, x: 10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: 10 }}
-                                    className="absolute right-0 top-0 bottom-0 z-10 flex items-center pr-1 pl-8 bg-gradient-to-l from-[#0A0F1E] to-transparent pointer-events-none"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="absolute right-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-l from-black to-transparent pointer-events-none rounded-r-full"
                                 >
                                     <button
                                         onClick={() => scroll('right')}
-                                        className="pointer-events-auto w-6 h-8 flex items-center justify-center rounded-md hover:bg-white/10 text-white transition-colors"
+                                        className="pointer-events-auto flex items-center justify-center w-10 h-6 rounded-r-full bg-black/40 hover:bg-black/60 text-white hover:text-primary transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                     >
                                         <span className="material-symbols-outlined !text-[18px]">chevron_right</span>
                                     </button>
@@ -210,34 +202,32 @@ const SceneHotbar: React.FC = () => {
                         </AnimatePresence>
                     </div>
 
-                    {/* EXPANDABLE SETTINGS SECTION */}
+                    {/* SETTINGS PANEL */}
                     <AnimatePresence>
                         {showSettings && (
                             <motion.div
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.25, ease: 'easeInOut' }}
-                                className="overflow-hidden border-t border-white/5 flex flex-col items-center"
+                                transition={{ duration: 0.2, ease: 'easeInOut' }}
+                                className="overflow-hidden"
                             >
-                                <div className="w-fit flex flex-col gap-1.5 px-6">
-                                    {/* ROW 1: TRANSITION TYPE */}
-                                    <div className="h-8 flex items-center gap-4">
-                                        <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap">Transition</span>
-                                        <div className="flex items-center gap-1.5">
+                                <div className="mt-1 w-fit rounded-xl bg-black/80 border border-white/8 px-4 py-3 flex flex-col gap-2">
+                                    {/* Transition type */}
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap w-16 shrink-0">Transition</span>
+                                        <div className="flex items-center gap-1">
                                             {TRANSITION_OPTIONS.map((opt) => {
                                                 const isActive = transitionType === opt.value;
                                                 return (
                                                     <button
                                                         key={opt.value}
                                                         onClick={() => setTransitionType(opt.value as any)}
-                                                        className={`
-                                                            px-2 py-1 rounded-md text-[10px] font-medium tracking-wide transition-all
+                                                        className={`px-2 py-0.5 rounded-full text-[9px] font-semibold tracking-wide transition-all
                                                             ${isActive
-                                                                ? 'bg-primary/20 text-primary shadow-[0_0_8px_rgba(251,0,255,0.15)]'
-                                                                : 'text-white/80 hover:text-white hover:bg-white/5'
-                                                            }
-                                                        `}
+                                                                ? 'bg-white/20 text-white border border-white/10'
+                                                                : 'text-white/60 hover:text-white border border-transparent hover:border-white/10'
+                                                            }`}
                                                     >
                                                         {opt.label}
                                                     </button>
@@ -246,10 +236,10 @@ const SceneHotbar: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* ROW 2: DURATION SLIDER */}
-                                    <div className="h-8 flex items-center gap-4">
-                                        <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap">Transition Time</span>
-                                        <div className="flex items-center gap-4 grow">
+                                    {/* Duration slider */}
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap w-16 shrink-0">Duration</span>
+                                        <div className="flex items-center gap-3 grow max-w-50">
                                             <input
                                                 type="range"
                                                 min="0"
@@ -257,9 +247,9 @@ const SceneHotbar: React.FC = () => {
                                                 step="0.1"
                                                 value={transitionDuration}
                                                 onChange={(e) => setTransitionDuration(parseFloat(e.target.value))}
-                                                className="grow h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-white"
+                                                className="grow h-0.5 bg-white/30 rounded-full appearance-none cursor-pointer accent-white"
                                             />
-                                            <span className="text-[10px] w-8 text-center font-medium tabular-nums text-white/80">{transitionDuration.toFixed(1)}s</span>
+                                            <span className="text-[9px] w-7 text-right font-medium tabular-nums text-white/60">{transitionDuration.toFixed(1)}s</span>
                                         </div>
                                     </div>
                                 </div>
