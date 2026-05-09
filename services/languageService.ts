@@ -35,6 +35,8 @@ interface LearnedParamSet {
   values: number[][];
   /** Parallel arrays of observed frequency bands, one entry per training example. */
   bands: FrequencyBand[][];
+  /** Parallel arrays of observed min values (reactive floors), one entry per training example. */
+  mins: number[][];
 }
 
 /** Everything learned about a single effect type. */
@@ -101,7 +103,7 @@ export function buildLanguageModel(): LanguageModel {
         starterCount: 0,
         transitions: new Map(),
         totalTransitions: 0,
-        params: { values: [], bands: [] },
+        params: { values: [], bands: [], mins: [] },
         sampleCount: 0,
         terminalCount: 0,
       });
@@ -137,8 +139,13 @@ export function buildLanguageModel(): LanguageModel {
           const found = current.params?.find((p) => p.param === metaParam.name);
           return found?.frequencyBand ?? metaParam.defaultBand;
         });
+        const minVector = meta.params.map((metaParam) => {
+          const found = current.params?.find((p) => p.param === metaParam.name);
+          return found?.min ?? metaParam.defaultMin ?? 0;
+        });
         model.params.values.push(paramVector);
         model.params.bands.push(bandVector);
+        model.params.mins.push(minVector);
         model.sampleCount += 1;
       }
 
@@ -349,53 +356,92 @@ export function buildLanguageModel(): LanguageModel {
 
     let baseVector: number[];
     let baseBands: FrequencyBand[];
+    let baseMins: number[];
 
     if (observations.length === 0) {
       // No training data: use defaults
       baseVector = meta.params.map((p) => p.defaultValue);
       baseBands = meta.params.map((p) => p.defaultBand);
+      baseMins = meta.params.map((p) => p.defaultMin ?? 0);
     } else if (observations.length === 1) {
       baseVector = [...observations[0]];
       baseBands = [...bandObservations[0]];
+      baseMins = [...(model?.params.mins[0] ?? meta.params.map(p => p.defaultMin ?? 0))];
     } else {
       // Pick two random observed vectors and interpolate
       const idxA = Math.floor(Math.random() * observations.length);
       let idxB = Math.floor(Math.random() * (observations.length - 1));
       if (idxB >= idxA) idxB += 1;
+
       const vecA = observations[idxA];
       const vecB = observations[idxB];
+      const minA = model?.params.mins[idxA] ?? meta.params.map(p => p.defaultMin ?? 0);
+      const minB = model?.params.mins[idxB] ?? meta.params.map(p => p.defaultMin ?? 0);
+
       baseBands = [...bandObservations[idxA]];
       const t = Math.random();
       baseVector = vecA.map((a, i) => a + t * ((vecB[i] ?? a) - a));
+      baseMins = minA.map((a, i) => a + t * ((minB[i] ?? a) - a));
     }
 
     const activeConstraints = resolveConstraints(type, pipelineContext);
     const jitterScale = temperature * 10;
 
-    // PHASE 1: Compute all parameter values independently
-    const paramValues: number[] = meta.params.map((metaParam, i) => {
+    // PHASE 1: Compute all parameter values and mins independently
+    const paramValues: number[] = [];
+    const paramMins: number[] = [];
+
+    meta.params.forEach((metaParam, i) => {
       const base = baseVector[i] ?? metaParam.defaultValue;
+      const baseMin = baseMins[i] ?? metaParam.defaultMin ?? 0;
+
       // Structural parameters (Scale, Pan) should not have jitter to avoid visual misalignment/gaps
       const isStructural =
         metaParam.name.includes('Scale X') ||
         metaParam.name.includes('Scale Y') ||
-        metaParam.name.includes('Pan X') && type !== 'SPIRAL_GRADIENT' && type !== 'RADIAL_GRADIENT' ||
-        metaParam.name.includes('Pan Y') && type !== 'SPIRAL_GRADIENT' && type !== 'RADIAL_GRADIENT';
+        (metaParam.name.includes('Pan X') && type !== 'SPIRAL_GRADIENT' && type !== 'RADIAL_GRADIENT') ||
+        (metaParam.name.includes('Pan Y') && type !== 'SPIRAL_GRADIENT' && type !== 'RADIAL_GRADIENT');
+
       const jitter = isStructural ? 0 : (Math.random() - 0.5) * 2 * jitterScale;
-      const min = metaParam.defaultMin ?? 0;
-      let value = Math.max(min, Math.min(100, base + jitter));
+
+      // Compute value
+      const floor = metaParam.defaultMin ?? 0;
+      let value = Math.max(floor, Math.min(100, base + jitter));
+
+      // Compute min (reactive floor)
+      let minValue = Math.max(floor, Math.min(100, baseMin + jitter));
+
       // Safety: Hard cap for 'Speed' parameters to avoid strobing
-      if (metaParam.name.includes('Speed')) value = Math.min(value, 20);
+      if (metaParam.name.includes('Speed')) {
+        value = Math.min(value, 20);
+        minValue = Math.min(minValue, 20);
+      }
       // Safety: Hard cap for LUMINANCE_MASK threshold to avoid black screens
-      if (type === 'LUMINANCE_MASK' && metaParam.name === 'Threshold') value = Math.min(value, 20);
+      if (type === 'LUMINANCE_MASK' && metaParam.name === 'Threshold') {
+        value = Math.min(value, 20);
+        minValue = Math.min(minValue, 20);
+      }
       // Safety: Hard min for INFINITE_ZOOM plane count to avoid strobing and black screens
-      if (type === 'INFINITE_ZOOM' && metaParam.name === 'Plane Count') value = Math.max(value, 3);
+      if (type === 'INFINITE_ZOOM' && metaParam.name === 'Plane Count') {
+        value = Math.max(value, 3);
+        minValue = Math.max(minValue, 3);
+      }
 
       const constraint = activeConstraints[metaParam.name];
-      if (constraint?.max !== undefined) value = Math.min(value, constraint.max);
-      if (constraint?.min !== undefined) value = Math.max(value, constraint.min);
+      if (constraint?.max !== undefined) {
+        value = Math.min(value, constraint.max);
+        minValue = Math.min(minValue, constraint.max);
+      }
+      if (constraint?.min !== undefined) {
+        value = Math.max(value, constraint.min);
+        minValue = Math.max(minValue, constraint.min);
+      }
 
-      return value;
+      // Ensure value >= min
+      value = Math.max(value, minValue);
+
+      paramValues.push(value);
+      paramMins.push(minValue);
     });
 
     // PHASE 2: Apply cross-param relative constraints
@@ -404,8 +450,8 @@ export function buildLanguageModel(): LanguageModel {
     return meta.params.map((metaParam, i) => ({
       param: metaParam.name,
       value: Math.round(paramValues[i] * 10) / 10,
-      min: metaParam.defaultMin ?? 0,
-      frequencyBand: baseBands[i] ?? metaParam.defaultBand as FrequencyBand,
+      min: Math.round(paramMins[i] * 10) / 10,
+      frequencyBand: baseBands[i] ?? (metaParam.defaultBand as FrequencyBand),
     }));
   }
 

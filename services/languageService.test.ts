@@ -314,5 +314,22 @@ describe('LanguageService', () => {
         }
       }
     });
+
+    it('samples non-zero min values (reactive floors) learned from macro presets', () => {
+      // We know TERRAIN Extrusion has mins like 3 and 7 in presets.
+      // We sample multiple times to verify that the generated min can be > 0.
+      let foundNonZeroMin = false;
+      
+      for (let i = 0; i < 100; i++) {
+        const params = model.sampleParams('TERRAIN', 0.5);
+        const extrusion = params.find(p => p.param === 'Extrusion');
+        if (extrusion && extrusion.min > 0) {
+          foundNonZeroMin = true;
+          break;
+        }
+      }
+      
+      expect(foundNonZeroMin).toBe(true);
+    });
   });
 });
