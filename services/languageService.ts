@@ -356,6 +356,23 @@ export function buildLanguageModel(): LanguageModel {
         }
       }
     }
+
+    // Rule 5: TUNNEL_WARP — Speed cannot be more than 5x the Scale (with a baseline of 5)
+    if (type === 'TUNNEL_WARP') {
+      const speedIdx = meta.params.findIndex(p => p.name === 'Speed');
+      const scaleIdx = meta.params.findIndex(p => p.name === 'Scale');
+
+      if (speedIdx !== -1 && scaleIdx !== -1) {
+        // We round the 'base' value (Scale) first to match the final rounding in sampleParams.
+        const roundedScaleValue = Math.round(paramValues[scaleIdx] * 10) / 10;
+        const maxSpeedValue = Math.max(5, Math.round((roundedScaleValue * 5) * 10) / 10);
+        paramValues[speedIdx] = Math.min(paramValues[speedIdx], maxSpeedValue);
+
+        const roundedScaleMin = Math.round(paramMins[scaleIdx] * 10) / 10;
+        const maxSpeedMin = Math.max(5, Math.round((roundedScaleMin * 5) * 10) / 10);
+        paramMins[speedIdx] = Math.min(paramMins[speedIdx], maxSpeedMin);
+      }
+    }
   }
 
   /**

@@ -163,8 +163,8 @@ describe('LanguageService', () => {
       const type = 'SHAPE';
       const getVariance = (temp: number, paramName: string) => {
         const samples: number[] = [];
-        // Increase sample size to stabilize statistical measures
-        for (let i = 0; i < 500; i++) {
+        // Increase sample size to stabilize statistical measures and reduce noise
+        for (let i = 0; i < 1000; i++) {
           const p = model.sampleParams(type, temp).find(p => p.param === paramName);
           if (p) samples.push(p.value);
         }
@@ -188,7 +188,7 @@ describe('LanguageService', () => {
       const type = 'SPIRAL_GRADIENT';
       const getVariance = (temp: number, paramName: string) => {
         const samples: number[] = [];
-        for (let i = 0; i < 500; i++) {
+        for (let i = 0; i < 1000; i++) {
           const p = model.sampleParams(type, temp).find(p => p.param === paramName);
           if (p) samples.push(p.value);
         }
@@ -210,7 +210,7 @@ describe('LanguageService', () => {
       const getVariance = (temp: number) => {
         const samples: number[] = [];
         // Increase sample size to stabilize the statistical measure
-        for (let i = 0; i < 500; i++) {
+        for (let i = 0; i < 1000; i++) {
           const p = model.sampleParams(type, temp).find(p => p.param === 'Freq X');
           if (p) samples.push(p.value);
         }
@@ -341,6 +341,22 @@ describe('LanguageService', () => {
         if (h && v) {
           // At least one must be >= 2
           expect(Math.max(h.value, v.value)).toBeGreaterThanOrEqual(2);
+        }
+      }
+    });
+
+    it('enforces TUNNEL_WARP constraint (Speed <= max(5, 5 * Scale))', () => {
+      for (let i = 0; i < 100; i++) {
+        const params = model.sampleParams('TUNNEL_WARP', 1.0);
+        const speed = params.find(p => p.param === 'Speed');
+        const scale = params.find(p => p.param === 'Scale');
+
+        if (speed && scale) {
+          const expectedMax = Math.max(5, scale.value * 5);
+          expect(speed.value).toBeLessThanOrEqual(expectedMax);
+
+          const expectedMaxMin = Math.max(5, scale.min * 5);
+          expect(speed.min).toBeLessThanOrEqual(expectedMaxMin);
         }
       }
     });
