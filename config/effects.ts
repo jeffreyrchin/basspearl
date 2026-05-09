@@ -493,7 +493,7 @@ export const EFFECT_METADATA: Record<GlitchEffectType, EffectMetadata> = {
       p('Blend', { v: 100 }),
     ],
   },
-  BRICK_WALL: {
+  BRICKS: {
     label: 'Bricks',
     category: 'Pattern',
     params: [

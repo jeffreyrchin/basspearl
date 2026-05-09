@@ -2266,5 +2266,387 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         melded: false
       }
     ]
+  },
+  BRICK_WALL: {
+    id: 'BRICK_WALL',
+    label: 'Brick Wall',
+    effects: [
+      {
+        type: 'BRICKS',
+        params: [
+          o('Spacing', { v: 50, b: 'OFF' }),
+          o('Freq X', { v: 14, b: 'OFF' }),
+          o('Freq Y', { v: 8, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'HUE_ROTATION',
+        params: [
+          o('Color Shift', { v: 0, b: 'OFF' }),
+          o('Speed', { v: 10, b: 'OFF' }),
+          o('Vibrance', { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 2, b: 'OFF' }),
+          o('Distance', { v: 29, b: 'OFF' }),
+          o('Strength', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'SCROLL',
+        params: [
+          o('Left Speed', { v: 0, b: 'OFF' }),
+          o('Right Speed', { v: 3, b: 'OFF' }),
+          o('Up Speed', { v: 0, b: 'OFF' }),
+          o('Down Speed', { v: 3, b: 'OFF' }),
+          o('Overlap X', { v: 5, b: 'OFF' }),
+          o('Overlap Y', { v: 5, b: 'OFF' }),
+        ],
+        melded: false
+      },
+    ]
+  },
+  STAR_MORPH: {
+    id: 'STAR_MORPH',
+    label: 'Star Morph',
+    effects: [
+      {
+        type: 'GRAIN',
+        params: [
+          o('Width', { v: 100, b: 'OFF' }),
+          o('Height', { v: 50, b: 'OFF' }),
+          o('Freq X', { v: 20, b: 'OFF' }),
+          o('Freq Y', { v: 20, b: 'OFF' }),
+          o('Density', { v: 89, b: 'OFF' }),
+          o('Roundness', { v: 3, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'KALEIDOSCOPE',
+        params: [
+          o('Segments', { v: 6, b: 'OFF' }),
+          o('Zoom', { v: 20, b: 'OFF' }),
+          o('Speed', { v: 100, b: 'SUB' }, { v: 50, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'SPECTRAL_MAP',
+        params: [
+          o('Rainbow Density', { v: 4, b: 'OFF' }),
+          o('Color Shift', { v: 0, b: 'OFF' }),
+          o('Speed', { v: 16, b: 'OFF' }),
+          o('Intensity', { v: 81, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 0, b: 'OFF' }),
+          o('Distance', { v: 14, b: 'OFF' }),
+          o('Strength', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+    ]
+  },
+  MAZE_3D: {
+    id: 'MAZE_3D',
+    label: '3D Maze',
+    effects: [
+      {
+        type: 'TRUCHET',
+        params: [
+          o('Thickness', { v: 43, b: 'OFF' }),
+          o('Grid Size', { v: 11, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'SPECTRAL_MAP',
+        params: [
+          o('Rainbow Density', { v: 17, b: 'OFF' }),
+          o('Color Shift', { v: 1, b: 'OFF' }),
+          o('Speed', { v: 0, b: 'OFF' }),
+          o('Intensity', { v: 65, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'TERRAIN',
+        params: [
+          o('Extrusion', { v: 30, b: 'SUB' }, { v: 7, b: 'OFF' }),
+          o('Detail Level', { v: 100, b: 'OFF' }),
+          o('Tile Width', { v: 100, b: 'OFF' }),
+          o('Tile Height', { v: 100, b: 'OFF' }),
+          o('Rotate X', { v: 0, b: 'OFF' }),
+          o('Rotate Y', { v: 0, b: 'OFF' }),
+          o('Rotate Z', { v: 0, b: 'OFF' }),
+          o('Elevation', { v: 50, b: 'OFF' }),
+          o('Distance', { v: 50, b: 'OFF' }),
+          o('Tile Blend', { v: 0, b: 'OFF' }),
+          o('Speed X', { v: 15, b: 'OFF' }),
+          o('Speed Y', { v: 15, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 0, b: 'OFF' }),
+          o('Distance', { v: 50, b: 'OFF' }),
+          o('Strength', { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      },
+    ]
+  },
+  DIAMOND_ZOOM: {
+    id: 'DIAMOND_ZOOM',
+    label: 'Diamond Zoom',
+    effects: [
+      {
+        type: 'DIAMOND_GRID',
+        params: [
+          o('Shape Size', { v: 80, m: 60, b: 'SUB' }, { v: 60, b: 'OFF' }),
+          o('Grid Size', { v: 15, b: 'OFF' }),
+          o('Feather', { v: 50, b: 'OFF' }),
+          o('Scale X', { v: 54, b: 'OFF' }),
+          o('Scale Y', { v: 96, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'ROTATE',
+        params: [
+          o('Rotation', { v: 0, b: 'OFF' }),
+          o('Speed', { v: 30, b: 'SUB' }, { v: 10, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'INFINITE_ZOOM',
+        params: [
+          o('Speed', { v: 100, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Depth', { v: 5, b: 'OFF' }),
+          o('Spacing', { v: 73, b: 'OFF' }),
+          o('Plane Count', { v: 100, b: 'OFF' }),
+          o('Edge Feather', { v: 29, b: 'OFF' }),
+          o('Zoom Fade', { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'COLOR_BLEED',
+        params: [
+          o('Bleed', { v: 3, b: 'OFF' }),
+          o('Ghosting', { v: 3, b: 'OFF' }),
+        ],
+        melded: false
+      },
+    ]
+  },
+  CIRCUIT_ZOOM: {
+    id: 'CIRCUIT_ZOOM',
+    label: 'Circuit Zoom',
+    effects: [
+      {
+        type: 'CIRCUIT',
+        params: [
+          o('Density', { v: 100, b: 'OFF' }),
+          o('Grid Size', { v: 0, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'CHANNEL_SHIFT',
+        params: [
+          o('Shift X', { v: 2, b: 'OFF' }),
+          o('Shift Y', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'EDGE_MASK',
+        params: [
+          o('Sensitivity', { v: 8, b: 'OFF' }),
+          o('Thickness', { v: 20, b: 'OFF' }),
+          o('Invert', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'INFINITE_ZOOM',
+        params: [
+          o('Speed', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Depth', { v: 14, b: 'OFF' }),
+          o('Spacing', { v: 44, b: 'OFF' }),
+          o('Plane Count', { v: 5, b: 'OFF' }),
+          o('Edge Feather', { v: 70, b: 'OFF' }),
+          o('Zoom Fade', { v: 99, b: 'OFF' }),
+        ],
+        melded: false
+      },
+    ]
+  },
+  MAZE_TUNNEL: {
+    id: 'MAZE_TUNNEL',
+    label: 'Maze Tunnel',
+    effects: [
+      {
+        type: 'TRUCHET',
+        params: [
+          o('Thickness', { v: 30, b: 'OFF' }),
+          o('Grid Size', { v: 20, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'SPECTRAL_MAP',
+        params: [
+          o('Rainbow Density', { v: 3, b: 'OFF' }),
+          o('Color Shift', { v: 40, b: 'OFF' }),
+          o('Speed', { v: 0, b: 'OFF' }),
+          o('Intensity', { v: 53, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 1, b: 'OFF' }),
+          o('Distance', { v: 0, b: 'OFF' }),
+          o('Strength', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'TUNNEL_WARP',
+        params: [
+          o('Scale', { v: 5, b: 'OFF' }),
+          o('Speed', { v: 20, b: 'SUB' }, { v: 5, b: 'OFF' }),
+          o('Twist', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      },
+    ]
+  },
+  AQUASCOPE: {
+    id: 'AQUASCOPE',
+    label: 'Aquascope',
+    effects: [
+      {
+        type: 'CAUSTICS',
+        params: [
+          o('Intensity', { v: 70, b: 'OFF' }),
+          o('Zoom', { v: 0, b: 'OFF' }),
+          o('Speed', { v: 100, m: 29, b: 'SUB' }, { v: 50, m: 0, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'KALEIDOSCOPE',
+        params: [
+          o('Segments', { v: 4, b: 'OFF' }),
+          o('Zoom', { v: 15, b: 'OFF' }),
+          o('Speed', { v: 100, b: 'SUB' }, { v: 50, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 0, b: 'OFF' }),
+          o('Distance', { v: 5, b: 'OFF' }),
+          o('Strength', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'RGBA',
+        params: [
+          o('Red', { v: 0, b: 'OFF' }),
+          o('Green', { v: 100, b: 'OFF' }),
+          o('Blue', { v: 100, b: 'OFF' }),
+          o('Opacity', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+    ]
+  },
+  ELECTRICITY: {
+    id: 'ELECTRICITY',
+    label: 'Electricity',
+    effects: [
+      {
+        type: 'CAUSTICS',
+        params: [
+          o('Intensity', { v: 70, b: 'OFF' }),
+          o('Zoom', { v: 0, b: 'OFF' }),
+          o('Speed', { v: 50, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'SPECTRAL_MAP',
+        params: [
+          o('Rainbow Density', { v: 16, b: 'OFF' }),
+          o('Color Shift', { v: 0, b: 'OFF' }),
+          o('Speed', { v: 0, b: 'OFF' }),
+          o('Intensity', { v: 64, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 0, b: 'OFF' }),
+          o('Distance', { v: 35, b: 'OFF' }),
+          o('Strength', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+    ]
   }
 };

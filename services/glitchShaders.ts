@@ -1645,7 +1645,7 @@ void main() {
 }
 `;
 
-export const BRICK_WALL_SHADER = `#version 300 es
+export const BRICKS_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_image;
 uniform float u_params[9]; // [spacing, freqX, freqY, scaleX, scaleY, panX, panY, rotation, blend]
@@ -1958,7 +1958,7 @@ export const SHADER_REGISTRY: Record<string, ShaderDefinition> = {
     IMAGE: { name: 'IMAGE', fragmentSource: IMAGE_SHADER },
     PARTICLES: { name: 'PARTICLES', fragmentSource: '', velocityParamIndices: [4, 5], is3D: true },
     POLKA_DOTS: { name: 'POLKA_DOTS', fragmentSource: POLKA_DOTS_SHADER },
-    BRICK_WALL: { name: 'BRICK_WALL', fragmentSource: BRICK_WALL_SHADER },
+    BRICKS: { name: 'BRICKS', fragmentSource: BRICKS_SHADER },
     DIAMOND_GRID: { name: 'DIAMOND_GRID', fragmentSource: DIAMOND_GRID_SHADER },
     TRIANGLE_GRID: { name: 'TRIANGLE_GRID', fragmentSource: TRIANGLE_GRID_SHADER },
     TRUCHET: { name: 'TRUCHET', fragmentSource: TRUCHET_SHADER },

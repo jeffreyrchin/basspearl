@@ -44,7 +44,7 @@ export type GlitchEffectType =
   | 'IMAGE'
   | 'PARTICLES'
   | 'POLKA_DOTS'
-  | 'BRICK_WALL'
+  | 'BRICKS'
   | 'DIAMOND_GRID'
   | 'TRIANGLE_GRID'
   | 'TRUCHET'
@@ -130,7 +130,15 @@ export type MacroType =
   'AURORA' |
   'STARFIELD_3D' |
   'FLAMES' |
-  'FIRE_RING';
+  'FIRE_RING' |
+  'BRICK_WALL' |
+  'STAR_MORPH' |
+  'MAZE_3D' |
+  'DIAMOND_ZOOM' |
+  'CIRCUIT_ZOOM' |
+  'MAZE_TUNNEL' |
+  'AQUASCOPE' |
+  'ELECTRICITY';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;
