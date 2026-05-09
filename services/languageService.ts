@@ -338,6 +338,24 @@ export function buildLanguageModel(): LanguageModel {
         }
       }
     }
+
+    // Rule 4: GRID — Horizontal and Vertical cannot both be less than 2
+    if (type === 'GRID') {
+      const hIdx = meta.params.findIndex((p) => p.name === 'Horizontal');
+      const vIdx = meta.params.findIndex((p) => p.name === 'Vertical');
+
+      if (hIdx !== -1 && vIdx !== -1) {
+        // If both are < 2, force one to be at least 2.
+        if (paramValues[hIdx] < 2 && paramValues[vIdx] < 2) {
+          // Randomly pick one to be at least 2
+          if (Math.random() > 0.5) {
+            paramValues[hIdx] = 2;
+          } else {
+            paramValues[vIdx] = 2;
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -402,7 +420,8 @@ export function buildLanguageModel(): LanguageModel {
       const base = baseVector[i] ?? metaParam.defaultValue;
       const baseMin = baseMins[i] ?? metaParam.defaultMin ?? 0;
 
-      // Structural parameters (Scale, Pan) should not have jitter to avoid visual misalignment/gaps
+      // Structural parameters (Scale X/Y, Pan X/Y) should not have jitter to avoid visual misalignment/gaps,
+      // but we allow jitter on generic 'Scale' (e.g., for organic noise) and Gradient 'Pan' (for shifting centers).
       const isStructural =
         metaParam.name.includes('Scale X') ||
         metaParam.name.includes('Scale Y') ||

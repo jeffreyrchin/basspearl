@@ -177,7 +177,7 @@ describe('LanguageService', () => {
       const varScale1 = getVariance(1, 'Scale X');
       const varPan0 = getVariance(0, 'Pan X');
       const varPan1 = getVariance(1, 'Pan X');
-      
+
       // Jitter adds +/- 10 range (variance ~33). 
       // We expect the difference to be well below that (allowing for sampling noise).
       expect(Math.abs(varScale1 - varScale0)).toBeLessThan(15);
@@ -198,7 +198,7 @@ describe('LanguageService', () => {
 
       const var0 = getVariance(0, 'Pan X');
       const var1 = getVariance(1, 'Pan X');
-      
+
       // For gradients, Pan X is NOT structural, so jitter IS applied.
       // Variance should increase significantly (base variance + jitter variance).
       expect(var1).toBeGreaterThan(var0 + 15);
@@ -332,11 +332,24 @@ describe('LanguageService', () => {
       }
     });
 
+    it('enforces GRID constraint (Horizontal and Vertical cannot both be less than 2)', () => {
+      for (let i = 0; i < 100; i++) {
+        const params = model.sampleParams('GRID', 1.0);
+        const h = params.find(p => p.param === 'Horizontal');
+        const v = params.find(p => p.param === 'Vertical');
+
+        if (h && v) {
+          // At least one must be >= 2
+          expect(Math.max(h.value, v.value)).toBeGreaterThanOrEqual(2);
+        }
+      }
+    });
+
     it('samples non-zero min values (reactive floors) learned from macro presets', () => {
       // We know TERRAIN Extrusion has mins like 3 and 7 in presets.
       // We sample multiple times to verify that the generated min can be > 0.
       let foundNonZeroMin = false;
-      
+
       for (let i = 0; i < 100; i++) {
         const params = model.sampleParams('TERRAIN', 0.5);
         const extrusion = params.find(p => p.param === 'Extrusion');
@@ -345,7 +358,7 @@ describe('LanguageService', () => {
           break;
         }
       }
-      
+
       expect(foundNonZeroMin).toBe(true);
     });
   });
