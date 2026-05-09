@@ -138,7 +138,9 @@ export type MacroType =
   'CIRCUIT_ZOOM' |
   'MAZE_TUNNEL' |
   'AQUASCOPE' |
-  'ELECTRICITY';
+  'ELECTRICITY' |
+  'DISCO_RING' |
+  'METRO_2';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;

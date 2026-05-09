@@ -2436,8 +2436,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'DIAMOND_GRID',
         params: [
           o('Shape Size', { v: 80, m: 60, b: 'SUB' }, { v: 60, b: 'OFF' }),
-          o('Grid Size', { v: 15, b: 'OFF' }),
-          o('Feather', { v: 50, b: 'OFF' }),
+          o('Grid Size', { v: 18, b: 'OFF' }),
+          o('Feather', { v: 54, b: 'OFF' }),
           o('Scale X', { v: 54, b: 'OFF' }),
           o('Scale Y', { v: 96, b: 'OFF' }),
           o('Pan X', { v: 50, b: 'OFF' }),
@@ -2459,7 +2459,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'INFINITE_ZOOM',
         params: [
           o('Speed', { v: 100, b: 'SUB' }, { v: 10, b: 'OFF' }),
-          o('Depth', { v: 5, b: 'OFF' }),
+          o('Depth', { v: 10, b: 'OFF' }),
           o('Spacing', { v: 73, b: 'OFF' }),
           o('Plane Count', { v: 100, b: 'OFF' }),
           o('Edge Feather', { v: 29, b: 'OFF' }),
@@ -2647,6 +2647,129 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         ],
         melded: false
       },
+    ]
+  },
+  DISCO_RING: {
+    id: 'DISCO_RING',
+    label: 'Disco Ring',
+    effects: [
+      {
+        type: 'GRAIN',
+        params: [
+          o('Width', { v: 95, b: 'OFF' }),
+          o('Height', { v: 70, b: 'OFF' }),
+          o('Freq X', { v: 22, b: 'OFF' }),
+          o('Freq Y', { v: 22, b: 'OFF' }),
+          o('Density', { v: 100, b: 'OFF' }),
+          o('Roundness', { v: 0, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+          o('Scale X', { v: 60, b: 'OFF' }),
+          o('Scale Y', { v: 60, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 3, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'SCROLL',
+        params: [
+          o('Left Speed', { v: 0, b: 'OFF' }),
+          o('Right Speed', { v: 9, b: 'SUB' }, { v: 4, b: 'OFF' }),
+          o('Up Speed', { v: 4, b: 'OFF' }),
+          o('Down Speed', { v: 20, b: 'OFF' }),
+          o('Overlap X', { v: 50, b: 'OFF' }),
+          o('Overlap Y', { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'SPECTRAL_MAP',
+        params: [
+          o('Rainbow Density', { v: 10, b: 'OFF' }),
+          o('Color Shift', { v: 18, b: 'OFF' }),
+          o('Speed', { v: 10, b: 'OFF' }),
+          o('Intensity', { v: 60, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'TERRAIN_RING',
+        params: [
+          o('Extrusion', { v: 0, b: 'OFF' }),
+          o('Detail Level', { v: 100, b: 'OFF' }),
+          o('Size', { v: 43, b: 'OFF' }),
+          o('Offset X', { v: 0, b: 'OFF' }),
+          o('Offset Y', { v: 0, b: 'OFF' }),
+          o('Offset Z', { v: 0, b: 'OFF' }),
+          o('Spin Speed X', { v: 20, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Spin Speed Y', { v: 20, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Spin Speed Z', { v: 4, b: 'OFF' }),
+          o('Tube Width', { v: 35, b: 'OFF' }),
+          o('Seam Blend', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 0, b: 'OFF' }),
+          o('Distance', { v: 20, b: 'OFF' }),
+          o('Strength', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      }
+    ]
+  },
+  METRO_2: {
+    id: 'METRO_2',
+    label: 'Metro 2',
+    effects: [
+      {
+        type: 'GRAIN',
+        params: [
+          o('Width', { v: 89, b: 'OFF' }),
+          o('Height', { v: 55, b: 'OFF' }),
+          o('Freq X', { v: 23, b: 'OFF' }),
+          o('Freq Y', { v: 22, b: 'OFF' }),
+          o('Density', { v: 67, b: 'OFF' }),
+          o('Roundness', { v: 0, b: 'OFF' }),
+          o('Blend', { v: 100, b: 'OFF' }),
+          o('Scale X', { v: 50, b: 'OFF' }),
+          o('Scale Y', { v: 50, b: 'OFF' }),
+          o('Pan X', { v: 50, b: 'OFF' }),
+          o('Pan Y', { v: 50, b: 'OFF' }),
+          o('Rotation', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'TERRAIN',
+        params: [
+          o('Extrusion', { v: 20, m: 10, b: 'SUB' }),
+          o('Detail Level', { v: 100, b: 'OFF' }),
+          o('Tile Width', { v: 100, b: 'OFF' }),
+          o('Tile Height', { v: 100, b: 'OFF' }),
+          o('Rotate X', { v: 7, b: 'OFF' }),
+          o('Rotate Y', { v: 8, b: 'OFF' }),
+          o('Rotate Z', { v: 0, b: 'OFF' }),
+          o('Elevation', { v: 55, b: 'OFF' }),
+          o('Distance', { v: 53, b: 'OFF' }),
+          o('Tile Blend', { v: 0, b: 'OFF' }),
+          o('Speed X', { v: 0, b: 'OFF' }),
+          o('Speed Y', { v: 20, m: 3, b: 'SUB' }, { v: 10, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'EDGE_MASK',
+        params: [
+          o('Sensitivity', { v: 7, b: 'OFF' }),
+          o('Thickness', { v: 10, b: 'OFF' }),
+          o('Invert', { v: 0, b: 'OFF' }),
+        ],
+        melded: false
+      }
     ]
   }
 };
