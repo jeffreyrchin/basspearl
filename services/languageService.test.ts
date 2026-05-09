@@ -61,8 +61,11 @@ describe('LanguageService', () => {
           expect(typeof p.value).toBe('number');
 
           // Safety Bounds: Glitchbrain sliders are 0-100
-          expect(p.value).toBeGreaterThanOrEqual(metaParam.defaultMin ?? 0);
+          const floor = metaParam.defaultMin ?? 0;
+          expect(p.value).toBeGreaterThanOrEqual(floor);
           expect(p.value).toBeLessThanOrEqual(100);
+          expect(p.min).toBeGreaterThanOrEqual(floor);
+          expect(p.min).toBeLessThanOrEqual(100);
 
           // Precision: Max 1 decimal place for UI cleanliness
           const decimals = (p.value.toString().split('.')[1] || '').length;
@@ -224,33 +227,42 @@ describe('LanguageService', () => {
       expect(highVar).toBeGreaterThan(lowVar);
     });
 
-    it('enforces a hard safety cap of 20 on all Speed parameters', () => {
+    it('enforces a hard safety cap of 20 on all Speed parameters (value and min)', () => {
       // Pick an effect known to have a Speed parameter
       for (let i = 0; i < 50; i++) {
         const params = model.sampleParams('WAVE_DISTORTION', 1.0);
         params.forEach(p => {
-          if (p.param.includes('Speed')) expect(p.value).toBeLessThanOrEqual(20);
+          if (p.param.includes('Speed')) {
+            expect(p.value).toBeLessThanOrEqual(20);
+            expect(p.min).toBeLessThanOrEqual(20);
+          }
         });
       }
     });
 
-    it('enforces a hard safety cap of 20 on LUMINANCE_MASK Threshold parameter', () => {
+    it('enforces a hard safety cap of 20 on LUMINANCE_MASK Threshold parameter (value and min)', () => {
       for (let i = 0; i < 50; i++) {
         const params = model.sampleParams('LUMINANCE_MASK', 1.0);
         const threshold = params.find(p => p.param === 'Threshold');
-        if (threshold) expect(threshold.value).toBeLessThanOrEqual(20);
+        if (threshold) {
+          expect(threshold.value).toBeLessThanOrEqual(20);
+          expect(threshold.min).toBeLessThanOrEqual(20);
+        }
       }
     });
 
-    it('enforces a hard safety min of 3 on INFINITE_ZOOM Plane Count parameter', () => {
+    it('enforces a hard safety min of 3 on INFINITE_ZOOM Plane Count parameter (value and min)', () => {
       for (let i = 0; i < 50; i++) {
         const params = model.sampleParams('INFINITE_ZOOM', 1.0);
         const planes = params.find(p => p.param === 'Plane Count');
-        if (planes) expect(planes.value).toBeGreaterThanOrEqual(3);
+        if (planes) {
+          expect(planes.value).toBeGreaterThanOrEqual(3);
+          expect(planes.min).toBeGreaterThanOrEqual(3);
+        }
       }
     });
 
-    it('enforces EDGE_MASK Thickness constraints (Relative rule: Thickness >= Sensitivity - 3)', () => {
+    it('enforces EDGE_MASK Thickness constraints (Relative rule: Thickness >= Sensitivity - 3 for value and min)', () => {
       const mockPipeline: EffectConfig[] = [
         { id: 'p1', type: 'ORGANIC_NOISE', params: [] }
       ];
@@ -261,8 +273,12 @@ describe('LanguageService', () => {
         const thickness = params.find(p => p.param === 'Thickness');
 
         if (sensitivity && thickness) {
-          const expectedMin = Math.round((sensitivity.value - 3) * 10) / 10;
-          expect(thickness.value).toBeGreaterThanOrEqual(expectedMin);
+          // Rule: Thickness must be >= Sensitivity - 3 at both endpoints
+          const loudFloor = Math.round((sensitivity.value - 3) * 10) / 10;
+          expect(thickness.value).toBeGreaterThanOrEqual(loudFloor);
+
+          const quietFloor = Math.round((sensitivity.min - 3) * 10) / 10;
+          expect(thickness.min).toBeGreaterThanOrEqual(quietFloor);
         }
       }
     });
@@ -293,7 +309,7 @@ describe('LanguageService', () => {
       expect(foundLowBlend).toBe(true);
     });
 
-    it('caps DEEP_FRY Heat ≤ 30 when a low-Blend pattern exists in the pipeline', () => {
+    it('caps DEEP_FRY Heat ≤ 30 (value and min) when a low-Blend pattern exists in the pipeline', () => {
       // Manually construct a context that triggers the rule
       const mockPipeline: EffectConfig[] = [
         {
@@ -311,6 +327,7 @@ describe('LanguageService', () => {
         const heat = params.find(p => p.param === 'Heat');
         if (heat) {
           expect(heat.value).toBeLessThanOrEqual(30);
+          expect(heat.min).toBeLessThanOrEqual(30);
         }
       }
     });

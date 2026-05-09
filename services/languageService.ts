@@ -300,6 +300,7 @@ export function buildLanguageModel(): LanguageModel {
     type: GlitchEffectType,
     pipelineContext: EffectConfig[],
     paramValues: number[],
+    paramMins: number[],
     meta: import('../types').EffectMetadata,
   ): void {
     // Rule 1: EDGE_MASK — enforce thickness to be >= Sensitivity - 3 when amorphous patterns are present.
@@ -314,8 +315,11 @@ export function buildLanguageModel(): LanguageModel {
         if (hasAmorphous) {
           // Round to 1dp to match the rounding applied to all stored param values,
           // preventing floating-point drift (e.g. 4.7 - 3 = 1.7000000000000002).
-          const minThickness = Math.round((paramValues[sensIdx] - 3) * 10) / 10;
-          paramValues[thickIdx] = Math.max(paramValues[thickIdx], minThickness);
+          const minThicknessForValue = Math.round((paramValues[sensIdx] - 3) * 10) / 10;
+          paramValues[thickIdx] = Math.max(paramValues[thickIdx], minThicknessForValue);
+
+          const minThicknessForMin = Math.round((paramMins[sensIdx] - 3) * 10) / 10;
+          paramMins[thickIdx] = Math.max(paramMins[thickIdx], minThicknessForMin);
         }
       }
     }
@@ -328,7 +332,10 @@ export function buildLanguageModel(): LanguageModel {
       );
       if (!hasOtherPattern) {
         const blendIdx = meta.params.findIndex(p => p.name === 'Blend');
-        if (blendIdx !== -1) paramValues[blendIdx] = 100;
+        if (blendIdx !== -1) {
+          paramValues[blendIdx] = 100;
+          paramMins[blendIdx] = 100;
+        }
       }
     }
   }
@@ -437,15 +444,12 @@ export function buildLanguageModel(): LanguageModel {
         minValue = Math.max(minValue, constraint.min);
       }
 
-      // Ensure value >= min
-      value = Math.max(value, minValue);
-
       paramValues.push(value);
       paramMins.push(minValue);
     });
 
     // PHASE 2: Apply cross-param relative constraints
-    applyRelativeConstraints(type, pipelineContext, paramValues, meta);
+    applyRelativeConstraints(type, pipelineContext, paramValues, paramMins, meta);
 
     return meta.params.map((metaParam, i) => ({
       param: metaParam.name,
