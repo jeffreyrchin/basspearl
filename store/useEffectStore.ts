@@ -153,7 +153,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     },
 
     // Endless Mode
-    isEndlessMode: false,
+    isEndlessMode: true,
     endlessScenes: [emptySlot(), emptySlot()],
     activeEndlessIndex: 0,
     endlessInterval: 5,

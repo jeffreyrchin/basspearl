@@ -9,7 +9,7 @@ const LandingBackground: React.FC = () => {
     const startTimeRef = useRef<number>(Date.now());
 
     // Preset blueprint
-    const blueprint = React.useMemo(() => createMacroInstance('AURORA', true), []);
+    const blueprint = React.useMemo(() => createMacroInstance('LIQUID', true), []);
 
     useLayoutEffect(() => {
         if (!canvasRef.current) return;

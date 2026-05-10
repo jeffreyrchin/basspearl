@@ -20,6 +20,8 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
     const setIsSidebarOpen = useEffectStore(e => e.setIsSidebarOpen);
     const setIsPuzzlesModalOpen = useEffectStore(e => e.setIsPuzzlesModalOpen);
 
+    const setEndlessMode = useEffectStore(e => e.setEndlessMode);
+
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onClose();
@@ -54,32 +56,51 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
         onClose();
     };
 
+    const handleEndlessMode = () => {
+        setEndlessMode(true);
+        onClose();
+    };
+
+    const handleSandboxMode = () => {
+        setEndlessMode(false);
+        !isMobile && setIsSidebarOpen(true);
+        onClose();
+    };
+
     const LandingCard: React.FC<{
         onClick: () => void;
         icon: string;
         label: string;
         description: string;
-        color: 'cyan' | 'red' | 'purple' | 'white';
+        color: 'cyan' | 'red' | 'purple' | 'amber' | 'white';
     }> = ({ onClick, icon, label, description, color }) => {
         const theme = {
             white: {
-                text: 'text-white/90'
+                text: 'text-white',
+                border: 'border-white/90',
             },
             cyan: {
-                text: 'text-cyan-400'
+                text: 'text-cyan-400',
+                border: 'border-cyan-400',
             },
             red: {
-                text: 'text-red-400'
+                text: 'text-red-400',
+                border: 'border-red-400',
             },
             purple: {
-                text: 'text-purple-400'
+                text: 'text-purple-400',
+                border: 'border-purple-400',
+            },
+            amber: {
+                text: 'text-amber-400',
+                border: 'border-amber-400/90',
             }
         }[color];
 
         return (
             <button
                 onClick={onClick}
-                className={`flex-1 rounded-2xl bg-black/40 hover:bg-black/50 transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-4 sm:p-8 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 shadow-2xl relative overflow-hidden`}
+                className={`flex-1 rounded-2xl border-2 ${theme.border} bg-black/40 hover:bg-black/50 transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-4 sm:p-8 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 shadow-2xl relative overflow-hidden`}
             >
                 <div className={`absolute -inset-2 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
@@ -111,10 +132,10 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
 
             <motion.div
                 key="landing-modal-content"
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 1, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ type: 'spring', damping: 50, stiffness: 1000 }}
+                transition={{ duration: 0.2 }}
                 data-section="modal"
                 className="relative w-[80vw] max-w-4xl bg-[#0a0a1a] rounded-2xl border border-white/5 max-h-[90vh] overflow-hidden custom-scrollbar flex flex-col items-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
             >
@@ -147,45 +168,21 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
 
                     {/* Body Section */}
                     <div className="w-full p-8 pt-4">
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-                            <input
-                                ref={audioInputRef}
-                                type="file"
-                                accept="audio/*"
-                                onChange={handleAudioFile}
-                                className="hidden"
+                        <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                            <LandingCard
+                                onClick={handleEndlessMode}
+                                icon="all_inclusive"
+                                label="Endless"
+                                description="Infinite scene generation"
+                                color="amber"
                             />
 
                             <LandingCard
-                                onClick={() => audioInputRef.current?.click()}
-                                icon="audio_file"
-                                label="Audio File"
-                                description="Upload from your device"
+                                onClick={handleSandboxMode}
+                                icon="edit"
+                                label="Sandbox"
+                                description="Build your own visuals"
                                 color="white"
-                            />
-
-                            <LandingCard
-                                onClick={handleExternalSource}
-                                icon="mic"
-                                label="Microphone"
-                                description="Stream mic or computer audio"
-                                color="red"
-                            />
-
-                            <LandingCard
-                                onClick={handleTabAudio}
-                                icon="present_to_all"
-                                label="Tab Audio"
-                                description="Stream from your browser tab"
-                                color="purple"
-                            />
-
-                            <LandingCard
-                                onClick={handlePuzzles}
-                                icon="grid_view"
-                                label="Puzzles"
-                                description="Learn how the app works"
-                                color="cyan"
                             />
                         </div>
 

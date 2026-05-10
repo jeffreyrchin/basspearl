@@ -130,7 +130,7 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
                         onChange={(e) => setTransitionDuration(parseFloat(e.target.value))}
                         className="grow h-0.5 bg-white/30 rounded-full appearance-none cursor-pointer accent-white"
                     />
-                    <span className="text-[9px] w-7 text-right font-medium tabular-nums text-white/60">{transitionDuration.toFixed(1)}s</span>
+                    <span className="text-[9px] w-7 text-right font-medium tabular-nums text-white/80">{transitionDuration.toFixed(1)}s</span>
                 </div>
             </div>
 
@@ -146,9 +146,9 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
                             step="1"
                             value={endlessInterval}
                             onChange={(e) => setEndlessInterval(parseInt(e.target.value))}
-                            className="grow h-0.5 bg-amber-400/30 rounded-full appearance-none cursor-pointer accent-amber-400"
+                            className="grow h-0.5 bg-white/30 rounded-full appearance-none cursor-pointer accent-white"
                         />
-                        <span className="text-[9px] w-7 text-right font-medium tabular-nums text-amber-400/80">{endlessInterval}s</span>
+                        <span className="text-[9px] w-7 text-right font-medium tabular-nums text-white/80">{endlessInterval}s</span>
                     </div>
                 </div>
             )}
