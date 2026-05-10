@@ -14,6 +14,7 @@ import SceneHotbar from './SceneHotbar';
 import PuzzleSuccessModal from './PuzzleSuccessModal';
 import PuzzleHelpModal from './PuzzleHelpModal';
 import { Footer } from './Footer';
+import { SceneSettingsPanel } from './SceneSettingsPanel';
 import { analytics } from '@/services/analytics';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 import { useLiveAudio } from '@/hooks/useLiveAudio';
@@ -37,6 +38,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const clearSelection = useEffectStore(s => s.clearSelection);
     const isUiHidden = useEffectStore(s => s.isUiHidden);
     const setIsUiHidden = useEffectStore(s => s.setIsUiHidden);
+    const isEndlessMode = useEffectStore(s => s.isEndlessMode);
     const [isMouseIdle, setIsMouseIdle] = useState(false);
 
     const isPuzzlesModalOpen = useEffectStore(s => s.isPuzzlesModalOpen);
@@ -44,6 +46,8 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const puzzleMatchResult = useEffectStore(s => s.puzzleMatchResult);
     const isPreviewingPuzzle = useEffectStore(s => s.isPreviewingPuzzle);
     const isPuzzleHelpModalOpen = useEffectStore(s => s.isPuzzleHelpModalOpen);
+    const endlessInterval = useEffectStore(s => s.endlessInterval);
+    const triggerEndlessStep = useEffectStore(s => s.triggerEndlessStep);
 
     const [isTabAudioUnsupportedModalOpen, setIsTabAudioUnsupportedModalOpen] = useState(false);
     const isTabAudioUnsupported = typeof navigator !== 'undefined' && (
@@ -212,6 +216,23 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         };
     }, [isUiHidden]);
 
+    // Endless Mode Automation
+    useEffect(() => {
+        if (isEndlessMode) {
+            triggerEndlessStep(); // Trigger the first step immediately when entering endless mode
+        }
+    }, [isEndlessMode, triggerEndlessStep]);
+
+    useEffect(() => {
+        if (!isEndlessMode) return;
+
+        const interval = setInterval(() => {
+            triggerEndlessStep();
+        }, endlessInterval * 1000);
+
+        return () => clearInterval(interval);
+    }, [isEndlessMode, endlessInterval, triggerEndlessStep]);
+
     const handleMicClick = () => {
         isLiveMode && liveSourceType === 'mic' ? stopMic() : (stopPlayback(), startMic());
     };
@@ -257,7 +278,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                             handleCanvasPointerDown(e);
                         }}
                     />
-                    {!isUiHidden && <TransformGizmoLayer canvasRef={canvasRef} />}
+                    {!isUiHidden && !isEndlessMode && <TransformGizmoLayer canvasRef={canvasRef} />}
                     {isProcessing && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-processing bg-black/80">
                             <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -293,13 +314,26 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
 
                 {/* Scene Hotbar */}
                 <div className="absolute top-15 left-0 right-0 flex justify-center">
-                    <SceneHotbar />
+                    {!isEndlessMode && <SceneHotbar />}
+                    <AnimatePresence>
+                        {isEndlessMode && (
+                            <motion.div
+                                key="endless-settings-panel"
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="pointer-events-auto"
+                            >
+                                <SceneSettingsPanel showEndlessControls={true} />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
 
                 {/* Sidebar: Effects Rack & Parameters */}
                 <aside
-                    inert={!isSidebarOpen}
-                    className={`pointer-events-auto fixed inset-y-0 right-0 z-sidebar w-full sm:w-[360px] bg-slate-900/90 flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] will-change-transform ${isSidebarOpen ? 'translate-x-0 visible' : 'translate-x-full invisible'}`}
+                    inert={!isSidebarOpen || isEndlessMode}
+                    className={`pointer-events-auto fixed inset-y-0 right-0 z-sidebar w-full sm:w-[360px] bg-slate-900/90 flex flex-col overflow-hidden shrink-0 transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.5)] will-change-transform ${isSidebarOpen && !isEndlessMode ? 'translate-x-0 visible' : 'translate-x-full invisible'}`}
                 >
                     {/* Inner wrapper */}
                     <div data-section="sidebar" className="flex-1 flex flex-col min-h-0 relative">
@@ -316,7 +350,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 )}
 
                 <AnimatePresence>
-                    {isInspectorOpen && <InspectorWindow />}
+                    {isInspectorOpen && !isEndlessMode && <InspectorWindow />}
                 </AnimatePresence>
             </div>
 

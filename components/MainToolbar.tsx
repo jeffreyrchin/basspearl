@@ -103,6 +103,8 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     const setIsPuzzlesModalOpen = useEffectStore(s => s.setIsPuzzlesModalOpen);
     const isGameMode = useEffectStore(s => s.isGameMode);
     const isMobile = useEffectStore(s => s.isMobile);
+    const isEndlessMode = useEffectStore(s => s.isEndlessMode);
+    const setEndlessMode = useEffectStore(s => s.setEndlessMode);
 
     const constraintsRef = useRef(null);
     const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
@@ -211,6 +213,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                     shortcut="P"
                                     isCollapsed={isToolbarCollapsed}
                                     isActive={isSidebarOpen}
+                                    className={`${isEndlessMode && 'hidden'}`}
                                 />
 
                                 {/* Scene Hotbar Toggle (Desktop only) */}
@@ -221,7 +224,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                     shortcut="K"
                                     isCollapsed={isToolbarCollapsed}
                                     isActive={isSceneHotbarOpen}
-                                    className={`hidden ${!isGameMode && 'lg:flex'}`}
+                                    className={`hidden ${!isGameMode && !isEndlessMode && 'lg:flex'}`}
                                 />
 
                                 {/* Puzzles Toggle */}
@@ -231,6 +234,20 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                     label="Puzzles"
                                     isCollapsed={isToolbarCollapsed}
                                     isActive={isPuzzlesModalOpen}
+                                    className={`${isEndlessMode && 'hidden'}`}
+                                />
+
+                                {/* Endless Mode Toggle */}
+                                <ToolbarRow
+                                    onClick={() => setEndlessMode(!isEndlessMode)}
+                                    icon="all_inclusive"
+                                    label="Endless"
+                                    isCollapsed={isToolbarCollapsed}
+                                    isActive={isEndlessMode}
+                                    colorHex="#F59E0B"
+                                    activeBg="bg-[#F59E0B]/10"
+                                    activeBorder="border-[#F59E0B]/30"
+                                    className={isGameMode ? 'hidden' : ''}
                                 />
 
                                 {/* Hide UI */}
@@ -249,7 +266,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                     icon="download"
                                     label="Export Video"
                                     isCollapsed={isToolbarCollapsed}
-                                    className={`hidden ${!isGameMode && 'lg:flex'}`}
+                                    className={`hidden ${!isGameMode && !isEndlessMode && 'lg:flex'}`}
                                 />
                             </div>
                         </div>

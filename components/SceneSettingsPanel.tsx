@@ -13,9 +13,11 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
     const setTransitionType = useEffectStore(s => s.setTransitionType);
     const transitionDuration = useEffectStore(s => s.transitionDuration);
     const setTransitionDuration = useEffectStore(s => s.setTransitionDuration);
+    const endlessInterval = useEffectStore(s => s.endlessInterval);
+    const setEndlessInterval = useEffectStore(s => s.setEndlessInterval);
 
     return (
-        <div className="mt-1 w-fit rounded-xl bg-black/80 border border-white/8 px-4 py-3 flex flex-col gap-2">
+        <div className={`w-fit rounded-xl bg-black/80 border border-white/8 px-4 py-3 flex flex-col gap-2 ${showEndlessControls ? 'mx-auto' : 'mt-1'}`}>
             {/* Transition type */}
             <div className="flex items-center gap-3">
                 <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap w-16 shrink-0">Transition</span>
@@ -56,11 +58,22 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
                 </div>
             </div>
 
-            {/* Placeholder for future Endless Mode "Every" parameter */}
+            {/* Endless Mode "Every" parameter */}
             {showEndlessControls && (
-                <div className="flex items-center gap-3 opacity-50">
+                <div className="flex items-center gap-3">
                     <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap w-16 shrink-0">Every</span>
-                    <div className="text-[9px] text-white/40 italic">Coming soon...</div>
+                    <div className="flex items-center gap-3 grow max-w-50">
+                        <input
+                            type="range"
+                            min="1"
+                            max="60"
+                            step="1"
+                            value={endlessInterval}
+                            onChange={(e) => setEndlessInterval(parseInt(e.target.value))}
+                            className="grow h-0.5 bg-amber-400/30 rounded-full appearance-none cursor-pointer accent-amber-400"
+                        />
+                        <span className="text-[9px] w-7 text-right font-medium tabular-nums text-amber-400/80">{endlessInterval}s</span>
+                    </div>
                 </div>
             )}
         </div>

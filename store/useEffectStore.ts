@@ -129,6 +129,8 @@ interface EffectState {
     activeEndlessIndex: number;
     setEndlessMode: (active: boolean) => void;
     triggerEndlessStep: () => void;
+    endlessInterval: number;
+    setEndlessInterval: (interval: number) => void;
 }
 
 export const useEffectStore = create<EffectState>((set, get) => ({
@@ -154,6 +156,8 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     isEndlessMode: false,
     endlessScenes: [emptySlot(), emptySlot()],
     activeEndlessIndex: 0,
+    endlessInterval: 5,
+    setEndlessInterval: (endlessInterval) => set({ endlessInterval }),
 
     setEndlessMode: (active: boolean) => {
         const { isEndlessMode, activeSceneIndex, activeEndlessIndex, switchScene } = get();
@@ -161,6 +165,8 @@ export const useEffectStore = create<EffectState>((set, get) => ({
 
         if (active) {
             // Entering Endless Mode: Switch from sandbox bank to endless bank
+            // Also close UI panels
+            set({ isSidebarOpen: false, isSceneHotbarOpen: false });
             switchScene(activeEndlessIndex, 'endless');
         } else {
             // Exiting Endless Mode: Switch from endless bank to sandbox bank

@@ -26,17 +26,18 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
 
     const toggleIsPreviewingPuzzle = useEffectStore(s => s.toggleIsPreviewingPuzzle);
     const isGameMode = useEffectStore(s => s.isGameMode);
+    const isEndlessMode = useEffectStore(s => s.isEndlessMode);
 
     // Derived state
     const isInspectorOpen = focusStack.includes('inspector');
     const isLibraryOpen = focusStack.includes('library');
 
     // These capture the latest state in the closure but we use a ref wrapper to ensure events get latest refs
-    const propsRef = useRef({ onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId, isUiHidden, setIsUiHidden, switchScene, isSceneHotbarOpen });
+    const propsRef = useRef({ onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId, isUiHidden, setIsUiHidden, switchScene, isSceneHotbarOpen, isEndlessMode });
 
     useEffect(() => {
-        propsRef.current = { onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId, isUiHidden, setIsUiHidden, switchScene, isSceneHotbarOpen };
-    }, [onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId, isUiHidden, setIsUiHidden, switchScene, isSceneHotbarOpen]);
+        propsRef.current = { onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId, isUiHidden, setIsUiHidden, switchScene, isSceneHotbarOpen, isEndlessMode };
+    }, [onTogglePlay, onScrub, onReleaseScrubber, isSidebarOpen, isInspectorOpen, isLibraryOpen, setIsSidebarOpen, pushFocus, removeFocus, undo, redo, setActiveDropdownId, isUiHidden, setIsUiHidden, switchScene, isSceneHotbarOpen, isEndlessMode]);
 
     // Update global interaction logic on every render via ref
     const handleGlobalPtrDownLogicRef = useRef<(e: PointerEvent) => void>(() => { });
@@ -79,7 +80,7 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
         };
 
         handleGlobalKbdDownLogicRef.current = (e: KeyboardEvent) => {
-            const { undo, redo, setIsSidebarOpen, isSidebarOpen, isInspectorOpen, pushFocus, removeFocus, isLibraryOpen, onTogglePlay, onScrub, isUiHidden, setIsUiHidden, switchScene, isSceneHotbarOpen } = propsRef.current;
+            const { undo, redo, setIsSidebarOpen, isSidebarOpen, isInspectorOpen, pushFocus, removeFocus, isLibraryOpen, onTogglePlay, onScrub, isUiHidden, setIsUiHidden, switchScene, isSceneHotbarOpen, isEndlessMode } = propsRef.current;
             const target = e.target as HTMLElement;
             const isTyping = (target.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'button', 'submit'].includes((target as HTMLInputElement).type)) ||
                 target.tagName === 'TEXTAREA' ||
@@ -105,41 +106,41 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
                 return;
             }
 
-            // Global Undo/Redo - Cmd/Ctrl + (Shift) + Z/Y
+            // Global Undo/Redo - Cmd/Ctrl + (Shift) + Z/Y - Sandbox only
             const isMod = e.metaKey || e.ctrlKey;
-            if (isMod && key === 'z') {
+            if (!isEndlessMode && isMod && key === 'z') {
                 if (e.shiftKey) redo();
                 else undo();
                 e.preventDefault();
-            } else if (isMod && key === 'y') {
+            } else if (!isEndlessMode && isMod && key === 'y') {
                 redo();
                 e.preventDefault();
             }
 
-            // Toggle Sidebar - P
-            if (key === 'p') {
+            // Toggle Sidebar - P - Sandbox only
+            if (!isEndlessMode && key === 'p') {
                 setIsSidebarOpen(!isSidebarOpen);
             }
 
-            // Toggle Inspector - I
-            else if (key === 'i') {
+            // Toggle Inspector - I - Sandbox only
+            else if (!isEndlessMode && key === 'i') {
                 if (isInspectorOpen) removeFocus('inspector');
                 else pushFocus('inspector');
             }
 
-            // Toggle Library - Y
-            else if (key === 'y' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+            // Toggle Library - Y - Sandbox only
+            else if (!isEndlessMode && key === 'y' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
                 if (isLibraryOpen) removeFocus('library');
                 else pushFocus('library');
             }
 
-            // Toggle Scene Hotbar - K
-            else if (key === 'k' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+            // Toggle Scene Hotbar - K - Sandbox only
+            else if (!isEndlessMode && key === 'k' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
                 setIsSceneHotbarOpen(!isSceneHotbarOpen);
             }
 
-            // Scene Hotbar - digits 1-9 (only when no modifier keys held)
-            if (!e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey) {
+            // Scene Hotbar - digits 1-9 (only when no modifier keys held) - Sandbox only
+            if (!isEndlessMode && !e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey) {
                 const digit = parseInt(e.key, 10);
                 if (digit >= 1 && digit <= 9) {
                     e.preventDefault();
@@ -148,13 +149,15 @@ export const useAppShortcuts = ({ onTogglePlay, onScrub, onReleaseScrubber }: Us
                 }
             }
 
-            if (e.key === '[') {
+            // Previous Scene - [ - Sandbox only
+            if (!isEndlessMode && e.key === '[') {
                 e.preventDefault();
                 switchScene(activeSceneIndex - 1);
                 return;
             }
 
-            if (e.key === ']') {
+            // Next Scene - ] - Sandbox only
+            if (!isEndlessMode && e.key === ']') {
                 e.preventDefault();
                 switchScene(activeSceneIndex + 1);
                 return;

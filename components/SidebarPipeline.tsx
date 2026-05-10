@@ -29,6 +29,7 @@ const SidebarPipeline = ({ onNavigateToLibrary, onAIGenerate }: SidebarPipelineP
     const addEffectFromSidebar = useEffectStore(s => s.addEffectFromSidebar);
 
     const isGameMode = useEffectStore(s => s.isGameMode);
+    const isEndlessMode = useEffectStore(s => s.isEndlessMode);
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
@@ -100,28 +101,28 @@ const SidebarPipeline = ({ onNavigateToLibrary, onAIGenerate }: SidebarPipelineP
 
             const isModalOpen = document.querySelector('[data-section="modal"]');
 
-            if (isTyping || activeFocus !== 'pipeline' || isModalOpen) return;
+            if (isTyping || activeFocus !== 'pipeline' || isModalOpen || isEndlessMode) return;
 
-            // Select All - Ctrl/Cmd + A
+            // Select All - Ctrl/Cmd + A - Sandbox only
             if (isMod && key === 'a') {
                 e.preventDefault();
                 selectAll();
                 return;
             }
 
-            // Add Image - O
+            // Add Image - O - Sandbox only
             if (key === 'o') {
                 e.preventDefault();
                 addEffectFromSidebar('IMAGE');
             }
 
-            // Add Color - C
+            // Add Color - C - Sandbox only
             else if (key === 'c') {
                 e.preventDefault();
                 addEffectFromSidebar('RGBA');
             }
 
-            // Add Move-Scale - M
+            // Add Move-Scale - M - Sandbox only
             else if (key === 'm') {
                 e.preventDefault();
                 addEffectFromSidebar('TRANSFORM');
@@ -129,31 +130,31 @@ const SidebarPipeline = ({ onNavigateToLibrary, onAIGenerate }: SidebarPipelineP
 
             if (selectedIds.size === 0) return;
 
-            // Delete selected effects - Backspace or Delete
+            // Delete selected effects - Backspace or Delete - Sandbox only
             if (e.key === 'Backspace' || e.key === 'Delete') {
                 e.preventDefault();
                 batchRemove();
             }
 
-            // Clear selection - Escape
+            // Clear selection - Escape - Sandbox only
             else if (e.key === 'Escape') {
                 clearSelection();
             }
 
-            // Duplicate selected effects - Ctrl/Cmd + D
+            // Duplicate selected effects - Ctrl/Cmd + D - Sandbox only
             else if (isMod && key === 'd') {
                 e.preventDefault();
                 batchDuplicate();
             }
 
-            // Ungroup selected effects - Ctrl/Cmd + Shift + G
+            // Ungroup selected effects - Ctrl/Cmd + Shift + G - Sandbox only
             // We check this BEFORE the group shortcut so the Shift modifier is caught correctly
             else if (isMod && e.shiftKey && key === 'g') {
                 e.preventDefault();
                 batchUnmeld();
             }
 
-            // Group selected effects - Ctrl/Cmd + G
+            // Group selected effects - Ctrl/Cmd + G - Sandbox only
             else if (isMod && key === 'g') {
                 e.preventDefault();
                 batchMeld();
