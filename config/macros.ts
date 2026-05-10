@@ -460,9 +460,9 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
-          o('Spin Speed X', { v: 0, b: 'OFF' }),
-          o('Spin Speed Y', { v: 0, b: 'OFF' }),
-          o('Spin Speed Z', { v: 20, b: 'SUB' }),
+          o('Spin Speed X', { v: 10, b: 'SUB' }, { v: 5, b: 'OFF' }),
+          o('Spin Speed Y', { v: 10, b: 'SUB' }, { v: 5, b: 'OFF' }),
+          o('Spin Speed Z', { v: 10, b: 'SUB' }, { v: 5, b: 'OFF' }),
         ],
         melded: false
       },
@@ -525,9 +525,10 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
-          o('Spin Speed X', { v: 0, b: 'OFF' }),
-          o('Spin Speed Y', { v: 0, b: 'OFF' }),
-          o('Spin Speed Z', { v: 0, b: 'OFF' }),
+          o('Spin Speed X', { v: 10, b: 'SUB' }, { v: 5, b: 'OFF' }),
+          o('Spin Speed Y', { v: 10, b: 'SUB' }, { v: 5, b: 'OFF' }),
+          o('Spin Speed Z', { v: 10, b: 'SUB' }, { v: 5, b: 'OFF' }),
+          o('Seam Blend', { v: 20, b: 'OFF' }),
         ],
         melded: false
       },
@@ -825,7 +826,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Speed', { v: 80, b: 'SUB' }, { v: 50, b: 'OFF' }),
           o('Blend', { v: 100 }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'TERRAIN_SPHERE',
@@ -836,11 +837,12 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Offset X', { v: 0, b: 'OFF' }),
           o('Offset Y', { v: 0, b: 'OFF' }),
           o('Offset Z', { v: 0, b: 'OFF' }),
-          o('Spin Speed X', { v: 0, b: 'OFF' }),
-          o('Spin Speed Y', { v: 0, b: 'OFF' }),
-          o('Spin Speed Z', { v: 0, b: 'OFF' }),
+          o('Spin Speed X', { v: 10, b: 'SUB' }, { v: 5, b: 'OFF' }),
+          o('Spin Speed Y', { v: 10, b: 'SUB' }, { v: 5, b: 'OFF' }),
+          o('Spin Speed Z', { v: 10, b: 'SUB' }, { v: 5, b: 'OFF' }),
+          o('Seam Blend', { v: 20, b: 'OFF' }),
         ],
-        melded: true
+        melded: false
       },
       {
         type: 'HUE_ROTATION',
@@ -880,7 +882,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Offset Z', { v: 0, b: 'OFF' }),
           o('Spin Speed X', { v: 0, b: 'OFF' }),
           o('Spin Speed Y', { v: 0, b: 'OFF' }),
-          o('Spin Speed Z', { v: 0, b: 'OFF' }),
+          o('Spin Speed Z', { v: 10, b: 'SUB' }, { v: 5, b: 'OFF' }),
+          o('Seam Blend', { v: 30, b: 'OFF' }),
         ],
         melded: false
       },
