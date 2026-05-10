@@ -379,7 +379,7 @@ export function buildLanguageModel(): LanguageModel {
    * Generate parameter values for a given effect type.
    *
    * Uses a two-phase constraint system:
-   *   Phase 1 — independent per-param values (interpolation + jitter + absolute caps)
+   *   Phase 1 — independent per-param values (interpolation + absolute caps)
    *   Phase 2 — cross-param relative constraints (applied after all values are known)
    *
    * @param pipelineContext - Effects generated so far; used for cross-effect constraint resolution.
@@ -427,8 +427,6 @@ export function buildLanguageModel(): LanguageModel {
     }
 
     const activeConstraints = resolveConstraints(type, pipelineContext);
-    const jitterScale = temperature * 10;
-
     // PHASE 1: Compute all parameter values and mins independently
     const paramValues: number[] = [];
     const paramMins: number[] = [];
@@ -437,28 +435,13 @@ export function buildLanguageModel(): LanguageModel {
       const base = baseVector[i] ?? metaParam.defaultValue;
       const baseMin = baseMins[i] ?? metaParam.defaultMin ?? 0;
 
-      // Structural parameters (Scale X/Y, Pan X/Y) should not have jitter to avoid visual misalignment/gaps,
-      // but we allow jitter on generic 'Scale' (e.g., for organic noise) and Gradient 'Pan' (for shifting centers).
-      const isStructural =
-        metaParam.name.includes('Scale X') ||
-        metaParam.name.includes('Scale Y') ||
-        (metaParam.name.includes('Pan X') && type !== 'SPIRAL_GRADIENT' && type !== 'RADIAL_GRADIENT') ||
-        (metaParam.name.includes('Pan Y') && type !== 'SPIRAL_GRADIENT' && type !== 'RADIAL_GRADIENT');
-
-      const jitter = isStructural ? 0 : (Math.random() - 0.5) * 2 * jitterScale;
-
       // Compute value
       const floor = metaParam.defaultMin ?? 0;
-      let value = Math.max(floor, Math.min(100, base + jitter));
+      let value = Math.max(floor, Math.min(100, base));
 
       // Compute min (reactive floor)
-      let minValue = Math.max(floor, Math.min(100, baseMin + jitter));
+      let minValue = Math.max(floor, Math.min(100, baseMin));
 
-      // Safety: Hard cap for 'Speed' parameters to avoid strobing
-      if (metaParam.name.includes('Speed')) {
-        value = Math.min(value, 20);
-        minValue = Math.min(minValue, 20);
-      }
       // Safety: Hard cap for LUMINANCE_MASK threshold to avoid black screens
       if (type === 'LUMINANCE_MASK' && metaParam.name === 'Threshold') {
         value = Math.min(value, 20);

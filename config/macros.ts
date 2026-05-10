@@ -194,8 +194,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Elevation', { v: 50, b: 'OFF' }),
           o('Distance', { v: 50, b: 'OFF' }),
           o('Tile Blend', { v: 0, b: 'OFF' }),
-          o('Speed X', { v: 70, b: 'SUB' }, { v: 21, b: 'OFF' }),
-          o('Speed Y', { v: 100, b: 'SUB' }, { v: 30, b: 'OFF' }),
+          o('Speed X', { v: 50, b: 'SUB' }, { v: 25, b: 'OFF' }),
+          o('Speed Y', { v: 50, b: 'SUB' }, { v: 25, b: 'OFF' }),
         ],
         melded: false
       },
@@ -2451,14 +2451,14 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         type: 'ROTATE',
         params: [
           o('Rotation', { v: 0, b: 'OFF' }),
-          o('Speed', { v: 30, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Speed', { v: 15, b: 'SUB' }, { v: 7, b: 'OFF' }),
         ],
         melded: false
       },
       {
         type: 'INFINITE_ZOOM',
         params: [
-          o('Speed', { v: 100, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Speed', { v: 30, b: 'SUB' }, { v: 10, b: 'OFF' }),
           o('Depth', { v: 10, b: 'OFF' }),
           o('Spacing', { v: 73, b: 'OFF' }),
           o('Plane Count', { v: 100, b: 'OFF' }),

@@ -159,85 +159,57 @@ describe('LanguageService', () => {
       }
     });
 
-    it('never applies jitter to structural parameters (Scale, Pan)', () => {
-      const type = 'SHAPE';
-      const getVariance = (temp: number, paramName: string) => {
-        const samples: number[] = [];
-        // Increase sample size to stabilize statistical measures and reduce noise
-        for (let i = 0; i < 1000; i++) {
-          const p = model.sampleParams(type, temp).find(p => p.param === paramName);
-          if (p) samples.push(p.value);
+    it('increases compositional entropy as temperature increases (starter effects)', () => {
+      const getStarterDistribution = (temp: number) => {
+        const counts: Record<string, number> = {};
+        for (let i = 0; i < 500; i++) {
+          const pipeline = model.generatePipeline({ length: 1, temperature: temp });
+          const type = pipeline[0].type;
+          counts[type] = (counts[type] || 0) + 1;
         }
-        const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
-        return samples.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / samples.length;
+        return counts;
       };
 
-      // For structural params, variance should be nearly identical at T=0 and T=1
-      const varScale0 = getVariance(0, 'Scale X');
-      const varScale1 = getVariance(1, 'Scale X');
-      const varPan0 = getVariance(0, 'Pan X');
-      const varPan1 = getVariance(1, 'Pan X');
+      const lowTempDist = getStarterDistribution(0.01);
+      const highTempDist = getStarterDistribution(1.0);
 
-      // Jitter adds +/- 10 range (variance ~33). 
-      // We expect the difference to be well below that (allowing for sampling noise).
-      expect(Math.abs(varScale1 - varScale0)).toBeLessThan(15);
-      expect(Math.abs(varPan1 - varPan0)).toBeLessThan(15);
+      // At low temp, the distribution should be "peaked" (the top choice is very frequent)
+      const lowTempMaxFreq = Math.max(...Object.values(lowTempDist));
+      // At high temp, the distribution should be "flatter" (the top choice is less frequent)
+      const highTempMaxFreq = Math.max(...Object.values(highTempDist));
+
+      expect(lowTempMaxFreq).toBeGreaterThan(highTempMaxFreq);
     });
 
-    it('allows jitter on Gradient Pan parameters (exception to structural rule)', () => {
-      const type = 'SPIRAL_GRADIENT';
-      const getVariance = (temp: number, paramName: string) => {
-        const samples: number[] = [];
-        for (let i = 0; i < 1000; i++) {
-          const p = model.sampleParams(type, temp).find(p => p.param === paramName);
-          if (p) samples.push(p.value);
-        }
-        const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
-        return samples.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / samples.length;
-      };
+    it('increases compositional entropy as temperature increases (transitions)', () => {
+      // Pick a common "parent" effect that we know has many transitions in macros (like ORGANIC_NOISE)
+      const parentType = 'ORGANIC_NOISE';
 
-      const var0 = getVariance(0, 'Pan X');
-      const var1 = getVariance(1, 'Pan X');
-
-      // For gradients, Pan X is NOT structural, so jitter IS applied.
-      // Variance should increase significantly (base variance + jitter variance).
-      expect(var1).toBeGreaterThan(var0 + 15);
-    });
-
-    it('increases parameter variance as temperature increases', () => {
-      const type = 'GRAIN';
-
-      const getVariance = (temp: number) => {
-        const samples: number[] = [];
-        // Increase sample size to stabilize the statistical measure
-        for (let i = 0; i < 1000; i++) {
-          const p = model.sampleParams(type, temp).find(p => p.param === 'Freq X');
-          if (p) samples.push(p.value);
-        }
-        const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
-        return samples.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / samples.length;
-      };
-
-      const lowVar = getVariance(0.0);
-      const highVar = getVariance(1.0);
-
-      // High temperature should produce more variance than zero temperature
-      // (Variance at temp=0 is just the variance of picking different pairs of observations,
-      // while temp=1 adds significant Gaussian jitter).
-      expect(highVar).toBeGreaterThan(lowVar);
-    });
-
-    it('enforces a hard safety cap of 20 on all Speed parameters (value and min)', () => {
-      // Pick an effect known to have a Speed parameter
-      for (let i = 0; i < 50; i++) {
-        const params = model.sampleParams('WAVE_DISTORTION', 1.0);
-        params.forEach(p => {
-          if (p.param.includes('Speed')) {
-            expect(p.value).toBeLessThanOrEqual(20);
-            expect(p.min).toBeLessThanOrEqual(20);
+      const getTransitionDistribution = (temp: number) => {
+        const counts: Record<string, number> = {};
+        for (let i = 0; i < 500; i++) {
+          // Force the first effect to be our parent type and check what follows it
+          const pipeline = model.generatePipeline({
+            startPattern: parentType,
+            length: 2,
+            temperature: temp
+          });
+          if (pipeline.length > 1) {
+            const nextType = pipeline[1].type;
+            counts[nextType] = (counts[nextType] || 0) + 1;
           }
-        });
-      }
+        }
+        return counts;
+      };
+
+      const lowTempDist = getTransitionDistribution(0.01);
+      const highTempDist = getTransitionDistribution(1.0);
+
+      const lowTempMaxFreq = Math.max(...Object.values(lowTempDist));
+      const highTempMaxFreq = Math.max(...Object.values(highTempDist));
+
+      // Low temperature should be much more deterministic (peaked on the most common transition)
+      expect(lowTempMaxFreq).toBeGreaterThan(highTempMaxFreq);
     });
 
     it('enforces a hard safety cap of 20 on LUMINANCE_MASK Threshold parameter (value and min)', () => {
@@ -299,7 +271,7 @@ describe('LanguageService', () => {
 
       let foundLowBlend = false;
       for (let i = 0; i < 100; i++) {
-        const params = model.sampleParams('SHAPE', 1.0, mockPipeline);
+        const params = model.sampleParams('ORGANIC_NOISE', 1.0, mockPipeline);
         const blend = params.find(p => p.param === 'Blend');
         if (blend && blend.value < 100) {
           foundLowBlend = true;
