@@ -1384,7 +1384,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Spacing', { v: 15, b: 'OFF' }),
           o('Plane Count', { v: 20, b: 'OFF' }),
           o('Edge Feather', { v: 90, b: 'OFF' }),
-          o('Zoom Fade', { v: 0, b: 'OFF' }),
+          o('Zoom Fade', { v: 100, b: 'OFF' }),
         ],
         melded: false
       }
@@ -1500,7 +1500,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Spacing', { v: 17 }),
           o('Plane Count', { v: 100 }),
           o('Edge Feather', { v: 100 }),
-          o('Zoom Fade', { v: 0 }),
+          o('Zoom Fade', { v: 100 }),
         ],
         melded: false
       }
@@ -1819,7 +1819,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Spacing', { v: 15, b: 'OFF' }),
           o('Plane Count', { v: 5, b: 'OFF' }),
           o('Edge Feather', { v: 100, b: 'OFF' }),
-          o('Zoom Fade', { v: 0, b: 'OFF' }),
+          o('Zoom Fade', { v: 50, b: 'OFF' }),
         ],
         melded: false
       }
@@ -2515,7 +2515,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Spacing', { v: 44, b: 'OFF' }),
           o('Plane Count', { v: 5, b: 'OFF' }),
           o('Edge Feather', { v: 70, b: 'OFF' }),
-          o('Zoom Fade', { v: 99, b: 'OFF' }),
+          o('Zoom Fade', { v: 100, b: 'OFF' }),
         ],
         melded: false
       },
