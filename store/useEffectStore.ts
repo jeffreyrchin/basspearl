@@ -259,7 +259,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
             past: targetBank === 'sandbox' ? JSON.parse(JSON.stringify(targetSlot.past)) : [],
             future: targetBank === 'sandbox' ? JSON.parse(JSON.stringify(targetSlot.future)) : [],
             selectedIds: new Set<string>(),
-            activeDropdownId: null,
+            activeDropdownId: get().activeDropdownId === 'scene-transition' ? get().activeDropdownId : null,
         });
     },
 
@@ -687,7 +687,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
     },
 
     // Transitions
-    transitionType: 'none',
+    transitionType: 'crossfade',
     setTransitionType: (transitionType) => set({ transitionType }),
     transitionDuration: DEFAULT_TRANSITION_DURATION,
     setTransitionDuration: (transitionDuration) => set({ transitionDuration }),
