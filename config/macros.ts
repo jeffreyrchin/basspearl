@@ -124,7 +124,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Distance', { v: 50, b: 'OFF' }),
           o('Tile Blend', { v: 0, b: 'OFF' }),
           o('Speed X', { v: 0, b: 'OFF' }),
-          o('Speed Y', { v: 100, b: 'SUB' }, { v: 50, b: 'OFF' }),
+          o('Speed Y', { v: 50, b: 'SUB' }, { v: 25, b: 'OFF' }),
         ],
         melded: false
       },
@@ -1717,7 +1717,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Distance', { v: 50, b: 'OFF' }),
           o('Tile Blend', { v: 10, b: 'OFF' }),
           o('Speed X', { v: 0, b: 'OFF' }),
-          o('Speed Y', { v: 100, b: 'SUB' }, { v: 10, b: 'OFF' }),
+          o('Speed Y', { v: 50, b: 'SUB' }, { v: 10, b: 'OFF' }),
         ],
         melded: false
       },
