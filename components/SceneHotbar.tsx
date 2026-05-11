@@ -16,8 +16,6 @@ const SceneHotbar: React.FC = () => {
     const openProModal = useProStore(s => s.openProModal);
     const canAddScene = isPro || scenes.length < MAX_FREE_SCENES;
 
-
-
     const scrollRef = useRef<HTMLDivElement>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(false);
@@ -96,25 +94,27 @@ const SceneHotbar: React.FC = () => {
                 >
                     {/* TOP ROW: actions */}
                     <div className="flex items-center justify-between gap-2 px-5">
-                        <span className="text-[12px] font-bold text-white [text-shadow:0_1px_4px_rgba(0,0,0,0.8)] uppercase tracking-widest select-none">Scenes</span>
-                        <div className="flex items-center gap-1">
+                        <span className="text-[12px] font-display font-bold text-white [text-shadow:0_1px_4px_rgba(0,0,0,0.8)] uppercase tracking-widest select-none">Scenes</span>
+                        <div className="flex items-center gap-2">
                             {/* Add scene */}
                             <button
                                 onClick={() => canAddScene ? addScene() : openProModal()}
                                 title={canAddScene ? 'Add New Scene' : 'Pro Required for Additional Scenes'}
-                                className="relative flex items-center justify-center bg-black/60 hover:bg-black/80 text-white hover:text-primary w-10 h-6 rounded-full text-[9px] font-bold transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                className="relative flex items-center justify-center bg-slate-950/90 hover:bg-slate-900 w-10 h-6 rounded-full border border-accent-blue/50 hover:border-accent-blue hover:text-accent-blue text-white transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-accent-blue group shadow-lg"
                             >
                                 <span className="material-symbols-outlined !text-[16px]">add</span>
                                 {!canAddScene && (
-                                    <span className="material-symbols-outlined !text-[9px] text-primary">lock</span>
+                                    <span className="material-symbols-outlined !text-[10px] text-accent-blue absolute -top-1.5 -right-1.5 bg-slate-950 rounded-full p-0.5 border border-accent-blue/30 shadow-sm">lock</span>
                                 )}
                             </button>
                             {/* Settings toggle */}
                             <button
                                 onClick={() => setShowSettings(s => !s)}
                                 title="Scene Settings"
-                                className={`flex items-center justify-center w-10 h-6 bg-black/60 hover:bg-black/80 hover:text-primary rounded-full text-[9px] font-semibold transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary
-                                    ${showSettings ? 'text-primary' : 'text-white'}`}
+                                className={`flex items-center justify-center w-10 h-6 rounded-full border transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary group shadow-lg
+                                    ${showSettings
+                                        ? 'bg-primary border-primary text-slate-950 shadow-[0_0_15px_rgba(240,171,252,0.8)]'
+                                        : 'bg-slate-950/90 border-primary/50 text-white hover:bg-slate-900 hover:border-primary hover:text-primary'}`}
                             >
                                 <span className={`material-symbols-outlined !text-[14px] transition-transform duration-300 ${showSettings ? 'rotate-90' : ''}`}>settings</span>
                             </button>
@@ -123,7 +123,6 @@ const SceneHotbar: React.FC = () => {
 
                     {/* STRIP ROW */}
                     <div className="relative flex items-center">
-
                         {/* Left scroll fade + arrow */}
                         <AnimatePresence>
                             {canScrollLeft && (
@@ -131,11 +130,11 @@ const SceneHotbar: React.FC = () => {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="absolute left-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-r from-black to-transparent pointer-events-none rounded-l-full"
+                                    className="absolute left-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-r from-black to-transparent pointer-events-none rounded-l-lg"
                                 >
                                     <button
                                         onClick={() => scroll('left')}
-                                        className="pointer-events-auto flex items-center justify-center w-10 h-6 rounded-l-full bg-black/40 hover:bg-black/60 text-white hover:text-primary transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                        className="pointer-events-auto flex items-center justify-center w-10 h-6 rounded-l-lg bg-black/40 hover:bg-black/60 text-white hover:text-primary transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                     >
                                         <span className="material-symbols-outlined !text-[18px]">chevron_left</span>
                                     </button>
@@ -146,7 +145,7 @@ const SceneHotbar: React.FC = () => {
                         {/* Scrollable strip — dark pill backdrop ensures readability on any bg */}
                         <div
                             ref={scrollRef}
-                            className="flex items-center gap-[3px] overflow-x-auto no-scrollbar px-5 py-[10px] rounded-full bg-black/80"
+                            className="flex items-center gap-[1px] overflow-x-auto no-scrollbar px-5 py-[8px] rounded-lg bg-black/80"
                         >
                             {scenes.map((slot, i) => {
                                 const isActive = i === activeSceneIndex;
@@ -159,19 +158,15 @@ const SceneHotbar: React.FC = () => {
                                         key={i}
                                         onClick={() => switchScene(i)}
                                         title={`Scene ${i + 1}${hasFx ? ` · ${effectCount} effect${effectCount !== 1 ? 's' : ''}` : ' · Empty'}`}
-                                        style={{
-                                            boxShadow: isActive
-                                                ? '0 0 8px 1px rgba(var(--color-primary-rgb), 0.5), 0 2px 6px rgba(0,0,0,0.7)'
-                                                : '0 2px 4px rgba(0,0,0,0.7)'
-                                        }}
-                                        className={`
-                                            relative shrink-0 rounded-full transition-all duration-200 outline-none
+
+                                        className={`h-[20px]
+                                            relative shrink-0 transition-all duration-200 outline-none
                                             focus-visible:outline-2 focus-visible:outline-white/60
                                             ${isActive
-                                                ? 'h-[5px] w-12 bg-white hover:brightness-110'
+                                                ? 'w-12 bg-white hover:brightness-110'
                                                 : hasFx
-                                                    ? 'h-[5px] w-10 bg-indigo-300 hover:bg-white'
-                                                    : 'h-[5px] w-10 bg-white/35 hover:bg-white/60'
+                                                    ? 'w-10 bg-indigo-300 hover:bg-white'
+                                                    : 'w-10 bg-white/35 hover:bg-white/60'
                                             }
                                         `}
                                     />
@@ -186,11 +181,11 @@ const SceneHotbar: React.FC = () => {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="absolute right-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-l from-black to-transparent pointer-events-none rounded-r-full"
+                                    className="absolute right-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-l from-black to-transparent pointer-events-none rounded-r-lg"
                                 >
                                     <button
                                         onClick={() => scroll('right')}
-                                        className="pointer-events-auto flex items-center justify-center w-10 h-6 rounded-r-full bg-black/40 hover:bg-black/60 text-white hover:text-primary transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                        className="pointer-events-auto flex items-center justify-center w-10 h-6 rounded-r-lg bg-black/40 hover:bg-black/60 text-white hover:text-primary transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                     >
                                         <span className="material-symbols-outlined !text-[18px]">chevron_right</span>
                                     </button>

@@ -89,7 +89,7 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
     const isMobile = useEffectStore(s => s.isMobile);
 
     return (
-        <div className={`w-fit rounded-xl bg-black/80 border border-white/8 px-4 py-3 flex flex-col gap-2 ${showEndlessControls ? 'mx-auto' : 'mt-1'}`}>
+        <div className={`w-fit rounded-xl bg-black/80 border border-white/8 px-5 py-3 flex flex-col gap-2 ${showEndlessControls ? 'mx-auto' : 'mt-1'}`}>
             {/* Transition type */}
             <div className="flex items-center gap-3">
                 <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap w-16 shrink-0">Transition</span>

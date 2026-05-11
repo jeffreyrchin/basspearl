@@ -328,7 +328,16 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
             </div>
 
             {/* Main UI Layer */}
-            <div inert={isUiHidden} className={`absolute inset-0 z-10 pointer-events-none transition-opacity duration-300 ${isUiHidden ? 'opacity-0 invisible' : 'opacity-100 visible'}`}>
+            <motion.div
+                initial={false}
+                animate={{
+                    opacity: isUiHidden ? 0 : 1,
+                    visibility: isUiHidden ? 'hidden' : 'visible'
+                }}
+                transition={{ duration: 0.3 }}
+                inert={isUiHidden}
+                className="absolute inset-0 z-10 pointer-events-none"
+            >
                 <MainToolbar
                     audioInputRef={audioInputRef}
                     audioFile={audioFile}
@@ -383,7 +392,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 <AnimatePresence>
                     {isInspectorOpen && !isEndlessMode && <InspectorWindow />}
                 </AnimatePresence>
-            </div>
+            </motion.div>
 
             {/* Bottom UI Overlay */}
             <div inert={isUiHidden} className={`absolute bottom-0 left-0 right-0 flex flex-col pointer-events-none bg-gradient-to-t from-black via-black/60 via-black/20 to-transparent pt-12 transition-transform duration-300 ease-in-out ${isUiHidden ? 'translate-y-full' : 'translate-y-0'}`}>
