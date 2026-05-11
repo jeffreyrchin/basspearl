@@ -74,7 +74,7 @@ export interface GenerateOptions {
   /**
    * Target number of effects in the pipeline (including the starting pattern).
    * The model may produce slightly fewer if it reaches a dead end.
-   * Defaults to a random value between 3 and 6 (matching preset lengths).
+   * Defaults to a random value between 3 and 8.
    */
   length?: number;
   /**
@@ -485,7 +485,7 @@ export function buildLanguageModel(): LanguageModel {
   function generatePipeline(options: GenerateOptions = {}): EffectConfig[] {
     const temperature = options.temperature ?? 0.5;
     const targetLength =
-      options.length ?? Math.floor(Math.random() * 4) + 3; // 3–6 effects
+      options.length ?? Math.floor(Math.random() * 6) + 3; // 3–8 effects
 
     const pipeline: EffectConfig[] = [];
     const usedTypes = new Set<GlitchEffectType>();

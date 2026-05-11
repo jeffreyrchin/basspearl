@@ -8,6 +8,7 @@ import { mainGlitchEngine } from '@/services/glitchEngine';
 import { canMeld, isAlreadyMelded } from '@/services/pipelineUtils';
 import LoadingSpinner from './LoadingSpinner';
 import { generateAndLoad } from '../services/languageService';
+import { DEFAULT_TEMPERATURE } from '@/constants';
 
 interface SidebarNavigationProps {
     onClose?: () => void;
@@ -87,7 +88,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     };
 
     const handleAIGenerate = () => {
-        generateAndLoad(setEffects, { temperature: 0.5 });
+        generateAndLoad(setEffects, { temperature: DEFAULT_TEMPERATURE });
     }
 
     const HeaderRightControls = (

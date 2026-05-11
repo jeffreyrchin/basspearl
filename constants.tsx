@@ -15,6 +15,8 @@ export const MIN_PUZZLE_COMPLETION_SCORE = 80;
 
 export const MAX_FREE_SCENES = 16;
 
+export const DEFAULT_TEMPERATURE = 0.8;
+
 export const DIFFICULTY_TRACKS = {
   Easy: { url: '/air.mp3', label: 'Demo Track 1' },
   Medium: { url: '/trip.mp3', label: 'Demo Track 2' },

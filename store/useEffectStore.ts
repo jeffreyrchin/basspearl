@@ -5,6 +5,7 @@ import { analytics } from '@/services/analytics';
 import { PUZZLES } from '../config/puzzles';
 import { PuzzleService, PuzzleMatchResult } from '../services/puzzleService';
 import { getLanguageModel } from '../services/languageService';
+import { DEFAULT_TEMPERATURE } from '@/constants';
 
 type SceneBank = 'sandbox' | 'endless';
 
@@ -181,7 +182,7 @@ export const useEffectStore = create<EffectState>((set, get) => ({
 
         // Use the language model to generate effects for the next slot
         const model = getLanguageModel();
-        const newEffects = model.generatePipeline({ temperature: 0.5 });
+        const newEffects = model.generatePipeline({ temperature: DEFAULT_TEMPERATURE });
 
         // Update the next target slot in the background before switching
         const updatedEndless = [...endlessScenes];
