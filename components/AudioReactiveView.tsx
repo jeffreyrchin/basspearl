@@ -48,6 +48,7 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     const isPuzzleHelpModalOpen = useEffectStore(s => s.isPuzzleHelpModalOpen);
     const endlessInterval = useEffectStore(s => s.endlessInterval);
     const triggerEndlessStep = useEffectStore(s => s.triggerEndlessStep);
+    const prepareNextEndlessScene = useEffectStore(s => s.prepareNextEndlessScene);
 
     const [isTabAudioUnsupportedModalOpen, setIsTabAudioUnsupportedModalOpen] = useState(false);
     const isTabAudioUnsupported = typeof navigator !== 'undefined' && (
@@ -217,21 +218,51 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     }, [isUiHidden]);
 
     // Endless Mode Automation
+    const isFirstRunRef = useRef(true);
+
+    // Reset the "First Run" flag when exiting endless mode
     useEffect(() => {
-        if (isEndlessMode) {
-            triggerEndlessStep(); // Trigger the first step immediately when entering endless mode
+        if (!isEndlessMode) {
+            isFirstRunRef.current = true;
         }
-    }, [isEndlessMode, triggerEndlessStep]);
+    }, [isEndlessMode]);
 
     useEffect(() => {
         if (!isEndlessMode) return;
 
-        const interval = setInterval(() => {
-            triggerEndlessStep();
-        }, endlessInterval * 1000);
+        let timeoutId: number;
 
-        return () => clearInterval(interval);
-    }, [isEndlessMode, endlessInterval, triggerEndlessStep]);
+        const runCycle = () => {
+            // 1. Trigger the switch (uses the already-prepared data)
+            triggerEndlessStep();
+
+            const halfInterval = (endlessInterval * 1000) / 2;
+
+            timeoutId = window.setTimeout(() => {
+                prepareNextEndlessScene();
+                timeoutId = window.setTimeout(runCycle, halfInterval);
+            }, halfInterval);
+        };
+
+        if (isFirstRunRef.current) {
+            // First time entering: prepare, switch immediately, and start loop
+            isFirstRunRef.current = false;
+            prepareNextEndlessScene();
+            runCycle();
+        } else {
+            // Slider changed: just restart the timers for the NEW interval
+            // DO NOT call triggerEndlessStep() here to avoid rapid-fire switching
+            const halfInterval = (endlessInterval * 1000) / 2;
+            timeoutId = window.setTimeout(() => {
+                prepareNextEndlessScene();
+                timeoutId = window.setTimeout(runCycle, halfInterval);
+            }, halfInterval);
+        }
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
+    }, [isEndlessMode, endlessInterval, triggerEndlessStep, prepareNextEndlessScene]);
 
     const handleMicClick = () => {
         isLiveMode && liveSourceType === 'mic' ? stopMic() : (stopPlayback(), startMic());

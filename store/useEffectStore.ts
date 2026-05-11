@@ -129,6 +129,7 @@ interface EffectState {
     activeEndlessIndex: number;
     setEndlessMode: (active: boolean) => void;
     triggerEndlessStep: () => void;
+    prepareNextEndlessScene: () => void;
     endlessInterval: number;
     setEndlessInterval: (interval: number) => void;
 }
@@ -174,17 +175,15 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         }
     },
 
-    triggerEndlessStep: () => {
-        const { isEndlessMode, activeEndlessIndex, endlessScenes, switchScene } = get();
-        if (!isEndlessMode) return;
-
+    prepareNextEndlessScene: () => {
+        const { activeEndlessIndex, endlessScenes } = get();
         const nextIndex = (activeEndlessIndex + 1) % 2;
 
-        // Use the language model directly
+        // Use the language model to generate effects for the next slot
         const model = getLanguageModel();
         const newEffects = model.generatePipeline({ temperature: 0.5 });
 
-        // Update the target slot in the background before switching
+        // Update the next target slot in the background before switching
         const updatedEndless = [...endlessScenes];
         updatedEndless[nextIndex] = {
             ...updatedEndless[nextIndex],
@@ -194,8 +193,15 @@ export const useEffectStore = create<EffectState>((set, get) => ({
         };
 
         set({ endlessScenes: updatedEndless });
+    },
 
-        // Trigger the transition switch
+    triggerEndlessStep: () => {
+        const { isEndlessMode, activeEndlessIndex, switchScene } = get();
+        if (!isEndlessMode) return;
+
+        const nextIndex = (activeEndlessIndex + 1) % 2;
+
+        // Transition to the already prepared slot
         switchScene(nextIndex, 'endless');
     },
 
