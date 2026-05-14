@@ -143,8 +143,8 @@ const LandingModal: React.FC = () => {
                         {/* Disclaimer */}
                         <div className="mt-8 flex flex-col items-center">
                             <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-widest leading-relaxed text-center max-w-xl">
-                                <span className="text-yellow-300">This application can produce rapid flashing, strobing, and high-contrast effects that may trigger seizures. </span>
-                                <span className="text-white/90">By continuing, you acknowledge that you have the rights to your media and agree to our <button onClick={openLegal} className="text-indigo-300 hover:text-white font-bold uppercase cursor-pointer transition-colors">Privacy & Terms.</button></span>
+                                <span className="text-amber-300">This application can produce rapid flashing, strobing, and high-contrast effects that may trigger seizures. </span>
+                                <span className="text-white/90">By continuing, you acknowledge that you have the rights to your media and agree to our <button onClick={openLegal} className="text-primary hover:text-white font-bold uppercase cursor-pointer underline decoration-1 underline-offset-2 transition-colors">Privacy & Terms.</button></span>
                             </p>
                         </div>
                     </div>

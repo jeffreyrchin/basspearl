@@ -292,7 +292,7 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onClose }) => {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search..."
-                            className="w-full bg-white/5 border border-white/5 rounded-lg h-7 pl-8 pr-8 text-[10px] text-white placeholder:text-white/60 focus:bg-white/10 outline-none ring-0 focus:border-indigo-400 transition-all"
+                            className="w-full bg-white/5 border border-white/5 rounded-lg h-7 pl-8 pr-8 text-[16px] md:text-[12px] text-white placeholder:text-white/60 focus:bg-white/10 outline-none ring-0 focus:border-indigo-400 transition-all"
                         />
                         {searchQuery && (
                             <button

@@ -38,7 +38,7 @@ const LegalConsentModal = () => {
                 {/* Header */}
                 <div className="p-6 border-b border-white/10 shrink-0 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <h2 className="text-2xl font-bold uppercase tracking-wider bg-gradient-to-r from-indigo-300 to-indigo-200 bg-clip-text text-transparent">Privacy & Terms</h2>
+                        <h2 className="text-2xl font-bold uppercase tracking-wider">Privacy & Terms</h2>
                     </div>
                     <button onClick={closeLegal} className="text-white/60 hover:text-white transition-colors">
                         <span className="material-symbols-outlined">close</span>
