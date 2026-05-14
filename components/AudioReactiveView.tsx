@@ -5,7 +5,6 @@ import PlaybackBar from './PlaybackBar';
 import Navbar from './Navbar';
 import MainToolbar from './MainToolbar';
 import ExportModal from './ExportModal';
-import LandingModal from './LandingModal';
 import InspectorWindow from './InspectorWindow';
 import PuzzlesModal from './PuzzlesModal';
 import PuzzleHeader from './PuzzleHeader';
@@ -80,7 +79,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         isProcessing,
         processingProgress,
         loadAudioFromUrl,
-        loadAudioFromFile,
         stopPlayback
     } = useAudioProcessor();
 
@@ -93,16 +91,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
     } = useLiveAudio();
 
     const {
-        isLandingOpen,
-        setIsLandingOpen,
-        handleLandingStart,
         canvasRef,
     } = useProjectAssets({
-        audioFile,
-        startMic,
-        startTabAudio,
         loadAudioFromUrl,
-        loadAudioFromFile
     });
 
     const {
@@ -428,16 +419,6 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 </div>
             </div>
 
-            <AnimatePresence>
-                {isLandingOpen && (
-                    <LandingModal
-                        onStart={handleLandingStart}
-                        onClose={() => setIsLandingOpen(false)}
-                        isTabAudioUnsupported={isTabAudioUnsupported}
-                        openTabAudioUnsupportedModal={() => setIsTabAudioUnsupportedModalOpen(true)}
-                    />
-                )}
-            </AnimatePresence>
             <AnimatePresence>
                 {isTabAudioUnsupportedModalOpen && (
                     <TabAudioUnsupportedModal

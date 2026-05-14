@@ -1,70 +1,34 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { useLegalStore } from '../store/useLegalStore';
 import { useEffectStore } from '../store/useEffectStore';
 import LandingBackground from './LandingBackground';
 
-
-interface LandingModalProps {
-    onStart: (audioOption: 'upload' | 'mic' | 'tab', audioFile?: File) => void;
-    onClose: () => void;
-    isTabAudioUnsupported?: boolean;
-    openTabAudioUnsupportedModal?: () => void;
-}
-
-const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudioUnsupported, openTabAudioUnsupportedModal }) => {
-    const audioInputRef = useRef<HTMLInputElement>(null);
-
+const LandingModal: React.FC = () => {
     const openLegal = useLegalStore(e => e.openLegal);
     const isMobile = useEffectStore(e => e.isMobile);
     const setIsSidebarOpen = useEffectStore(e => e.setIsSidebarOpen);
-    const setIsPuzzlesModalOpen = useEffectStore(e => e.setIsPuzzlesModalOpen);
+    const setIsLandingOpen = useEffectStore(e => e.setIsLandingOpen);
 
     const setEndlessMode = useEffectStore(e => e.setEndlessMode);
 
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
+            if (e.key === 'Escape') setIsLandingOpen(false);
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [onClose]);
-
-    const handleAudioFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            onStart('upload', e.target.files[0]);
-            !isMobile && setIsSidebarOpen(true);
-        }
-    };
-
-    const handleExternalSource = () => {
-        onStart('mic');
-        !isMobile && setIsSidebarOpen(true);
-    };
-
-    const handleTabAudio = () => {
-        if (isTabAudioUnsupported && openTabAudioUnsupportedModal) {
-            openTabAudioUnsupportedModal();
-            return;
-        }
-        onStart('tab');
-        !isMobile && setIsSidebarOpen(true);
-    };
-
-    const handlePuzzles = () => {
-        setIsPuzzlesModalOpen(true);
-        onClose();
-    };
+    }, [setIsLandingOpen]);
 
     const handleEndlessMode = () => {
         setEndlessMode(true);
-        onClose();
+        setIsLandingOpen(false);
     };
 
     const handleSandboxMode = () => {
         setEndlessMode(false);
         !isMobile && setIsSidebarOpen(true);
-        onClose();
+        setIsLandingOpen(false);
     };
 
     const LandingCard: React.FC<{
@@ -72,35 +36,25 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
         icon: string;
         label: string;
         description: string;
-        color: 'cyan' | 'red' | 'purple' | 'amber' | 'white';
+        color: 'amber' | 'primary';
     }> = ({ onClick, icon, label, description, color }) => {
         const theme = {
-            white: {
-                text: 'text-white',
-                border: 'border-white/90',
-            },
-            cyan: {
-                text: 'text-cyan-400',
-                border: 'border-cyan-400',
-            },
-            red: {
-                text: 'text-red-400',
-                border: 'border-red-400',
-            },
-            purple: {
-                text: 'text-purple-400',
-                border: 'border-purple-400',
-            },
             amber: {
                 text: 'text-amber-400',
-                border: 'border-amber-400/90',
+                border: 'border-amber-400',
+                glow: 'shadow-[0_0_20px_rgba(251,191,36,0.4)]',
+            },
+            primary: {
+                text: 'text-primary',
+                border: 'border-primary',
+                glow: 'shadow-[0_0_20px_rgba(79,70,229,0.4)]',
             }
         }[color];
 
         return (
             <button
                 onClick={onClick}
-                className={`flex-1 rounded-2xl border-2 ${theme.border} bg-black/40 hover:bg-black/50 transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-4 sm:p-8 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 shadow-2xl relative overflow-hidden`}
+                className={`flex-1 rounded-3xl border-2 ${theme.border} ${theme.glow} bg-black/40 hover:bg-black/60 transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-4 sm:p-8 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 relative overflow-hidden`}
             >
                 <div className={`absolute -inset-2 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
@@ -108,7 +62,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                     {icon}
                 </span>
                 <div className="flex flex-col items-center gap-1.5 z-10 text-center px-1">
-                    <span className="text-[11px] sm:text-[14px] font-medium uppercase tracking-[0.15em] text-white/90 group-hover:text-white transition-colors">
+                    <span className="text-[11px] sm:text-[14px] font-bold uppercase tracking-[0.15em] text-white/90 group-hover:text-white transition-colors">
                         {label}
                     </span>
                     <span className="text-[8px] sm:text-[10px] font-medium uppercase tracking-[0.15em] text-white/60 group-hover:text-white transition-colors">
@@ -126,7 +80,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.5 }}
                 exit={{ opacity: 0 }}
-                onClick={onClose}
+                onClick={() => setIsLandingOpen(false)}
                 className="absolute inset-0 bg-black"
             />
 
@@ -145,7 +99,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                 <div className="relative w-full h-full overflow-y-auto overflow-x-hidden flex flex-col items-center custom-scrollbar">
                     {/* Close Button */}
                     <button
-                        onClick={onClose}
+                        onClick={() => setIsLandingOpen(false)}
                         className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-all z-10"
                         title="Close"
                     >
@@ -163,7 +117,7 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                         <motion.p
                             animate={{ scale: [1, 1.1, 1] }}
                             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                            className="text-white/60 font-medium text-xs tracking-widest uppercase will-change-transform">Visualize Your Sound</motion.p>
+                            className="text-xs font-medium tracking-widest text-white/60 will-change-transform">animate your sound</motion.p>
                     </div>
 
                     {/* Body Section */}
@@ -172,8 +126,8 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                             <LandingCard
                                 onClick={handleEndlessMode}
                                 icon="all_inclusive"
-                                label="Endless"
-                                description="Infinite scene generation"
+                                label="Endless AI"
+                                description="Infinite scene generator"
                                 color="amber"
                             />
 
@@ -182,13 +136,13 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                                 icon="edit"
                                 label="Sandbox"
                                 description="Build your own visuals"
-                                color="white"
+                                color="primary"
                             />
                         </div>
 
                         {/* Disclaimer */}
                         <div className="mt-8 flex flex-col items-center">
-                            <p className="text-[11px] uppercase tracking-widest leading-relaxed text-center max-w-xl">
+                            <p className="text-[11px] font-bold uppercase tracking-widest leading-relaxed text-center max-w-xl">
                                 <span className="text-yellow-300">This application can produce rapid flashing, strobing, and high-contrast effects that may trigger seizures. </span>
                                 <span className="text-white/90">By continuing, you acknowledge that you have the rights to your media and agree to our <button onClick={openLegal} className="text-indigo-300 hover:text-white font-bold uppercase cursor-pointer transition-colors">Privacy & Terms.</button></span>
                             </p>

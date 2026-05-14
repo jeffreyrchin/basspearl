@@ -12,6 +12,7 @@ import AudioReactiveView from './components/AudioReactiveView';
 import AuthModal from './components/AuthModal';
 import LegalConsentModal from './components/LegalConsentModal';
 import ProModal from './components/ProModal';
+import LandingModal from './components/LandingModal';
 import PuzzleTestPage from './components/content/PuzzleTestPage';
 
 const App = () => {
@@ -19,6 +20,7 @@ const App = () => {
   const isAuthOpen = useAuthStore((s) => s.isAuthOpen);
   const isLegalOpen = useLegalStore((s) => s.isLegalOpen);
   const isProModalOpen = useProStore((s) => s.isProModalOpen);
+  const isLandingOpen = useEffectStore((s) => s.isLandingOpen);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -35,6 +37,9 @@ const App = () => {
         <Route path="/help" element={<HelpPage />} />
         <Route path="/puzzle-service-test" element={<PuzzleTestPage />} />
       </Routes>
+      <AnimatePresence>
+        {isLandingOpen && <LandingModal />}
+      </AnimatePresence>
       <AnimatePresence>
         {isLegalOpen && <LegalConsentModal />}
       </AnimatePresence>

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { EffectConfig, GlitchEffectType, MacroType, TransitionType, PuzzleType } from '../types';
-import { INITIAL_REACTIVE_EFFECTS, createEffectInstance, createMacroInstance, INITIAL_SCENE_COUNT, DEFAULT_TRANSITION_DURATION, DIFFICULTY_TRACKS } from '../constants';
+import { createEffectInstance, createMacroInstance, INITIAL_SCENE_COUNT, DEFAULT_TRANSITION_DURATION, DIFFICULTY_TRACKS } from '../constants';
 import { analytics } from '@/services/analytics';
 import { PUZZLES } from '../config/puzzles';
 import { PuzzleService, PuzzleMatchResult } from '../services/puzzleService';
@@ -92,6 +92,9 @@ interface EffectState {
     isUiHidden: boolean;
     setIsUiHidden: (hidden: boolean) => void;
 
+    isLandingOpen: boolean;
+    setIsLandingOpen: (open: boolean) => void;
+
     isMobile: boolean;
     setIsMobile: (isMobile: boolean) => void;
 
@@ -137,7 +140,7 @@ interface EffectState {
 
 export const useEffectStore = create<EffectState>((set, get) => ({
     isInSelectMode: false,
-    effects: INITIAL_REACTIVE_EFFECTS,
+    effects: [],
     selectedIds: new Set<string>(),
     past: [],
     future: [],
@@ -365,6 +368,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
 
     isUiHidden: false,
     setIsUiHidden: (isUiHidden) => set({ isUiHidden }),
+
+    isLandingOpen: true,
+    setIsLandingOpen: (isLandingOpen) => set({ isLandingOpen }),
 
     isMobile: false,
     setIsMobile: (isMobile) => set({ isMobile }),

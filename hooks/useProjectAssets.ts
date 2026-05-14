@@ -1,46 +1,16 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useEffectStore } from '../store/useEffectStore';
 
 export interface UseProjectAssetsProps {
-    audioFile: File | null;
-    startMic: () => Promise<void>;
-    startTabAudio: () => Promise<void>;
     loadAudioFromUrl: (url: string, title: string) => Promise<void>;
-    loadAudioFromFile: (file: File) => Promise<void>;
 }
 
 export const useProjectAssets = ({
-    audioFile,
-    startMic,
-    startTabAudio,
     loadAudioFromUrl,
-    loadAudioFromFile
 }: UseProjectAssetsProps) => {
-    const effects = useEffectStore(s => s.effects);
     const puzzleAudio = useEffectStore(s => s.puzzleAudio);
 
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
-
-    const [isLandingOpen, setIsLandingOpen] = useState(effects.length === 0 && audioFile === null);
-
-    const handleLandingStart = useCallback((audioOption: 'upload' | 'mic' | 'tab', selectedAudioFile?: File) => {
-        setIsLandingOpen(false);
-
-        // 1. Handle Audio Option
-        if (audioOption === 'upload' && selectedAudioFile) {
-            loadAudioFromFile(selectedAudioFile).catch(err => {
-                console.error('Failed to load uploaded audio:', err);
-            });
-        } else if (audioOption === 'mic') {
-            startMic().catch(err => {
-                console.error('Failed to start mic:', err);
-            });
-        } else if (audioOption === 'tab') {
-            startTabAudio().catch(err => {
-                console.error('Failed to start tab audio:', err);
-            });
-        }
-    }, [loadAudioFromUrl, loadAudioFromFile, startMic, startTabAudio]);
 
     const loadPuzzleAudio = useCallback(() => {
         if (!puzzleAudio) return;
@@ -55,9 +25,6 @@ export const useProjectAssets = ({
     }, [puzzleAudio, loadPuzzleAudio]);
 
     return {
-        isLandingOpen,
-        setIsLandingOpen,
-        handleLandingStart,
         canvasRef,
     };
 };
