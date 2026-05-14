@@ -54,7 +54,7 @@ const LandingModal: React.FC = () => {
         return (
             <button
                 onClick={onClick}
-                className={`flex-1 rounded-3xl border-2 ${theme.border} ${theme.glow} bg-black/40 hover:bg-black/60 transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-4 sm:p-8 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 relative overflow-hidden`}
+                className={`flex-1 rounded-3xl border-2 ${theme.border} ${theme.glow} bg-black/40 hover:bg-black/60 transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-3 sm:p-8 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 relative overflow-hidden`}
             >
                 <div className={`absolute -inset-2 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
@@ -62,10 +62,10 @@ const LandingModal: React.FC = () => {
                     {icon}
                 </span>
                 <div className="flex flex-col items-center gap-1.5 z-10 text-center px-1">
-                    <span className="text-[11px] sm:text-[14px] font-bold uppercase tracking-[0.15em] text-white/90 group-hover:text-white transition-colors">
+                    <span className="text-[9px] sm:text-[14px] font-bold uppercase tracking-[0.15em] text-white/90 group-hover:text-white transition-colors">
                         {label}
                     </span>
-                    <span className="text-[8px] sm:text-[10px] font-medium uppercase tracking-[0.15em] text-white/60 group-hover:text-white transition-colors">
+                    <span className="text-[7px] sm:text-[10px] font-medium uppercase tracking-[0.15em] text-white/60 group-hover:text-white transition-colors">
                         {description}
                     </span>
                 </div>
@@ -142,7 +142,7 @@ const LandingModal: React.FC = () => {
 
                         {/* Disclaimer */}
                         <div className="mt-8 flex flex-col items-center">
-                            <p className="text-[11px] font-bold uppercase tracking-widest leading-relaxed text-center max-w-xl">
+                            <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-widest leading-relaxed text-center max-w-xl">
                                 <span className="text-yellow-300">This application can produce rapid flashing, strobing, and high-contrast effects that may trigger seizures. </span>
                                 <span className="text-white/90">By continuing, you acknowledge that you have the rights to your media and agree to our <button onClick={openLegal} className="text-indigo-300 hover:text-white font-bold uppercase cursor-pointer transition-colors">Privacy & Terms.</button></span>
                             </p>

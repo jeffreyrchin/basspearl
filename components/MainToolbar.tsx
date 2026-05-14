@@ -115,7 +115,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 
     return (
         <div className="absolute inset-0 z-toolbar pointer-events-none overflow-hidden" ref={constraintsRef}>
-            <div className="absolute left-8 flex items-center justify-start pt-15">
+            <div className="absolute left-8 top-16 bottom-28 flex items-center justify-start">
                 <motion.div
                     drag
                     dragConstraints={constraintsRef}
@@ -190,7 +190,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                 <ToolbarRow
                                     onClick={startTabAudio}
                                     icon="present_to_all"
-                                    label="Tab Audio"
+                                    label="Share Tab Audio"
                                     isCollapsed={isToolbarCollapsed}
                                     isActive={isLiveMode && liveSourceType === 'tab'}
                                     colorHex={isTabAudioUnsupported ? "#666" : "#C084FC"}
