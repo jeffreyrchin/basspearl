@@ -133,7 +133,17 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                         {/* Header */}
                         <div className="flex items-center justify-center w-full h-4 mb-2 shrink-0 z-10 cursor-grab active:cursor-grabbing group/handle relative">
                             {/* Drag Handle */}
-                            <div className={`${isToolbarCollapsed ? 'w-0' : 'w-10'} h-1 bg-white/80 rounded-full group-hover/handle:bg-white transition-colors`} />
+                            <motion.div
+                                animate={{
+                                    opacity: isToolbarCollapsed ? 0 : 1,
+                                    width: isToolbarCollapsed ? 0 : 40
+                                }}
+                                transition={{
+                                    opacity: { duration: isToolbarCollapsed ? 0.1 : 0.6 }, // fast fade-out, slower fade-in to reduce visual overlap of the drag handle and the expand/collapse chevron icon 
+                                    width: { duration: 0.2 }
+                                }}
+                                className="h-1 bg-white/80 rounded-full group-hover/handle:bg-white transition-colors"
+                            />
 
                             {/* Collapse Toggle */}
                             <button
