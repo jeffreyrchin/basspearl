@@ -39,7 +39,7 @@ const TabAudioUnsupportedModal: React.FC<TabAudioUnsupportedModalProps> = ({ onC
                     <div className="flex flex-col gap-3">
                         <h2 className="text-2xl font-bold uppercase tracking-tight text-white">Tab Audio Unsupported</h2>
                         <p className="text-white/60 text-sm leading-relaxed max-w-sm">
-                            Your current browser does not yet support capturing internal tab audio. To use this feature, try opening Muxels in a Chromium-based browser like Chrome, Edge, or Opera.
+                            Your current browser does not yet support capturing internal tab audio. To use this feature, try opening basspearl in a Chromium-based browser like Chrome, Edge, or Opera.
                         </p>
                     </div>
 

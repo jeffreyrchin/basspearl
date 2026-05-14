@@ -98,7 +98,7 @@ export const loadMuxelsFile = async (file: File): Promise<MuxelsProject> => {
                     if (sanitized.length > 0) {
                         resolve({ effects: sanitized });
                     } else {
-                        reject(new Error("No valid effects found in this .muxels file."));
+                        reject(new Error("No valid effects found in this .bp file."));
                     }
                     return;
                 }
@@ -117,13 +117,13 @@ export const loadMuxelsFile = async (file: File): Promise<MuxelsProject> => {
                     return;
                 }
 
-                reject(new Error("Invalid .muxels file format."));
+                reject(new Error("Invalid .bp file format."));
             } catch (err) {
-                console.error("Failed to read .muxels file:", err);
-                reject(new Error("Failed to read .muxels file."));
+                console.error("Failed to read .bp file:", err);
+                reject(new Error("Failed to read .bp file."));
             }
         };
-        reader.onerror = () => reject(new Error("Failed to read .muxels file."));
+        reader.onerror = () => reject(new Error("Failed to read .bp file."));
         reader.readAsText(file);
     });
 };

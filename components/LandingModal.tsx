@@ -157,8 +157,8 @@ const LandingModal: React.FC<LandingModalProps> = ({ onStart, onClose, isTabAudi
                         <motion.h1
                             animate={{ scale: [1, 1.2, 1] }}
                             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                            className="text-2xl font-bold tracking-normal uppercase bg-gradient-to-r from-primary via-indigo-300 to-white bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-move will-change-transform">
-                            muxels
+                            className="text-2xl font-bold tracking-normal bg-gradient-to-r from-primary via-indigo-300 to-white bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-move will-change-transform">
+                            basspearl
                         </motion.h1>
                         <motion.p
                             animate={{ scale: [1, 1.1, 1] }}

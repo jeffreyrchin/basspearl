@@ -139,7 +139,7 @@ const AuthModal = () => {
                     <div className="relative p-8 pt-12">
                         {/* Title */}
                         <h2 className="text-3xl font-bold text-center tracking-tight uppercase mb-1">
-                            {authMode === 'login' ? 'Welcome Back' : 'Join Muxels'}
+                            {authMode === 'login' ? 'Welcome Back' : 'Join basspearl'}
                         </h2>
                         <p className="text-white/60 text-center text-sm mb-8">
                             {authMode === 'login'

@@ -45,7 +45,7 @@ const HelpContent: React.FC = () => {
                 <div className="space-y-8 glass-panel p-6 sm:p-8 rounded-2xl border border-white/5">
                     <div className="space-y-6">
                         <p className="text-white/90 text-base leading-relaxed">
-                            <span className="font-bold text-white">1. Select audio source:</span> In the main toolbar on the left, click <InlineIcon icon="audio_file" />, <InlineIcon icon="mic" />, or <InlineIcon icon="present_to_all" /> to select your audio source. If you have a virtual audio driver installed such as BlackHole or Voicemeeter, you can select the microphone to route audio to Muxels from any application on your device.
+                            <span className="font-bold text-white">1. Select audio source:</span> In the main toolbar on the left, click <InlineIcon icon="audio_file" />, <InlineIcon icon="mic" />, or <InlineIcon icon="present_to_all" /> to select your audio source. If you have a virtual audio driver installed such as BlackHole or Voicemeeter, you can select the microphone to route audio to basspearl from any application on your device.
                         </p>
                         <p className="text-white/90 text-base leading-relaxed">
                             <span className="font-bold text-white">2. Add effects:</span> To add visual effects, open the sidebar by clicking the <InlineIcon icon="add_circle" /> icon in the main toolbar on the left. In the sidebar, click “Add Visuals” to open the effect library. In the effect library, click the search button (<InlineIcon icon="search" />) to search for effects by name, or click the header tabs to filter effects by category. Click on an effect card to add it to your scene.

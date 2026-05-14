@@ -88,7 +88,7 @@ const UserMenu: React.FC<UserMenuProps> = () => {
                     )}
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold truncate">
-                            {user.displayName || 'Muxels User'}
+                            {user.displayName || 'basspearl user'}
                         </p>
                         <p className="text-xs text-white/60 truncate">
                             {user.email}

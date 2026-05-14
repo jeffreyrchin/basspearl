@@ -58,7 +58,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `${Date.now()}.muxels`;
+        link.download = `${Date.now()}.bp`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -68,7 +68,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     const handleImport = () => {
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = '.muxels';
+        input.accept = '.bp';
         input.onchange = (e: any) => {
             const file = e.target.files?.[0];
             if (!file) return;
@@ -238,7 +238,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                     <button
                         onClick={handleImport}
                         className="h-6 rounded-md border border-white/5 bg-white/5 flex items-center gap-1 px-2 justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
-                        title="Import .muxels">
+                        title="Import .bp">
                         <span className="material-symbols-outlined !text-[16px]">upload</span>
                         <span className="text-[10px] font-semibold uppercase tracking-widest">Import</span>
                     </button>
@@ -248,7 +248,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                         onClick={handleExport}
                         disabled={effects.length === 0}
                         className="h-6 rounded-md border border-white/5 bg-white/5 flex items-center gap-1 px-2 justify-center transition-all text-white/90 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
-                        title="Export .muxels">
+                        title="Export .bp">
                         <span className="material-symbols-outlined !text-[16px]">download</span>
                         <span className="text-[10px] font-semibold uppercase tracking-widest">Export</span>
                     </button>

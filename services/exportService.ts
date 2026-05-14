@@ -207,7 +207,7 @@ export const exportVideo = async (options: ExportOptions): Promise<{ fileUrl: st
         if (target.buffer) {
             const blob = new Blob([target.buffer], { type: 'video/mp4' });
             const downloadUrl = URL.createObjectURL(blob);
-            const fileName = `muxels_${Date.now()}.mp4`;
+            const fileName = `basspearl_${Date.now()}.mp4`;
 
             const link = document.createElement('a');
             link.href = downloadUrl;

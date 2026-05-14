@@ -14,10 +14,10 @@ const Navbar = () => {
             <header className="flex items-center justify-between px-4 md:px-8 py-4 z-navbar bg-transparent w-full">
                 {/* Left: Logo */}
                 <Link to="/" className="flex items-center gap-2 group pointer-events-auto">
-                    <h1 className="text-xl font-bold tracking-normal uppercase bg-gradient-to-r from-indigo-300 to-indigo-200 bg-clip-text text-transparent">
-                        muxels
+                    <h1 className="text-xl font-bold tracking-normal bg-gradient-to-r from-indigo-300 to-indigo-200 bg-clip-text text-transparent">
+                        basspearl
                     </h1>
-                    <p className="hidden sm:block text-white/60 font-medium text-xs tracking-widest uppercase relative top-[0.5px] leading-[1.1em]">Visualize Your Sound</p>
+                    {/* <p className="hidden sm:block text-white/60 font-medium text-xs tracking-widest uppercase relative top-[0.5px] leading-[1.1em]">Visualize Your Sound</p> */}
                 </Link>
 
                 {/* Right: Navigation Links and User Menu */}

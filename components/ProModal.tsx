@@ -39,7 +39,7 @@ const ProModal: React.FC = () => {
                     <div className="text-center">
                         <h2 className="text-2xl font-bold text-white uppercase tracking-tight mb-2">Lifetime Pro</h2>
                         <p className="text-xs text-white/60 font-medium leading-relaxed">
-                            Unlock the full creative potential of Muxels. Pay once, own it forever.
+                            Unlock the full creative potential of basspearl. Pay once, own it forever.
                         </p>
                     </div>
 
