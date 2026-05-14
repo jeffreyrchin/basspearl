@@ -103,6 +103,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     const setIsPuzzlesModalOpen = useEffectStore(s => s.setIsPuzzlesModalOpen);
     const isGameMode = useEffectStore(s => s.isGameMode);
     const isMobile = useEffectStore(s => s.isMobile);
+    const setIsPuzzlesUnsupportedModalOpen = useEffectStore(s => s.setIsPuzzlesUnsupportedModalOpen);
     const isEndlessMode = useEffectStore(s => s.isEndlessMode);
     const setEndlessMode = useEffectStore(s => s.setEndlessMode);
 
@@ -239,7 +240,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 
                                 {/* Puzzles Toggle */}
                                 <ToolbarRow
-                                    onClick={() => setIsPuzzlesModalOpen(!isPuzzlesModalOpen)}
+                                    onClick={() => isMobile ? setIsPuzzlesUnsupportedModalOpen(true) : setIsPuzzlesModalOpen(!isPuzzlesModalOpen)}
                                     icon="grid_view"
                                     label="Puzzles"
                                     isCollapsed={isToolbarCollapsed}

@@ -12,6 +12,7 @@ import TabAudioUnsupportedModal from './TabAudioUnsupportedModal';
 import SceneHotbar from './SceneHotbar';
 import PuzzleSuccessModal from './PuzzleSuccessModal';
 import PuzzleHelpModal from './PuzzleHelpModal';
+import PuzzlesUnsupportedModal from './PuzzlesUnsupportedModal';
 import { Footer } from './Footer';
 import { SceneSettingsPanel } from './SceneSettingsPanel';
 import { analytics } from '@/services/analytics';
@@ -54,6 +55,9 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
         !navigator.mediaDevices?.getDisplayMedia || // Browser can't share screen at all
         !(navigator.mediaDevices.getSupportedConstraints() as any).suppressLocalAudioPlayback // Browser can't route tab audio
     );
+
+    const isPuzzlesUnsupportedModalOpen = useEffectStore(s => s.isPuzzlesUnsupportedModalOpen);
+    const setIsPuzzlesUnsupportedModalOpen = useEffectStore(s => s.setIsPuzzlesUnsupportedModalOpen);
 
     const requestRef = useRef<number>();
     const currentTimeLabelRef = useRef<HTMLSpanElement>(null);
@@ -423,6 +427,13 @@ const AudioReactiveView: React.FC<AudioReactiveViewProps> = () => {
                 {isTabAudioUnsupportedModalOpen && (
                     <TabAudioUnsupportedModal
                         onClose={() => setIsTabAudioUnsupportedModalOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {isPuzzlesUnsupportedModalOpen && (
+                    <PuzzlesUnsupportedModal
+                        onClose={() => setIsPuzzlesUnsupportedModalOpen(false)}
                     />
                 )}
             </AnimatePresence>

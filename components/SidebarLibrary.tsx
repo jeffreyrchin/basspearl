@@ -140,7 +140,9 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onClose }) => {
     const currentPuzzle = useEffectStore(s => s.currentPuzzle);
     const isPuzzleComplete = useProgressStore(s => s.isPuzzleComplete);
     const isPro = useProStore(s => s.isPro);
+    const isMobile = useEffectStore(s => s.isMobile);
     const setIsPuzzlesModalOpen = useEffectStore(s => s.setIsPuzzlesModalOpen);
+    const setIsPuzzlesUnsupportedModalOpen = useEffectStore(s => s.setIsPuzzlesUnsupportedModalOpen);
     const [selectedCategory, setSelectedCategory] = useState<string>('Patterns');
     const [searchQuery, setSearchQuery] = useState('');
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -231,7 +233,7 @@ const SidebarLibrary: React.FC<SidebarLibraryProps> = ({ onClose }) => {
     const handleAddMacro = (macroType: MacroType) => {
         const meta = MACRO_METADATA[macroType];
         if (!isPro && meta.requiredPuzzleCompletedToUnlock !== undefined && !isPuzzleComplete(meta.requiredPuzzleCompletedToUnlock)) {
-            setIsPuzzlesModalOpen(true);
+            isMobile ? setIsPuzzlesUnsupportedModalOpen(true) : setIsPuzzlesModalOpen(true);
             return;
         }
         addMacro(macroType);

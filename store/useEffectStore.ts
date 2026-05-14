@@ -66,6 +66,9 @@ interface EffectState {
     isPuzzlesModalOpen: boolean;
     setIsPuzzlesModalOpen: (open: boolean) => void;
 
+    isPuzzlesUnsupportedModalOpen: boolean;
+    setIsPuzzlesUnsupportedModalOpen: (open: boolean) => void;
+
     isPuzzleHelpModalOpen: boolean;
     setIsPuzzleHelpModalOpen: (open: boolean) => void;
 
@@ -291,6 +294,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
 
     isPuzzlesModalOpen: false,
     setIsPuzzlesModalOpen: (isPuzzlesModalOpen) => set({ isPuzzlesModalOpen }),
+
+    isPuzzlesUnsupportedModalOpen: false,
+    setIsPuzzlesUnsupportedModalOpen: (isPuzzlesUnsupportedModalOpen) => set({ isPuzzlesUnsupportedModalOpen }),
 
     isPuzzleHelpModalOpen: false,
     setIsPuzzleHelpModalOpen: (isPuzzleHelpModalOpen) => set({ isPuzzleHelpModalOpen }),
