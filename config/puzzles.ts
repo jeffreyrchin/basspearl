@@ -13,8 +13,8 @@ export const PUZZLE_ORDER: PuzzleType[] = [
     'LANDSCAPE',
     'STORM',
     'SQUARE_RIPPLES',
-    'DISCO_BALL',
-    'FLAMES',
+    'STAR_MORPH',
+    'FIRE_RING',
     'WAXY_STARS'
 ];
 
@@ -103,18 +103,18 @@ export const PUZZLES: Record<PuzzleType, PuzzleMetadata> = {
             'RADIAL_GRADIENT', 'BIT_CRUSH', 'TERRAIN', 'RGBA'
         ]
     },
-    DISCO_BALL: {
+    STAR_MORPH: {
         difficulty: 'Hard',
-        macro: 'DISCO_BALL',
+        macro: 'STAR_MORPH',
         allowedEffects: [
-            'TERRAIN_SPHERE', 'SPECTRAL_MAP', 'GLOW', 'GRAIN'
+            'GRAIN', 'KALEIDOSCOPE', 'SPECTRAL_MAP', 'GLOW'
         ]
     },
-    FLAMES: {
+    FIRE_RING: {
         difficulty: 'Hard',
-        macro: 'FLAMES',
+        macro: 'FIRE_RING',
         allowedEffects: [
-            'ORGANIC_NOISE', 'PARTICLES', 'RGBA', 'LUMINANCE_MASK', 'GLOW'
+            'ORGANIC_NOISE', 'SPECTRAL_MAP', 'TERRAIN_RING', 'GLOW'
         ]
     },
     WAXY_STARS: {

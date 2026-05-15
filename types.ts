@@ -183,8 +183,8 @@ export type PuzzleType =
   'LANDSCAPE' |
   'STORM' |
   'SQUARE_RIPPLES' |
-  'DISCO_BALL' |
-  'FLAMES' |
+  'STAR_MORPH' |
+  'FIRE_RING' |
   'WAXY_STARS';
 
 export interface PuzzleMetadata {

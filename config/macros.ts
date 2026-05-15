@@ -418,7 +418,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   CELL_MESH: {
     id: 'CELL_MESH',
     label: 'Cell Mesh',
-    requiredPuzzleCompletedToUnlock: 'DISCO_BALL',
+    requiredPuzzleCompletedToUnlock: 'CRYOGENIC_FLUID',
     effects: [
       {
         type: 'ORGANIC_NOISE',
@@ -600,7 +600,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   DISCO_BALL: {
     id: 'DISCO_BALL',
     label: 'Disco Ball',
-    requiredPuzzleCompletedToUnlock: 'DISCO_BALL',
     effects: [
       {
         type: 'GRAIN',
@@ -1675,8 +1674,8 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
           o('Roundness', { v: 0, b: 'OFF' }),
           o('Feather', { v: 100, b: 'OFF' }),
           o('Blend', { v: 100, b: 'OFF' }),
-          o('Scale X', { v: 26, m: 9, b: 'SUB' }, { v: 25, b: 'SUB' }),
-          o('Scale Y', { v: 32, m: 11, b: 'SUB' }, { v: 25, b: 'SUB' }),
+          o('Scale X', { v: 32, m: 10, b: 'BASS' }, { v: 25, b: 'SUB' }),
+          o('Scale Y', { v: 39, m: 12, b: 'BASS' }, { v: 25, b: 'SUB' }),
           o('Pan X', { v: 50, b: 'OFF' }),
           o('Pan Y', { v: 50, b: 'OFF' }),
           o('Rotation', { v: 0, b: 'OFF' }),
@@ -2159,7 +2158,6 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   FLAMES: {
     id: 'FLAMES',
     label: 'Flames',
-    requiredPuzzleCompletedToUnlock: 'FLAMES',
     effects: [
       {
         type: 'ORGANIC_NOISE',
@@ -2219,6 +2217,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   FIRE_RING: {
     id: 'FIRE_RING',
     label: 'Fire Ring',
+    requiredPuzzleCompletedToUnlock: 'FIRE_RING',
     effects: [
       {
         type: 'ORGANIC_NOISE',
@@ -2324,6 +2323,7 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
   STAR_MORPH: {
     id: 'STAR_MORPH',
     label: 'Star Morph',
+    requiredPuzzleCompletedToUnlock: 'STAR_MORPH',
     effects: [
       {
         type: 'GRAIN',
