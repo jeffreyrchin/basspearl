@@ -248,17 +248,22 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                     className={`${isEndlessMode && 'hidden'}`}
                                 />
 
-                                {/* Endless Mode Toggle */}
+                                {/* Endless Mode */}
                                 <ToolbarRow
-                                    onClick={() => setEndlessMode(!isEndlessMode)}
+                                    onClick={() => setEndlessMode(true)}
                                     icon="all_inclusive"
                                     label="Endless"
                                     isCollapsed={isToolbarCollapsed}
-                                    isActive={isEndlessMode}
-                                    colorHex="#F59E0B"
-                                    activeBg="bg-[#F59E0B]/10"
-                                    activeBorder="border-[#F59E0B]/30"
-                                    className={isGameMode ? 'hidden' : ''}
+                                    className={(isGameMode || isEndlessMode) ? 'hidden' : ''}
+                                />
+
+                                {/* Sandbox Mode */}
+                                <ToolbarRow
+                                    onClick={() => setEndlessMode(false)}
+                                    icon="edit"
+                                    label="Sandbox"
+                                    isCollapsed={isToolbarCollapsed}
+                                    className={(isGameMode || !isEndlessMode) ? 'hidden' : ''}
                                 />
 
                                 {/* Hide UI */}
