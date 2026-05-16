@@ -9,6 +9,7 @@ import { canMeld, isAlreadyMelded } from '@/services/pipelineUtils';
 import LoadingSpinner from './LoadingSpinner';
 import { generateAndLoad } from '../services/languageService';
 import { DEFAULT_TEMPERATURE } from '@/constants';
+import Tooltip from './Tooltip';
 
 interface SidebarNavigationProps {
     onClose?: () => void;
@@ -94,28 +95,34 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     const HeaderRightControls = (
         <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
-                <button
-                    onClick={undo}
-                    disabled={past.length === 0}
-                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed`}
-                    title="Undo (Cmd+Z)">
-                    <span className="material-symbols-outlined">undo</span>
-                </button>
-                <button
-                    onClick={redo}
-                    disabled={future.length === 0}
-                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed`}
-                    title="Redo (Cmd+Shift+Z)">
-                    <span className="material-symbols-outlined">redo</span>
-                </button>
+                <Tooltip content="Undo (Cmd+Z)" position="bottom" useContents>
+                    <button
+                        onClick={undo}
+                        disabled={past.length === 0}
+                        className={`w-7 h-7 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed`}
+                        aria-label="Undo (Cmd+Z)">
+                        <span className="material-symbols-outlined">undo</span>
+                    </button>
+                </Tooltip>
+                <Tooltip content="Redo (Cmd+Shift+Z)" position="bottom" useContents>
+                    <button
+                        onClick={redo}
+                        disabled={future.length === 0}
+                        className={`w-7 h-7 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed`}
+                        aria-label="Redo (Cmd+Shift+Z)">
+                        <span className="material-symbols-outlined">redo</span>
+                    </button>
+                </Tooltip>
             </div>
             {onClose && (
-                <button
-                    onClick={onClose}
-                    className="w-8 h-8 rounded-xl flex items-center justify-center transition-all bg-white/5 text-white/90 hover:text-white hover:bg-white/10 border border-white/5"
-                    title="Close Sidebar (P)">
-                    <span className="material-symbols-outlined">chevron_right</span>
-                </button>
+                <Tooltip content="Close Sidebar (P)" position="left" useContents>
+                    <button
+                        onClick={onClose}
+                        className="w-8 h-8 rounded-xl flex items-center justify-center transition-all bg-white/5 text-white/90 hover:text-white hover:bg-white/10 border border-white/5"
+                        aria-label="Close Sidebar (P)">
+                        <span className="material-symbols-outlined">chevron_right</span>
+                    </button>
+                </Tooltip>
             )}
         </div>
     );
@@ -126,41 +133,49 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             <div className="h-14 border-b border-white/5 bg-slate-800 flex items-center justify-between px-3 shrink-0 relative">
                 <div className="flex items-center h-full ml-1 gap-1">
                     {/* Library Button */}
-                    <button
-                        onClick={() => isLibraryOpen ? removeFocus('library') : pushFocus('library')}
-                        className={`h-8 px-3 mr-2 rounded-full flex items-center justify-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white transition-colors border border-indigo-400 shadow-md`}
-                        title="Toggle Library (Y)">
-                        <span className="material-symbols-outlined">{isLibraryOpen ? 'remove' : 'add'}</span>
-                    </button>
+                    <Tooltip content="Toggle Library (Y)" position="bottom" useContents>
+                        <button
+                            onClick={() => isLibraryOpen ? removeFocus('library') : pushFocus('library')}
+                            className={`h-8 px-3 mr-2 rounded-full flex items-center justify-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white transition-colors border border-indigo-400 shadow-md`}
+                            aria-label="Toggle Library (Y)">
+                            <span className="material-symbols-outlined">{isLibraryOpen ? 'remove' : 'add'}</span>
+                        </button>
+                    </Tooltip>
 
                     {/* Add Effect Buttons / Submit Solution */}
                     {isGameMode ? (
                         <button
                             onClick={checkPuzzle}
-                            className="flex items-center h-8 px-4 ml-1 rounded-full bg-indigo-500 hover:bg-indigo-400 border border-indigo-400 text-white text-[10px] md:text-[11px] font-semibold uppercase tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)]"
+                            className="flex items-center h-8 px-4 ml-1 rounded-full bg-indigo-500 hover:bg-indigo-400 border border-indigo-400 text-white text-[10px] md:text-[11px] font-semibold uppercase tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 transition-all shadow-[0_0_15_rgba(79,70,229,0.3)]"
                         >
                             Submit Solution
                         </button>
                     ) : (
                         <>
-                            <button
-                                onClick={() => addEffectFromSidebar('IMAGE')}
-                                className="w-9 h-8 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
-                                title="Add Image (O)">
-                                <span className="material-symbols-outlined !text-[22px]">image</span>
-                            </button>
-                            <button
-                                onClick={() => addEffectFromSidebar('RGBA')}
-                                className="w-9 h-8 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
-                                title="Add Color (C)">
-                                <span className="material-symbols-outlined !text-[22px]">palette</span>
-                            </button>
-                            <button
-                                onClick={() => addEffectFromSidebar('TRANSFORM')}
-                                className="w-9 h-8 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
-                                title="Add Move-Scale (M)">
-                                <span className="material-symbols-outlined !text-[22px]">drag_pan</span>
-                            </button>
+                            <Tooltip content="Add Image (O)" position="bottom" useContents>
+                                <button
+                                    onClick={() => addEffectFromSidebar('IMAGE')}
+                                    className="w-9 h-8 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
+                                    aria-label="Add Image (O)">
+                                    <span className="material-symbols-outlined !text-[22px]">image</span>
+                                </button>
+                            </Tooltip>
+                            <Tooltip content="Add Color (C)" position="bottom" useContents>
+                                <button
+                                    onClick={() => addEffectFromSidebar('RGBA')}
+                                    className="w-9 h-8 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
+                                    aria-label="Add Color (C)">
+                                    <span className="material-symbols-outlined !text-[22px]">palette</span>
+                                </button>
+                            </Tooltip>
+                            <Tooltip content="Add Move-Scale (M)" position="bottom" useContents>
+                                <button
+                                    onClick={() => addEffectFromSidebar('TRANSFORM')}
+                                    className="w-9 h-8 rounded-md flex items-center justify-center transition-all text-white/90 hover:text-white hover:bg-white/10"
+                                    aria-label="Add Move-Scale (M)">
+                                    <span className="material-symbols-outlined !text-[22px]">drag_pan</span>
+                                </button>
+                            </Tooltip>
                         </>
                     )}
                 </div>
@@ -171,46 +186,54 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             <div className="h-9 flex items-center justify-between px-3 gap-2 bg-slate-800/80 shrink-0 border-b border-white/5">
                 <div className="flex items-center gap-2">
                     {/* Duplicate Button */}
-                    <button
-                        onClick={batchDuplicate}
-                        disabled={selectionCount === 0}
-                        className="w-8 h-6 border border-white/10 rounded-md flex items-center justify-center text-white bg-white/5 hover:bg-white/10 transition-all disabled:opacity-20 disabled:cursor-not-allowed group"
-                        title="Duplicate (Cmd+D)"
-                    >
-                        <span className="material-symbols-outlined !text-[16px] group-hover:scale-110 transition-transform will-change-transform">content_copy</span>
-                    </button>
+                    <Tooltip content="Duplicate (Cmd+D)" useContents>
+                        <button
+                            onClick={batchDuplicate}
+                            disabled={selectionCount === 0}
+                            className="w-8 h-6 border border-white/10 rounded-md flex items-center justify-center text-white bg-white/5 hover:bg-white/10 transition-all disabled:opacity-20 disabled:cursor-not-allowed group"
+                            aria-label="Duplicate (Cmd+D)"
+                        >
+                            <span className="material-symbols-outlined !text-[16px] group-hover:scale-110 transition-transform will-change-transform">content_copy</span>
+                        </button>
+                    </Tooltip>
 
                     {/* Group/Ungroup Button */}
-                    <button
-                        onClick={isMelded ? batchUnmeld : batchMeld}
-                        disabled={!canMeldSelected}
-                        className="w-8 h-6 border border-white/10 rounded-md flex items-center justify-center text-white bg-white/5 hover:bg-white/10 transition-all disabled:opacity-20 disabled:cursor-not-allowed group"
-                        title={isMelded ? "Ungroup (Cmd+Shift+G)" : "Group (Cmd+G)"}
-                    >
-                        <span className="material-symbols-outlined !text-[16px] group-hover:scale-110 transition-transform will-change-transform">
-                            {isMelded ? 'link_off' : 'group_work'}
-                        </span>
-                    </button>
+                    <Tooltip content={isMelded ? "Ungroup Selected (Cmd+Shift+G)" : "Group Selected (Cmd+G)"} useContents>
+                        <button
+                            onClick={isMelded ? batchUnmeld : batchMeld}
+                            disabled={!canMeldSelected}
+                            className="w-8 h-6 border border-white/10 rounded-md flex items-center justify-center text-white bg-white/5 hover:bg-white/10 transition-all disabled:opacity-20 disabled:cursor-not-allowed group"
+                            aria-label={isMelded ? "Ungroup Selected (Cmd+Shift+G)" : "Group Selected (Cmd+G)"}
+                        >
+                            <span className="material-symbols-outlined !text-[16px] group-hover:scale-110 transition-transform will-change-transform">
+                                {isMelded ? 'link_off' : 'group_work'}
+                            </span>
+                        </button>
+                    </Tooltip>
 
                     {/* Delete Button */}
-                    <button
-                        onClick={batchRemove}
-                        disabled={selectionCount === 0}
-                        className="w-8 h-6 border border-red-400/20 rounded-md flex items-center justify-center text-red-400 bg-red-400/5 hover:bg-red-400/20 transition-all disabled:opacity-20 disabled:cursor-not-allowed group"
-                        title="Delete Selected (Backspace)"
-                    >
-                        <span className="material-symbols-outlined !text-[16px] group-hover:scale-110 transition-transform will-change-transform">delete</span>
-                    </button>
+                    <Tooltip content="Delete Selected (Backspace)" useContents>
+                        <button
+                            onClick={batchRemove}
+                            disabled={selectionCount === 0}
+                            className="w-8 h-6 border border-red-400/20 rounded-md flex items-center justify-center text-red-400 bg-red-400/5 hover:bg-red-400/20 transition-all disabled:opacity-20 disabled:cursor-not-allowed group"
+                            aria-label="Delete Selected (Backspace)"
+                        >
+                            <span className="material-symbols-outlined !text-[16px] group-hover:scale-110 transition-transform will-change-transform">delete</span>
+                        </button>
+                    </Tooltip>
 
                     {/* Clear All Button */}
-                    <button
-                        onClick={clearEffects}
-                        disabled={effects.length === 0}
-                        className="w-8 h-6 border border-white/10 rounded-md flex items-center justify-center text-white bg-white/5 hover:text-red-400 hover:border-red-400/20 hover:bg-red-400/5 transition-all disabled:opacity-20 disabled:cursor-not-allowed group"
-                        title="Clear All Effects"
-                    >
-                        <span className="material-symbols-outlined !text-[18px] group-hover:scale-110 transition-transform will-change-transform">delete_sweep</span>
-                    </button>
+                    <Tooltip content="Delete All" useContents>
+                        <button
+                            onClick={clearEffects}
+                            disabled={effects.length === 0}
+                            className="w-8 h-6 border border-white/10 rounded-md flex items-center justify-center text-white bg-white/5 hover:text-red-400 hover:border-red-400/20 hover:bg-red-400/5 transition-all disabled:opacity-20 disabled:cursor-not-allowed group"
+                            aria-label="Delete All"
+                        >
+                            <span className="material-symbols-outlined !text-[18px] group-hover:scale-110 transition-transform will-change-transform">delete_sweep</span>
+                        </button>
+                    </Tooltip>
                 </div>
 
                 {/* Multiselect Toggle */}

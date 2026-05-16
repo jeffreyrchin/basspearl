@@ -4,6 +4,7 @@ import { useEffectStore } from '../store/useEffectStore';
 import { useProStore } from '@/store/useProStore';
 import { MAX_FREE_SCENES } from '../constants';
 import { SceneSettingsPanel } from './SceneSettingsPanel';
+import Tooltip from './Tooltip';
 
 const SceneHotbar: React.FC = () => {
     const isSceneHotbarOpen = useEffectStore(s => s.isSceneHotbarOpen);
@@ -61,7 +62,10 @@ const SceneHotbar: React.FC = () => {
     // Auto-scroll to active scene
     useEffect(() => {
         if (scrollRef.current) {
-            const activeEl = scrollRef.current.children[activeSceneIndex] as HTMLElement;
+            const wrapper = scrollRef.current.children[activeSceneIndex] as HTMLElement;
+            // Since Tooltip uses display: contents, we measure the button inside it
+            const activeEl = wrapper?.firstElementChild as HTMLElement;
+            
             if (activeEl) {
                 const container = scrollRef.current;
                 const scrollLeft = activeEl.offsetLeft - (container.clientWidth / 2) + (activeEl.clientWidth / 2);
@@ -97,27 +101,31 @@ const SceneHotbar: React.FC = () => {
                         <span className="text-[12px] font-display font-bold text-white [text-shadow:0_1px_4px_rgba(0,0,0,0.8)] uppercase tracking-widest select-none">Scenes</span>
                         <div className="flex items-center gap-2">
                             {/* Add scene */}
-                            <button
-                                onClick={() => canAddScene ? addScene() : openProModal()}
-                                title={canAddScene ? 'Add New Scene' : 'Pro Required for Additional Scenes'}
-                                className="relative flex items-center justify-center bg-[#0a0a1a]/70 hover:bg-[#0a0a1a] w-10 h-6 rounded-full border border-indigo-300/70 hover:border-indigo-300 hover:text-indigo-300 text-white transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 group shadow-lg"
-                            >
-                                <span className="material-symbols-outlined !text-[16px]">add</span>
-                                {!canAddScene && (
-                                    <span className="material-symbols-outlined !text-[10px] text-indigo-300 absolute -top-1.5 -right-1.5 bg-[#0a0a1a] rounded-full p-0.5 border border-indigo-300/30 shadow-sm">lock</span>
-                                )}
-                            </button>
+                            <Tooltip content={canAddScene ? 'Add New Scene' : 'Pro Required for Additional Scenes'} useContents>
+                                <button
+                                    onClick={() => canAddScene ? addScene() : openProModal()}
+                                    aria-label={canAddScene ? 'Add New Scene' : 'Pro Required for Additional Scenes'}
+                                    className="relative flex items-center justify-center bg-[#0a0a1a]/70 hover:bg-[#0a0a1a] w-10 h-6 rounded-full border border-indigo-300/70 hover:border-indigo-300 hover:text-indigo-300 text-white transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 group shadow-lg"
+                                >
+                                    <span className="material-symbols-outlined !text-[16px]">add</span>
+                                    {!canAddScene && (
+                                        <span className="material-symbols-outlined !text-[10px] text-indigo-300 absolute -top-1.5 -right-1.5 bg-[#0a0a1a] rounded-full p-0.5 border border-indigo-300/30 shadow-sm">lock</span>
+                                    )}
+                                </button>
+                            </Tooltip>
                             {/* Settings toggle */}
-                            <button
-                                onClick={() => setShowSettings(s => !s)}
-                                title="Scene Settings"
-                                className={`flex items-center justify-center w-10 h-6 rounded-full border transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary group shadow-lg
-                                    ${showSettings
-                                        ? 'bg-primary border-primary text-[#0a0a1a] shadow-[0_0_15px_rgba(240,171,252,0.8)]'
-                                        : 'bg-[#0a0a1a]/70 border-primary/70 text-white hover:bg-[#0a0a1a] hover:border-primary hover:text-primary'}`}
-                            >
-                                <span className={`material-symbols-outlined !text-[14px] transition-transform duration-300 ${showSettings ? 'rotate-90' : ''}`}>settings</span>
-                            </button>
+                            <Tooltip content="Scene Settings" useContents>
+                                <button
+                                    onClick={() => setShowSettings(s => !s)}
+                                    aria-label="Scene Settings"
+                                    className={`flex items-center justify-center w-10 h-6 rounded-full border transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary group shadow-lg
+                                        ${showSettings
+                                            ? 'bg-primary border-primary text-[#0a0a1a] shadow-[0_0_15px_rgba(240,171,252,0.8)]'
+                                            : 'bg-[#0a0a1a]/70 border-primary/70 text-white hover:bg-[#0a0a1a] hover:border-primary hover:text-primary'}`}
+                                >
+                                    <span className={`material-symbols-outlined !text-[14px] transition-transform duration-300 ${showSettings ? 'rotate-90' : ''}`}>settings</span>
+                                </button>
+                            </Tooltip>
                         </div>
                     </div>
 
@@ -154,22 +162,24 @@ const SceneHotbar: React.FC = () => {
                                 const hasFx = effectCount > 0;
 
                                 return (
-                                    <button
-                                        key={i}
-                                        onClick={() => switchScene(i)}
-                                        title={`Scene ${i + 1}${hasFx ? ` · ${effectCount} effect${effectCount !== 1 ? 's' : ''}` : ' · Empty'}`}
+                                    <Tooltip key={i} content={`Scene ${i + 1}${hasFx ? ` · ${effectCount} effect${effectCount !== 1 ? 's' : ''}` : ' · Empty'}`} useContents>
+                                        <button
+                                            key={i}
+                                            onClick={() => switchScene(i)}
+                                            aria-label={`Scene ${i + 1}${hasFx ? ` · ${effectCount} effect${effectCount !== 1 ? 's' : ''}` : ' · Empty'}`}
 
-                                        className={`h-[20px]
-                                            relative shrink-0 transition-all duration-200 outline-none
-                                            focus-visible:outline-2 focus-visible:outline-white/60
-                                            ${isActive
-                                                ? 'w-12 bg-white hover:brightness-110'
-                                                : hasFx
-                                                    ? 'w-10 bg-indigo-300 hover:bg-white'
-                                                    : 'w-10 bg-white/35 hover:bg-white/60'
-                                            }
-                                        `}
-                                    />
+                                            className={`h-[20px]
+                                                relative shrink-0 transition-all duration-200 outline-none
+                                                focus-visible:outline-2 focus-visible:outline-white/60
+                                                ${isActive
+                                                    ? 'w-12 bg-white hover:brightness-110'
+                                                    : hasFx
+                                                        ? 'w-10 bg-indigo-300 hover:bg-white'
+                                                        : 'w-10 bg-white/35 hover:bg-white/60'
+                                                }
+                                            `}
+                                        />
+                                    </Tooltip>
                                 );
                             })}
                         </div>

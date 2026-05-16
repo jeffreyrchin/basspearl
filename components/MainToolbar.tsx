@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useEffectStore } from '../store/useEffectStore';
+import Tooltip from './Tooltip';
 
 interface MainToolbarProps {
     audioInputRef: React.RefObject<HTMLInputElement>;
@@ -43,43 +44,51 @@ const ToolbarRow: React.FC<{
     }
 
     return (
-        <button
-            type="button"
-            onClick={() => onClick?.()}
-            onPointerDownCapture={(e) => { e.stopPropagation(); }}
-            disabled={disabled}
-            className={`${baseClass} ${bgClass} ${borderClass} ${textClass} ${className}`}
-            title={label}
+        <Tooltip
+            content={shortcut ? `${label} (${shortcut})` : label}
+            position="right"
+            className="w-full"
+            useContents
+            disabled={!isCollapsed}
         >
-            <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : 'gap-3'}`}>
-                <div className="relative flex items-center justify-center w-5 shrink-0">
-                    <span
-                        className="material-symbols-outlined !text-[20px] text-center"
-                        style={{ color: isActive && colorHex ? colorHex : (isActive && isCollapsed ? 'white' : undefined) }}
-                    >
-                        {icon}
-                    </span>
+            <button
+                type="button"
+                onClick={() => onClick?.()}
+                onPointerDownCapture={(e) => { e.stopPropagation(); }}
+                disabled={disabled}
+                className={`${baseClass} ${bgClass} ${borderClass} ${textClass} ${className}`}
+                aria-label={label}
+            >
+                <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : 'gap-3'}`}>
+                    <div className="relative flex items-center justify-center w-5 shrink-0">
+                        <span
+                            className="material-symbols-outlined !text-[20px] text-center"
+                            style={{ color: isActive && colorHex ? colorHex : (isActive && isCollapsed ? 'white' : undefined) }}
+                        >
+                            {icon}
+                        </span>
+                    </div>
+                    {!isCollapsed && (
+                        <span className="text-[13px] font-medium tracking-wide whitespace-nowrap overflow-hidden text-ellipsis">{label}</span>
+                    )}
                 </div>
-                {!isCollapsed && (
-                    <span className="text-[13px] font-medium tracking-wide whitespace-nowrap overflow-hidden text-ellipsis">{label}</span>
+
+                {shortcut && !isCollapsed && (
+                    <div className="flex items-center pr-1 shrink-0">
+                        <span className={`text-[12px] font-medium mb-0.5 transition-colors ${isActive ? 'text-white' : 'text-white/80 group-hover/row:text-white'}`}>{shortcut}</span>
+                    </div>
                 )}
-            </div>
 
-            {shortcut && !isCollapsed && (
-                <div className="flex items-center pr-1 shrink-0">
-                    <span className={`text-[12px] font-medium mb-0.5 transition-colors ${isActive ? 'text-white' : 'text-white/80 group-hover/row:text-white'}`}>{shortcut}</span>
-                </div>
-            )}
-
-            {showDot && (
-                <span
-                    className={`${isCollapsed ? 'absolute top-1/2 -translate-y-1/2 -left-2 w-0.5 h-4 rounded-full' : 'w-2 h-2 rounded-full'}`}
-                    style={{ backgroundColor: colorHex, boxShadow: `0 0 8px ${colorHex}` }}
-                />
-            )}
-        </button>
-    )
-}
+                {showDot && (
+                    <span
+                        className={`${isCollapsed ? 'absolute top-1/2 -translate-y-1/2 -left-2 w-0.5 h-4 rounded-full' : 'w-2 h-2 rounded-full'}`}
+                        style={{ backgroundColor: colorHex, boxShadow: `0 0 8px ${colorHex}` }}
+                    />
+                )}
+            </button>
+        </Tooltip>
+    );
+};
 
 const MainToolbar: React.FC<MainToolbarProps> = ({
     audioInputRef,
@@ -151,7 +160,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                 className={`absolute ${isToolbarCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-0'} top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-all cursor-pointer`}
                                 onClick={() => setIsToolbarCollapsed(!isToolbarCollapsed)}
                                 onPointerDownCapture={(e) => { e.stopPropagation(); }}
-                                title={isToolbarCollapsed ? "Expand Toolbar" : "Collapse Toolbar"}
+                                aria-label={isToolbarCollapsed ? "Expand Toolbar" : "Collapse Toolbar"}
                             >
                                 <span className="material-symbols-outlined !text-[20px]">
                                     {isToolbarCollapsed ? 'chevron_right' : 'chevron_left'}
@@ -169,7 +178,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                     type="file"
                                     accept="audio/*, .mp3, .wav, .m4a, .aac, .ogg"
                                     onChange={handleAudioUpload}
-                                    title="Audio File"
+                                    aria-label="Audio File Upload"
                                     className="sr-only"
                                 />
                                 <ToolbarRow
