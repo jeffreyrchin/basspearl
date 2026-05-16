@@ -89,7 +89,7 @@ const SceneHotbar: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className="pointer-events-auto flex flex-col gap-1.5 w-fit max-w-[90vw] md:max-w-[60vw]"
+                    className="pointer-events-auto flex flex-col gap-1.5 w-fit max-w-[300px] lg:max-w-[370px] xl:max-w-[430px]"
                     title="Scene Bar (1-9 to switch scenes, [ / ] to navigate scenes)"
                 >
                     {/* TOP ROW: actions */}
@@ -100,11 +100,11 @@ const SceneHotbar: React.FC = () => {
                             <button
                                 onClick={() => canAddScene ? addScene() : openProModal()}
                                 title={canAddScene ? 'Add New Scene' : 'Pro Required for Additional Scenes'}
-                                className="relative flex items-center justify-center bg-slate-950/90 hover:bg-slate-900 w-10 h-6 rounded-full border border-accent-blue/50 hover:border-accent-blue hover:text-accent-blue text-white transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-accent-blue group shadow-lg"
+                                className="relative flex items-center justify-center bg-[#0a0a1a]/70 hover:bg-[#0a0a1a] w-10 h-6 rounded-full border border-indigo-300/70 hover:border-indigo-300 hover:text-indigo-300 text-white transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 group shadow-lg"
                             >
                                 <span className="material-symbols-outlined !text-[16px]">add</span>
                                 {!canAddScene && (
-                                    <span className="material-symbols-outlined !text-[10px] text-accent-blue absolute -top-1.5 -right-1.5 bg-slate-950 rounded-full p-0.5 border border-accent-blue/30 shadow-sm">lock</span>
+                                    <span className="material-symbols-outlined !text-[10px] text-indigo-300 absolute -top-1.5 -right-1.5 bg-[#0a0a1a] rounded-full p-0.5 border border-indigo-300/30 shadow-sm">lock</span>
                                 )}
                             </button>
                             {/* Settings toggle */}
@@ -113,8 +113,8 @@ const SceneHotbar: React.FC = () => {
                                 title="Scene Settings"
                                 className={`flex items-center justify-center w-10 h-6 rounded-full border transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary group shadow-lg
                                     ${showSettings
-                                        ? 'bg-primary border-primary text-slate-950 shadow-[0_0_15px_rgba(240,171,252,0.8)]'
-                                        : 'bg-slate-950/90 border-primary/50 text-white hover:bg-slate-900 hover:border-primary hover:text-primary'}`}
+                                        ? 'bg-primary border-primary text-[#0a0a1a] shadow-[0_0_15px_rgba(240,171,252,0.8)]'
+                                        : 'bg-[#0a0a1a]/70 border-primary/70 text-white hover:bg-[#0a0a1a] hover:border-primary hover:text-primary'}`}
                             >
                                 <span className={`material-symbols-outlined !text-[14px] transition-transform duration-300 ${showSettings ? 'rotate-90' : ''}`}>settings</span>
                             </button>
@@ -130,11 +130,11 @@ const SceneHotbar: React.FC = () => {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="absolute left-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-r from-black to-transparent pointer-events-none rounded-l-lg"
+                                    className="absolute left-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-r from-[#0a0a1a] to-transparent pointer-events-none rounded-l-lg"
                                 >
                                     <button
                                         onClick={() => scroll('left')}
-                                        className="pointer-events-auto flex items-center justify-center w-10 h-6 rounded-l-lg bg-black/40 hover:bg-black/60 text-white hover:text-primary transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                        className="pointer-events-auto flex items-center justify-center w-10 h-6 rounded-l-lg bg-transparent hover:bg-[#0a0a1a]/40 text-white hover:text-primary transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                     >
                                         <span className="material-symbols-outlined !text-[18px]">chevron_left</span>
                                     </button>
@@ -145,7 +145,7 @@ const SceneHotbar: React.FC = () => {
                         {/* Scrollable strip — dark pill backdrop ensures readability on any bg */}
                         <div
                             ref={scrollRef}
-                            className="flex items-center gap-[1px] overflow-x-auto no-scrollbar px-5 py-[8px] rounded-lg bg-black/80"
+                            className="flex items-center gap-[1px] overflow-x-auto no-scrollbar px-5 py-[8px] rounded-lg bg-[#0a0a1a]"
                         >
                             {scenes.map((slot, i) => {
                                 const isActive = i === activeSceneIndex;
@@ -181,11 +181,11 @@ const SceneHotbar: React.FC = () => {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="absolute right-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-l from-black to-transparent pointer-events-none rounded-r-lg"
+                                    className="absolute right-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-l from-[#0a0a1a] to-transparent pointer-events-none rounded-r-lg"
                                 >
                                     <button
                                         onClick={() => scroll('right')}
-                                        className="pointer-events-auto flex items-center justify-center w-10 h-6 rounded-r-lg bg-black/40 hover:bg-black/60 text-white hover:text-primary transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                        className="pointer-events-auto flex items-center justify-center w-10 h-6 rounded-r-lg bg-transparent hover:bg-[#0a0a1a]/40 text-white hover:text-primary transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                     >
                                         <span className="material-symbols-outlined !text-[18px]">chevron_right</span>
                                     </button>

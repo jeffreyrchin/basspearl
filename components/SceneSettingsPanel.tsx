@@ -51,7 +51,7 @@ const TransitionDropdown: React.FC<{
                                 width: '130px',
                             }}
                             data-dropdown-ignore="true"
-                            className="bg-zinc-900 border border-white/10 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[9999] overflow-hidden p-1"
+                            className="bg-[#0a0a1a] border border-white/10 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[9999] overflow-hidden p-1 space-y-0.5"
                         >
                             {TRANSITION_OPTIONS.map((opt) => (
                                 <button
@@ -63,7 +63,7 @@ const TransitionDropdown: React.FC<{
                                     className={`w-full px-3 py-2 text-left text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all
                                         ${value === opt.value
                                             ? 'bg-white/10 text-white'
-                                            : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+                                            : 'text-white/60 hover:text-white hover:bg-white/10'}`}
                                 >
                                     {opt.label}
                                 </button>
@@ -86,40 +86,18 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
     const setTransitionDuration = useEffectStore(s => s.setTransitionDuration);
     const endlessInterval = useEffectStore(s => s.endlessInterval);
     const setEndlessInterval = useEffectStore(s => s.setEndlessInterval);
-    const isMobile = useEffectStore(s => s.isMobile);
 
     return (
-        <div className={`w-fit rounded-xl bg-black/80 border border-white/8 px-5 py-3 flex flex-col gap-2 ${showEndlessControls ? 'mx-auto' : 'mt-1'}`}>
+        <div className={`w-fit rounded-xl bg-[#0a0a1a] border border-white/8 px-5 py-3 flex flex-col gap-2 ${showEndlessControls ? 'mx-auto' : 'mt-1'}`}>
             {/* Transition type */}
             <div className="flex items-center gap-3">
-                <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap w-16 shrink-0">Transition</span>
-                <div className="flex items-center gap-1">
-                    {isMobile ? (
-                        <TransitionDropdown value={transitionType} onChange={setTransitionType} />
-                    ) : (
-                        TRANSITION_OPTIONS.map((opt) => {
-                            const isActive = transitionType === opt.value;
-                            return (
-                                <button
-                                    key={opt.value}
-                                    onClick={() => setTransitionType(opt.value as any)}
-                                    className={`px-2 py-0.5 rounded-full text-[9px] font-semibold tracking-wide transition-all
-                                        ${isActive
-                                            ? 'bg-white/20 text-white border border-white/10'
-                                            : 'text-white/60 hover:text-white border border-transparent hover:border-white/10'
-                                        }`}
-                                >
-                                    {opt.label}
-                                </button>
-                            );
-                        })
-                    )}
-                </div>
+                <span className="text-[10px] font-bold text-white uppercase tracking-widest whitespace-nowrap w-16 shrink-0">Transition</span>
+                <TransitionDropdown value={transitionType} onChange={setTransitionType} />
             </div>
 
             {/* Duration slider */}
             <div className="flex items-center gap-3">
-                <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap w-16 shrink-0">Duration</span>
+                <span className="text-[10px] font-bold text-white uppercase tracking-widest whitespace-nowrap w-16 shrink-0">Duration</span>
                 <div className="flex items-center gap-3 grow max-w-50">
                     <input
                         type="range"
@@ -130,14 +108,14 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
                         onChange={(e) => setTransitionDuration(parseFloat(e.target.value))}
                         className="grow h-0.5 bg-white/30 rounded-full appearance-none cursor-pointer accent-white"
                     />
-                    <span className="text-[9px] w-7 text-right font-medium tabular-nums text-white/80">{transitionDuration.toFixed(1)}s</span>
+                    <span className="text-[10px] w-7 text-right font-medium tabular-nums text-white/80">{transitionDuration.toFixed(1)}s</span>
                 </div>
             </div>
 
             {/* Endless Mode "Every" parameter */}
             {showEndlessControls && (
                 <div className="flex items-center gap-3">
-                    <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap w-16 shrink-0">Every</span>
+                    <span className="text-[10px] font-bold text-white uppercase tracking-widest whitespace-nowrap w-16 shrink-0">Every</span>
                     <div className="flex items-center gap-3 grow max-w-50">
                         <input
                             type="range"
@@ -148,7 +126,7 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
                             onChange={(e) => setEndlessInterval(parseInt(e.target.value))}
                             className="grow h-0.5 bg-white/30 rounded-full appearance-none cursor-pointer accent-white"
                         />
-                        <span className="text-[9px] w-7 text-right font-medium tabular-nums text-white/80">{endlessInterval}s</span>
+                        <span className="text-[10px] w-7 text-right font-medium tabular-nums text-white/80">{endlessInterval}s</span>
                     </div>
                 </div>
             )}
