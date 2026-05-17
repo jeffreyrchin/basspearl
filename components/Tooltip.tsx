@@ -77,23 +77,25 @@ const Tooltip: React.FC<TooltipProps> = ({
     }
   };
 
-  const hideTooltip = () => {
+  const hideTooltip = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     setIsVisible(false);
-  };
+  }, []);
 
   useEffect(() => {
     if (isVisible) {
       window.addEventListener('scroll', updatePosition, true);
       window.addEventListener('resize', updatePosition);
+      window.addEventListener('blur', hideTooltip);
     }
     return () => {
       window.removeEventListener('scroll', updatePosition, true);
       window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('blur', hideTooltip);
     };
-  }, [isVisible, updatePosition]);
+  }, [isVisible, updatePosition, hideTooltip]);
 
   useEffect(() => {
     return () => {
@@ -122,13 +124,19 @@ const Tooltip: React.FC<TooltipProps> = ({
     <div
       ref={triggerRef}
       className={className}
-      style={{ 
+      style={{
         display: useContents ? 'contents' : 'inline-block',
         position: useContents ? undefined : 'relative'
       }}
       onMouseEnter={showTooltip}
       onMouseLeave={hideTooltip}
-      onFocus={showTooltip}
+      onMouseDown={hideTooltip}
+      onFocus={(e) => {
+        // Show tooltip if focused via keyboard (matches :focus-visible)
+        if (!e.target.matches || e.target.matches(':focus-visible')) {
+          showTooltip();
+        }
+      }}
       onBlur={hideTooltip}
     >
       {children}
@@ -153,8 +161,8 @@ const Tooltip: React.FC<TooltipProps> = ({
                   {content}
                 </div>
                 <div className="absolute inset-0 rounded-lg bg-indigo-500/20 blur-xl -z-10" />
-                
-                <div 
+
+                <div
                   className={`absolute w-2 h-2 rotate-45 bg-[#0a0a1a] border-white/10 -z-10
                     ${position === 'top' ? 'bottom-[-4px] left-1/2 -translate-x-1/2 border-r border-b' : ''}
                     ${position === 'bottom' ? 'top-[-4px] left-1/2 -translate-x-1/2 border-l border-t' : ''}
