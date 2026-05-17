@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { useEffectStore } from './store/useEffectStore';
@@ -21,6 +21,8 @@ const App = () => {
   const isLegalOpen = useLegalStore((s) => s.isLegalOpen);
   const isProModalOpen = useProStore((s) => s.isProModalOpen);
   const isLandingOpen = useEffectStore((s) => s.isLandingOpen);
+  const location = useLocation();
+  const isMainPage = location.pathname === '/';
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -38,7 +40,7 @@ const App = () => {
         <Route path="/puzzle-service-test" element={<PuzzleTestPage />} />
       </Routes>
       <AnimatePresence>
-        {isLandingOpen && <LandingModal />}
+        {isMainPage && isLandingOpen && <LandingModal />}
       </AnimatePresence>
       <AnimatePresence>
         {isLegalOpen && <LegalConsentModal />}
