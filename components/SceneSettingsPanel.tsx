@@ -98,7 +98,7 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
             {/* Duration slider */}
             <div className="flex items-center gap-3">
                 <span className="text-[10px] font-bold text-white uppercase tracking-widest whitespace-nowrap w-16 shrink-0">Duration</span>
-                <div className="flex items-center gap-3 grow max-w-50">
+                <div className="flex items-center gap-3 grow max-w-[200px]">
                     <input
                         type="range"
                         min="0"
@@ -106,7 +106,7 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
                         step="0.1"
                         value={transitionDuration}
                         onChange={(e) => setTransitionDuration(parseFloat(e.target.value))}
-                        className="grow h-0.5 bg-white/30 rounded-full appearance-none cursor-pointer accent-white"
+                        className="grow min-w-0 w-full h-0.5 bg-white/30 rounded-full appearance-none cursor-pointer accent-white"
                     />
                     <span className="text-[10px] w-7 text-right font-medium tabular-nums text-white/80">{transitionDuration.toFixed(1)}s</span>
                 </div>
@@ -116,7 +116,7 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
             {showEndlessControls && (
                 <div className="flex items-center gap-3">
                     <span className="text-[10px] font-bold text-white uppercase tracking-widest whitespace-nowrap w-16 shrink-0">Every</span>
-                    <div className="flex items-center gap-3 grow max-w-50">
+                    <div className="flex items-center gap-3 grow max-w-[200px]">
                         <input
                             type="range"
                             min="1"
@@ -124,7 +124,7 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
                             step="1"
                             value={endlessInterval}
                             onChange={(e) => setEndlessInterval(parseInt(e.target.value))}
-                            className="grow h-0.5 bg-white/30 rounded-full appearance-none cursor-pointer accent-white"
+                            className="grow min-w-0 w-full h-0.5 bg-white/30 rounded-full appearance-none cursor-pointer accent-white"
                         />
                         <span className="text-[10px] w-7 text-right font-medium tabular-nums text-white/80">{endlessInterval}s</span>
                     </div>
