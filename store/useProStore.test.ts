@@ -20,7 +20,7 @@ const { useProStore } = await import('./useProStore');
 const store = () => useProStore.getState();
 
 const resetStore = () => {
-    useProStore.setState({ isPro: false, isProModalOpen: false });
+    useProStore.setState({ isPro: false, isProModalOpen: false, daily4kCount: 0, last4kDate: '' });
     vi.clearAllMocks();
 };
 
@@ -41,36 +41,42 @@ describe('useProStore', () => {
     });
 
     describe('loadProStatus', () => {
-        it('sets isPro to true if cloud data has isPro: true', async () => {
+        it('sets isPro to true and populates daily4kCount and last4kDate if cloud data exists', async () => {
             mockGetDoc.mockResolvedValueOnce({
                 exists: () => true,
-                data: () => ({ isPro: true }),
+                data: () => ({ isPro: true, daily4kCount: 3, last4kDate: '2026-05-16' }),
             });
             await store().loadProStatus('user_123');
             expect(store().isPro).toBe(true);
+            expect(store().daily4kCount).toBe(3);
+            expect(store().last4kDate).toBe('2026-05-16');
             expect(mockDoc).toHaveBeenCalledWith({}, 'users', 'user_123');
         });
 
-        it('sets isPro to false if cloud data has isPro: false', async () => {
+        it('sets isPro to false and defaults daily4kCount/last4kDate if cloud data has them missing', async () => {
             mockGetDoc.mockResolvedValueOnce({
                 exists: () => true,
                 data: () => ({ isPro: false }),
             });
             await store().loadProStatus('user_123');
             expect(store().isPro).toBe(false);
+            expect(store().daily4kCount).toBe(0);
+            expect(store().last4kDate).toBe('');
         });
 
-        it('sets isPro to false if the document does not exist', async () => {
+        it('sets isPro to false and daily4kCount/last4kDate to default if the document does not exist', async () => {
             mockGetDoc.mockResolvedValueOnce({
                 exists: () => false,
                 data: () => undefined,
             });
             await store().loadProStatus('user_123');
             expect(store().isPro).toBe(false);
+            expect(store().daily4kCount).toBe(0);
+            expect(store().last4kDate).toBe('');
         });
 
-        it('sets isPro to false if Firestore throws an error', async () => {
-            useProStore.setState({ isPro: true }); // set to true to ensure it gets overridden
+        it('sets all fields to default if Firestore throws an error', async () => {
+            useProStore.setState({ isPro: true, daily4kCount: 4, last4kDate: '2026-05-16' }); // set to check override
             mockGetDoc.mockRejectedValueOnce(new Error('Network offline'));
             
             // spy on console.error so it doesn't clutter the test output
@@ -78,6 +84,8 @@ describe('useProStore', () => {
             
             await store().loadProStatus('user_123');
             expect(store().isPro).toBe(false);
+            expect(store().daily4kCount).toBe(0);
+            expect(store().last4kDate).toBe('');
             
             consoleSpy.mockRestore();
         });
@@ -150,6 +158,55 @@ describe('useProStore', () => {
             expect(window.LemonSqueezy.Setup).toHaveBeenCalledWith({
                 eventHandler: expect.any(Function)
             });
+        });
+    });
+
+    describe('record4kExport', () => {
+        it('does nothing if uid is empty', async () => {
+            await store().record4kExport('');
+            expect(mockSetDoc).not.toHaveBeenCalled();
+            expect(store().daily4kCount).toBe(0);
+        });
+
+        it('resets/sets count to 1 if last export was on a different day', async () => {
+            const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            useProStore.setState({ daily4kCount: 4, last4kDate: yesterday });
+
+            await store().record4kExport('user_123');
+
+            const today = new Date().toISOString().split('T')[0];
+            expect(store().daily4kCount).toBe(1);
+            expect(store().last4kDate).toBe(today);
+            expect(mockSetDoc).toHaveBeenCalledWith(
+                expect.objectContaining({ path: 'users/user_123' }),
+                { daily4kCount: 1, last4kDate: today },
+                { merge: true }
+            );
+        });
+
+        it('increments the count if last export was today', async () => {
+            const today = new Date().toISOString().split('T')[0];
+            useProStore.setState({ daily4kCount: 2, last4kDate: today });
+
+            await store().record4kExport('user_123');
+
+            expect(store().daily4kCount).toBe(3);
+            expect(store().last4kDate).toBe(today);
+            expect(mockSetDoc).toHaveBeenCalledWith(
+                expect.objectContaining({ path: 'users/user_123' }),
+                { daily4kCount: 3, last4kDate: today },
+                { merge: true }
+            );
+        });
+
+        it('handles Firestore error gracefully without throwing', async () => {
+            mockSetDoc.mockRejectedValueOnce(new Error('Firestore failed'));
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+            await store().record4kExport('user_123');
+
+            expect(consoleSpy).toHaveBeenCalledWith('Failed to record 4K export:', expect.any(Error));
+            consoleSpy.mockRestore();
         });
     });
 });

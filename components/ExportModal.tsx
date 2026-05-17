@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { calculateExportDimensions } from '@/services/exportService';
 import { useProStore } from '@/store/useProStore';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
 
 interface ExportModalProps {
@@ -24,6 +26,43 @@ const ExportModal: React.FC<ExportModalProps> = ({
     const [resolution, setResolution] = useState<number>(1920);
     const isPro = useProStore(s => s.isPro);
     const openProModal = useProStore(s => s.openProModal);
+    const openAuth = useAuthStore(s => s.openAuth);
+    const { user } = useAuth();
+
+    const daily4kCount = useProStore(s => s.daily4kCount);
+    const last4kDate = useProStore(s => s.last4kDate);
+    const today = new Date().toISOString().split('T')[0];
+
+    const currentDailyCount = last4kDate === today ? daily4kCount : 0;
+    const freeExportsRemaining = Math.max(0, 5 - currentDailyCount);
+    const hasReachedFreeLimit = !isPro && freeExportsRemaining <= 0;
+
+    const [resetsIn, setResetsIn] = useState<string>('');
+
+    useEffect(() => {
+        const updateCountdown = () => {
+            const now = new Date();
+            const nextUtcMidnight = new Date(Date.UTC(
+                now.getUTCFullYear(),
+                now.getUTCMonth(),
+                now.getUTCDate() + 1,
+                0, 0, 0, 0
+            ));
+            const diffMs = nextUtcMidnight.getTime() - now.getTime();
+            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+            if (hours > 0) {
+                setResetsIn(`Resets in ${hours}h ${minutes}m`);
+            } else {
+                setResetsIn(`Resets in ${minutes}m`);
+            }
+        };
+
+        updateCountdown();
+        const interval = setInterval(updateCountdown, 60000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
@@ -118,11 +157,26 @@ const ExportModal: React.FC<ExportModalProps> = ({
                             </label>
                             <div className="flex flex-col gap-2">
                                 {resolutionOptions.map((option) => {
-                                    const isLocked = !isPro && option.value > 1920;
+                                    const is4k = option.value > 1920;
+                                    const isLocked = is4k && !user;
+                                    const isLimitReached = is4k && user && hasReachedFreeLimit;
+
+                                    const handleClick = () => {
+                                        if (isLocked) {
+                                            openAuth('signup');
+                                            return;
+                                        }
+                                        if (isLimitReached) {
+                                            openProModal();
+                                            return;
+                                        }
+                                        setResolution(option.value);
+                                    };
+
                                     return (
                                         <button
                                             key={option.value}
-                                            onClick={() => isLocked ? openProModal() : setResolution(option.value)}
+                                            onClick={handleClick}
                                             disabled={isExporting}
                                             className={`px-4 py-3 rounded-lg border text-xs font-medium transition-all flex items-center justify-between ${resolution === option.value
                                                 ? 'bg-white/20 border-white/30'
@@ -131,10 +185,11 @@ const ExportModal: React.FC<ExportModalProps> = ({
                                         >
                                             <div className="flex items-center gap-2">
                                                 <span>{option.label}</span>
-                                                {isLocked && <span className="material-symbols-outlined !text-xs text-indigo-300" title="Requires Lifetime Pro">lock</span>}
+                                                {isLocked && <span className="material-symbols-outlined !text-xs text-primary" title="Sign in to unlock 4K">lock</span>}
+                                                {isLimitReached && <span className="material-symbols-outlined !text-xs text-primary" title="Daily limit reached. Upgrade to Pro for unlimited 4K.">info</span>}
                                             </div>
-                                            <span className={`text-[10px] font-medium text-white/60`}>
-                                                {option.desc}
+                                            <span className={`text-[10px] tracking-wider ${isLocked ? 'text-primary uppercase font-bold' : isLimitReached ? 'text-primary uppercase font-bold' : 'text-white/60 font-medium'}`}>
+                                                {isLocked ? 'Sign in to Unlock' : isLimitReached ? resetsIn : (is4k && user && !isPro) ? `${freeExportsRemaining} / 5 Daily Credits` : option.desc}
                                             </span>
                                         </button>
                                     );
@@ -179,7 +234,18 @@ const ExportModal: React.FC<ExportModalProps> = ({
                     ) : (
                         <div className="mt-10 pt-8 border-t border-white/10">
                             <button
-                                onClick={() => onExport({ fps, resolution })}
+                                onClick={() => {
+                                    const is4k = resolution > 1920;
+                                    if (is4k && !user) {
+                                        openAuth('signup');
+                                        return;
+                                    }
+                                    if (is4k && hasReachedFreeLimit) {
+                                        openProModal();
+                                        return;
+                                    }
+                                    onExport({ fps, resolution });
+                                }}
                                 className={`w-full py-4 rounded-lg border font-bold text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 border-white/20 bg-white/10 text-white hover:bg-white/20`}
                             >
                                 Export .MP4

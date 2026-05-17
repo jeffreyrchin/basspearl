@@ -3,6 +3,8 @@ import { exportVideo } from '@/services/exportService';
 import { analytics } from '@/services/analytics';
 import { EffectConfig } from '@/types';
 import { EnginePhaseState, mainGlitchEngine } from '@/services/glitchEngine';
+import { useProStore } from '@/store/useProStore';
+import { useAuth } from '@/context/AuthContext';
 
 export interface VideoExportParams {
     options: {
@@ -21,6 +23,8 @@ export const useVideoExport = () => {
     const [exportProgress, setExportProgress] = useState(0);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [exportResult, setExportResult] = useState<{ fileUrl: string, fileName: string } | null>(null);
+    const { user } = useAuth();
+    const record4kExport = useProStore(s => s.record4kExport);
 
     const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -72,6 +76,11 @@ export const useVideoExport = () => {
             });
             analytics.export.succeeded(effects);
             setExportResult(result);
+
+            // Record 4K export if successful
+            if (result && options.resolution > 1920 && user) {
+                await record4kExport(user.uid);
+            }
         } catch (err: any) {
             if (err.name === 'AbortError') {
                 console.log("Export was canceled by user.");
@@ -85,7 +94,7 @@ export const useVideoExport = () => {
             setExportProgress(0);
             abortControllerRef.current = null;
         }
-    }, []);
+    }, [user, record4kExport]);
 
     const cancelExport = useCallback(() => {
         if (abortControllerRef.current) {
