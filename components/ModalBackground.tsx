@@ -1,15 +1,24 @@
 import React, { useRef, useLayoutEffect } from 'react';
 import { GlitchEngine } from '../services/glitchEngine';
 import { createMacroInstance } from '../constants';
+import { MacroType } from '../types';
 
-const LandingBackground: React.FC = () => {
+interface ModalBackgroundProps {
+    macroType: MacroType;
+    opacity?: number;
+}
+
+const ModalBackground: React.FC<ModalBackgroundProps> = ({
+    macroType,
+    opacity = 0.4
+}) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const engineRef = useRef<GlitchEngine | null>(null);
     const rafRef = useRef<number>();
     const startTimeRef = useRef<number>(Date.now());
 
     // Preset blueprint
-    const blueprint = React.useMemo(() => createMacroInstance('LIQUID', true), []);
+    const blueprint = React.useMemo(() => createMacroInstance(macroType, true), [macroType]);
 
     useLayoutEffect(() => {
         if (!canvasRef.current) return;
@@ -53,7 +62,8 @@ const LandingBackground: React.FC = () => {
         <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
             <canvas
                 ref={canvasRef}
-                className="w-full h-full object-cover opacity-40"
+                style={{ opacity }}
+                className="w-full h-full object-cover"
             />
 
             {/* Vignette */}
@@ -62,4 +72,4 @@ const LandingBackground: React.FC = () => {
     );
 };
 
-export default LandingBackground;
+export default ModalBackground;

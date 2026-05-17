@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useLegalStore } from '../store/useLegalStore';
 import { useEffectStore } from '../store/useEffectStore';
-import LandingBackground from './LandingBackground';
+import ModalBackground from './ModalBackground';
 
 const LandingModal: React.FC = () => {
     const openLegal = useLegalStore(e => e.openLegal);
@@ -93,8 +93,8 @@ const LandingModal: React.FC = () => {
                 data-section="modal"
                 className="relative w-[80vw] max-w-4xl bg-[#0a0a1a] rounded-2xl border border-white/5 max-h-[90vh] overflow-hidden custom-scrollbar flex flex-col items-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
             >
-                {/* Aurora Background */}
-                <LandingBackground />
+                {/* Liquid Background */}
+                <ModalBackground macroType='LIQUID' />
 
                 <div className="relative w-full h-full overflow-y-auto overflow-x-hidden flex flex-col items-center custom-scrollbar">
                     {/* Close Button */}
