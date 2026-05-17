@@ -639,6 +639,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
         };
     },
     PARTICLES: () => {
+        const PARTICLE_REFERENCE_HEIGHT = 1080.0;
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 10000);
         camera.position.set(0, 0, 300);
@@ -648,15 +649,25 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
         const basePositions = new Float32Array(PARTICLE_COUNT * 3);
         const randoms = new Float32Array(PARTICLE_COUNT * 3);
 
+        // Deterministic PRNG (Mulberry32) — fixed seed ensures the particle skeleton
+        // is identical on every initialization: live preview, export engine, import-after-refresh.
+        let seed = 0x9E3779B9;
+        const rng = () => {
+            seed = (seed + 0x6D2B79F5) >>> 0;
+            let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+            return ((t ^ (t >>> 14)) >>> 0) / 0x100000000;
+        };
+
         for (let i = 0; i < PARTICLE_COUNT; i++) {
             const ix = i * 3;
-            basePositions[ix + 0] = (Math.random() - 0.5) * 2.0;
-            basePositions[ix + 1] = (Math.random() - 0.5) * 2.0;
-            basePositions[ix + 2] = (Math.random() - 0.5) * 2.0;
+            basePositions[ix + 0] = (rng() - 0.5) * 2.0;
+            basePositions[ix + 1] = (rng() - 0.5) * 2.0;
+            basePositions[ix + 2] = (rng() - 0.5) * 2.0;
 
-            randoms[ix + 0] = Math.random();
-            randoms[ix + 1] = Math.random();
-            randoms[ix + 2] = Math.random();
+            randoms[ix + 0] = rng();
+            randoms[ix + 1] = rng();
+            randoms[ix + 2] = rng();
         }
 
         const positions = new Float32Array(PARTICLE_COUNT * 3);
@@ -825,7 +836,7 @@ export const THREE_JS_EFFECTS: Record<string, () => IThreeJSEffect> = {
                 mat.uniforms.u_drift.value = drift;
                 mat.uniforms.u_spread.value = spread;
                 mat.uniforms.u_aspect.value = params.width / params.height;
-                mat.uniforms.u_size.value = size;
+                mat.uniforms.u_size.value = size * (params.height / PARTICLE_REFERENCE_HEIGHT);
                 mat.uniforms.u_opacity.value = blend;
 
                 // Background Quad
