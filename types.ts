@@ -140,7 +140,11 @@ export type MacroType =
   'AQUASCOPE' |
   'ELECTRICITY' |
   'DISCO_RING' |
-  'METRO_2';
+  'METRO_2' |
+  'SPECTRAL_SPHERE' |
+  'STAR_TUNNEL' |
+  'STAR_MORPH_2' |
+  'MANDALA';
 
 export interface MacroEffectOverrideItem {
   type: GlitchEffectType;

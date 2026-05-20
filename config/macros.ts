@@ -2774,5 +2774,251 @@ export const MACRO_METADATA: Record<MacroType, MacroMetadata> = {
         melded: false
       }
     ]
+  },
+  SPECTRAL_SPHERE: {
+    id: 'SPECTRAL_SPHERE',
+    label: 'Spectral Sphere',
+    effects: [
+      {
+        type: 'GRAIN',
+        params: [
+          o('Width', { v: 73 }),
+          o('Height', { v: 71 }),
+          o('Freq X', { v: 23 }),
+          o('Freq Y', { v: 14 }),
+          o('Density', { v: 100, b: 'OFF' }),
+          o('Roundness', { v: 0 }),
+          o('Blend', { v: 100, b: 'OFF' }),
+          o('Scale X', { v: 50 }),
+          o('Scale Y', { v: 50 }),
+          o('Pan X', { v: 50 }),
+          o('Pan Y', { v: 50 }),
+          o('Rotation', { v: 0 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'SPECTRAL_MAP',
+        params: [
+          o('Rainbow Density', { v: 5 }),
+          o('Color Shift', { v: 0 }),
+          o('Speed', { v: 23 }),
+          o('Intensity', { v: 52 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'TERRAIN_SPHERE',
+        params: [
+          o('Extrusion', { v: 24, b: 'SUB' }, { v: 12, b: 'OFF' }),
+          o('Detail Level', { v: 100 }),
+          o('Size', { v: 36 }),
+          o('Offset X', { v: 0 }),
+          o('Offset Y', { v: 0 }),
+          o('Offset Z', { v: 0 }),
+          o('Spin Speed X', { v: 11, b: 'SUB' }),
+          o('Spin Speed Y', { v: 10, b: 'SUB' }),
+          o('Spin Speed Z', { v: 21, m: 4, b: 'SUB' }),
+          o('Seam Blend', { v: 0 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'EDGE_MASK',
+        params: [
+          o('Sensitivity', { v: 13, b: 'OFF' }),
+          o('Thickness', { v: 11 }),
+          o('Invert', { v: 0 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 0 }),
+          o('Distance', { v: 50 }),
+          o('Strength', { v: 100 }),
+        ],
+        melded: false
+      },
+    ]
+  },
+  STAR_TUNNEL: {
+    id: 'STAR_TUNNEL',
+    label: 'Star Tunnel',
+    effects: [
+      {
+        type: 'PARTICLES',
+        params: [
+          o('Count', { v: 100 }),
+          o('Size', { v: 40, m: 20, b: 'SUB' }, { v: 30, b: 'OFF' }),
+          o('Spread', { v: 13 }),
+          o('Drift', { v: 20 }),
+          o('Drift Speed', { v: 0 }),
+          o('Zoom Speed', { v: 0 }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'SPECTRAL_MAP',
+        params: [
+          o('Rainbow Density', { v: 10 }),
+          o('Color Shift', { v: 7 }),
+          o('Speed', { v: 0 }),
+          o('Intensity', { v: 100 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 0 }),
+          o('Distance', { v: 5 }),
+          o('Strength', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'TUNNEL_WARP',
+        params: [
+          o('Scale', { v: 5 }),
+          o('Speed', { v: 6 }),
+          o('Twist', { v: 0 }),
+        ],
+        melded: false
+      },
+    ]
+  },
+  STAR_MORPH_2: {
+    id: 'STAR_MORPH_2',
+    label: 'Star Morph 2',
+    effects: [
+      {
+        type: 'GRAIN',
+        params: [
+          o('Width', { v: 86, m: 50 }),
+          o('Height', { v: 88, m: 50 }),
+          o('Freq X', { v: 16 }),
+          o('Freq Y', { v: 9 }),
+          o('Density', { v: 63, b: 'OFF' }),
+          o('Roundness', { v: 0 }),
+          o('Blend', { v: 100, m: 100 }),
+          o('Scale X', { v: 55 }),
+          o('Scale Y', { v: 55 }),
+          o('Pan X', { v: 50 }),
+          o('Pan Y', { v: 50 }),
+          o('Rotation', { v: 0 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'RGBA',
+        params: [
+          o('Red', { v: 56 }),
+          o('Green', { v: 0 }),
+          o('Blue', { v: 100 }),
+          o('Opacity', { v: 100 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 0 }),
+          o('Distance', { v: 5 }),
+          o('Strength', { v: 100, b: 'OFF' }),
+        ],
+        melded: false
+      },
+      {
+        type: 'KALEIDOSCOPE',
+        params: [
+          o('Segments', { v: 4 }),
+          o('Zoom', { v: 100, m: 30, b: 'SUB' }, { v: 30, b: 'OFF' }),
+          o('Speed', { v: 98 }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'INFINITE_ZOOM',
+        params: [
+          o('Speed', { v: 30, b: 'SUB' }),
+          o('Depth', { v: 15 }),
+          o('Spacing', { v: 61 }),
+          o('Plane Count', { v: 100, m: 3 }),
+          o('Edge Feather', { v: 10 }),
+          o('Zoom Fade', { v: 83 }),
+        ],
+        melded: false
+      },
+    ]
+  },
+  MANDALA: {
+    id: 'MANDALA',
+    label: 'Mandala',
+    effects: [
+      {
+        type: 'ORGANIC_NOISE',
+        params: [
+          o('Scale', { v: 50 }),
+          o('Detail Level', { v: 100 }),
+          o('Warp Amount', { v: 1 }),
+          o('Warp Speed', { v: 45, m: 20, b: 'SUB' }, { v: 20, b: 'OFF' }),
+          o('Warp Direction', { v: 0 }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'KALEIDOSCOPE',
+        params: [
+          o('Segments', { v: 10 }),
+          o('Zoom', { v: 30 }),
+          o('Speed', { v: 100, b: 'SUB' }, { v: 20, b: 'OFF' }),
+          o('Blend', { v: 100 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'TERRAIN',
+        params: [
+          o('Extrusion', { v: 10, m: 3, b: 'SUB' }),
+          o('Detail Level', { v: 100 }),
+          o('Tile Width', { v: 100 }),
+          o('Tile Height', { v: 100 }),
+          o('Rotate X', { v: 0 }),
+          o('Rotate Y', { v: 0 }),
+          o('Rotate Z', { v: 0 }),
+          o('Elevation', { v: 50 }),
+          o('Distance', { v: 50 }),
+          o('Tile Blend', { v: 0 }),
+          o('Speed X', { v: 0 }),
+          o('Speed Y', { v: 0 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'RGBA',
+        params: [
+          o('Red', { v: 100 }),
+          o('Green', { v: 75 }),
+          o('Blue', { v: 100 }),
+          o('Opacity', { v: 100 }),
+        ],
+        melded: false
+      },
+      {
+        type: 'GLOW',
+        params: [
+          o('Sensitivity', { v: 0 }),
+          o('Distance', { v: 10 }),
+          o('Strength', { v: 50, b: 'OFF' }),
+        ],
+        melded: false
+      },
+    ]
   }
 };
+
