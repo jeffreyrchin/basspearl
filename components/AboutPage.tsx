@@ -12,7 +12,7 @@ const AboutPage = () => {
             >
                 <Navbar />
 
-                <main className="flex-none relative grid-bg">
+                <main className="grow relative grid-bg">
                     <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
 
                     <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-20">
