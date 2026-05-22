@@ -241,25 +241,29 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
                                             const currentY = selectedEffect.params[syIdx].value;
 
                                             const isDraggingX = paramIdx === sxIdx;
-                                            const shouldSync = !shouldDecoupleScale(currentX, currentY, isDraggingX);
-                                            const ratio = getSafeAspectRatio(currentX, currentY, selectedEffect.aspectRatio);
+                                            const isDraggingY = paramIdx === syIdx;
 
-                                            if (isDraggingX) {
-                                                const multiUpdate: any[] = [{ paramIndex: sxIdx, update }];
-                                                if (shouldSync) {
-                                                    if (update.value !== undefined) multiUpdate.push({ paramIndex: syIdx, update: { value: getLinkedScale(update.value, ratio, true) } });
-                                                    if (update.min !== undefined) multiUpdate.push({ paramIndex: syIdx, update: { min: getLinkedScale(update.min, ratio, true) } });
+                                            if (isDraggingX || isDraggingY) {
+                                                const shouldSync = !shouldDecoupleScale(currentX, currentY, isDraggingX);
+                                                const ratio = getSafeAspectRatio(currentX, currentY, selectedEffect.aspectRatio);
+
+                                                if (isDraggingX) {
+                                                    const multiUpdate: any[] = [{ paramIndex: sxIdx, update }];
+                                                    if (shouldSync) {
+                                                        if (update.value !== undefined) multiUpdate.push({ paramIndex: syIdx, update: { value: getLinkedScale(update.value, ratio, true) } });
+                                                        if (update.min !== undefined) multiUpdate.push({ paramIndex: syIdx, update: { min: getLinkedScale(update.min, ratio, true) } });
+                                                    }
+                                                    updateMultipleParameters(selectedEffect.id, multiUpdate);
+                                                    return;
+                                                } else {
+                                                    const multiUpdate: any[] = [{ paramIndex: syIdx, update }];
+                                                    if (shouldSync) {
+                                                        if (update.value !== undefined) multiUpdate.push({ paramIndex: sxIdx, update: { value: getLinkedScale(update.value, ratio, false) } });
+                                                        if (update.min !== undefined) multiUpdate.push({ paramIndex: sxIdx, update: { min: getLinkedScale(update.min, ratio, false) } });
+                                                    }
+                                                    updateMultipleParameters(selectedEffect.id, multiUpdate);
+                                                    return;
                                                 }
-                                                updateMultipleParameters(selectedEffect.id, multiUpdate);
-                                                return;
-                                            } else {
-                                                const multiUpdate: any[] = [{ paramIndex: syIdx, update }];
-                                                if (shouldSync) {
-                                                    if (update.value !== undefined) multiUpdate.push({ paramIndex: sxIdx, update: { value: getLinkedScale(update.value, ratio, false) } });
-                                                    if (update.min !== undefined) multiUpdate.push({ paramIndex: sxIdx, update: { min: getLinkedScale(update.min, ratio, false) } });
-                                                }
-                                                updateMultipleParameters(selectedEffect.id, multiUpdate);
-                                                return;
                                             }
                                         }
                                     }
@@ -273,10 +277,13 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
                                     const syIdx = EFFECT_METADATA[selectedEffect.type].params.findIndex(p => p.name === 'Scale Y');
                                     if (sxIdx === -1 || syIdx === -1) return [];
 
+                                    const isDraggingX = paramIdx === sxIdx;
+                                    const isDraggingY = paramIdx === syIdx;
+                                    if (!isDraggingX && !isDraggingY) return [];
+
                                     const currentX = selectedEffect.params[sxIdx].value;
                                     const currentY = selectedEffect.params[syIdx].value;
 
-                                    const isDraggingX = paramIdx === sxIdx;
                                     if (shouldDecoupleScale(currentX, currentY, isDraggingX)) return [];
 
                                     const ratio = getSafeAspectRatio(currentX, currentY, selectedEffect.aspectRatio);
