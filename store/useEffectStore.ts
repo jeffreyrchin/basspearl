@@ -98,6 +98,9 @@ interface EffectState {
     isLandingOpen: boolean;
     setIsLandingOpen: (open: boolean) => void;
 
+    isFeedbackOpen: boolean;
+    setIsFeedbackOpen: (open: boolean) => void;
+
     isMobile: boolean;
     setIsMobile: (isMobile: boolean) => void;
 
@@ -377,6 +380,9 @@ export const useEffectStore = create<EffectState>((set, get) => ({
 
     isLandingOpen: true,
     setIsLandingOpen: (isLandingOpen) => set({ isLandingOpen }),
+
+    isFeedbackOpen: false,
+    setIsFeedbackOpen: (isFeedbackOpen) => set({ isFeedbackOpen }),
 
     isMobile: false,
     setIsMobile: (isMobile) => set({ isMobile }),

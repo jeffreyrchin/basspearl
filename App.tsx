@@ -14,6 +14,7 @@ import LegalConsentModal from './components/LegalConsentModal';
 import ProModal from './components/ProModal';
 import LandingModal from './components/LandingModal';
 import PuzzleTestPage from './components/content/PuzzleTestPage';
+import FeedbackModal from './components/FeedbackModal';
 
 const App = () => {
   const setIsMobile = useEffectStore((s) => s.setIsMobile);
@@ -21,6 +22,7 @@ const App = () => {
   const isLegalOpen = useLegalStore((s) => s.isLegalOpen);
   const isProModalOpen = useProStore((s) => s.isProModalOpen);
   const isLandingOpen = useEffectStore((s) => s.isLandingOpen);
+  const isFeedbackOpen = useEffectStore((s) => s.isFeedbackOpen);
   const location = useLocation();
   const isMainPage = location.pathname === '/';
 
@@ -50,6 +52,9 @@ const App = () => {
       </AnimatePresence>
       <AnimatePresence>
         {isProModalOpen && <ProModal />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {isFeedbackOpen && <FeedbackModal />}
       </AnimatePresence>
     </AuthProvider>
   );
