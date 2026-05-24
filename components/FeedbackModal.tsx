@@ -94,7 +94,7 @@ const FeedbackModal: React.FC = () => {
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                 className="relative flex flex-col w-full max-w-md max-h-[95vh] overflow-hidden bg-slate-900 border border-white/10 shadow-2xl rounded-xl"
             >
-                {/* Glitch Background */}
+                {/* Background */}
                 <ModalBackground macroType="LIQUID" opacity={0.1} />
 
                 <div className="relative p-8 flex flex-col overflow-y-auto custom-scrollbar flex-1 z-10">
@@ -135,7 +135,7 @@ const FeedbackModal: React.FC = () => {
                                 }}
                                 className="mt-4 px-6 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
                             >
-                                Close Modal
+                                Close
                             </button>
                         </motion.div>
                     ) : (
