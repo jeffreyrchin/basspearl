@@ -149,7 +149,7 @@ const FeedbackModal: React.FC = () => {
                                             key={t}
                                             type="button"
                                             onClick={() => setType(t)}
-                                            className={`py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer ${type === t
+                                            className={`py-2 px-3 rounded-lg text-[9px] sm:text-[12px] font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer ${type === t
                                                 ? 'bg-gradient-to-r from-indigo-500 to-purple-600 ring-0 ring-inset ring-transparent text-white'
                                                 : 'bg-black/40 ring-1 ring-inset ring-white/10 hover:ring-white/20 text-white/70 hover:text-white'
                                                 }`}
@@ -172,7 +172,7 @@ const FeedbackModal: React.FC = () => {
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="your@email.com"
                                     disabled={isSubmitting}
-                                    className="w-full px-4 py-3 rounded-lg bg-black/40 border border-white/10 text-white text-xs placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all font-medium"
+                                    className="w-full px-4 py-3 rounded-lg bg-black/40 border border-white/10 text-white text-[16px] md:text-[12px] placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all font-medium"
                                 />
                             </div>
 
@@ -190,7 +190,7 @@ const FeedbackModal: React.FC = () => {
                                         required
                                         rows={5}
                                         disabled={isSubmitting}
-                                        className="w-full pl-4 pr-1 py-2 bg-transparent border-none text-white text-xs placeholder-white/40 focus:outline-none focus:ring-0 resize-none custom-scrollbar font-medium"
+                                        className="w-full pl-4 pr-1 py-2 bg-transparent border-none text-white text-[16px] md:text-[12px] placeholder-white/40 focus:outline-none focus:ring-0 resize-none custom-scrollbar font-medium"
                                     />
                                 </div>
                             </div>
