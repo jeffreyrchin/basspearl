@@ -54,6 +54,28 @@ export const calculateExportDimensions = (targetWidth: number): { width: number,
 };
 
 /**
+ * Resamples an AudioBuffer to a target sample rate (e.g. 48000 Hz) using OfflineAudioContext.
+ */
+const resampleAudioBuffer = async (audioBuffer: AudioBuffer, targetSampleRate = 48000): Promise<AudioBuffer> => {
+    if (audioBuffer.sampleRate === targetSampleRate) {
+        return audioBuffer;
+    }
+
+    const offlineCtx = new OfflineAudioContext(
+        audioBuffer.numberOfChannels,
+        Math.ceil(audioBuffer.duration * targetSampleRate),
+        targetSampleRate
+    );
+
+    const bufferSource = offlineCtx.createBufferSource();
+    bufferSource.buffer = audioBuffer;
+    bufferSource.connect(offlineCtx.destination);
+    bufferSource.start();
+
+    return await offlineCtx.startRendering();
+};
+
+/**
  * Service to export the glitch art to a video file using WebCodecs via Mediabunny.
  */
 export const exportVideo = async (options: ExportOptions): Promise<{ fileUrl: string, fileName: string } | null> => {
@@ -70,6 +92,13 @@ export const exportVideo = async (options: ExportOptions): Promise<{ fileUrl: st
 
     if (!reactivityMap) throw new Error("Reactivity map is required for export");
     if (!audioBuffer) throw new Error("Audio buffer is required for export");
+
+    // 1. Resample audio to standard 48kHz if it exceeds 48kHz to prevent encoder crashes
+    let processedAudioBuffer = audioBuffer;
+    if (audioBuffer.sampleRate > 48000) {
+        console.log(`[Export] Resampling audio from ${audioBuffer.sampleRate}Hz to 48000Hz for encoder compatibility.`);
+        processedAudioBuffer = await resampleAudioBuffer(audioBuffer, 48000);
+    }
 
     const { width: outWidth, height: outHeight } = calculateExportDimensions(targetWidth);
 
@@ -96,11 +125,17 @@ export const exportVideo = async (options: ExportOptions): Promise<{ fileUrl: st
 
     // 4. Set up Audio Track (Adaptive Probing)
     let audioSource: AudioBufferSource | null = null;
-    if (audioBuffer) {
-        const bestCodec = await getFirstEncodableAudioCodec(['aac', 'opus', 'mp3', 'vorbis', 'flac', 'ac3', 'eac3', 'pcm-s16', 'pcm-s16be', 'pcm-s24', 'pcm-s24be', 'pcm-s32', 'pcm-s32be', 'pcm-f32', 'pcm-f32be', 'pcm-f64', 'pcm-f64be', 'pcm-u8', 'pcm-s8', 'ulaw', 'alaw']);
+    if (processedAudioBuffer) {
+        const bestCodec = await getFirstEncodableAudioCodec(
+            ['aac', 'opus', 'mp3', 'vorbis', 'flac', 'ac3', 'eac3', 'pcm-s16', 'pcm-s16be', 'pcm-s24', 'pcm-s24be', 'pcm-s32', 'pcm-s32be', 'pcm-f32', 'pcm-f32be', 'pcm-f64', 'pcm-f64be', 'pcm-u8', 'pcm-s8', 'ulaw', 'alaw'],
+            {
+                numberOfChannels: processedAudioBuffer.numberOfChannels,
+                sampleRate: processedAudioBuffer.sampleRate,
+            }
+        );
 
         if (bestCodec) {
-            console.log(`Using audio codec: ${bestCodec}`);
+            console.log(`Using audio codec: ${bestCodec} (${processedAudioBuffer.sampleRate} Hz, ${processedAudioBuffer.numberOfChannels} ch)`);
             audioSource = new AudioBufferSource({
                 codec: bestCodec,
                 bitrate: 192_000,
@@ -115,8 +150,8 @@ export const exportVideo = async (options: ExportOptions): Promise<{ fileUrl: st
     await output.start();
 
     // 6. Add Audio (if available)
-    if (audioSource && audioBuffer) {
-        await audioSource.add(audioBuffer);
+    if (audioSource && processedAudioBuffer) {
+        await audioSource.add(processedAudioBuffer);
     }
 
     // 7. Initialize Rendering Engine
