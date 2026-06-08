@@ -167,7 +167,7 @@ const SortableGroupItem = ({
                                             `}
                                             title={effect.soloed ? "Toggle Solo" : "Toggle Visibility (Alt+Click to Solo)"}
                                         >
-                                            <span className="material-symbols-outlined">
+                                            <span className="material-symbols-outlined !text-[22px]">
                                                 {effect.soloed ? 'star' : (effect.muted ? 'visibility_off' : 'visibility')}
                                             </span>
                                         </button>
@@ -180,7 +180,7 @@ const SortableGroupItem = ({
                                             className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors text-white/80 hover:text-white`}
                                             title="Show Inspector (I)"
                                         >
-                                            <span className="material-symbols-outlined">tune</span>
+                                            <span className="material-symbols-outlined !text-[22px]">tune</span>
                                         </button>
                                         <div className="w-px h-4 bg-white/5" />
                                         <button
@@ -190,7 +190,7 @@ const SortableGroupItem = ({
                                             className={`w-9 h-full flex items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40 focus-visible:rounded-md transition-colors text-white/80 hover:text-white`}
                                             title="Remove"
                                         >
-                                            <span className="material-symbols-outlined">delete</span>
+                                            <span className="material-symbols-outlined !text-[22px]">delete</span>
                                         </button>
                                     </div>
                                 )}
