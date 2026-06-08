@@ -1612,7 +1612,10 @@ void main() {
     vec4 fg = texture(u_overlay, tr.localUV) * tr.mask;
     
     float alphaMultiplier = fg.a * opacity * u_has_overlay;
-    outColor = vec4(mix(bg.rgb, fg.rgb, alphaMultiplier), 1.0); // Force alpha to 1.0 to ensure base image is always visible, even with no overlay
+
+    // Correctly preserves background alpha, but allows the overlay to add opacity
+    float finalAlpha = mix(bg.a, 1.0, alphaMultiplier);
+    outColor = vec4(mix(bg.rgb, fg.rgb, alphaMultiplier), finalAlpha);
 }
 `;
 
