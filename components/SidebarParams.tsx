@@ -178,7 +178,7 @@ const SidebarParams: React.FC<SidebarParamsProps> = () => {
                             ) : (
                                 <div className="z-10 flex flex-col items-center gap-2 text-white/60 group-hover:text-[#22D3EE] group-data-[dragover=true]:text-[#22D3EE] transition-colors pointer-events-none">
                                     <span className="material-symbols-outlined !text-3xl shrink-0">add_photo_alternate</span>
-                                    <span className="text-xs font-medium text-center px-4">Click or drag image here</span>
+                                    <span className="text-xs font-medium text-center px-4">.jpg, .jpeg, .png, .webp, .avif, .heic (Safari only)</span>
                                 </div>
                             )}
                         </div>

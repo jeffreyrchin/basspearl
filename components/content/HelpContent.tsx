@@ -173,7 +173,7 @@ const HelpContent: React.FC = () => {
                     <div className="glass-panel p-5 rounded-xl border border-white/10">
                         <h3 className="text-sm font-bold uppercase tracking-wider text-white mb-2">Which file formats are supported?</h3>
                         <p className="text-white/60 text-sm leading-relaxed">
-                            Images: .jpg, .jpeg, .png, .webp, .heic. Audio: .mp3, .wav, .m4a, .aac, .ogg. Export: .mp4 (H.264).
+                            Images: .jpg, .jpeg, .png, .webp, .avif, .heic (Safari only). Audio: .mp3, .wav, .m4a, .aac, .ogg. Export: .mp4 (H.264).
                         </p>
                     </div>
                 </div>
