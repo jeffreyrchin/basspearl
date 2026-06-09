@@ -33,7 +33,7 @@ const getThumbnailBackgroundUrl = (effects: EffectConfig[]): string | null => {
     if (effects.length === 1) {
         const effect = EFFECT_METADATA[effects[0].type];
         if (effect.category === 'Modifier') {
-            return "./sunset_square.jpeg";
+            return "./blanket_square.jpeg";
         }
         if (effect.label === 'Image') {
             return "./landscape.png";
