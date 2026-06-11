@@ -48,13 +48,18 @@ const LandingModal: React.FC = () => {
                 text: 'text-primary',
                 border: 'border-primary',
                 glow: 'shadow-[0_0_20px_rgba(79,70,229,0.4)]',
+            },
+            indigo: {
+                text: 'text-indigo-400',
+                border: 'border-indigo-400',
+                glow: 'shadow-[0_0_20px_rgba(129,140,248,0.4)]',
             }
         }[color];
 
         return (
             <button
                 onClick={onClick}
-                className={`flex-1 rounded-3xl border-2 ${theme.border} ${theme.glow} bg-black/40 hover:bg-black/60 transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-3 sm:p-8 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 relative overflow-hidden`}
+                className={`flex-1 rounded-3xl border-2 ${theme.border} ${theme.glow} bg-black/40 hover:bg-black/60 transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-3 sm:p-12 md:p-15 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 relative overflow-hidden`}
             >
                 <div className={`absolute -inset-2 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
@@ -62,10 +67,10 @@ const LandingModal: React.FC = () => {
                     {icon}
                 </span>
                 <div className="flex flex-col items-center gap-1.5 z-10 text-center px-1">
-                    <span className="text-[9px] sm:text-[14px] font-bold uppercase tracking-[0.15em] text-white/90 group-hover:text-white transition-colors">
+                    <span className="text-[9px] sm:text-[16px] md:text-[20px] font-bold uppercase tracking-[0.15em] text-white/90 group-hover:text-white transition-colors">
                         {label}
                     </span>
-                    <span className="text-[7px] sm:text-[10px] font-medium uppercase tracking-[0.15em] text-white/60 group-hover:text-white transition-colors">
+                    <span className="text-[7px] sm:text-[8px] md:text-[10px] font-medium uppercase tracking-[0.15em] text-white/60 group-hover:text-white transition-colors">
                         {description}
                     </span>
                 </div>
@@ -117,25 +122,30 @@ const LandingModal: React.FC = () => {
                         <motion.p
                             animate={{ scale: [1, 1.1, 1] }}
                             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                            className="text-xs font-medium tracking-widest text-white/60 will-change-transform">animate your sound</motion.p>
+                            className="text-xs font-medium tracking-widest text-white/60 will-change-transform">visualize your sound</motion.p>
                     </div>
 
                     {/* Body Section */}
                     <div className="w-full p-8 pt-4">
+                        <div className="text-center mb-6">
+                            <h2 className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-white/90">
+                                Select mode
+                            </h2>
+                        </div>
                         <div className="grid grid-cols-2 gap-2 sm:gap-4">
                             <LandingCard
                                 onClick={handleEndlessMode}
                                 icon="all_inclusive"
-                                label="Endless AI"
-                                description="Infinite scene generator"
-                                color="amber"
+                                label="Autocycle"
+                                description="Endless slideshow"
+                                color="indigo"
                             />
 
                             <LandingCard
                                 onClick={handleSandboxMode}
-                                icon="edit"
-                                label="Sandbox"
-                                description="Build your own visuals"
+                                icon="add_circle"
+                                label="Create"
+                                description="Build custom visualizers"
                                 color="primary"
                             />
                         </div>
@@ -144,7 +154,7 @@ const LandingModal: React.FC = () => {
                         <div className="mt-8 flex flex-col items-center">
                             <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-widest leading-relaxed text-center max-w-xl">
                                 <span className="text-amber-300">This application can produce rapid flashing, strobing, and high-contrast effects that may trigger seizures. </span>
-                                <span className="text-white/90">By continuing, you acknowledge that you have the rights to your media and agree to our <button onClick={openLegal} className="text-primary hover:text-white font-bold uppercase cursor-pointer underline decoration-1 underline-offset-2 transition-colors">Privacy & Terms.</button></span>
+                                <span className="text-white/90">By continuing, you acknowledge that you have the rights to your media and agree to our <button onClick={openLegal} className="text-primary hover:text-white font-bold uppercase cursor-pointer underline decoration-1 underline-offset-2 transition-colors">Privacy & Terms</button>.</span>
                             </p>
                         </div>
                     </div>

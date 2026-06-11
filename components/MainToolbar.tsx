@@ -261,16 +261,16 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
                                 <ToolbarRow
                                     onClick={() => setEndlessMode(true)}
                                     icon="all_inclusive"
-                                    label="Endless"
+                                    label="Autocycle"
                                     isCollapsed={isToolbarCollapsed}
                                     className={(isGameMode || isEndlessMode) ? 'hidden' : ''}
                                 />
 
-                                {/* Sandbox Mode */}
+                                {/* Create/Sandbox Mode */}
                                 <ToolbarRow
                                     onClick={() => setEndlessMode(false)}
-                                    icon="edit"
-                                    label="Sandbox"
+                                    icon="add_circle"
+                                    label="Create"
                                     isCollapsed={isToolbarCollapsed}
                                     className={(isGameMode || !isEndlessMode) ? 'hidden' : ''}
                                 />
