@@ -59,7 +59,7 @@ const LandingModal: React.FC = () => {
         return (
             <button
                 onClick={onClick}
-                className={`flex-1 rounded-3xl border-2 ${theme.border} ${theme.glow} bg-black/40 hover:bg-black/60 transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-3 sm:p-12 md:p-15 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 relative overflow-hidden`}
+                className={`flex-1 rounded-3xl border-2 ${theme.border} ${theme.glow} bg-black/40 hover:bg-black/60 transition-all duration-300 will-change-transform group flex flex-col items-center justify-center gap-2 sm:gap-4 p-3 sm:p-12 hover:scale-[1.05] hover:-translate-y-1 active:scale-95 relative overflow-hidden`}
             >
                 <div className={`absolute -inset-2 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
@@ -126,7 +126,7 @@ const LandingModal: React.FC = () => {
                     </div>
 
                     {/* Body Section */}
-                    <div className="w-full p-8 pt-4">
+                    <div className="w-full px-8 sm:px-16 py-8">
                         <div className="text-center mb-6">
                             <h2 className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-white/90">
                                 Select mode
