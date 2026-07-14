@@ -6,20 +6,20 @@ This guide outlines our development workflow, coding style, and pull request gui
 
 ---
 
-## 📜 Code of Conduct
+## Code of Conduct
 
 We are committed to fostering a welcoming, respectful, and inclusive community. Please be polite, collaborative, and constructive in all discussions, issues, and pull requests.
 
 ---
 
-## 🗺️ Project Structure
+## Project Structure
 
 Getting familiar with the directory structure will help you locate the files you need to modify:
 
 ```text
 ├── components/          # React UI components (Modals, Panels, Menus, etc.)
-│   └── content/         # Core pages and helper content (About, Help, Puzzles)
-├── config/              # Constants and configurations for visual effects & macros
+│   └── content/         # Page content (About, Help, etc.)
+├── config/              # Configuration files for visual effects, macros, puzzles, etc.
 ├── context/             # React Contexts (e.g., AuthContext)
 ├── functions/           # Cloudflare Pages Functions (Serverless backend API)
 │   └── api/
@@ -28,17 +28,17 @@ Getting familiar with the directory structure will help you locate the files you
 ├── hooks/               # Custom React hooks
 ├── services/            # Core business logic and engines
 │   ├── glitchEngine.ts  # Canvas WebGL/Three.js effect rendering engine
-│   ├── exportService.ts # Hardware-accelerated MP4 encoder integration (mediabunny)
-│   └── puzzleService.ts # Gameplay checking logic for unlocking macro scenes
-├── store/               # Zustand state stores (highly reactive frontend state)
-├── types.ts             # Unified TypeScript declarations for effects, frequency bands, etc.
-├── index.css            # Global CSS styles (Tailwind v4 base + glassmorphic UI)
+│   ├── exportService.ts # Hardware-accelerated MP4 encoder integration (uses mediabunny)
+│   └── puzzleService.ts # Gameplay service logic
+├── store/               # Zustand state stores
+├── types.ts             # Unified TypeScript declarations for effects, frequency bands, macros, etc.
+├── index.css            # Global CSS styles (TailwindCSS v4)
 └── wrangler.jsonc       # Cloudflare Pages configuration
 ```
 
 ---
 
-## 🛠️ Local Development Setup
+## Local Development Setup
 
 To set up a local development environment, follow these steps:
 
@@ -49,7 +49,7 @@ To set up a local development environment, follow these steps:
    ```
 3. **Environment Configuration**:
    - Copy `.env.example` to `.env.local`.
-   - Setup a [Firebase](https://firebase.google.com/) project and retrieve your web configuration details to enable user authentication.
+   - Set up a [Firebase](https://firebase.google.com/) project and retrieve your web configuration details to enable user authentication.
    - Fill in details for Google Analytics and Lemon Squeezy if you plan to test payment or telemetry features locally.
 4. **Run Dev Server**:
    ```bash
@@ -64,7 +64,7 @@ To set up a local development environment, follow these steps:
 
 ---
 
-## 🎨 Coding Guidelines
+## Coding Guidelines
 
 ### 1. TypeScript & Typings
 - Avoid `any` at all costs. Use strong interfaces, generics, or unions.
@@ -81,30 +81,30 @@ To set up a local development environment, follow these steps:
 - Local UI state (e.g., whether a specific drop-down is open inside a card) should remain in React `useState`.
 
 ### 3. Styling & Layout
-- We use **TailwindCSS v4** with a custom active-glow and glassmorphic aesthetic.
+- We use **TailwindCSS v4**.
 - Global Tailwind configurations and custom CSS components are placed in [index.css](./index.css).
-- When developing UI elements, keep the design clean, responsive, and aligned with the dark glassmorphic theme.
+- When developing UI elements, keep the design clean, responsive, and aligned with the main theme.
 
 ### 4. GPU-Accelerated Effects & Shaders
-- Shaders and canvas rendering are implemented under [services/glitchEngine.ts](./services/glitchEngine.ts).
-- If adding a new WebGL effect, register the enum value in `GlitchEffectType` in `types.ts`, configure its parameters, and add its WebGL implementation to the glitch engine.
+- Canvas rendering is implemented under [services/glitchEngine.ts](./services/glitchEngine.ts).
+- When adding a new WebGL pattern or effect, register the enum value in `GlitchEffectType` in `types.ts`, configure its parameters in `effects.ts`, and add its WebGL implementation to `glitchShaders.ts`, or `ThreeJSEffects.ts` for Three.js effects.
 
 ---
 
-## 📝 Commit Messages
+## Commit Messages
 
 We encourage the use of [Conventional Commits](https://www.conventionalcommits.org/) to keep our git history clean and readable:
 
 - `feat: add spectral map effect` (New feature)
 - `fix: prevent audio sync jitter when changing frequency bands` (Bug fix)
 - `docs: update setup steps in readme` (Documentation changes)
-- `style: fix alignment of pro tier pricing modal` (Styling tweaks)
+- `style: fix alignment of pro-tier pricing modal` (Styling tweaks)
 - `test: add unit test for language translation service` (Testing updates)
 - `refactor: clean up Three.js initialization logic` (Code reorganization)
 
 ---
 
-## 🚀 Submitting a Pull Request
+## Submitting a Pull Request
 
 1. **Fork the Repository** and clone your fork locally.
 2. **Create a Branch** off of `main`:
