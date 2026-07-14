@@ -83,7 +83,7 @@ To set up a local development environment, follow these steps:
 ### 3. Styling & Layout
 - We use **TailwindCSS v4**.
 - Global Tailwind configurations and custom CSS components are placed in [index.css](./index.css).
-- When developing UI elements, keep the design clean, responsive, and aligned with the main theme.
+- When developing UI elements, keep the design clean, accessible, responsive, and aligned with the main theme.
 
 ### 4. GPU-Accelerated Effects & Shaders
 - Canvas rendering is implemented under [services/glitchEngine.ts](./services/glitchEngine.ts).
