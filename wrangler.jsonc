@@ -1,7 +1,9 @@
 {
-    "name": "glitchbrain--glitch-art-generator",
-    "compatibility_date": "2026-01-25",
-    "compatibility_flags": ["nodejs_compat"],
+    "name": "basspearl",
+    "compatibility_date": "2026-07-14",
+    "compatibility_flags": [
+        "nodejs_compat"
+    ],
     "assets": {
         "directory": "./dist"
     }
