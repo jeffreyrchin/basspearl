@@ -1,6 +1,6 @@
-# basspearl | Audio-Reactive Visual Synthesizer
+# basspearl | Browser-Based Audio-Reactive Visual Synthesizer
 
-Turn your music into professional animated visuals. **basspearl** is an AI-powered audio visualizer and animation editor for musicians, artists, DJs, VJs, and content creators. Built entirely for the web, it processes all audio analysis, WebGL rendering, and video export client-side in the browser.
+Turn your music into animated 2D/3D visuals. **basspearl** is an AI-powered audio visualizer and animation editor for musicians, artists, DJs, VJs, content creators, and more! Built entirely for the web, it processes all audio analysis, WebGL rendering, and MP4 video export client-side in the browser.
 
 ---
 
@@ -101,10 +101,10 @@ npm run preview
 | --- | --- |
 | `H` | Hide / Show User Interface (Full Screen Preview) |
 | `Esc` | Show UI / Close active modals |
-| `P` | Toggle Sidebar panel |
-| `I` | Toggle Effect Inspector panel |
-| `Y` | Toggle FX Library panel |
-| `K` | Toggle Scene Bar panel |
+| `P` | Toggle Sidebar |
+| `I` | Toggle Inspector |
+| `Y` | Toggle Library |
+| `K` | Toggle Scene Bar |
 
 ### Effect Editing (Sidebar)
 | Key | Action |
