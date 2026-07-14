@@ -6,14 +6,14 @@ Turn your music into professional animated visuals. **basspearl** is an AI-power
 
 ## Features
 
-- **Rich FX Library**: Over 50 high-performance visual effects (Channel Shift, Wave Distortion, Tri Crush, Tunnel Warp, particles, grids, and more) categorized into Patterns, Macros, and Modifiers.
-- **Dynamic Audio Analysis**: Advanced sub-frame accurate audio processing that splits sound into Sub, Bass, Mid, and Treble ranges.
-- **Granular Reactivity**: Map any effect parameter (intensity, speed, size) to specific frequency bands or lock them to static values.
-- **Visual Puzzles**: Resolve interactive effect configuration puzzles to unlock premium multi-layered macro templates.
-- **Privacy-First Design**: All rendering and processing occur locally. Your music and image assets never leave your device.
-- **Hardware-Accelerated Export**: Export your sound-synced animations directly to high-definition MP4 files in the browser using the `mediabunny` encoder.
-- **Multi-Scene Workspace**: Edit and manage up to 9 scenes with configurable transitions (crossfade, fade-to-black, flash, zoom fade).
-- **Pro DJ/VJ Controls**: Extensive keyboard shortcuts for live control, side-by-side effect grouping, duplicating, and drag-and-drop effect reordering.
+- **Rich FX Library**: 100+ high-performance visual effects (Channel Shift, Wave Distortion, Tri Crush, Tunnel Warp, particle fields, 3D objects, and more) categorized into patterns, modifiers, and presets.
+- **Dynamic Audio Analysis**: Sub-frame audio processing that splits sound into Sub, Bass, Mid, and Treble ranges.
+- **Granular Reactivity**: Map any effect parameter (intensity, speed, size) to a specific frequency band or lock them to static values.
+- **Interactive Puzzles**: Solve interactive effect configuration puzzles to unlock additional macros/presets.
+- **Privacy-First Design**: All rendering and processing is local. Your music and image assets never leave your device.
+- **Hardware-Accelerated Export**: Export your animations directly to high-definition MP4 files in the browser, powered by the `mediabunny` encoder.
+- **Multi-Scene Workspace**: Edit and manage scenes with configurable transitions (crossfade, fade-to-black, zoom fade, etc.).
+- **Pro DJ/VJ Controls**: Extensive keyboard shortcuts for accessibility, live control, effect grouping, duplicating, and drag-and-drop effect reordering.
 
 ---
 
@@ -21,14 +21,14 @@ Turn your music into professional animated visuals. **basspearl** is an AI-power
 
 - **Framework**: [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
 - **Build Tool**: [Vite](https://vite.dev/)
-- **Styling**: [TailwindCSS v4](https://tailwindcss.com/) + Custom CSS for active-glow UI panels
+- **Styling**: [TailwindCSS v4](https://tailwindcss.com/) + Custom CSS
 - **State Management**: [Zustand](https://github.com/pmndrs/zustand)
 - **Drag-and-Drop**: [@dnd-kit](https://dnd-kit.com/)
 - **Graphics & Rendering**: [Three.js](https://threejs.org/) + WebGL Custom Shaders
 - **Video Encoding**: `mediabunny` (WebGL canvas recorder)
 - **Authentication**: [Firebase Auth](https://firebase.google.com/) (Google & Email/Password)
 - **Deployment & API**: [Cloudflare Pages](https://pages.cloudflare.com/) + Cloudflare Pages Functions
-- **Payments Integration**: [Lemon Squeezy](https://www.lemonsqueezy.com/) (Lifetime Pro tier webhook processing)
+- **Payments Integration**: [Lemon Squeezy](https://www.lemonsqueezy.com/) (Lifetime Pro webhook processing)
 - **Testing**: [Vitest](https://vitest.dev/)
 
 ---
@@ -115,9 +115,9 @@ npm run preview
 | `Mod + Shift + G` | Ungroup selected effect group |
 | `Delete` / `Backspace` | Remove selected effects |
 | `Esc` | Clear active selection |
-| `O` | Insert new Image layer |
-| `C` | Insert new Solid Color layer |
-| `M` | Insert new Move-Scale modifier |
+| `O` | Insert new Image |
+| `C` | Insert new Color |
+| `M` | Insert new Move-Scale |
 
 ### Scenes & History
 | Key | Action |
