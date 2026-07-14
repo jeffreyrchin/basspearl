@@ -1,6 +1,6 @@
 # Contributing to basspearl
 
-Thank you for your interest in contributing to **basspearl**! As an open-source, client-side audio-reactive visual synthesizer, we welcome contributions from developers, designers, VJs, musicians, and creators of all backgrounds.
+Thank you for your interest in contributing to basspearl! As an open-source, client-side audio-reactive visual synthesizer, we welcome contributions from developers, designers, VJs, musicians, and all creators.
 
 This guide outlines our development workflow, coding style, and pull request guidelines to help you get started quickly.
 

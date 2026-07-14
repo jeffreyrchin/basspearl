@@ -1,6 +1,6 @@
 # basspearl | Browser-Based Audio-Reactive Visual Synthesizer
 
-Turn your sound into animated 2D/3D visuals. **basspearl** is an open-source, AI-powered audio visualizer and animation editor for musicians, artists, DJs, VJs, content creators, and more! Built entirely for the web, it processes all audio analysis, WebGL rendering, and MP4 video export client-side in the browser.
+Turn your sound into animated 2D/3D visuals. basspearl is an open-source, AI-powered audio visualizer and animation editor for musicians, artists, DJs, VJs, content creators, and more! Built entirely for the web, it processes all audio analysis, WebGL rendering, and MP4 video export client-side in the browser.
 
 ---
 
